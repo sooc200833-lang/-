@@ -158,6 +158,7 @@ tr[hidden]{display:none}
 .count{font-size:.8rem; color:var(--ink-3); margin-left:auto}
 footer{border-top:2px solid var(--ink); padding:2rem 0 4rem; font-size:.85rem; color:var(--ink-2)}
 </style>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 <style>
 /* 만화판 추가 스타일 */
@@ -335,6 +336,8 @@ body.sub .minihead{display:block}
 .crcard{border:1px solid var(--rule-hard); border-left:4px solid var(--mark); background:var(--paper-2); padding:.8rem .9rem; margin:.8rem 0}
 .crhead{font-family:"Hahmlet",serif; font-weight:700; font-size:1.05rem; margin-bottom:.25rem}
 .crlocked{background:var(--paper-3)}
+.crchain{margin-top:.6rem; padding-top:.5rem; border-top:1px dashed var(--rule-hard); font-size:.88rem; line-height:1.7}
+.crchain b{font-family:"Hahmlet",serif}
 .crcard .czre[disabled]{opacity:.35; cursor:default}
 .crtag{display:inline-block; font-size:.76rem; color:var(--paper); background:var(--ink-2); padding:.1rem .5rem; margin-bottom:.5rem}
 .crcard .tw{margin:.4rem 0 .6rem}
@@ -362,13 +365,24 @@ body.sub .minihead{display:block}
 
 .aidet{margin:1rem 0; border:1px solid var(--rule-hard); background:var(--paper-2); padding:.5rem .8rem}
 .aidet summary{cursor:pointer; font-family:"Hahmlet",serif; font-weight:700; font-size:.92rem}
-textarea#ct-in, textarea#pc-in{width:100%; font:inherit; font-size:.88rem; padding:.5rem .6rem; border:1px solid var(--rule-hard); background:var(--paper); color:var(--ink); box-sizing:border-box}
+textarea#ct-in, textarea#pc-in, textarea#pa-q, textarea#pm-text, textarea#fm-text, textarea#bk-paste{width:100%; font:inherit; font-size:.88rem; padding:.5rem .6rem; border:1px solid var(--rule-hard); background:var(--paper); color:var(--ink); box-sizing:border-box}
 .aires{border:1px solid var(--rule-hard); background:var(--paper-2); padding:.6rem .8rem; margin:.5rem 0}
 .aires .gen-h{margin-bottom:.3rem}
 tr.twrow td{background:var(--paper-2); font-size:.86rem; line-height:1.7; white-space:pre-wrap}
 .twbtn{border:1px solid var(--rule-hard); background:var(--paper); color:var(--ink-2); cursor:pointer; font:inherit; font-size:.72rem; padding:.05rem .35rem; margin-left:.35rem}
 .aihint{font-size:.8rem; color:var(--ink-3)}
-@media (max-width:640px){ textarea#ct-in, textarea#pc-in{font-size:16px} }
+@media (max-width:640px){ textarea#ct-in, textarea#pc-in, textarea#pa-q, textarea#pm-text, textarea#fm-text, textarea#bk-paste{font-size:16px} }
+
+.verbar{position:sticky; top:0; z-index:60; background:var(--mark); color:var(--paper); padding:.5rem .8rem; font-size:.86rem}
+.verbar .chip{margin-left:.5rem}
+
+.synclink{display:inline-flex; align-items:center; gap:.25rem; text-decoration:none; border:1px solid var(--rule-hard);
+  padding:.28rem .45rem; color:var(--ink-2); background:var(--paper-2); white-space:nowrap}
+.synclink i{font-style:normal; font-size:.72rem; color:var(--ink-3)}
+.synclink.ok i{color:var(--green)} .synclink.busy i{color:var(--note)} .synclink.warn i{color:var(--mark)}
+.gdrow{display:flex; gap:.5rem; align-items:center; padding:.3rem 0; border-bottom:1px solid var(--rule); font-size:.84rem}
+.gdrow:last-child{border-bottom:0}
+.gdrow span{flex:1}
 .gen-top{display:flex; align-items:center; gap:.6rem; margin:.8rem 0 .4rem; font-family:"Hahmlet",serif}
 .gen-sec{border:1px solid var(--rule-hard); background:var(--paper-2); padding:.6rem .8rem; margin:.5rem 0}
 .gen-h{font-family:"Hahmlet",serif; font-weight:700; font-size:.92rem; display:flex; align-items:center; gap:.5rem; margin-bottom:.35rem}
@@ -384,7 +398,9 @@ tr.twrow td{background:var(--paper-2); font-size:.86rem; line-height:1.7; white-
 #tr-float .face{font-size:1.9rem; line-height:1}
 #tr-float .time{font-family:"Hahmlet",serif; font-weight:700; font-size:1.5rem; font-variant-numeric:tabular-nums; margin:.1rem 0}
 #tr-float .msg{font-size:.76rem; color:var(--ink-2); line-height:1.4; min-height:2.2em}
-#tr-float button{position:absolute; top:2px; right:4px; border:0; background:none; color:var(--ink-3); cursor:pointer; font-size:.9rem}
+#tr-float #tr-stop{right:4px}
+#tr-float #tr-min{right:24px}
+#tr-float button{position:absolute; top:2px; border:0; background:none; color:var(--ink-3); cursor:pointer; font-size:.9rem}
 #tr-float.mini{width:auto; padding:.3rem .5rem}
 #tr-float.mini .msg, #tr-float.mini .face{display:none}
 #tr-float.mini .time{font-size:1rem; margin:0}
@@ -507,6 +523,7 @@ details.gdet[open] summary{margin-bottom:.5rem}
 </header>
 
 <div class="topbar"><label for="pagesel">페이지</label><select id="pagesel"></select><label for="topfolder" class="tf">담는 곳</label><select id="topfolder"></select><label class="trainbtn"><input type="checkbox" id="tr-on"> 트레이닝</label>
+<a class="synclink" id="sync-dot" href="#favs" title="드라이브 동기화">☁<i id="sync-st">꺼짐</i></a>
 <a class="favlink" href="#favs" title="즐겨찾기"><span>★</span><i id="topfavn">0</i></a></div>
 <div class="minihead"><a href="#home">← 만화 클리셰 사전</a><span id="mh-t"></span></div>
 <div class="layout">
@@ -1503,6 +1520,7 @@ details.gdet[open] summary{margin-bottom:.5rem}
       <option value="all">전부 (죽음 포함)</option>
     </select></label>
     <button class="chip" id="sf-go">전체 다시 뽑기</button>
+    <button class="chip" id="sf-reset">처음부터</button>
     <span class="count" id="sf-sum"></span>
   </div>
 
@@ -1537,6 +1555,7 @@ details.gdet[open] summary{margin-bottom:.5rem}
   <h3>쓰는 법</h3>
   <ul class="small">
     <li><b>전체 다시 뽑기</b>로 다섯 칸을 한 번에. 결과는 <b>? ? ?</b>로 가려진 채 나오고, 칸을 누르면 열린다.</li>
+    <li><b>처음부터</b>는 고정·결정·트레이닝 횟수·AI 결과를 모두 풀고 새로 뽑는다.</li>
     <li><b>↻</b>는 그 칸만 다시 뽑는다. 이때는 바로 보인다.</li>
     <li>장르·상태·조화 같은 <b>설정을 바꿔도 내용은 그대로</b> 있다. 바뀐 조건으로 새로 보려면 <b>전체 다시 뽑기</b>나 칸별 <b>↻</b>를 누른다.</li>
     <li><b>📌</b>는 그 칸을 고정한다. 전체 다시 뽑기에도 바뀌지 않는다. 마음에 드는 두어 칸을 고정하고 나머지만 굴린다.</li>
@@ -1747,24 +1766,6 @@ details.gdet[open] summary{margin-bottom:.5rem}
   </div>
   <div id="lt-out"></div>
 
-  <h3>크리쳐 생성기</h3>
-  <p class="small">피노는 먹은 생물을 따라 한다. <b>큰 것이 골격을 정하고 작은 것일수록 말단으로 간다.</b> 약점이나 서식지는 정해 두지 않았다. 필요할 때 직접 정한다. 한국에 사는 생물 148종으로 조합하며, 애완동물과 해양생물도 들어 있다. 크기와 이동 방식을 지정하면 그 조건에 맞는 개체가 나온다. 생물마다 <b>📌</b>로 고정하고 <b>↻</b>로 그것만 다시 뽑는다. <b>생성</b>은 고정을 풀고 전부 새로 뽑는다. <b>★</b>로 즐겨찾기에 담는다.</p>
-  <div class="shuf">
-    <span class="shuflabel">개체</span>
-    <label>먹은 수 <select id="cr-n"><option>2</option><option selected>3</option><option>4</option><option>5</option></select></label>
-    <label>크기 <select id="cr-sz"><option value="">무작위</option><option value="5">초대형</option><option value="4">대형</option><option value="3">중형</option><option value="2">소형</option><option value="1">극소형</option></select></label>
-    <label>이동 <select id="cr-mv"><option value="">무작위</option><option value="g">지상</option><option value="f">비행</option><option value="w">수생</option><option value="c">등반</option><option value="b">굴</option></select></label>
-    <label><input type="checkbox" id="cr-human"> 인간을 먹음</label>
-    <button class="chip" id="cr-go">생성</button>
-  </div>
-  <div id="cr-out"></div>
-  <div class="filterbar"><span data-ai-slot="creature"></span></div>
-  <div id="cr-ai"></div>
-
-  <h3>크리쳐 점검</h3>
-  <p class="small">그린 개체가 이 세계의 규칙을 지키는지 확인한다.</p>
-  <ul class="afcheck" id="cr-check"></ul>
-
   <h3>쓸 만한 항목 모아 보기</h3>
   <p class="small">이 작품에 걸리는 클리셰만 색인에서 골라 둔 것이다. 누르면 색인이 그 조건으로 좁혀진다.</p>
   <div class="filterbar">
@@ -1774,27 +1775,57 @@ details.gdet[open] summary{margin-bottom:.5rem}
   </div>
 </section>
 
-<section class="blk" id="draw">
-  <h2 class="big">그림 주제 뽑기</h2>
-  <p class="lede">이야기가 아니라 <b>한 장</b>을 위한 것이다. 인물·상황·분위기·구도·소품을 뽑아 하나의 그림으로 만든다. 인물은 <a href="#chars">캐릭터 모티브 색인</a>에서 가져온다.</p>
-  <div class="warnbox"><b>고르지 말고 그린다.</b> 마음에 드는 조합이 나올 때까지 굴리면 연습이 안 된다. 뽑힌 것을 말이 되게 만드는 것이 연습이다. 특히 <b>구도</b>는 평소 안 쓰던 것이 나올 때 값이 크다.</div>
+<section class="blk" id="pcre">
+  <h2 class="big">《피노》 크리쳐</h2>
+  <p class="lede">피노는 먹은 것을 흉내 낸다. <b>큰 것이 골격을 정하고 작은 것일수록 말단으로 간다.</b> 한국에 사는 생물과 사람이 원하는 사물로 조합한다. 즐겨찾기 폴더에 <b>피노설정집</b>이 있을 때만 보인다.</p>
+  <p class="small">피노는 먹은 생물을 따라 한다. <b>큰 것이 골격을 정하고 작은 것일수록 말단으로 간다.</b> 약점이나 서식지는 정해 두지 않았다. 필요할 때 직접 정한다. 한국에 사는 생물 148종으로 조합하며, 애완동물과 해양생물도 들어 있다. 크기와 이동 방식을 지정하면 그 조건에 맞는 개체가 나온다. 생물마다 <b>📌</b>로 고정하고 <b>↻</b>로 그것만 다시 뽑는다. <b>생성</b>은 고정을 풀고 전부 새로 뽑는다. <b>★</b>로 즐겨찾기에 담는다.</p>
   <div class="shuf">
-    <span class="shuflabel">주제</span>
-    <label>난이도 <select id="dw-lv"><option>쉬움</option><option selected>보통</option><option>어려움</option></select></label>
-    <label><input type="checkbox" id="dw-prop" checked> 소품</label>
-    <label><input type="checkbox" id="dw-comp" checked> 구도</label>
-    <label>타이머 <select id="dw-min"><option>15분</option><option selected>30분</option><option>45분</option><option>60분</option><option>90분</option></select></label>
-    <button class="chip" id="dw-go">뽑기</button>
-    <button class="chip" id="dw-start">시작</button>
+    <span class="shuflabel">개체</span>
+    <label>먹은 수 <select id="cr-n"><option>2</option><option selected>3</option><option>4</option><option>5</option></select></label>
+    <label>크기 <select id="cr-sz"><option value="">무작위</option><option value="5">초대형</option><option value="4">대형</option><option value="3">중형</option><option value="2">소형</option><option value="1">극소형</option></select></label>
+    <label>이동 <select id="cr-mv"><option value="">무작위</option><option value="g">지상</option><option value="f">비행</option><option value="w">수생</option><option value="c">등반</option><option value="b">굴</option><option value="o">사물 포함</option></select></label>
+    <label><input type="checkbox" id="cr-human"> 인간을 먹음</label>
+    <button class="chip" id="cr-go">생성</button>
   </div>
-  <div id="dw-out"></div>
-  <h3>쓰는 법</h3>
-  <ul class="small">
-    <li>줄마다 <b>📌</b>로 고정하고 <b>↻</b>로 그것만 다시 뽑는다. <b>★</b>로 즐겨찾기에 담는다.</li>
-    <li><b>시작</b>을 누르면 오른쪽 아래에 타이머가 뜬다. 시간이 줄수록 재촉이 심해진다.</li>
-    <li>난이도가 <b>어려움</b>이면 인물이 둘이 되고 구도가 반드시 지정된다.</li>
-  </ul>
+  <div id="cr-out"></div>
+  <div class="filterbar"><span data-ai-slot="crstory"></span><span data-ai-slot="creature"></span></div>
+  <div id="cr-ai"></div>
+
+  <h3>크리쳐 점검</h3>
+  <p class="small">그린 개체가 이 세계의 규칙을 지키는지 확인한다.</p>
+  <ul class="afcheck" id="cr-check"></ul>
+
 </section>
+
+<section class="blk" id="pask">
+  <h2 class="big">《피노》 설정에게 묻기</h2>
+  <p class="lede">설정집과 <a href="#pmemo">내 메모</a>를 읽고 답한다. 확정된 내용만 근거로 삼고, 없으면 없다고 말한다.</p>
+  <div class="warnbox"><b>학습이 아니라 참고다.</b> 모델을 다시 훈련시키는 것이 아니라, 물을 때마다 설정집과 메모를 함께 보내 읽게 하는 방식이다. 그래서 메모를 고치면 바로 다음 질문부터 반영된다.</div>
+  <textarea id="pa-q" rows="4" placeholder="예) 주인공이 자기 정체를 처음 의심하는 장면은 어디서 무엇 때문인가?"></textarea>
+  <div class="filterbar"><span data-ai-slot="pask"></span><label style="font-size:.84rem"><input type="checkbox" id="pa-memo" checked> 메모 포함</label></div>
+  <div id="pa-out"></div>
+  <div id="pa-log"></div>
+</section>
+
+<section class="blk" id="pmemo">
+  <h2 class="big">《피노》 내 메모</h2>
+  <p class="lede">자유롭게 적는 곳. 적은 내용은 <b>설정에게 묻기</b>와 <b>정합성 검사</b>, <b>크리쳐 사연</b>에 함께 보내진다. 확정된 것과 아이디어를 구분하려면 줄 앞에 <b>[확정]</b> <b>[아이디어]</b>를 붙여 둔다.</p>
+  <div class="warnbox">이 브라우저에만 저장된다. 캐시를 지우면 사라지므로 <b>복사</b>로 자주 백업한다. 다른 기기로 옮길 때는 복사해서 그쪽 메모에 붙여 넣는다.</div>
+  <textarea id="pm-text" rows="18" placeholder="[확정] 오두막은 강원도 평창 근처 산속이다&#10;[아이디어] 친구의 총은 아버지 유품일 수도"></textarea>
+  <div class="filterbar">
+    <button class="chip" id="pm-copy">복사</button>
+    <button class="chip" id="pm-save">파일로 받기</button>
+    <label class="chip" style="cursor:pointer">파일에서 불러오기<input type="file" id="pm-load" accept=".txt,text/plain" hidden></label>
+    <button class="chip" id="pm-clear">비우기</button>
+    <span class="count" id="pm-count"></span>
+  </div>
+</section>
+
+
+
+
+
+
 
 <section class="blk" id="ai">
   <h2 class="big">AI 연결</h2>
@@ -1824,6 +1855,8 @@ details.gdet[open] summary{margin-bottom:.5rem}
   <h3>쓰는 법</h3>
   <ul class="small">
     <li><b>AI로 잇기</b> — 📌로 고정한 칸을 기준으로 나머지 칸과 엔딩을 <b>색인 안에서</b> 골라 채운다. 앞 칸의 결과가 다음 칸의 원인이 되게 고르고, 고른 이유를 한 줄씩 보여 준다. 초반만 고정하면 앞에서 뒤로, 엔딩만 고정하면 뒤에서 앞으로 잇는다.</li>
+    <li><b>다음 화 시작</b> — 연재 모드에서만 보인다. 이번 화의 마지막 컷을 받아 다음 화의 회차 역할, 이어받을 것, 첫 세 컷, 쓸 만한 클리셰 둘을 제안한다.</li>
+    <li><b>캐릭터 구성기</b>의 <b>AI로 잇기</b>와 <b>인물 설정 짜기</b> — 📌로 고정한 요소를 기준으로 나머지를 색인에서 골라 한 인물로 잇고, 이름·배경·첫 등장 컷·대사 한 줄까지 확정한다.</li>
     <li><b>AI 새 소재</b> — 지금 흐름에 맞는 <b>사전에 없는</b> 소재를 하나 만들어 소재 칸 맨 위에 넣는다. 「사전 밖」으로 표시되며 별표할 수 있다.</li>
     <li><b>랜덤 구성기</b> 아래 <b>확정하고 만들기</b> — 지금 화면에 뽑힌 것만으로 세계관·인물·줄거리·컷 구성을 차례로 만든다. 앞 단계 결과가 다음 단계에 넘어가므로 넷이 서로 이어진다.</li>
     <li><b>즐겨찾기</b> 페이지의 <b>이 폴더로 만들기</b> — 보고 있는 폴더의 항목을 전부 재료로 같은 네 가지를 만든다.</li>
@@ -1946,6 +1979,8 @@ details.gdet[open] summary{margin-bottom:.5rem}
     <button class="chip" id="ch-go">캐릭터 뽑기</button>
   </div>
   <div id="ch-out"></div>
+  <div class="filterbar"><span data-ai-slot="charlink"></span><span data-ai-slot="charmake"></span></div>
+  <div id="ch-ai"></div>
   <hr class="rule">
   <div class="facets">
     <div class="fgroup"><span class="flabel">축</span><div class="chips">
@@ -1997,9 +2032,37 @@ details.gdet[open] summary{margin-bottom:.5rem}
     <button class="chip" id="fav-clear">전체 비우기</button>
     <span class="count" id="fav-count"></span>
   </div>
+  <details class="aidet" id="fm-wrap" open><summary id="fm-title">폴더 메모</summary>
+    <p class="small">담는 곳으로 지정된 폴더의 메모다. AI 결과의 <b>메모에 넣기</b>를 누르면 여기에 쌓인다. 폴더마다 따로 저장된다.</p>
+    <textarea id="fm-text" rows="10" placeholder="이 폴더에 대한 메모"></textarea>
+    <div class="filterbar"><button class="chip" id="fm-copy">복사</button><button class="chip" id="fm-clear">비우기</button><span class="count" id="fm-count"></span></div>
+  </details>
   <div class="filterbar" id="fav-ai-bar"></div>
   <div id="fav-ai-out"></div>
   <div id="fav-body"></div>
+  <details class="aidet" id="gd-wrap" open><summary>구글 드라이브 동기화</summary>
+    <p class="small">구글 드라이브의 <b>숨겨진 앱 전용 폴더</b>에 저장한다. 드라이브 화면에는 보이지 않고, 다른 파일은 건드리지 않는다. 즐겨찾기·폴더·모든 메모·아크 점검표·미정 체크가 이어지며, API 키는 올리지 않는다.</p>
+    <div class="filterbar">
+      <button class="chip" id="gd-link">구글로 연결</button>
+      <button class="chip" id="gd-now">지금 동기화</button>
+      <button class="chip" id="gd-hist">되돌리기 목록</button>
+      <button class="chip" id="gd-off">연결 끊기</button>
+    </div>
+    <p class="small" id="gd-msg">연결되어 있지 않다.</p>
+    <div id="gd-choice"></div>
+    <div id="gd-list"></div>
+  </details>
+  <details class="aidet"><summary>백업과 복원</summary>
+    <p class="small">즐겨찾기·폴더·모든 메모·아크 점검표·미정 체크를 파일 하나로 받는다. API 키는 넣지 않는다. 다른 기기나 캐시를 지운 뒤 이 파일을 불러오면 그대로 돌아온다.</p>
+    <div class="filterbar">
+      <button class="chip" id="bk-save">백업 파일 받기</button>
+      <label class="chip" style="cursor:pointer">백업 파일 불러오기<input type="file" id="bk-load" accept=".json,application/json" hidden></label>
+      <button class="chip" id="bk-copy">백업 내용 복사</button>
+      <span class="count" id="bk-msg"></span>
+    </div>
+    <textarea id="bk-paste" rows="3" placeholder="파일 대신 복사한 백업 내용을 여기에 붙여 넣고 아래 버튼을 누른다"></textarea>
+    <div class="filterbar"><button class="chip" id="bk-restore">붙여 넣은 내용으로 복원</button></div>
+  </details>
   <p class="small">항목을 별표하면 <b>담는 곳</b>으로 지정된 폴더에 들어간다. 1화·2화·단편처럼 나눠 두고, 목록에서 폴더를 바꿔 옮길 수 있다. 복사한 목록은 메모 앱에 붙여 두거나, AI에게 그대로 붙여넣어 “이 재료로 24쪽 단편 구성을 짜 줘”라고 물어보기 좋다. 기기를 옮길 때도 이 텍스트만 있으면 된다.</p>
 </section>
 
@@ -2333,7 +2396,7 @@ details.gdet[open] summary{margin-bottom:.5rem}
 <footer>
   <p>만화 클리셰 · 연출 사전 — 본편 10개 · 클리셰 611 · 소재 138 · 캐릭터 221 · 엔딩 264 · 에피소드 220 · 14개 장르. 판정은 2020년대 상업 만화·웹툰 시장의 평균 독자를 기준으로 한 것이며, 절대적인 것이 아니다.</p>
 </footer>
-<div id="tr-float" hidden><div class="face" id="tr-face">🙂</div><div class="time" id="tr-time">00:00</div><div class="msg" id="tr-msg"></div><button id="tr-min" title="접기">─</button></div>
+<div id="tr-float" hidden><div class="face" id="tr-face">🙂</div><div class="time" id="tr-time">00:00</div><div class="msg" id="tr-msg"></div><button id="tr-min" title="접기">─</button><button id="tr-stop" title="멈추기">✕</button></div>
 
 </div>
 <script>
@@ -2370,7 +2433,6 @@ var PAGES=[
  {g:'도구',id:'shuffle',t:'랜덤 구성기',d:'소재·클리셰·엔딩을 한 번에. 연재 모드와 고정 지원.'},
  {g:'도구',id:'arc',t:'아크 점검표',d:'장편용. 네 칸을 채워 점검하고 장르별 예시 48개.'},
  {g:'도구',id:'epidx',t:'에피소드 소재 색인',d:'220개. 한 화를 채우는 작은 사건. 로맨스·개그·일상.'},
- {g:'도구',id:'draw',t:'그림 주제 뽑기',d:'일러스트 한 장용. 인물·상황·분위기·구도·소품.'},
  {g:'도구',id:'ai',t:'AI 연결',d:'OpenRouter 키를 넣고 해석·추천·줄거리·대화를 쓴다.'},
  {g:'도구',id:'index',t:'클리셰 색인',d:'611개. 기능·연출 도구·배치·상태·지면으로 검색.'},
  {g:'도구',id:'motifidx',t:'소재 색인',d:'138개. 세계 규칙·사회 조건·인물 처지. 원작 표시 포함.'},
@@ -2455,89 +2517,7 @@ function show(id){
   if(id==='favs') renderFavs();
   try{ window.scrollTo(0,0); }catch(e){}
 }
-window.addEventListener('hashchange',function(){ 
-
-
-// ----- 아크 점검표 -----
-(function(){
-  var box=document.getElementById('af-result'); if(!box) return;
-  var ids=['af1','af2','af3','af4','af5'];
-  function val(i){ var e=document.getElementById(ids[i]); return e?e.value.trim():''; }
-  function load(){ try{ var s=JSON.parse(localStorage.getItem('arcForm')||'[]');
-    ids.forEach(function(id,i){ var e=document.getElementById(id); if(e&&s[i]) e.value=s[i]; }); }catch(e){} }
-  function save(){ try{ localStorage.setItem('arcForm', JSON.stringify(ids.map(function(_,i){return val(i);}))); }catch(e){} }
-  ids.forEach(function(id){ var e=document.getElementById(id); if(e) e.addEventListener('input',save); });
-  load();
-  function check(){
-    var g=val(0), t=val(1), c=val(2), s=val(3), n=val(4);
-    var out=[];
-    function row(ok,txt){ return '<li class="'+(ok?'ok':'no')+'">'+(ok?'\u2713':'\u2715')+' '+txt+'</li>'; }
-    out.push(row(!!g,'목표가 적혀 있다'));
-    out.push(row(!!t,'중간 뒤집기가 있다'));
-    out.push(row(!!c,'끝의 변화가 있다 — 없으면 이 아크는 없어도 된다'));
-    out.push(row(!!s,'다음 씨앗이 있다 — 없으면 다음 아크가 처음부터 다시 시작한다'));
-    out.push(row(!!n,'예상 화수를 정했다 — 안 정하면 늘어난다'));
-    if(c) out.push(row(c.length<=40,'변화를 한 문장으로 썼다 ('+c.length+'자)'));
-    if(t&&c) out.push(row(true,'뒤집기와 변화가 이어지는지 직접 확인 — 「'+t+'」 때문에 「'+c+'」가 되었는가'));
-    if(s&&g) out.push(row(true,'씨앗이 이번 결과에서 나왔는지 직접 확인 — 「'+g+'」의 결과로 「'+s+'」가 남는가'));
-    var done=[g,t,c,s,n].filter(Boolean).length;
-    box.innerHTML='<h3>점검 결과 <span class="small">('+done+'/5 채움)</span></h3><ul class="afcheck">'+out.join('')+'</ul>';
-  }
-  function text(){
-    return ['아크 점검표','1. 목표: '+val(0),'2. 뒤집기: '+val(1),'3. 끝의 변화: '+val(2),'4. 다음 씨앗: '+val(3),'예상 화수: '+val(4)].join('\n');
-  }
-  document.getElementById('af-check').addEventListener('click',check);
-  document.getElementById('af-clear').addEventListener('click',function(){
-    ids.forEach(function(id){ var e=document.getElementById(id); if(e) e.value=''; }); save(); box.innerHTML=''; });
-  // 장르별 예시
-  var gsel=document.getElementById('af-genre'), elist=document.getElementById('af-exlist');
-  if(gsel && elist){
-    Object.keys(ARCEX).forEach(function(g){ var o=document.createElement('option'); o.textContent=g; gsel.appendChild(o); });
-    var drawEx=function(){
-      var arr=ARCEX[gsel.value]||[];
-      elist.innerHTML=arr.map(function(a,i){
-        return '<div class="arcex"><div class="b"><b>'+a[0]+'</b>'+
-          '<span>뒤집기 · '+a[1]+'</span><span>변화 · '+a[2]+'</span><span>씨앗 · '+a[3]+'</span></div>'+
-          '<span class="arclen">'+a[4]+'</span>'+
-          '<button class="czre" data-ex="'+i+'" title="이 예시로 채우기">\u2193</button></div>';
-      }).join('');
-      [].slice.call(elist.querySelectorAll('button[data-ex]')).forEach(function(b){
-        b.addEventListener('click',function(){
-          var a=arr[+b.getAttribute('data-ex')];
-          ids.forEach(function(id,k){ var e=document.getElementById(id); if(e) e.value=a[k]; });
-          save(); check();
-        });
-      });
-    };
-    gsel.addEventListener('change',drawEx); drawEx();
-  }
-  document.getElementById('af-copy').addEventListener('click',function(){
-    var b=document.getElementById('af-copy'), t=text();
-    try{ if(navigator.clipboard&&navigator.clipboard.writeText){ navigator.clipboard.writeText(t).catch(function(){window.prompt('복사해서 쓰세요',t);});
-      b.textContent='복사됨'; setTimeout(function(){b.textContent='복사';},1200); } else window.prompt('복사해서 쓰세요',t);
-    }catch(e){ window.prompt('복사해서 쓰세요',t); } });
-})();
-(function(){
-  var t=document.getElementById('topfolder');
-  if(t){ fillFolderSelects(); t.addEventListener('change',function(){
-    if(t.value==='__new'){
-      var inp=document.getElementById('fav-new');
-      if(inp){ location.hash='#favs'; setTimeout(function(){ inp.focus(); },50); }
-      t.value=CURFOLDER; return;
-    }
-    if(false){
-      var v='';
-      if(v && FOLDERS.indexOf(v)<0){ FOLDERS.push(v); CURFOLDER=v; if(pinoOn()&&pinoInsert()&&window.__rebuildNav) window.__rebuildNav(); }
-      foldSave(); fillFolderSelects();
-      if(typeof renderFavs==='function') renderFavs();
-      return;
-    }
-    CURFOLDER=t.value; foldSave(); fillFolderSelects();
-    if(typeof renderFavs==='function') renderFavs(); }); }
-  updateFavCount();
-})();
-aiBar(); favAiBar(); aiSlots();
-show((location.hash||'#home').slice(1)); });
+window.addEventListener('hashchange',function(){ show((location.hash||'#home').slice(1)); });
 // 이전/다음
 pages.forEach(function(el){
   if(el.id==='home') return;
@@ -2552,11 +2532,12 @@ pages.forEach(function(el){
 
 var FOLDERS=['기본'], CURFOLDER='기본', FAVDIR={};
 try{ var fr=localStorage.getItem('mangaFolders'); if(fr){ var o=JSON.parse(fr); FOLDERS=o.list||['기본']; CURFOLDER=o.cur||'기본'; FAVDIR=o.dir||{}; } }catch(e){}
-function foldSave(){ try{ localStorage.setItem('mangaFolders', JSON.stringify({list:FOLDERS,cur:CURFOLDER,dir:FAVDIR})); }catch(e){} }
+function foldSave(){ keepSave('mangaFolders',{list:FOLDERS,cur:CURFOLDER,dir:FAVDIR}); }
 function updateFavCount(){
   var n=document.getElementById('topfavn'); if(n) n.textContent=Object.keys(FAV).length;
 }
 function fillFolderSelects(){
+  if(typeof fmRender==='function') setTimeout(fmRender,0);
   var t=document.getElementById('topfolder');
   if(t){ t.innerHTML=FOLDERS.map(function(f){return '<option'+(f===CURFOLDER?' selected':'')+'>'+f+'</option>';}).join('')
       +'<option value="__new">+ 새 폴더…</option>'; }
@@ -2566,10 +2547,58 @@ function fillFolderSelects(){
     b.innerHTML='<option value="*">전체</option>'+FOLDERS.map(function(f){return '<option>'+f+'</option>';}).join('');
     b.value=FOLDERS.indexOf(v)>-1||v==='*'?v:'*'; }
 }
+
+// ----- 데이터 버전 · 업데이트 호환 -----
+var DATA_VER=2;
+/* 항목 이름을 바꿀 때 여기에 「옛 키 → 새 키」를 남긴다. 예) 'c|배급 줄':'c|배급 행렬' */
+var ALIAS={
+};
+function dataMigrate(){
+  var cur=1; try{ cur=parseInt(localStorage.getItem('mangaDataVer')||'1',10)||1; }catch(e){}
+  if(cur>DATA_VER){
+    window.__dataNewer=true;
+    var b=document.createElement('div'); b.className='verbar';
+    b.innerHTML='이 기기의 데이터는 <b>더 새 버전</b>에서 저장되었다. 새로고침하면 최신 사이트를 받는다. <button class="chip" onclick="location.reload()">새로고침</button>';
+    document.body.insertBefore(b, document.body.firstChild);
+    return;
+  }
+  if(cur<DATA_VER){
+    try{ var snap={at:new Date().toISOString(), from:cur, data:{}};
+      ['mangaFav','mangaFolders','folderMemo','pinoMemo','pinoTodo','arcForm'].forEach(function(k){ var v=localStorage.getItem(k); if(v!==null) snap.data[k]=v; });
+      localStorage.setItem('mangaPreMigrate', JSON.stringify(snap)); }catch(e){}
+  }
+  // 이름 변경 따라가기 (매번 실행해도 안전)
+  var moved=0;
+  Object.keys(ALIAS).forEach(function(o){
+    var n=ALIAS[o]; if(!FAV[o]) return;
+    FAV[n]=FAV[o]; delete FAV[o];
+    if(FAVMETA[o]!==undefined){ FAVMETA[n]=FAVMETA[o]; delete FAVMETA[o]; }
+    if(FAVDIR[o]!==undefined){ FAVDIR[n]=FAVDIR[o]; delete FAVDIR[o]; }
+    moved++;
+  });
+  if(moved){ favSave(); foldSave(); }
+  try{ localStorage.setItem('mangaDataVer', String(DATA_VER)); }catch(e){}
+}
+var KNOWN=null;
+function knownHas(t,nm){
+  if(!KNOWN){
+    KNOWN={c:{},m:{},ch:{},ep:{}};
+    ROWS.forEach(function(r){ KNOWN.c[r[0]]=1; });
+    MOTIFDATA.forEach(function(r){ KNOWN.m[r[0]]=1; });
+    CHARS.forEach(function(r){ KNOWN.ch[r[2]]=1; });
+    if(typeof EPM!=='undefined') for(var g in EPM) EPM[g].forEach(function(x){ KNOWN.ep[x[0]]=1; });
+  }
+  if(!KNOWN[t]) return true;
+  return !!KNOWN[t][nm];
+}
 // ----- 즐겨찾기 -----
 var FAV={}, FAVMETA={};
 try{ var raw=localStorage.getItem('mangaFav'); if(raw){ var o=JSON.parse(raw); FAV=o.f||{}; FAVMETA=o.m||{}; } }catch(e){}
-function favSave(){ try{ localStorage.setItem('mangaFav', JSON.stringify({f:FAV,m:FAVMETA})); }catch(e){} }
+function keepSave(key, obj){
+  try{ var old={}; try{ old=JSON.parse(localStorage.getItem(key)||'{}')||{}; }catch(e){}
+    for(var k in obj) old[k]=obj[k]; localStorage.setItem(key, JSON.stringify(old)); }catch(e){}
+}
+function favSave(){ keepSave('mangaFav',{f:FAV,m:FAVMETA}); }
 function favToggle(key, meta){
   if(FAV[key]){ delete FAV[key]; delete FAVMETA[key]; delete FAVDIR[key]; foldSave(); }
   else { FAV[key]=1; if(meta) FAVMETA[key]=meta; FAVDIR[key]=CURFOLDER; foldSave(); }
@@ -2590,22 +2619,27 @@ document.addEventListener('click',function(ev){
   favToggle(b.getAttribute('data-k'), b.getAttribute('data-meta')||'');
 });
 // 즐겨찾기 페이지
-var LABELS={c:'클리셰',m:'소재',ch:'캐릭터',e:'엔딩',a:'아크',p:'회차',ep:'에피소드',cr:'크리쳐',lt:'편지 지점',dw:'그림 주제',cz:'소재'};
+var LABELS={x:'사전에서 빠진 항목',c:'클리셰',m:'소재',ch:'캐릭터',e:'엔딩',a:'아크',p:'회차',ep:'에피소드',cr:'크리쳐',lt:'편지 지점',dw:'그림 주제',cz:'소재'};
 function renderFavs(){
   var box=document.getElementById('fav-body'); if(!box) return;
   fillFolderSelects();
   var vsel=document.getElementById('fav-view'), view=vsel?vsel.value:'*';
   var keys=Object.keys(FAV).filter(function(k){ return view==='*' || (FAVDIR[k]||'기본')===view; });
-  var groups={c:[],m:[],ch:[],e:[],a:[],p:[],ep:[],cr:[],lt:[],dw:[],cz:[]};
-  keys.forEach(function(k){ var t=k.split('|')[0]; if(groups[t]) groups[t].push(k); });
+  var groups={c:[],m:[],ch:[],e:[],a:[],p:[],ep:[],cr:[],lt:[],dw:[],cz:[],x:[]};
+  keys.forEach(function(k){ var t=k.split('|')[0], nm=k.slice(k.indexOf('|')+1);
+    if(!knownHas(t,nm)){ groups.x.push(k); return; }
+    if(groups[t]) groups[t].push(k); else groups.x.push(k); });
   var html='';
-  ['c','m','ch','e','a','p','ep','cr','lt','dw','cz'].forEach(function(t){
+  ['c','m','ch','e','a','p','ep','cr','lt','dw','cz','x'].forEach(function(t){
     var arr=groups[t]; if(!arr.length) return;
-    html+='<div class="favgrp"><h3>'+LABELS[t]+' <span class="small">('+arr.length+')</span></h3><ul class="favlist">';
+    html+='<div class="favgrp"><h3>'+(LABELS[t]||t)+' <span class="small">('+arr.length+')</span></h3><ul class="favlist">';
     arr.forEach(function(k){
       var nm=k.slice(k.indexOf('|')+1), memo=FAVMETA[k]||'';
       if(t==='c'){ for(var i=0;i<ROWS.length;i++){ if(ROWS[i][0]===nm){ memo=ROWS[i][1]+' · '+ROWS[i][2]+' · '+ROWS[i][3]+' · '+ROWS[i][6]+' — '+ROWS[i][9]; break; } } }
-      html+='<li><button class="fav" data-k="'+k+'" aria-pressed="true">★</button><div class="body"><b>'+nm+'</b>'+(memo?'<span>'+memo+'</span>':'')+'</div></li>';
+      var dir=FAVDIR[k]||'기본';
+      if(t==='x') memo='사전에서 빠지거나 이름이 바뀐 항목. 별표는 남겨 두었다.'+(memo?' — '+memo:'');
+      html+='<li><button class="fav" data-k="'+k+'" aria-pressed="true">★</button><div class="body"><b>'+nm+'</b>'+(memo?'<span>'+memo+'</span>':'')+'</div>'+
+        '<select class="favmove" data-k="'+k+'">'+FOLDERS.map(function(f){return '<option'+(f===dir?' selected':'')+'>'+f+'</option>';}).join('')+'</select></li>';
     });
     html+='</ul></div>';
   });
@@ -2640,7 +2674,7 @@ function renderFavs(){
   var fc=document.getElementById('fav-cur'), fn=document.getElementById('fav-new'),
       fa=document.getElementById('fav-add'), fd=document.getElementById('fav-del'),
       fv=document.getElementById('fav-view');
-  if(fc) fc.addEventListener('change',function(){ CURFOLDER=fc.value; foldSave(); });
+  if(fc) fc.addEventListener('change',function(){ CURFOLDER=fc.value; foldSave(); fmRender(); });
   if(fa) fa.addEventListener('click',function(){
     var v=(fn.value||'').trim(); if(!v||FOLDERS.indexOf(v)>-1) return;
     FOLDERS.push(v); CURFOLDER=v; fn.value=''; foldSave(); renderFavs();
@@ -2664,16 +2698,22 @@ function renderFavs(){
 
 
 // ----- 《피노》 전용 -----
-var CREA={"a":[["멧돼지",4,"g"],["고라니",4,"g"],["노루",4,"g"],["사슴",4,"g"],["반달가슴곰",4,"g"],["표범",4,"g"],["삵",3,"g"],["너구리",3,"g"],["오소리",3,"b"],["여우",3,"g"],["멧토끼",3,"g"],["수달",3,"w"],["담비",3,"c"],["고양이",3,"c"],["개",3,"g"],["염소",3,"g"],["소",4,"g"],["말",4,"g"],["돼지",4,"g"],["사향노루",3,"g"],["청설모",2,"c"],["다람쥐",2,"c"],["두더지",2,"b"],["고슴도치",2,"g"],["박쥐",2,"f"],["집쥐",2,"b"],["족제비",2,"g"],["하늘다람쥐",2,"f"],["까치",2,"f"],["까마귀",2,"f"],["참새",1,"f"],["직박구리",2,"f"],["황새",3,"f"],["두루미",3,"f"],["왜가리",3,"f"],["올빼미",2,"f"],["소쩍새",2,"f"],["수리부엉이",3,"f"],["꿩",2,"g"],["오리",2,"w"],["갈매기",2,"f"],["딱따구리",2,"c"],["제비",1,"f"],["뻐꾸기",2,"f"],["동박새",1,"f"],["매",2,"f"],["잉어",2,"w"],["붕어",2,"w"],["메기",3,"w"],["가물치",3,"w"],["미꾸라지",1,"w"],["송사리",1,"w"],["쏘가리",2,"w"],["장어",2,"w"],["두꺼비",1,"g"],["청개구리",1,"c"],["도롱뇽",1,"w"],["맹꽁이",1,"b"],["구렁이",3,"g"],["살모사",2,"g"],["유혈목이",2,"g"],["남생이",2,"w"],["자라",2,"w"],["도마뱀",1,"c"],["사마귀",1,"g"],["장수풍뎅이",1,"f"],["사슴벌레",1,"g"],["매미",1,"f"],["귀뚜라미",1,"g"],["여치",1,"g"],["메뚜기",1,"g"],["잠자리",1,"f"],["나비",1,"f"],["나방",1,"f"],["반딧불이",1,"f"],["무당벌레",1,"f"],["물장군",1,"w"],["소금쟁이",1,"w"],["거미",1,"c"],["지네",1,"b"],["공벌레",1,"g"],["개미",1,"g"],["말벌",1,"f"],["꿀벌",1,"f"],["달팽이",1,"c"],["지렁이",1,"b"],["가재",1,"w"],["게",1,"w"],["새우",1,"w"],["우렁이",1,"w"],["거머리",1,"w"],["누에",1,"g"],["금붕어",1,"w"],["구피",1,"w"],["비단잉어",2,"w"],["햄스터",1,"b"],["기니피그",1,"g"],["토끼",2,"g"],["앵무새",1,"f"],["잉꼬",1,"f"],["카나리아",1,"f"],["십자매",1,"f"],["거북",2,"w"],["남생이거북",2,"w"],["이구아나",2,"c"],["도마뱀붙이",1,"c"],["고슴도치(애완)",1,"g"],["페럿",2,"g"],["친칠라",1,"c"],["사슴벌레(사육)",1,"g"],["거미(타란툴라)",1,"c"],["달팽이(애완)",1,"c"],["금붕어(유금)",1,"w"],["메추리",1,"g"],["닭",2,"g"],["거위",2,"w"],["칠면조",2,"g"],["당나귀",3,"g"],["조랑말",3,"g"],["양",3,"g"],["귀신고래",5,"w"],["혹등고래",5,"w"],["밍크고래",5,"w"],["범고래",5,"w"],["상괭이",3,"w"],["돌고래",4,"w"],["고래상어",5,"w"],["백상아리",4,"w"],["청상아리",4,"w"],["가오리",3,"w"],["대왕오징어",4,"w"],["문어",2,"w"],["참치",3,"w"],["방어",3,"w"],["개복치",4,"w"],["바다거북",3,"w"],["물범",3,"w"],["바다사자",4,"w"],["해파리",2,"w"],["불가사리",1,"w"],["성게",1,"w"],["따개비",1,"w"],["멍게",1,"w"],["해마",1,"w"],["대게",2,"w"],["문어(대왕)",3,"w"],["전복",1,"w"],["굴",1,"w"]],"p":{"4":[["골격","몸 전체의 뼈대와 크기를 정한다"],["몸통","가슴과 등의 형태"]],"3":[["머리","두개골과 얼굴 윤곽"],["다리","이동 방식을 정한다"],["꼬리","균형과 위협 표시"]],"2":[["팔·앞다리","붙잡는 방식"],["등·날개","등에 붙은 구조물"],["눈","시야와 인상"],["입","먹는 방식"]],"1":[["표면","피부·비늘·인분·점액"],["발끝","접지 방식"],["소리","울음과 진동"],["더듬이·촉수","감지 기관"]],"5":[["골격","몸 전체의 뼈대와 크기를 정한다"],["몸통","가슴과 등의 형태"]]},"t":["마지막에 먹은 것의 소리를 낸다.","먹은 것의 기억을 가진다.","먹은 것의 움직임을 그대로 따라 한다.","여러 번 먹을수록 나중 것이 겉으로 드러난다."],"sz":{"5":"초대형","4":"대형","3":"중형","2":"소형","1":"극소형"},"mv":{"g":"지상","f":"비행","w":"수생","c":"등반","b":"굴"}};
+var CREA={"a":[["멧돼지",4,"g"],["고라니",4,"g"],["노루",4,"g"],["사슴",4,"g"],["반달가슴곰",4,"g"],["표범",4,"g"],["삵",3,"g"],["너구리",3,"g"],["오소리",3,"b"],["여우",3,"g"],["멧토끼",3,"g"],["수달",3,"w"],["담비",3,"c"],["고양이",3,"c"],["개",3,"g"],["염소",3,"g"],["소",4,"g"],["말",4,"g"],["돼지",4,"g"],["사향노루",3,"g"],["청설모",2,"c"],["다람쥐",2,"c"],["두더지",2,"b"],["고슴도치",2,"g"],["박쥐",2,"f"],["집쥐",2,"b"],["족제비",2,"g"],["하늘다람쥐",2,"f"],["까치",2,"f"],["까마귀",2,"f"],["참새",1,"f"],["직박구리",2,"f"],["황새",3,"f"],["두루미",3,"f"],["왜가리",3,"f"],["올빼미",2,"f"],["소쩍새",2,"f"],["수리부엉이",3,"f"],["꿩",2,"g"],["오리",2,"w"],["갈매기",2,"f"],["딱따구리",2,"c"],["제비",1,"f"],["뻐꾸기",2,"f"],["동박새",1,"f"],["매",2,"f"],["잉어",2,"w"],["붕어",2,"w"],["메기",3,"w"],["가물치",3,"w"],["미꾸라지",1,"w"],["송사리",1,"w"],["쏘가리",2,"w"],["장어",2,"w"],["두꺼비",1,"g"],["청개구리",1,"c"],["도롱뇽",1,"w"],["맹꽁이",1,"b"],["구렁이",3,"g"],["살모사",2,"g"],["유혈목이",2,"g"],["남생이",2,"w"],["자라",2,"w"],["도마뱀",1,"c"],["사마귀",1,"g"],["장수풍뎅이",1,"f"],["사슴벌레",1,"g"],["매미",1,"f"],["귀뚜라미",1,"g"],["여치",1,"g"],["메뚜기",1,"g"],["잠자리",1,"f"],["나비",1,"f"],["나방",1,"f"],["반딧불이",1,"f"],["무당벌레",1,"f"],["물장군",1,"w"],["소금쟁이",1,"w"],["거미",1,"c"],["지네",1,"b"],["공벌레",1,"g"],["개미",1,"g"],["말벌",1,"f"],["꿀벌",1,"f"],["달팽이",1,"c"],["지렁이",1,"b"],["가재",1,"w"],["게",1,"w"],["새우",1,"w"],["우렁이",1,"w"],["거머리",1,"w"],["누에",1,"g"],["금붕어",1,"w"],["구피",1,"w"],["비단잉어",2,"w"],["햄스터",1,"b"],["기니피그",1,"g"],["토끼",2,"g"],["앵무새",1,"f"],["잉꼬",1,"f"],["카나리아",1,"f"],["십자매",1,"f"],["거북",2,"w"],["남생이거북",2,"w"],["이구아나",2,"c"],["도마뱀붙이",1,"c"],["고슴도치(애완)",1,"g"],["페럿",2,"g"],["친칠라",1,"c"],["사슴벌레(사육)",1,"g"],["거미(타란툴라)",1,"c"],["달팽이(애완)",1,"c"],["금붕어(유금)",1,"w"],["메추리",1,"g"],["닭",2,"g"],["거위",2,"w"],["칠면조",2,"g"],["당나귀",3,"g"],["조랑말",3,"g"],["양",3,"g"],["귀신고래",5,"w"],["혹등고래",5,"w"],["밍크고래",5,"w"],["범고래",5,"w"],["상괭이",3,"w"],["돌고래",4,"w"],["고래상어",5,"w"],["백상아리",4,"w"],["청상아리",4,"w"],["가오리",3,"w"],["대왕오징어",4,"w"],["문어",2,"w"],["참치",3,"w"],["방어",3,"w"],["개복치",4,"w"],["바다거북",3,"w"],["물범",3,"w"],["바다사자",4,"w"],["해파리",2,"w"],["불가사리",1,"w"],["성게",1,"w"],["따개비",1,"w"],["멍게",1,"w"],["해마",1,"w"],["대게",2,"w"],["문어(대왕)",3,"w"],["전복",1,"w"],["굴",1,"w"],["금괴",1,"o"],["금반지",1,"o"],["지폐 뭉치",1,"o"],["동전",1,"o"],["권총",1,"o"],["소총",2,"o"],["탄약",1,"o"],["다이아몬드",1,"o"],["명품 시계",1,"o"],["휴대폰",1,"o"],["열쇠",1,"o"],["약병",1,"o"],["통조림",1,"o"],["빵",1,"o"],["쌀 포대",2,"o"],["고기",1,"o"],["사과",1,"o"],["술병",1,"o"],["담배",1,"o"],["사탕",1,"o"],["라면",1,"o"],["케이크",1,"o"],["칼",1,"o"],["방독면",2,"o"],["배터리",1,"o"],["연료통",2,"o"],["구급상자",1,"o"],["훈장",1,"o"],["왕관",1,"o"],["사진",1,"o"],["인형",1,"o"],["거울",1,"o"],["오르골",1,"o"],["편지",1,"o"],["씨앗",1,"o"]],"p":{"4":[["골격","몸 전체의 뼈대와 크기를 정한다"],["몸통","가슴과 등의 형태"]],"3":[["머리","두개골과 얼굴 윤곽"],["다리","이동 방식을 정한다"],["꼬리","균형과 위협 표시"]],"2":[["팔·앞다리","붙잡는 방식"],["등·날개","등에 붙은 구조물"],["눈","시야와 인상"],["입","먹는 방식"]],"1":[["표면","피부·비늘·인분·점액"],["발끝","접지 방식"],["소리","울음과 진동"],["더듬이·촉수","감지 기관"]],"5":[["골격","몸 전체의 뼈대와 크기를 정한다"],["몸통","가슴과 등의 형태"]]},"t":["마지막에 먹은 것의 소리를 낸다.","먹은 것의 기억을 가진다.","먹은 것의 움직임을 그대로 따라 한다.","여러 번 먹을수록 나중 것이 겉으로 드러난다."],"sz":{"5":"초대형","4":"대형","3":"중형","2":"소형","1":"극소형"},"mv":{"g":"지상","f":"비행","w":"수생","c":"등반","b":"굴","o":"사물"}};
 var PINOTODO=["이라의 정확한 기원","피노의 생물학적 구조","피노가 기억을 갖는 원리","‘피노’라는 이름의 뜻","온실의 규모와 구조","온실 밖 인간들의 정식 명칭","주인공의 이름","주인공의 현재 직업","어머니의 이름","병실 소녀의 이름","오두막 소녀의 이름","친구의 이름","친구가 지금 모습이 된 과정","친구의 총 설정","사냥꾼의 이름","사냥꾼의 딸이 만들어진 뒤의 행방","최종 피노의 이름","최종 피노가 병실 소녀를 먹게 된 과정","병실 소녀가 인간이었는지 피노였는지","인간 복제의 결과","화염 무기의 피노 식별 방식","오두막 소녀의 최종 선택을 보여줄 것인가","제목 《피노》와 마지막 문장의 연결"];
 function pinoOn(){
   try{ var o=JSON.parse(localStorage.getItem('mangaFolders')||'{}');
     return (o.list||[]).some(function(f){ return f.replace(/\s/g,'')==='피노설정집'; }); }catch(e){ return false; }
 }
-function pinoPage(){ return {g:'작품',id:'pino',t:'《피노》 설정집',d:'전용 페이지. 세계관·인물·미정 목록.'}; }
+var PINOPAGES=[
+  {g:'작품',id:'pino',t:'《피노》 설정집',d:'세계관·인물·결말·미정 목록·편지 지점.'},
+  {g:'작품',id:'pcre',t:'《피노》 크리쳐',d:'먹은 것으로 조합하는 크리쳐와 그 사연.'},
+  {g:'작품',id:'pask',t:'《피노》 설정에게 묻기',d:'설정집과 메모를 읽고 답한다.'},
+  {g:'작품',id:'pmemo',t:'《피노》 내 메모',d:'자유 메모. AI가 함께 읽는다.'}
+];
 function pinoInsert(){
-  if(PAGES.some(function(p){return p.id==='pino';})) return false;
-  PAGES.push(pinoPage()); return true;
+  var added=false;
+  PINOPAGES.forEach(function(p){ if(!PAGES.some(function(x){return x.id===p.id;})){ PAGES.push(p); added=true; } });
+  return added;
 }
 (function(){
   var box=document.getElementById('pino-todo'); if(!box) return;
@@ -2751,7 +2791,7 @@ function pinoInsert(){
     }
     function pickOne(c, exclude, leader){
       var pool=CREA.a.filter(function(x){ return exclude.indexOf(x[0])<0; });
-      if(leader){
+      if(leader){ pool=pool.filter(function(x){ return x[2]!=='o'; });
         if(c.sz){ var a=pool.filter(function(x){ return String(x[1])===c.sz && (!c.mv||x[2]===c.mv); });
           if(!a.length) a=pool.filter(function(x){ return String(x[1])===c.sz; });
           if(a.length) return rnd(a); }
@@ -2759,7 +2799,40 @@ function pinoInsert(){
         return rnd(pool);
       }
       if(c.mv && Math.random()<0.6){ var m=pool.filter(function(x){ return x[2]===c.mv; }); if(m.length) pool=m; }
+      else if(c.mv!=='o' && Math.random()<0.8){ pool=pool.filter(function(x){ return x[2]!=='o'; }); }
       return rnd(pool);
+    }
+
+    function bat(w){ var c=w.charCodeAt(w.length-1)-44032; return (c>=0&&c<=11171)?(c%28!==0):false; }
+    function jo(w,p){ var b=bat(w);
+      if(p==='을') return w+(b?'을':'를'); if(p==='이') return w+(b?'이':'가');
+      if(p==='은') return w+(b?'은':'는'); if(p==='과') return w+(b?'과':'와'); return w; }
+    function chainText(list, human){
+      var objs=list.filter(function(x){ return x[2]==='o'; }).map(function(x){ return x[0]; });
+      var lives=list.filter(function(x){ return x[2]!=='o'; }).sort(function(a,b){ return a[1]-b[1]; });
+      if(!lives.length) return '';
+      var lines=[], str;
+      if(objs.length){
+        var o=objs.length===1?objs[0]:objs.slice(0,-1).map(function(x){return x;}).join(', ')+(objs.length>1?', '+objs[objs.length-1]:'');
+        if(objs.length===2) o=jo(objs[0],'과')+' '+objs[1];
+        str=jo(o,'을')+' 삼킨 '+lives[0][0];
+      } else if(lives.length===1){
+        str=jo(lives[0][0],'이')+' 이라에 닿아 피노가 되었다';
+      } else {
+        str=jo(lives[0][0],'을')+' 먹은 '+lives[1][0];
+      }
+      var start=objs.length?1:2;
+      for(var i=start;i<lives.length;i++){
+        if(i===lives.length-1) str=jo(str,'을')+' '+jo(lives[i][0],'이')+' 먹었다';
+        else str=jo(str,'을')+' 먹은 '+lives[i][0];
+      }
+      if(objs.length && lives.length===1) str+='. 그것이 피노가 되었다';
+      if(!objs.length && lives.length===2) str+='. 그것이 피노가 되었다';
+      str+='.';
+      if(human) str+=' 그리고 그것이 사람을 먹었다.';
+      var big=lives[lives.length-1][0], first=objs.length?objs[0]:lives[0][0];
+      if(list.length>1) str+='\n마지막에 먹은 '+big+'의 형태가 골격이 되고, 처음 먹힌 '+jo(first,'은')+' 말단과 표면에 남는다.';
+      return str;
     }
     function newTraits(){
       var t1=rnd(CREA.t), t2=rnd(CREA.t.filter(function(x){return x!==t1;}));
@@ -2929,7 +3002,7 @@ function maskOn(){ var c=document.getElementById('sf-mask'); return !c || c.chec
 var TRSTAGE=[[0.85,"🙂","시작. 첫 컷부터 잡는다."],[0.7,"🙂","아직 여유 있다. 배치부터."],[0.55,"😀","절반 왔다. 대사는 나중에."],[0.4,"😐","이제 지우지 말고 그려라."],[0.28,"😟","남은 컷 수를 세라."],[0.18,"😰","완성이 우선이다. 잘 그리려 하지 마라."],[0.08,"😱","마지막 컷부터 확보해라."],[0.0,"🔥","시간 끝. 지금 상태로 덮는다."]];
 function trFloat(){
   var box=document.getElementById('tr-float'); if(!box) return;
-  if(!TRAIN.on || !TRAIN.fixed){ box.hidden=true; box.className=''; return; }
+  if(!TRAIN.fixed || !(TRAIN.on || TRAIN.mode==='draw')){ box.hidden=true; box.className=''; return; }
   box.hidden=false;
   var left=TRAIN.limit-(Date.now()-TRAIN.t0), r=Math.min(1,left/TRAIN.limit), over=left<0;
   window.__trTest=function(x){ TRAIN.t0=Date.now()-TRAIN.limit*(1-x); trFloat(); };
@@ -2947,70 +3020,16 @@ function trFloat(){
   box.className=(box.classList.contains('mini')?'mini ':'')+(over?'over':(r<=0.2?'warn':''));
 }
 (function(){
+  var s=document.getElementById('tr-stop');
+  if(s) s.addEventListener('click',function(){ trReset(); TRAIN.mode='conti'; });
+})();
+(function(){
   var b=document.getElementById('tr-min'); if(!b) return;
   b.addEventListener('click',function(){
     var box=document.getElementById('tr-float');
     box.classList.toggle('mini');
     b.textContent=box.classList.contains('mini')?'▢':'─';
   });
-})();
-
-// ----- 그림 주제 -----
-var DW={sit:["젖은 옷을 말리는 중","빈 의자를 보고 있음","남의 짐을 들어 주는 중","문 앞에서 돌아서는 중","신발 끈을 다시 묶는 중","무언가를 주워 드는 중","창문을 닦는 중","줄을 서서 기다리는 중","버스를 놓친 직후","잠에서 막 깬 참","밥을 다 먹고 앉아 있는 중","짐을 싸는 중","짐을 푸는 중","누군가를 기다리는 중","먼저 일어서는 중","우산을 접는 중","전화를 끊은 직후","사진을 찍어 주는 중","약을 삼키는 중","손을 씻는 중","머리를 말리는 중","계단을 오르다 멈춘 참","길을 묻는 중","길을 알려 주는 중","물건을 고르는 중","값을 치르는 중","남의 말을 듣고 있는 중","졸다가 깬 참","무릎을 털고 일어서는 중","뒤를 돌아보는 중","빗물을 털어 내는 중","불을 끄러 가는 중","이름표를 떼는 중","열쇠를 찾는 중","가방을 뒤지는 중","편지를 봉하는 중","버리려다 멈춘 참","옷깃을 세우는 중","숨을 고르는 중","손을 내미는 중"],mood:["해 지기 직전","해 뜨기 직전","형광등 하나만 켜진 방","비 그친 직후","눈이 오기 시작한 순간","안개 낀 아침","한낮의 정면 햇빛","가로등 아래","창으로 들어온 빛 한 줄","정전된 저녁","촛불 하나","화면 불빛만","여름 오후의 그늘","장마철 습한 실내","겨울 이른 저녁","봄바람이 부는 낮","늦가을 흐린 날","폭염의 정오","첫눈 내린 아침","새벽 네 시"],comp:["부감 (위에서 내려다보기)","앙각 (아래에서 올려보기)","뒷모습","손만","발만","거울 너머","창 너머","문틈 사이","군중 속 한 사람","어깨 너머 시점","바닥에 놓인 시점","정면 클로즈업","전신 원경","반신 측면","역광 실루엣","물에 비친 상","좁은 세로 화면","가로로 긴 화면","두 인물 사이의 공간","프레임 밖으로 나가는 중"],prop:["우산","낡은 가방","손목시계","안경","담요","보온병","종이컵","비닐봉지","자전거","이어폰","열쇠 꾸러미","편지 봉투","화분","목도리","장갑 한 짝","운동화","모자","손전등","약통","사진 한 장","일기장","빗자루","고장 난 우산","접이식 의자","라디오","카세트테이프","손수건","반창고","빈 병","도시락통","수첩","볼펜","가위","실과 바늘","낚싯대","망치","줄자","삽","물뿌리개","공","배드민턴 라켓","줄넘기","인형","퍼즐 조각","구슬","딱지","연","풍선","종이비행기","우유갑"],lv:{"쉬움":"인물 하나, 배경은 단순하게.","보통":"인물과 배경을 함께. 시간대를 지켜 빛을 그린다.","어려움":"인물 둘. 손이나 발이 반드시 보이게."}};
-(function(){
-  var out=document.getElementById('dw-out'); if(!out) return;
-  function rnd(a){ return a[Math.floor(Math.random()*a.length)]; }
-  var cur={}, lock={};
-  function pickChar(axis){ var a=CHARS.filter(function(x){return x[0]===axis;}); var c=rnd(a); return c[2]+' <span class="small">('+c[1]+')</span>'; }
-  function drawOne(k){
-    if(k==='who'||k==='who2') cur[k]=pickChar('외모')+' · '+pickChar('성격');
-    else if(k==='sit') cur.sit=rnd(DW.sit);
-    else if(k==='mood') cur.mood=rnd(DW.mood);
-    else if(k==='comp') cur.comp=rnd(DW.comp);
-    else if(k==='prop') cur.prop=rnd(DW.prop);
-  }
-  function fields(){
-    var lv=document.getElementById('dw-lv').value, f=['who'];
-    if(lv==='어려움') f.push('who2');
-    f.push('sit','mood');
-    if(document.getElementById('dw-comp').checked || lv==='어려움') f.push('comp');
-    if(document.getElementById('dw-prop').checked) f.push('prop');
-    return f;
-  }
-  function gen(force){ fields().forEach(function(k){ if(force || !lock[k] || !cur[k]) drawOne(k); }); paint(); }
-  function paint(){
-    var lv=document.getElementById('dw-lv').value;
-    var NAME={who:'인물',who2:'인물 2',sit:'상황',mood:'분위기',comp:'구도',prop:'소품'};
-    var f=fields();
-    var plain=f.map(function(k){ return String(cur[k]||'').replace(/<[^>]+>/g,''); }).join(' / ');
-    var fk='dw|'+plain, on=!!FAV[fk];
-    var html='<div class="crcard"><span class="btns" style="float:right">'+
-      '<button class="fav" data-k="'+fk+'" data-meta="그림 주제" aria-pressed="'+(on?'true':'false')+'">'+(on?'\u2605':'\u2606')+'</button></span>'+
-      '<div class="crtag">'+lv+' · '+DW.lv[lv]+'</div><div class="tw"><table><tbody>';
-    f.forEach(function(k){
-      html+='<tr><td style="width:18%"><b>'+NAME[k]+'</b></td><td>'+(cur[k]||'')+'</td>'+
-        '<td style="width:1%; white-space:nowrap"><span class="btns">'+
-        '<button class="lockbtn" data-dl="'+k+'" aria-pressed="'+(lock[k]?'true':'false')+'">\ud83d\udccc</button>'+
-        '<button class="czre" data-dr="'+k+'"'+(lock[k]?' disabled':'')+'>\u21bb</button></span></td></tr>';
-    });
-    html+='</tbody></table></div></div>';
-    out.innerHTML=html;
-    [].slice.call(out.querySelectorAll('button[data-dl]')).forEach(function(b){
-      b.addEventListener('click',function(e){ e.stopPropagation(); var k=b.getAttribute('data-dl'); lock[k]=!lock[k]; paint(); }); });
-    [].slice.call(out.querySelectorAll('button[data-dr]')).forEach(function(b){
-      b.addEventListener('click',function(){ var k=b.getAttribute('data-dr'); if(lock[k]) return; drawOne(k); paint(); }); });
-  }
-  ['dw-lv','dw-prop','dw-comp'].forEach(function(id){
-    var e=document.getElementById(id); if(e) e.addEventListener('change',function(){ gen(false); }); });
-  document.getElementById('dw-go').addEventListener('click',function(){ lock={}; gen(true); });
-  document.getElementById('dw-start').addEventListener('click',function(){
-    var m=parseInt(document.getElementById('dw-min').value,10)||30;
-    TRAIN.on=true; TRAIN.fixed=true; TRAIN.t0=Date.now(); TRAIN.limit=m*60000; TRAIN.mode='draw';
-    if(TRAIN.timer) clearInterval(TRAIN.timer);
-    TRAIN.timer=setInterval(function(){ trFloat(); },1000);
-    trFloat();
-  });
-  gen(true);
 })();
 
 // ----- AI (OpenRouter) -----
@@ -3086,10 +3105,10 @@ function genBuild(src, outId, label){
   var cutRule= cut<=20
     ? '20컷을 1번부터 20번까지 전부 적는다. 각 컷은 「번호. 화면 — 대사(있으면)」 한 줄.'
     : '핵심 컷 12개만 적는다. 각 컷은 「번호(대략 위치). 화면 — 대사(있으면)」 한 줄.';
-  var html='<div class="gen-top"><b>'+label+'</b> <button class="chip" data-gcopy="all">전체 복사</button></div>';
+  var html='<div class="gen-top"><b>'+label+'</b> <button class="chip" data-gcopy="all">전체 복사</button><button class="chip" data-gmemo="all">전체 메모에 넣기</button></div>';
   GEN_SECTIONS.forEach(function(s){
     html+='<div class="gen-sec" id="'+outId+'-'+s[0]+'"><div class="gen-h">'+s[1]+
-      ' <button class="chip" data-gcopy="'+s[0]+'">복사</button></div><div class="gen-b busy">대기 중…</div></div>';
+      ' <button class="chip" data-gcopy="'+s[0]+'">복사</button><button class="chip" data-gmemo="'+s[0]+'">메모에 넣기</button></div><div class="gen-b busy">대기 중…</div></div>';
   });
   out.innerHTML=html;
   var R={};
@@ -3098,6 +3117,14 @@ function genBuild(src, outId, label){
     try{ if(navigator.clipboard&&navigator.clipboard.writeText){ navigator.clipboard.writeText(t).catch(function(){window.prompt('복사',t);});
       var o=b.textContent; b.textContent='복사됨'; setTimeout(function(){b.textContent=o;},1200); } else window.prompt('복사',t);
     }catch(e){ window.prompt('복사',t); } }
+  [].slice.call(out.querySelectorAll('button[data-gmemo]')).forEach(function(b){
+    b.addEventListener('click',function(){
+      var k=b.getAttribute('data-gmemo'), f;
+      if(k==='all') f=fmAppend(label, GEN_SECTIONS.map(function(s){ return '[ '+s[1]+' ]\n'+(R[s[0]]||''); }).join('\n\n'));
+      else { var nm=GEN_SECTIONS.filter(function(s){return s[0]===k;})[0][1]; f=fmAppend(label+' — '+nm, R[k]||''); }
+      var o=b.textContent; b.textContent='「'+f+'」에 넣음'; setTimeout(function(){ b.textContent=o; },1600);
+    });
+  });
   [].slice.call(out.querySelectorAll('button[data-gcopy]')).forEach(function(b){
     b.addEventListener('click',function(){
       var k=b.getAttribute('data-gcopy');
@@ -3150,10 +3177,349 @@ function favAiBar(){
   });
 }
 
+
+function pinoMemo(){ try{ return localStorage.getItem('pinoMemo')||''; }catch(e){ return ''; } }
+function pinoSetting(max){
+  var sec=document.getElementById('pino'); if(!sec) return '';
+  var c=sec.cloneNode(true);
+  ['#lt-out','#pino-todo','#pc-out','textarea','.shuf','.filterbar','.lede'].forEach(function(s){
+    [].slice.call(c.querySelectorAll(s)).forEach(function(x){ x.remove(); }); });
+  var t=c.textContent.replace(/\s+/g,' ').trim();
+  return max?t.slice(0,max):t;
+}
+function pinoContext(max, withMemo){
+  var s='[설정집]\n'+pinoSetting(max||6000);
+  var m=pinoMemo().trim();
+  if(withMemo!==false && m) s+='\n\n[작가 메모]\n'+m.slice(0,4000);
+  return s;
+}
+(function(){
+  var ta=document.getElementById('pm-text'); if(!ta) return;
+  var cnt=document.getElementById('pm-count');
+  ta.value=pinoMemo();
+  function upd(){ if(cnt) cnt.textContent=ta.value.length+'자'; }
+  ta.addEventListener('input',function(){ try{ localStorage.setItem('pinoMemo',ta.value); }catch(e){} upd(); });
+  upd();
+  document.getElementById('pm-copy').addEventListener('click',function(){
+    var t=ta.value, b=this;
+    try{ if(navigator.clipboard&&navigator.clipboard.writeText){ navigator.clipboard.writeText(t).catch(function(){window.prompt('복사',t);});
+      b.textContent='복사됨'; setTimeout(function(){b.textContent='복사';},1200); } else window.prompt('복사',t); }catch(e){ window.prompt('복사',t); } });
+  var cl=document.getElementById('pm-clear');
+  cl.addEventListener('click',function(){
+    if(cl.getAttribute('data-arm')!=='1'){ cl.setAttribute('data-arm','1'); cl.textContent='한 번 더 누르면 비움';
+      setTimeout(function(){ cl.setAttribute('data-arm',''); cl.textContent='비우기'; },3000); return; }
+    cl.setAttribute('data-arm',''); cl.textContent='비우기'; ta.value=''; try{ localStorage.setItem('pinoMemo',''); }catch(e){} upd(); });
+})();
+
+// ----- 폴더 메모 · 백업 -----
+var FMEMO={};
+try{ FMEMO=JSON.parse(localStorage.getItem('folderMemo')||'{}')||{}; }catch(e){ FMEMO={}; }
+function fmGet(f){ if(f==='피노설정집') return (typeof pinoMemo==='function')?pinoMemo():''; return FMEMO[f]||''; }
+function fmSet(f,t){
+  if(f==='피노설정집'){ try{ localStorage.setItem('pinoMemo',t); }catch(e){} var pm=document.getElementById('pm-text'); if(pm && pm!==document.activeElement) pm.value=t; }
+  else { FMEMO[f]=t; try{ localStorage.setItem('folderMemo',JSON.stringify(FMEMO)); }catch(e){} }
+}
+function fmAppend(title,text){
+  var f=CURFOLDER||'기본', now=fmGet(f);
+  var d=new Date(), stamp=(d.getMonth()+1)+'/'+d.getDate()+' '+d.getHours()+':'+('0'+d.getMinutes()).slice(-2);
+  fmSet(f, (now?now.replace(/\s+$/,'')+'\n\n':'')+'■ '+title+' ('+stamp+')\n'+text.trim()+'\n');
+  fmRender();
+  return f;
+}
+function fmRender(){
+  var ta=document.getElementById('fm-text'); if(!ta) return;
+  var f=CURFOLDER||'기본';
+  var ti=document.getElementById('fm-title'); if(ti) ti.textContent='「'+f+'」 폴더 메모';
+  if(ta!==document.activeElement) ta.value=fmGet(f);
+  var c=document.getElementById('fm-count'); if(c) c.textContent=ta.value.length+'자';
+}
+(function(){
+  var ta=document.getElementById('fm-text'); if(!ta) return;
+  ta.addEventListener('input',function(){ fmSet(CURFOLDER||'기본',ta.value); var c=document.getElementById('fm-count'); if(c) c.textContent=ta.value.length+'자'; });
+  document.getElementById('fm-copy').addEventListener('click',function(){
+    var t=ta.value, b=this; try{ navigator.clipboard.writeText(t); b.textContent='복사됨'; setTimeout(function(){b.textContent='복사';},1200);}catch(e){ window.prompt('복사',t);} });
+  var cl=document.getElementById('fm-clear');
+  cl.addEventListener('click',function(){
+    if(cl.getAttribute('data-arm')!=='1'){ cl.setAttribute('data-arm','1'); cl.textContent='한 번 더 누르면 비움';
+      setTimeout(function(){ cl.setAttribute('data-arm',''); cl.textContent='비우기'; },3000); return; }
+    cl.setAttribute('data-arm',''); cl.textContent='비우기'; ta.value=''; fmSet(CURFOLDER||'기본',''); fmRender(); });
+  fmRender();
+})();
+// 파일 받기 (브라우저 다운로드)
+function saveFile(name, text, type){
+  try{
+    var blob=new Blob([text],{type:type||'text/plain;charset=utf-8'});
+    var a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=name;
+    document.body.appendChild(a); a.click(); setTimeout(function(){ URL.revokeObjectURL(a.href); a.remove(); },500);
+    return true;
+  }catch(e){ return false; }
+}
+function stampName(){ var d=new Date(); return d.getFullYear()+('0'+(d.getMonth()+1)).slice(-2)+('0'+d.getDate()).slice(-2); }
+var BK_KEYS=['mangaFav','mangaFolders','folderMemo','pinoMemo','pinoTodo','arcForm','orModel','mangaDataVer'];
+function bkDump(){
+  var o={app:'manga-cliche-dictionary', v:1, dataVer:DATA_VER, at:new Date().toISOString(), data:{}};
+  BK_KEYS.forEach(function(k){ try{ var v=localStorage.getItem(k); if(v!==null) o.data[k]=v; }catch(e){} });
+  return JSON.stringify(o,null,1);
+}
+function bkRestore(text){
+  var o=JSON.parse(text);
+  if(!o||!o.data) throw new Error('백업 형식이 아니다');
+  Object.keys(o.data).forEach(function(k){ if(BK_KEYS.indexOf(k)>-1) localStorage.setItem(k,o.data[k]); });
+}
+(function(){
+  var msg=document.getElementById('bk-msg'); if(!msg) return;
+  function say(t){ msg.textContent=t; setTimeout(function(){ if(msg.textContent===t) msg.textContent=''; },4000); }
+  document.getElementById('bk-save').addEventListener('click',function(){
+    var ok=saveFile('manga-backup-'+stampName()+'.json', bkDump(), 'application/json');
+    say(ok?'받았다. 다운로드 폴더를 확인한다.':'이 화면에서는 파일 받기가 막혀 있다. 백업 내용 복사를 쓴다.');
+  });
+  document.getElementById('bk-copy').addEventListener('click',function(){
+    var t=bkDump(); try{ navigator.clipboard.writeText(t); say('복사했다. 메모 앱에 붙여 두면 된다.'); }catch(e){ window.prompt('복사',t); } });
+  function done(){ say('복원했다. 새로고침한다.'); setTimeout(function(){ location.reload(); },800); }
+  document.getElementById('bk-load').addEventListener('change',function(e){
+    var f=e.target.files&&e.target.files[0]; if(!f) return;
+    var r=new FileReader(); r.onload=function(){ try{ bkRestore(r.result); done(); }catch(err){ say('불러오지 못했다: '+err.message); } }; r.readAsText(f);
+  });
+  document.getElementById('bk-restore').addEventListener('click',function(){
+    var t=document.getElementById('bk-paste').value.trim(); if(!t){ say('붙여 넣은 내용이 없다.'); return; }
+    try{ bkRestore(t); done(); }catch(err){ say('복원하지 못했다: '+err.message); }
+  });
+})();
+// 피노 메모 파일
+(function(){
+  var sv=document.getElementById('pm-save'); if(!sv) return;
+  sv.addEventListener('click',function(){
+    var ok=saveFile('pino-memo-'+stampName()+'.txt', document.getElementById('pm-text').value);
+    var c=document.getElementById('pm-count'); if(c) c.textContent=ok?'받았다':'이 화면에서는 막혀 있다. 복사를 쓴다.';
+  });
+  document.getElementById('pm-load').addEventListener('change',function(e){
+    var f=e.target.files&&e.target.files[0]; if(!f) return;
+    var r=new FileReader(); r.onload=function(){
+      var ta=document.getElementById('pm-text'); ta.value=r.result; try{ localStorage.setItem('pinoMemo',r.result); }catch(err){}
+      var c=document.getElementById('pm-count'); if(c) c.textContent=ta.value.length+'자'; };
+    r.readAsText(f);
+  });
+})();
+
+// ----- 구글 드라이브 동기화 -----
+var GD={cid:'349312731183-t2bc2v3cbr90jci7aa4f8gumre6fdcd2.apps.googleusercontent.com', scope:'https://www.googleapis.com/auth/drive.appdata', file:'manga-sync.json',
+  token:null, exp:0, client:null, fileId:null, busy:false, timer:null, applying:false, pending:false};
+var GD_KEYS=['mangaFav','mangaFolders','folderMemo','pinoMemo','pinoTodo','arcForm'];
+function gdLinked(){ try{ return localStorage.getItem('gdLinked')==='1'; }catch(e){ return false; } }
+function gdDevice(){
+  try{ var d=localStorage.getItem('deviceId'); if(!d){ d=(/Mobi|Android|iPhone/i.test(navigator.userAgent)?'폰':'PC')+'-'+Math.random().toString(36).slice(2,6); localStorage.setItem('deviceId',d); } return d; }catch(e){ return '기기'; }
+}
+function gdStatus(t, cls){
+  var st=document.getElementById('sync-st'), dot=document.getElementById('sync-dot'), m=document.getElementById('gd-msg');
+  if(st) st.textContent=t; if(dot) dot.className='synclink'+(cls?' '+cls:'');
+  if(m && arguments[2]) m.textContent=arguments[2];
+}
+function gdLocal(){
+  var o={}; GD_KEYS.forEach(function(k){ try{ var v=localStorage.getItem(k); if(v!==null) o[k]=v; }catch(e){} }); return o;
+}
+function gdEmpty(o){
+  var f={}, m={}, p='';
+  try{ f=(JSON.parse(o.mangaFav||'{}').f)||{}; }catch(e){}
+  try{ m=JSON.parse(o.folderMemo||'{}')||{}; }catch(e){}
+  p=o.pinoMemo||'';
+  var memoLen=Object.keys(m).reduce(function(a,k){ return a+String(m[k]||'').length; },0)+p.length;
+  return !Object.keys(f).length && !memoLen && !o.arcForm;
+}
+function gdSize(o){
+  var f={}, m={}; try{ f=(JSON.parse(o.mangaFav||'{}').f)||{}; }catch(e){} try{ m=JSON.parse(o.folderMemo||'{}')||{}; }catch(e){}
+  return {fav:Object.keys(f).length, memo:Object.keys(m).reduce(function(a,k){ return a+String(m[k]||'').length; },0)+String(o.pinoMemo||'').length};
+}
+function J(s,d){ try{ return JSON.parse(s||''); }catch(e){ return d; } }
+// 세 갈래 병합: base(마지막 동기화) · local · remote
+function gdMerge(L,R,B){
+  B=B||{};
+  var out={};
+  // 즐겨찾기
+  var lf=J(L.mangaFav,{}), rf=J(R.mangaFav,{}), bf=J(B.mangaFav,{});
+  var lF=lf.f||{}, rF=rf.f||{}, bF=bf.f||{}, F={}, M={};
+  Object.keys(lF).concat(Object.keys(rF)).forEach(function(k){
+    var inL=!!lF[k], inR=!!rF[k], inB=!!bF[k];
+    var keep = (inL&&inR) || (inL&&!inB) || (inR&&!inB);
+    if(keep){ F[k]=1; M[k]=(lf.m&&lf.m[k])||(rf.m&&rf.m[k])||undefined; if(M[k]===undefined) delete M[k]; }
+  });
+  var fav=Object.assign({}, rf, lf); fav.f=F; fav.m=M; out.mangaFav=JSON.stringify(fav);
+  // 폴더
+  var lo=J(L.mangaFolders,{}), ro=J(R.mangaFolders,{}), bo=J(B.mangaFolders,{});
+  var ll=lo.list||['기본'], rl=ro.list||['기본'], bl=bo.list||[];
+  var list=[]; ll.concat(rl).forEach(function(x){ if(list.indexOf(x)>-1) return;
+    var inL=ll.indexOf(x)>-1, inR=rl.indexOf(x)>-1, inB=bl.indexOf(x)>-1;
+    if((inL&&inR)||(inL&&!inB)||(inR&&!inB)||x==='기본') list.push(x); });
+  var ld=lo.dir||{}, rd=ro.dir||{}, bd=bo.dir||{}, dir={};
+  Object.keys(F).forEach(function(k){ var v=(ld[k]!==bd[k])?ld[k]:rd[k]; if(v===undefined) v=ld[k]||rd[k]; if(v) dir[k]=(list.indexOf(v)>-1)?v:'기본'; });
+  var fo=Object.assign({}, ro, lo); fo.list=list; fo.dir=dir; fo.cur=(list.indexOf(lo.cur)>-1)?lo.cur:'기본';
+  out.mangaFolders=JSON.stringify(fo);
+  // 텍스트 값 세 갈래
+  function text3(l,r,b,label){
+    l=l||''; r=r||''; b=b||'';
+    if(l===r) return l; if(l===b) return r; if(r===b) return l;
+    return l.replace(/\s+$/,'')+'\n\n--- 다른 기기에서 쓴 내용'+(label?' ('+label+')':'')+' ---\n'+r;
+  }
+  var lm=J(L.folderMemo,{}), rm=J(R.folderMemo,{}), bm=J(B.folderMemo,{}), fm={};
+  Object.keys(lm).concat(Object.keys(rm)).forEach(function(k){ if(k in fm) return; var v=text3(lm[k],rm[k],bm[k]); if(v) fm[k]=v; });
+  out.folderMemo=JSON.stringify(fm);
+  var pm=text3(L.pinoMemo,R.pinoMemo,B.pinoMemo); if(pm) out.pinoMemo=pm;
+  ['pinoTodo','arcForm'].forEach(function(k){ var l=L[k], r=R[k], b=B[k];
+    var v=(l===r)?l:(l===b?r:l); if(v!==undefined && v!==null) out[k]=v; });
+  return out;
+}
+function gdAuth(prompt){
+  return new Promise(function(res,rej){
+    if(GD.token && Date.now()<GD.exp-60000){ res(GD.token); return; }
+    if(!window.google || !google.accounts || !google.accounts.oauth2){ rej(new Error('구글 로그인 스크립트를 불러오지 못했다. 깃허브 주소에서 열었는지 확인한다.')); return; }
+    GD.client=google.accounts.oauth2.initTokenClient({client_id:GD.cid, scope:GD.scope,
+      callback:function(r){ if(r&&r.access_token){ GD.token=r.access_token; GD.exp=Date.now()+(r.expires_in||3600)*1000; res(GD.token); } else rej(new Error(r&&r.error||'로그인 실패')); },
+      error_callback:function(e){ rej(new Error((e&&e.type)==='popup_closed'?'로그인 창이 닫혔다':'로그인 창이 막혔다. 버튼을 눌러 다시 연결한다')); }});
+    GD.client.requestAccessToken({prompt:prompt||''});
+  });
+}
+function gdFetch(url, opt){
+  opt=opt||{}; opt.headers=opt.headers||{}; opt.headers.Authorization='Bearer '+GD.token;
+  return fetch(url,opt).then(function(r){ if(r.status===401){ GD.token=null; throw new Error('인증이 만료되었다'); } if(!r.ok) throw new Error('드라이브 오류 '+r.status); return r; });
+}
+function gdFind(){
+  return gdFetch('https://www.googleapis.com/drive/v3/files?spaces=appDataFolder&fields=files(id,modifiedTime)&q='+encodeURIComponent("name='"+GD.file+"'"))
+    .then(function(r){ return r.json(); }).then(function(j){ var f=(j.files||[])[0]; GD.fileId=f?f.id:null; return GD.fileId; });
+}
+function gdDownload(){
+  if(!GD.fileId) return Promise.resolve(null);
+  return gdFetch('https://www.googleapis.com/drive/v3/files/'+GD.fileId+'?alt=media').then(function(r){ return r.json(); });
+}
+function gdUpload(pack){
+  var body=JSON.stringify(pack);
+  if(GD.fileId){
+    return gdFetch('https://www.googleapis.com/upload/drive/v3/files/'+GD.fileId+'?uploadType=media',{method:'PATCH',headers:{'Content-Type':'application/json'},body:body});
+  }
+  var meta={name:GD.file, parents:['appDataFolder']}, bd='gdsync'+Date.now();
+  var mp='--'+bd+'\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n'+JSON.stringify(meta)+'\r\n--'+bd+'\r\nContent-Type: application/json\r\n\r\n'+body+'\r\n--'+bd+'--';
+  return gdFetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id',{method:'POST',headers:{'Content-Type':'multipart/related; boundary='+bd},body:mp})
+    .then(function(r){ return r.json(); }).then(function(j){ GD.fileId=j.id; });
+}
+function gdApply(data){
+  GD.applying=true;
+  GD_KEYS.forEach(function(k){ try{ if(data[k]===undefined) localStorage.removeItem(k); else localStorage.setItem(k,data[k]); }catch(e){} });
+  GD.applying=false;
+}
+function gdSame(a,b){ return GD_KEYS.every(function(k){ return (a[k]||'')===(b[k]||''); }); }
+function gdSync(opts){
+  opts=opts||{};
+  if(!gdLinked() || GD.busy) return Promise.resolve();
+  if(window.__dataNewer){ gdStatus('구버전','warn','이 기기의 사이트가 옛 버전이다. 새로고침한 뒤 동기화한다.'); return Promise.resolve(); }
+  GD.busy=true; gdStatus('동기화','busy','동기화하는 중…');
+  var local=gdLocal(), base=J(localStorage.getItem('gdBase'),null);
+  return gdAuth(opts.prompt).then(gdFind).then(gdDownload).then(function(pack){
+    var remote=(pack&&pack.current&&pack.current.data)||null, hist=(pack&&pack.history)||[];
+    // 첫 연결에 양쪽 다 있으면 선택
+    if(!base && remote && !gdEmpty(remote) && !gdEmpty(local) && !opts.choice){
+      GD.busy=false; gdChoice(); gdStatus('선택','warn','드라이브와 이 기기에 모두 데이터가 있다. 어떻게 합칠지 고른다.'); return;
+    }
+    var merged;
+    if(opts.choice==='remote') merged=remote||local;
+    else if(opts.choice==='local') merged=local;
+    else if(!remote) merged=local;
+    else if(gdEmpty(local)) merged=remote;                       // 빈 기기는 받기만
+    else merged=gdMerge(local, remote, opts.choice==='merge'?{}:base);
+    var changedLocal=!gdSame(merged, local);
+    var needUp=!remote || !gdSame(merged, remote);
+    if(gdEmpty(local) && !remote){ needUp=false; }                // 빈 상태는 절대 올리지 않음
+    // 급감 감지
+    if(needUp && remote && !opts.force){
+      var a=gdSize(merged), b=gdSize(remote);
+      if((b.fav>=6 && a.fav<b.fav*0.5) || (b.memo>=200 && a.memo<b.memo*0.5)){
+        GD.busy=false; gdGuard(a,b,merged); gdStatus('확인','warn','올릴 내용이 드라이브보다 크게 줄었다. 확인이 필요하다.'); return;
+      }
+    }
+    var p=Promise.resolve();
+    if(needUp){
+      var entry={at:new Date().toISOString(), device:gdDevice(), dataVer:(typeof DATA_VER!=='undefined'?DATA_VER:1), data:merged};
+      if(pack&&pack.current) hist.unshift(pack.current);
+      hist=hist.slice(0,10);
+      p=gdUpload({app:'manga-cliche-dictionary', current:entry, history:hist});
+    }
+    return p.then(function(){
+      try{ localStorage.setItem('gdBase', JSON.stringify(merged)); localStorage.setItem('gdLast', new Date().toISOString()); }catch(e){}
+      GD.busy=false;
+      var t=new Date(), s=t.getHours()+':'+('0'+t.getMinutes()).slice(-2);
+      gdStatus('✓ '+s,'ok','마지막 동기화 '+s+' · 이 기기 '+gdDevice());
+      if(changedLocal){ gdApply(merged); gdStatus('✓ '+s,'ok','다른 기기의 변경을 받았다. 새로고침한다.'); setTimeout(function(){ location.reload(); },700); }
+    });
+  }).catch(function(e){
+    GD.busy=false; gdStatus('!','warn',e.message+(/막혔|만료|로그인/.test(e.message)?' — 「구글로 연결」을 누른다.':''));
+  });
+}
+function gdChoice(){
+  var box=document.getElementById('gd-choice'); if(!box) return;
+  box.innerHTML='<div class="aires"><div class="gen-h">처음 연결 — 어떻게 할까</div>'+
+    '<div class="filterbar"><button class="chip" data-c="merge">합치기 (권장)</button><button class="chip" data-c="remote">드라이브 것으로</button><button class="chip" data-c="local">이 기기 것으로</button></div>'+
+    '<p class="small">합치기는 양쪽의 별표를 모두 남기고, 메모가 서로 다르면 둘 다 보존한다.</p></div>';
+  [].slice.call(box.querySelectorAll('button[data-c]')).forEach(function(b){
+    b.addEventListener('click',function(){ box.innerHTML=''; gdSync({choice:b.getAttribute('data-c')}); }); });
+}
+function gdGuard(a,b,merged){
+  var box=document.getElementById('gd-choice'); if(!box) return;
+  box.innerHTML='<div class="aires"><div class="gen-h">올리기 전에 확인</div>'+
+    '<p class="small">드라이브: 별표 '+b.fav+'개 · 메모 '+b.memo+'자 → 이 기기: 별표 '+a.fav+'개 · 메모 '+a.memo+'자</p>'+
+    '<div class="filterbar"><button class="chip" data-g="up">그래도 올리기</button><button class="chip" data-g="down">드라이브 것 받기</button><button class="chip" data-g="no">취소</button></div></div>';
+  [].slice.call(box.querySelectorAll('button[data-g]')).forEach(function(bt){
+    bt.addEventListener('click',function(){ var g=bt.getAttribute('data-g'); box.innerHTML='';
+      if(g==='up') gdSync({force:true}); else if(g==='down') gdSync({choice:'remote'}); else gdStatus('보류','warn','올리지 않았다.'); }); });
+}
+function gdHistory(){
+  var box=document.getElementById('gd-list'); if(!box) return;
+  box.innerHTML='<p class="small">불러오는 중…</p>';
+  gdAuth().then(gdFind).then(gdDownload).then(function(pack){
+    var list=[]; if(pack&&pack.current) list.push(pack.current); (pack&&pack.history||[]).forEach(function(x){ list.push(x); });
+    if(!list.length){ box.innerHTML='<p class="small">저장된 기록이 없다.</p>'; return; }
+    box.innerHTML='<div class="aires"><div class="gen-h">되돌리기 — 최근 '+list.length+'개</div>'+list.map(function(x,i){
+      var s=gdSize(x.data||{}), d=new Date(x.at);
+      return '<div class="gdrow"><span>'+(d.getMonth()+1)+'/'+d.getDate()+' '+d.getHours()+':'+('0'+d.getMinutes()).slice(-2)+' · '+(x.device||'')+' · 별표 '+s.fav+' · 메모 '+s.memo+'자'+(i===0?' (현재)':'')+'</span>'+
+        (i>0?'<button class="chip" data-h="'+i+'">이 시점으로</button>':'')+'</div>'; }).join('')+'</div>';
+    [].slice.call(box.querySelectorAll('button[data-h]')).forEach(function(b){
+      b.addEventListener('click',function(){
+        if(b.getAttribute('data-arm')!=='1'){ b.setAttribute('data-arm','1'); b.textContent='한 번 더 누르면 되돌림'; return; }
+        var x=list[+b.getAttribute('data-h')];
+        try{ localStorage.setItem('mangaPreRestore', JSON.stringify({at:new Date().toISOString(), data:gdLocal()})); }catch(e){}
+        gdApply(x.data); try{ localStorage.removeItem('gdBase'); }catch(e){}
+        gdSync({choice:'local', force:true}).then(function(){ location.reload(); });
+      });
+    });
+  }).catch(function(e){ box.innerHTML='<p class="small">'+e.message+'</p>'; });
+}
+// 변경 감지 → 5초 뒤 자동 동기화
+(function(){
+  try{
+    var orig=Storage.prototype.setItem;
+    Storage.prototype.setItem=function(k,v){ orig.apply(this,arguments);
+      if(this===window.localStorage && !GD.applying && GD_KEYS.indexOf(k)>-1 && gdLinked()){
+        clearTimeout(GD.timer); GD.timer=setTimeout(function(){ gdSync(); },5000); } };
+  }catch(e){}
+})();
+(function(){
+  var ln=document.getElementById('gd-link'); if(!ln) return;
+  ln.addEventListener('click',function(){ try{ localStorage.setItem('gdLinked','1'); }catch(e){} gdSync({prompt:GD.token?'':'consent'}); });
+  document.getElementById('gd-now').addEventListener('click',function(){ if(!gdLinked()){ gdStatus('꺼짐','','먼저 「구글로 연결」을 누른다.'); return; } gdSync(); });
+  document.getElementById('gd-hist').addEventListener('click',function(){ if(!gdLinked()){ gdStatus('꺼짐','','먼저 연결한다.'); return; } gdHistory(); });
+  document.getElementById('gd-off').addEventListener('click',function(){
+    try{ localStorage.removeItem('gdLinked'); localStorage.removeItem('gdBase'); }catch(e){}
+    if(GD.token && window.google && google.accounts && google.accounts.oauth2) try{ google.accounts.oauth2.revoke(GD.token,function(){}); }catch(e){}
+    GD.token=null; gdStatus('꺼짐','','연결을 끊었다. 드라이브의 데이터는 그대로 남아 있다.'); });
+  if(gdLinked()){
+    var last=localStorage.getItem('gdLast');
+    gdStatus('연결됨','', '연결되어 있다.'+(last?' 마지막 동기화 '+new Date(last).toLocaleString():''));
+    var tries=0; (function wait(){ if(window.google&&google.accounts&&google.accounts.oauth2){ gdSync(); } else if(tries++<20){ setTimeout(wait,300); } })();
+  }
+  window.addEventListener('focus',function(){ if(gdLinked()) gdSync(); });
+})();
 // ----- AI 확장 기능 -----
 function aiResult(box, title, text){
-  box.innerHTML='<div class="aires"><div class="gen-h">'+title+' <button class="chip">복사</button></div><div class="gen-b"></div></div>';
+  box.innerHTML='<div class="aires"><div class="gen-h">'+title+' <button class="chip">복사</button><button class="chip memo">메모에 넣기</button></div><div class="gen-b"></div></div>';
   box.querySelector('.gen-b').textContent=text;
+  var mb=box.querySelector('button.memo');
+  mb.addEventListener('click',function(){ var f=fmAppend(title,text); mb.textContent='「'+f+'」에 넣음'; setTimeout(function(){ mb.textContent='메모에 넣기'; },1600); });
   var b=box.querySelector('button');
   b.addEventListener('click',function(){
     try{ if(navigator.clipboard&&navigator.clipboard.writeText){ navigator.clipboard.writeText(text).catch(function(){window.prompt('복사',text);});
@@ -3163,6 +3529,42 @@ function aiResult(box, title, text){
 function aiBusy(box,title){ box.innerHTML='<div class="aires"><div class="gen-h">'+title+'</div><div class="gen-b busy">만드는 중…</div></div>'; }
 var AIX_SYS='당신은 한국 만화·웹툰 연출 조력자다. 서론·칭찬·요약 없이 본론만. 마크다운 기호(#, *, -)를 쓰지 않는다. 담백한 서술체. 구체적인 컷과 행동으로 말한다.';
 var AISLOTS={
+  pask:['묻기', function(){
+    var q=document.getElementById('pa-q').value.trim(), box=document.getElementById('pa-out'), log=document.getElementById('pa-log');
+    if(!q){ box.innerHTML='<p class="small">질문을 먼저 적는다.</p>'; return; }
+    var wm=document.getElementById('pa-memo'); wm=!wm||wm.checked;
+    aiBusy(box,'답');
+    aiAsk('당신은 만화 《피노》의 설정 담당 편집자다. 아래 설정집과 작가 메모만 근거로 답한다. 근거가 있으면 어느 항목에서 왔는지 짧게 밝힌다. 근거가 없으면 「설정에 없음」이라 쓰고, 설정을 지어내지 않는다. 메모의 [아이디어] 표시는 확정이 아니므로 확정처럼 말하지 않는다. 서론 없이 본론만, 마크다운 기호 없이.',
+      pinoContext(7000, wm)+'\n\n[질문]\n'+q)
+    .then(function(t){
+      aiResult(box,'답',t);
+      if(log){ var d=document.createElement('div'); d.className='aires'; d.innerHTML='<div class="gen-h" style="font-weight:400; color:var(--ink-3)"></div><div class="gen-b"></div>';
+        d.querySelector('.gen-h').textContent='Q. '+q; d.querySelector('.gen-b').textContent=t; log.insertBefore(d, log.firstChild); }
+    });
+  }],
+  crstory:['어떻게 이렇게 되었나', function(){
+    var o=document.getElementById('cr-out'), box=document.getElementById('cr-ai');
+    if(!o||!o.querySelector('.crhead')) return;
+    var src=o.querySelector('.crhead').textContent+'\n'+[].slice.call(o.querySelectorAll('tbody tr')).map(function(r){
+      return r.children[0].textContent+': '+r.children[1].textContent; }).join('\n')+'\n'+o.querySelector('.crtag').textContent;
+    var human=document.getElementById('cr-human'); human=human&&human.checked;
+    aiBusy(box,'어떻게 이렇게 되었나');
+    aiAsk(AIX_SYS+' 확정된 설정 외의 설정을 지어내지 않는다.','[작품 설정 요약]\n'+pinoContext(2500)+'\n\n[크리쳐 조합]\n'+src+(human?'\n인간도 먹었다.':'')+
+      '\n\n이 개체가 어떻게 이런 모습이 되었는지 사연을 쓴다. 규칙:\n가장 작은 것부터 먹힌 순서대로 잇는다. 사물은 먹힌 쪽에만 놓는다. 예: 나비를 잡아먹은 새를 족제비가 잡아먹었다.\n어디서, 어떤 상황에서 먹었는지 한 문장씩 구체적으로.\n마지막에 먹은 것이 골격이 되고 처음 먹힌 것이 말단에 남는다는 점을 형태와 연결해 한 문장.\n인간을 먹었다면 그 사람이 누구였을 법한지 한 문장. 이름은 짓지 않는다.\n전체 다섯 문장 내외.')
+    .then(function(t){ aiResult(box,'어떻게 이렇게 되었나',t); });
+  }],
+  charlink:['AI로 잇기', function(){
+    var box=document.getElementById('ch-ai'); if(!window.__charLink) return;
+    aiBusy(box,'AI로 잇기');
+    window.__charLink(function(t){ aiResult(box,'AI로 잇기 — 고른 이유',t); });
+  }],
+  charmake:['인물 설정 짜기', function(){
+    var box=document.getElementById('ch-ai'), st=window.__charState?window.__charState():null; if(!st) return;
+    var src=['결핍','성격','외모'].map(function(k){ return k+': '+st.cur[k].map(function(x){ return x[2]+' ('+x[3]+')'; }).join(', '); }).join('\n');
+    aiBusy(box,'인물 설정');
+    aiAsk(AIX_SYS,'[재료]\n'+src+'\n\n이 재료로 한 인물을 확정한다. 다음 형식으로.\n이름 / 나이 / 직업이나 처지\n배경: 결핍이 생긴 사건 두 문장\n성격: 결핍 때문에 굳은 행동 방식 두 문장\n외모: 그 성격이 드러나는 습관이나 표식\n원하는 것 / 두려워하는 것\n첫 등장 컷: 대사 없이 이 인물을 보여 주는 한 컷\n대사 한 줄: 이 인물만 할 법한 말\n약점이 드러나는 순간: 한 문장')
+    .then(function(t){ aiResult(box,'인물 설정',t); });
+  }],
   arc:['AI 비평', function(){
     var v=['af1','af2','af3','af4','af5'].map(function(id){ var e=document.getElementById(id); return e?e.value.trim():''; });
     var box=document.getElementById('af-ai');
@@ -3187,11 +3589,9 @@ var AISLOTS={
   pino:['정합성 검사', function(){
     var t=document.getElementById('pc-in').value.trim(), box=document.getElementById('pc-out');
     if(!t){ box.innerHTML='<p class="small">장면을 먼저 적는다.</p>'; return; }
-    var sec=document.getElementById('pino'), setting='';
-    if(sec){ var c=sec.cloneNode(true); ['#cr-out','#lt-out','#pino-todo','#pc-out','#cr-ai','textarea','.shuf','.filterbar'].forEach(function(s){ [].slice.call(c.querySelectorAll(s)).forEach(function(x){x.remove();}); });
-      setting=c.textContent.replace(/\s+/g,' ').slice(0,6000); }
+    var setting=pinoContext(6000);
     aiBusy(box,'정합성 검사');
-    aiAsk(AIX_SYS,'[확정 설정]\n'+setting+'\n\n[검사할 장면]\n'+t+
+    aiAsk(AIX_SYS,setting+'\n\n[검사할 장면]\n'+t+
       '\n\n이 장면이 확정 설정과 부딪히는지 본다. 부딪히는 설정을 인용하고 왜 충돌하는지 한 문장. 충돌이 없으면 「충돌 없음」 한 줄.\n그다음 이 장면이 작품의 핵심 질문(기억과 모습이 같으면 그 사람인가)에 기여하는지 한 문장.\n충돌이 있다면 설정을 지키면서 장면을 살리는 대안을 하나 제시한다. 설정을 새로 만들지 않는다.')
     .then(function(r){ aiResult(box,'정합성 검사',r); });
   }],
@@ -3237,7 +3637,8 @@ function aiBar(){
   if(!aiReady()){ bar.innerHTML='<span class="count">AI 기능은 <a href="#ai">AI 연결</a>에서 키를 넣으면 쓸 수 있다.</span>'; return; }
   bar.innerHTML='<button class="chip" id="ai-link">AI로 잇기</button>'+
     '<button class="chip" id="ai-new">AI 새 소재</button>'+
-    '<button class="chip" id="ai-make">확정하고 만들기</button>';
+    '<button class="chip" id="ai-make">확정하고 만들기</button>'+
+    '<button class="chip" id="ai-next" style="display:none">다음 화 시작</button>';
   var out=document.getElementById('ai-out');
   document.getElementById('ai-link').addEventListener('click',function(){
     if(!window.__aiLink) return;
@@ -3258,6 +3659,15 @@ function aiBar(){
   document.getElementById('ai-make').addEventListener('click',function(){
     if(window.unmaskAllNow) window.unmaskAllNow();
     genBuild(aiDrawn(),'ai-out','구성기에서 만든 작품');
+  });
+  var nx=document.getElementById('ai-next'), sr=document.getElementById('sf-serial');
+  function syncNext(){ if(nx) nx.style.display=(sr&&sr.checked)?'':'none'; }
+  if(sr) sr.addEventListener('change',syncNext); syncNext();
+  if(nx) nx.addEventListener('click',function(){
+    if(window.unmaskAllNow) window.unmaskAllNow();
+    aiBusy(out,'다음 화 시작');
+    aiAsk(AIX_SYS,'[이번 화]\n'+aiDrawn()+'\n\n이번 화의 마지막 컷을 받아 다음 화를 연다. 다음 형식으로.\n다음 화 회차 역할: 목표 제시 / 정보 공개 / 관계 진전 / 첫 시도 / 실패와 대가 / 추격·전투 / 반전 / 휴식·일상 / 준비 / 결단 / 절정 / 정리 중 하나와 그 이유 한 문장\n이어받는 것: 이번 화 마지막 컷에서 무엇을 이어받는가 한 문장\n첫 세 컷: 번호를 붙여 한 줄씩. 첫 컷은 이번 화 마지막 컷의 직후이거나, 시간을 건너뛴 결과여야 한다\n다음 화에 쓸 만한 클리셰 두 개: 이름과 이유 한 문장씩')
+    .then(function(t){ aiResult(out,'다음 화 시작',t); });
   });
 }
 // ----- 트레이닝 모드 -----
@@ -3303,13 +3713,14 @@ function trRender(){
   if(e) e.addEventListener('click',function(){ trReset(); });
 }
 function trReset(){
+  TRAIN.fixed=false;
   var fb=document.getElementById('tr-float'); if(fb){ fb.hidden=true; }
   if(TRAIN.timer) clearInterval(TRAIN.timer);
   TRAIN.fixed=false; TRAIN.all=0; TRAIN.one=0; TRAIN.timer=null;
   trRender();
 }
 function trBlock(kind){
-  if(!TRAIN.on) return false;
+  if(!TRAIN.on || TRAIN.mode!=='conti') return false;
   if(TRAIN.fixed) return true;
   if(kind==='all'){ if(TRAIN.all>=TR_LIMITS.all) return true; TRAIN.all++; }
   else { if(TRAIN.one>=TR_LIMITS.one) return true; TRAIN.one++; }
@@ -3663,6 +4074,18 @@ function trBlock(kind){
       done(why.join('\n'));
     });
   };
+
+  window.__fullReset=function(){
+    slock=[]; if(typeof elock!=='undefined') elock=false;
+    if(window.__czReset) window.__czReset();
+    var o=document.getElementById('ai-out'); if(o) o.innerHTML='';
+    var on=TRAIN.on; TRAIN.on=false;
+    TRAIN.all=0; TRAIN.one=0;
+    all_();
+    TRAIN.on=on;
+    trReset();
+  };
+  document.getElementById('sf-reset').addEventListener('click',window.__fullReset);
   document.getElementById('sf-go').addEventListener('click',all_);
   var mk=document.getElementById('sf-mask');
   var cutn=document.getElementById('sf-cutn');
@@ -3779,18 +4202,24 @@ var runChar=makeIndex({
   var A=CHARS.filter(function(x){return x[0]==='외모';}),
       B=CHARS.filter(function(x){return x[0]==='성격';}),
       C=CHARS.filter(function(x){return x[0]==='결핍';});
-  var cur={외모:[],성격:[],결핍:[]};
+  var SRC={외모:A,성격:B,결핍:C};
+  var cur={외모:[],성격:[],결핍:[]}, lk={외모:[],성격:[],결핍:[]};
   function drawFrom(arr,have){
     for(var t=0;t<40;t++){ var x=arr[Math.floor(Math.random()*arr.length)];
       if(have.every(function(y){return y[2]!==x[2];})) return x; }
     return arr[0];
   }
-  function fill(){
-    var n={외모:+document.getElementById('ch-a').value,성격:+document.getElementById('ch-b').value,결핍:+document.getElementById('ch-c').value};
-    var src={외모:A,성격:B,결핍:C};
+  function counts(){ return {외모:+document.getElementById('ch-a').value,성격:+document.getElementById('ch-b').value,결핍:+document.getElementById('ch-c').value}; }
+  function fill(force){
+    var n=counts();
     ['결핍','성격','외모'].forEach(function(k){
-      cur[k]=cur[k].slice(0,n[k]);
-      while(cur[k].length<n[k]) cur[k].push(drawFrom(src[k],cur[k]));
+      var keep=[], keepL=[];
+      for(var i=0;i<n[k];i++){
+        if(!force && lk[k][i] && cur[k][i]){ keep.push(cur[k][i]); keepL.push(true); }
+        else { keep.push(null); keepL.push(false); }
+      }
+      for(var j=0;j<keep.length;j++) if(!keep[j]) keep[j]=drawFrom(SRC[k], keep.filter(Boolean));
+      cur[k]=keep; lk[k]=keepL;
     });
   }
   function render(){
@@ -3799,27 +4228,55 @@ var runChar=makeIndex({
       if(!cur[k].length) return;
       html+='<div class="slotgrp'+(k==='결핍'?' g4':'')+'"><h4>'+k+'</h4>';
       cur[k].forEach(function(x,i){
-        var key='ch|'+x[2], on=!!FAV[key];
-        html+='<div class="slot"><div class="body"><b><button class="fav" data-k="'+key+'" data-meta="'+x[1]+' — '+x[3]+'" aria-pressed="'+(on?'true':'false')+'">'+(on?'★':'☆')+'</button>'+x[2]+'</b>'+
+        var key='ch|'+x[2], on=!!FAV[key], L=!!lk[k][i];
+        html+='<div class="slot"><div class="body"><b><button class="fav" data-k="'+key+'" data-meta="'+x[1]+' — '+x[3]+'" aria-pressed="'+(on?'true':'false')+'">'+(on?'\u2605':'\u2606')+'</button>'+x[2]+'</b>'+
           '<span class="m">'+x[0]+' · '+x[1]+'</span><span class="t">'+x[3]+(x[4]?' · '+x[4]:'')+'</span></div>'+
-          '<button data-k="'+k+'" data-i="'+i+'" title="이 칸만 다시">↻</button></div>';
+          '<span class="btns"><button class="lockbtn" data-ck="'+k+'" data-cl="'+i+'" aria-pressed="'+(L?'true':'false')+'" title="고정">\ud83d\udccc</button>'+
+          '<button data-k="'+k+'" data-i="'+i+'"'+(L?' disabled':'')+' title="이 칸만 다시">\u21bb</button></span></div>';
       });
       html+='</div>';
     });
     out.innerHTML=html;
     [].slice.call(out.querySelectorAll('button[data-i]')).forEach(function(b){
       b.addEventListener('click',function(){
-        var k=b.getAttribute('data-k'), i=+b.getAttribute('data-i');
-        var src={외모:A,성격:B,결핍:C}[k];
-        cur[k][i]=drawFrom(src,cur[k].filter(function(_,j){return j!==i;}));
-        render();
-      });
+        var k=b.getAttribute('data-k'), i=+b.getAttribute('data-i'); if(lk[k][i]) return;
+        cur[k][i]=drawFrom(SRC[k],cur[k].filter(function(_,j){return j!==i;})); render(); });
+    });
+    [].slice.call(out.querySelectorAll('button[data-cl]')).forEach(function(b){
+      b.addEventListener('click',function(e){ e.stopPropagation();
+        var k=b.getAttribute('data-ck'), i=+b.getAttribute('data-cl'); lk[k][i]=!lk[k][i]; render(); });
     });
   }
-  function all_(){ cur={외모:[],성격:[],결핍:[]}; fill(); render(); }
-
-  ['ch-a','ch-b','ch-c'].forEach(function(id){ document.getElementById(id).addEventListener('change',function(){ fill(); render(); }); });
-  document.getElementById('ch-go').addEventListener('click',all_);
+  window.__charState=function(){ return {cur:cur, lk:lk}; };
+  window.__charLink=function(done){
+    var anchors=[], open=[];
+    ['결핍','성격','외모'].forEach(function(k){ cur[k].forEach(function(x,i){
+      if(lk[k][i]) anchors.push(k+': '+x[2]+' ('+x[1]+') — '+x[3]); else open.push([k,i]); }); });
+    if(!open.length){ done('모든 칸이 고정되어 있다.'); return; }
+    var txt=[], cands={};
+    open.forEach(function(o){
+      var k=o[0], p=SRC[k].slice(); for(var a=p.length-1;a>0;a--){ var b=Math.floor(Math.random()*(a+1)); var t=p[a]; p[a]=p[b]; p[b]=t; }
+      p=p.filter(function(x){ return !cur[k].some(function(y,j){ return j!==o[1] && y && y[2]===x[2]; }); }).slice(0,35);
+      cands[k+o[1]]=p;
+      txt.push('['+k+' '+(o[1]+1)+' — id '+k+o[1]+']\n'+p.map(function(x,n){ return n+'. '+x[2]+' ('+x[1]+') '+x[3]; }).join('\n'));
+    });
+    aiAsk('당신은 만화 캐릭터 디자이너다. 반드시 유효한 JSON만 출력한다.',
+      '[고정된 요소]\n'+(anchors.length?anchors.join('\n'):'(없음)')+'\n\n'+txt.join('\n\n')+
+      '\n\n한 인물이 되도록 비어 있는 칸마다 후보 하나를 고른다. 결핍이 성격을 만들고, 성격이 외모의 습관이나 표식으로 드러나는 인과가 서야 한다.\n'+
+      'JSON만: {"picks":[{"id":"결핍0","pick":번호,"why":"한 문장"}]}')
+    .then(function(t){
+      var j=null; try{ j=JSON.parse(String(t).replace(/```json|```/g,'').trim().replace(/^[^{]*/,'').replace(/[^}]*$/,'')); }catch(e){}
+      if(!j||!j.picks){ done('응답을 해석하지 못했다. 다시 눌러 본다.\n\n'+t); return; }
+      var why=[];
+      j.picks.forEach(function(p){ var id=String(p.id), c=cands[id]; if(!c) return;
+        var k=id.replace(/\d+$/,''), i=+id.replace(/^\D+/,''), x=c[+p.pick]; if(!x) return;
+        cur[k][i]=x; why.push(k+' — '+x[2]+': '+(p.why||'')); });
+      render(); done(why.join('\n'));
+    });
+  };
+  function all_(){ fill(true); lk={외모:[],성격:[],결핍:[]}; fill(true); render(); }
+  ['ch-a','ch-b','ch-c'].forEach(function(id){ document.getElementById(id).addEventListener('change',function(){ fill(false); render(); }); });
+  document.getElementById('ch-go').addEventListener('click',function(){ fill(false); render(); });
   all_();
 })();
 // 소재 뽑기 (난이도 하·중·상)
@@ -4009,6 +4466,7 @@ var runChar=makeIndex({
   window.unmaskAllNow=function(){ if(window.__unmaskAll) window.__unmaskAll(); if(window.__unmaskEnd) window.__unmaskEnd();
     smaskAllOff&&smaskAllOff(); };
   window.__unmaskAll=function(){ imask=imask.map(function(){return false;}); paint(); };
+  window.__czReset=function(){ ilock=[]; imask=[]; items=[]; };
   window.__czAdd=function(text,why){
     if(onbox && !onbox.checked){ onbox.checked=true; sync(); }
     var deco='<em>\u201C'+text.replace(/</g,'&lt;')+'\u201D</em>';
@@ -4214,6 +4672,7 @@ var runChar=makeIndex({
   updateFavCount();
 })();
 aiBar(); favAiBar(); aiSlots();
+dataMigrate();
 show((location.hash||'#home').slice(1));
 })();
 </script>
