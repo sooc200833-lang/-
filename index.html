@@ -2431,8 +2431,8 @@ details.gdet[open] summary{margin-bottom:.5rem}
 </footer>
 <button id="ix-open" title="색인에게 묻기">🔎</button>
 <div id="ix-box" hidden><div class="ix-head">색인에게 묻기 <span class="small">— 눌러서 접기</span><button id="ix-min" aria-label="접기">─</button><button id="ix-close" aria-label="닫기">✕</button></div>
-<div class="ix-log" id="ix-log"><p class="small">사전 전체(클리셰·소재·캐릭터·엔딩·에피소드)에서 찾아 답한다. 예) 복수극 중반에 쓸 만한 반전 클리셰 / 비 오는 장면이 들어간 엔딩 / 내가 추가한 항목도 함께 찾는다</p></div>
-<div class="ix-in"><input id="ix-q" placeholder="색인에 물어보기"><button id="ix-send">보내기</button></div></div>
+<div class="ix-log" id="ix-log"><p class="small">사전 전체(클리셰·소재·캐릭터·엔딩·에피소드)에서 찾아 답한다. 예) 복수극 중반에 쓸 만한 반전 클리셰 / 비 오는 장면이 들어간 엔딩<br>본 작품 이야기를 하면 쓰인 장치를 찾고, 색인에 없는 장치는 <b>알아서 추가</b>한다. 예) 영화 《기생충》 봤는데, 반지하 가족이 부잣집에 위장 취업하고…</p></div>
+<div class="ix-in"><input id="ix-q" placeholder="질문하거나 본 작품 이야기를 한다"><button id="ix-send">보내기</button></div></div>
 <div id="tr-float" hidden><div class="face" id="tr-face">🙂</div><div class="time" id="tr-time">00:00</div><div class="msg" id="tr-msg"></div><button id="tr-min" title="접기">─</button><button id="tr-stop" title="멈추기">✕</button></div>
 
 </div>
@@ -3200,13 +3200,26 @@ function ormAfter(){
   ormFill(document.getElementById('ai-msearch')?document.getElementById('ai-msearch').value:'');
   if(info) info.textContent=note+'지금 쓸 수 있는 모델 '+ORM.list.length+'개. 위쪽 「추천」은 싸고 한국어가 무난한 최신 모델이다. 가격은 100만 토큰당 입력/출력 달러.';
 }
+
+function aiClean(t){
+  t=String(t||'');
+  t=t.replace(/<think(ing)?>[\s\S]*?<\/think(ing)?>/gi,'').replace(/^[\s\S]*?<\/think(ing)?>/i,'');
+  var hasKo=/[\uAC00-\uD7A3]/.test(t);
+  var lines=t.split('\n');
+  if(hasKo){
+    // 앞쪽에 붙은 영어 속생각 줄 걷어내기
+    while(lines.length && lines[0].trim() && !/[\uAC00-\uD7A3{}\[\]「」]/.test(lines[0])) lines.shift();
+    lines=lines.filter(function(l){ return !/^\s*(\d+\.|[-*])?\s*[^\uAC00-\uD7A3]*\?\s*(Yes|No)\.?\s*$/i.test(l); });
+  }
+  return lines.join('\n').replace(/^\s+/,'').replace(/\s+$/,'');
+}
 function aiCall(system, user, onText, maxTok, _retry){
   if(!aiReady()){ onText('AI 연결 페이지에서 키를 먼저 넣어 주세요.'); return; }
   onText('생각하는 중…');
   fetch('https://openrouter.ai/api/v1/chat/completions',{
     method:'POST',
     headers:{'Content-Type':'application/json','Authorization':'Bearer '+AIKEY,'HTTP-Referer':location.origin||'https://localhost','X-Title':'Manga Cliche Dictionary'},
-    body:JSON.stringify({model:(AIMODEL||'openrouter/auto'), max_tokens:(maxTok||900),
+    body:JSON.stringify({model:(AIMODEL||'openrouter/auto'), max_tokens:(maxTok||900)+1500, reasoning:{effort:'low', exclude:true},
       messages:[{role:'system',content:system},{role:'user',content:user}]})
   }).then(function(r){
      if(!r.ok){ return r.text().then(function(tx){
@@ -3221,7 +3234,8 @@ function aiCall(system, user, onText, maxTok, _retry){
      return r.json();
    })
    .then(function(d){
-     var t=(d&&d.choices&&d.choices[0]&&d.choices[0].message&&d.choices[0].message.content)||'';
+     var t=aiClean((d&&d.choices&&d.choices[0]&&d.choices[0].message&&d.choices[0].message.content)||'');
+     if(!t && d&&d.choices&&d.choices[0]&&d.choices[0].finish_reason==='length') t='답이 길이 한도에 걸려 잘렸다. 다시 누르거나 AI 연결에서 다른 모델을 고른다.';
      if(!t && d && d.error) t='오류: '+(d.error.message||JSON.stringify(d.error));
      onText(t||'응답이 비어 있습니다.');
    })
@@ -3750,28 +3764,23 @@ function pbBar(){
   bar.innerHTML='<button class="chip" id="pb-go">클리셰 찾기</button>';
   document.getElementById('pb-go').addEventListener('click',pbRun);
 }
-function pbRun(){
-  var title=(document.getElementById('pb-title').value||'').trim()||'제목 미상';
-  var media=document.getElementById('pb-media').value;
-  var text=(document.getElementById('pb-text').value||'').trim();
-  var out=document.getElementById('pb-out');
-  if(text.length<20){ out.innerHTML='<p class="small">줄거리를 조금 더 적는다. 장면 두세 개면 충분하다.</p>'; return; }
+function pbAnalyze(title, media, text){
   var names=ROWS.map(function(r){ return r[0]; }).join(' / ');
   var mnames=MOTIFDATA.map(function(r){ return r[0]; }).join(' / ');
   var hit=ixSearch(text,40);
-  aiBusy(out,'찾는 중');
   var sys='당신은 만화 클리셰 사전의 편집자다. 반드시 유효한 JSON만 출력한다. 다른 글자는 쓰지 않는다.';
   var usr='[작품] '+media+' 《'+title+'》\n[줄거리]\n'+text.slice(0,4000)+
     '\n\n[색인의 클리셰 이름 전체]\n'+names+'\n\n[색인의 소재 이름 전체]\n'+mnames+
     '\n\n[줄거리와 가까운 색인 항목 설명]\n'+ixText(hit)+
     '\n\n할 일:\n1. 이 작품에 실제로 쓰인 클리셰와 소재를 색인 이름에서 찾는다. 이름은 위 목록의 표기를 글자 그대로 쓴다. 줄거리에 근거가 있는 것만, 많아도 12개.\n'+
     '2. 색인 어디에도 없는 뚜렷한 장치가 있으면 새 항목으로 제안한다. 기존 항목과 이름만 다르고 같은 장치면 새 항목이 아니다. 많아도 5개. 없으면 빈 배열.\n'+
-    '형식:\n{"found":[{"type":"클리셰 또는 소재","name":"색인 이름","where":"작품 속 어디서 쓰였는지 한 문장"}],'+
+    '3. summary 에 이 작품의 장치 구성을 두 문장으로 쓴다.\n'+
+    '형식:\n{"summary":"두 문장","found":[{"type":"클리셰 또는 소재","name":"색인 이름","where":"작품 속 어디서 쓰였는지 한 문장"}],'+
     '"new":[{"type":"클리셰","name":"짧은 이름","genre":"'+PB_ENUM.g.join('|')+' 중 하나","fn":"'+PB_ENUM.fn.join('|')+' 중 하나","pos":"도입·초·중반·중반·정점·마무리 중 하나 이상을 |로","cost":"1–3컷|반쪽|1쪽|2쪽+ 중 하나","tool":"'+PB_ENUM.tool.join('|')+' 중 한두 개를 |로","def":"무엇인가 한 문장","point":"어떻게 그리는가 한 문장","where":"작품 속 어디서 한 문장"},'+
     '{"type":"소재","name":"짧은 이름","cat":"'+PB_ENUM.mc.join('|')+' 중 하나","where":"작품 속 어디서 한 문장"}]}';
-  aiAsk(sys, usr, 2200).then(function(t){
+  return aiAsk(sys, usr, 2200).then(function(t){
     var j=null; try{ j=JSON.parse(String(t).replace(/```json|```/g,'').trim().replace(/^[^{]*/,'').replace(/[^}]*$/,'')); }catch(e){}
-    if(!j){ aiResult(out,'해석하지 못했다 — 다시 누른다',String(t)); return; }
+    if(!j) return {error:String(t)};
     var rowMap={}, motMap={}; ROWS.forEach(function(r){ rowMap[r[0]]=r; }); MOTIFDATA.forEach(function(r){ motMap[r[0]]=r; });
     var found=[], news=[], seen={};
     (j.found||[]).forEach(function(f){
@@ -3791,44 +3800,71 @@ function pbRun(){
           (tool.length?tool:['반응 컷']).slice(0,2).join('|'), String(n.def||'').trim()||nm+'.', String(n.point||'').trim()||'', '', '추가|'+media+' 《'+title+'》'], w:n.where});
       }
     });
-    var html='<div class="pbsec"><h4>《'+title+'》에 쓰인 장치 — '+found.length+'개</h4>';
-    if(!found.length) html+='<p class="small">색인에서 맞는 항목을 찾지 못했다.</p>';
-    found.forEach(function(f){
-      var on=!!FAV[f.k], meta=f.t==='클리셰'?(f.r[1]+' · '+f.r[2]+' · '+f.r[5]):f.r[1];
-      html+='<div class="pbrow"><button class="fav" data-k="'+f.k+'" data-meta="《'+title+'》" aria-pressed="'+(on?'true':'false')+'">'+(on?'\u2605':'\u2606')+'</button>'+
-        '<div class="b"><b>'+f.r[0]+'</b> <span class="small">'+f.t+' · '+meta+'</span><span class="w">'+String(f.w||'').replace(/</g,'&lt;')+'</span></div>'+
-        (f.t==='클리셰'?'<button class="twbtn" data-pbtw="'+encodeURIComponent(f.r[0])+'">비틀기</button>':'')+'</div>';
+    return {summary:String(j.summary||''), found:found, news:news};
+  });
+}
+function pbCommit(list){
+  var u=pbUser(); u.c=u.c||[]; u.m=u.m||[]; var added=[];
+  list.forEach(function(it){
+    if(it.t==='클리셰'){ if(!ROWS.some(function(x){return x[0]===it.row[0];})){ ROWS.push(it.row); u.c.push(it.row); added.push(it); } }
+    else { if(!MOTIFDATA.some(function(x){return x[0]===it.row[0];})){ MOTIFDATA.push(it.row); u.m.push(it.row); added.push(it); } }
+  });
+  pbUserSave(u); pbRefresh(); return added;
+}
+function pbUndo(it){
+  var u=pbUser(), t=it.t==='클리셰'?'c':'m';
+  u[t]=(u[t]||[]).filter(function(r){ return r[0]!==it.row[0]; }); pbUserSave(u);
+  if(t==='c'){ for(var x=ROWS.length-1;x>=0;x--) if(ROWS[x][0]===it.row[0] && String(ROWS[x][11]).indexOf('추가|')===0) ROWS.splice(x,1); }
+  else { for(var y=MOTIFDATA.length-1;y>=0;y--) if(MOTIFDATA[y][0]===it.row[0]) MOTIFDATA.splice(y,1); }
+  pbRefresh();
+}
+function pbEsc(s){ return String(s||'').replace(/</g,'&lt;'); }
+function pbFoundHTML(title, found){
+  var html='<div class="pbsec"><h4>《'+pbEsc(title)+'》에 쓰인 장치 — '+found.length+'개</h4>';
+  if(!found.length) html+='<p class="small">색인에서 맞는 항목을 찾지 못했다.</p>';
+  found.forEach(function(f){
+    var on=!!FAV[f.k], meta=f.t==='클리셰'?(f.r[1]+' · '+f.r[2]+' · '+f.r[5]):f.r[1];
+    html+='<div class="pbrow"><button class="fav" data-k="'+f.k+'" data-meta="《'+pbEsc(title)+'》" aria-pressed="'+(on?'true':'false')+'">'+(on?'\u2605':'\u2606')+'</button>'+
+      '<div class="b"><b>'+f.r[0]+'</b> <span class="small">'+f.t+' · '+meta+'</span><span class="w">'+pbEsc(f.w)+'</span></div>'+
+      (f.t==='클리셰'?'<button class="twbtn" data-pbtw="'+encodeURIComponent(f.r[0])+'">비틀기</button>':'')+'</div>';
+  });
+  return html+'</div>';
+}
+function pbBindTwist(root){
+  [].slice.call(root.querySelectorAll('button[data-pbtw]')).forEach(function(b){
+    b.addEventListener('click',function(){
+      var row=b.closest('.pbrow'), nx=row.nextElementSibling;
+      if(nx && nx.classList.contains('twres')){ nx.remove(); return; }
+      var bx=document.createElement('div'); bx.className='twres'; row.parentNode.insertBefore(bx,row.nextSibling);
+      twistAsk(decodeURIComponent(b.getAttribute('data-pbtw')), bx);
     });
-    html+='</div>';
+  });
+}
+function pbRun(){
+  var title=(document.getElementById('pb-title').value||'').trim()||'제목 미상';
+  var media=document.getElementById('pb-media').value;
+  var text=(document.getElementById('pb-text').value||'').trim();
+  var out=document.getElementById('pb-out');
+  if(text.length<20){ out.innerHTML='<p class="small">줄거리를 조금 더 적는다. 장면 두세 개면 충분하다.</p>'; return; }
+  aiBusy(out,'찾는 중');
+  pbAnalyze(title, media, text).then(function(res){
+    if(res.error){ aiResult(out,'해석하지 못했다 — 다시 누른다',res.error); return; }
+    var news=res.news, html=(res.summary?'<p>'+pbEsc(res.summary)+'</p>':'')+pbFoundHTML(title,res.found);
     if(news.length){
       html+='<div class="pbsec"><h4>색인에 없는 새 장치 — '+news.length+'개</h4><p class="small">추가할 것만 체크한다. 추가하면 색인·랜덤 구성기·🔎 창에서 바로 쓰인다.</p>';
       news.forEach(function(n,i){
         var meta=n.t==='클리셰'?(n.row[1]+' · '+n.row[2]+' · '+n.row[6]):n.row[1];
-        html+='<div class="pbrow"><input type="checkbox" data-new="'+i+'" checked><div class="b"><b>'+n.row[0].replace(/</g,'&lt;')+'</b> <span class="small">'+n.t+' · '+meta+'</span>'+
-          '<span class="w">'+(n.t==='클리셰'?String(n.row[8]).replace(/</g,'&lt;')+' ':'')+'— '+String(n.w||'').replace(/</g,'&lt;')+'</span></div></div>';
+        html+='<div class="pbrow"><input type="checkbox" data-new="'+i+'" checked><div class="b"><b>'+pbEsc(n.row[0])+'</b> <span class="small">'+n.t+' · '+meta+'</span>'+
+          '<span class="w">'+(n.t==='클리셰'?pbEsc(n.row[8])+' ':'')+'— '+pbEsc(n.w)+'</span></div></div>';
       });
       html+='<div class="filterbar"><button class="chip" id="pb-add">체크한 것 색인에 추가</button><span class="count" id="pb-addmsg"></span></div></div>';
     } else html+='<p class="small">색인에 없는 새 장치는 찾지 못했다.</p>';
-    out.innerHTML=html;
-    [].slice.call(out.querySelectorAll('button[data-pbtw]')).forEach(function(b){
-      b.addEventListener('click',function(){
-        var row=b.closest('.pbrow'), nx=row.nextElementSibling;
-        if(nx && nx.classList.contains('twres')){ nx.remove(); return; }
-        var bx=document.createElement('div'); bx.className='twres'; row.parentNode.insertBefore(bx,row.nextSibling);
-        twistAsk(decodeURIComponent(b.getAttribute('data-pbtw')), bx);
-      });
-    });
+    out.innerHTML=html; pbBindTwist(out);
     var add=document.getElementById('pb-add');
     if(add) add.addEventListener('click',function(){
-      var u=pbUser(); u.c=u.c||[]; u.m=u.m||[]; var n=0;
-      [].slice.call(out.querySelectorAll('input[data-new]')).forEach(function(cb){
-        if(!cb.checked||cb.disabled) return; var it=news[+cb.getAttribute('data-new')];
-        if(it.t==='클리셰'){ if(!ROWS.some(function(x){return x[0]===it.row[0];})){ ROWS.push(it.row); u.c.push(it.row); n++; } }
-        else { if(!MOTIFDATA.some(function(x){return x[0]===it.row[0];})){ MOTIFDATA.push(it.row); u.m.push(it.row); n++; } }
-        cb.disabled=true;
-      });
-      pbUserSave(u); pbRefresh();
-      document.getElementById('pb-addmsg').textContent=n?n+'개를 추가했다.':'새로 추가된 것이 없다.';
+      var pick=[]; [].slice.call(out.querySelectorAll('input[data-new]')).forEach(function(cb){ if(cb.checked&&!cb.disabled){ pick.push(news[+cb.getAttribute('data-new')]); cb.disabled=true; } });
+      var added=pbCommit(pick);
+      document.getElementById('pb-addmsg').textContent=added.length?added.length+'개를 추가했다.':'새로 추가된 것이 없다.';
     });
   });
 }
@@ -4005,12 +4041,47 @@ function favAiBar(){
   document.getElementById('ix-min').addEventListener('click',function(e){ e.stopPropagation(); mini(); });
   box.querySelector('.ix-head').addEventListener('click',mini);
   document.addEventListener('keydown',function(e){ if(e.key==='Escape' && !box.hidden) close(); });
+  function isWork(t){
+    return t.length>=25 && /(영화|만화|웹툰|드라마|애니|소설|작품|줄거리|봤는데|봤어|봤다|읽었|에서 나오|《)/.test(t);
+  }
+  function guessTitle(t){
+    var m=t.match(/《([^》]+)》|「([^」]+)」|『([^』]+)』|"([^"]+)"|'([^']+)'/);
+    if(m) return (m[1]||m[2]||m[3]||m[4]||m[5]).trim().slice(0,40);
+    var m2=t.match(/([\uAC00-\uD7A3A-Za-z0-9:·\s]{2,20}?)(?:이라는|라는|이란|란)\s*(영화|만화|웹툰|드라마|애니|소설)/);
+    return m2?m2[1].trim():'대화에서 말한 작품';
+  }
+  function guessMedia(t){
+    var m=t.match(/영화|웹툰|만화|드라마|애니|소설/); return m?m[0]:'작품';
+  }
+  function workReply(t, slot){
+    var title=guessTitle(t), media=guessMedia(t);
+    aiBusy(slot,'《'+title+'》 분석 중');
+    pbAnalyze(title, media, t).then(function(res){
+      if(res.error){ aiResult(slot,'해석하지 못했다 — 다시 보낸다',res.error); return; }
+      var added=pbCommit(res.news);
+      var html=(res.summary?'<p>'+pbEsc(res.summary)+'</p>':'')+pbFoundHTML(title,res.found);
+      if(added.length){
+        html+='<div class="pbsec"><h4>색인에 새로 추가함 — '+added.length+'개</h4><p class="small">필요 없으면 「빼기」를 누른다.</p>';
+        added.forEach(function(n,i){
+          var meta=n.t==='클리셰'?(n.row[1]+' · '+n.row[2]):n.row[1];
+          html+='<div class="pbrow"><div class="b"><b>'+pbEsc(n.row[0])+'</b> <span class="small">'+n.t+' · '+meta+'</span><span class="w">'+(n.t==='클리셰'?pbEsc(n.row[8])+' ':'')+'— '+pbEsc(n.w)+'</span></div><button class="chip" data-undo="'+i+'">빼기</button></div>';
+        });
+        html+='</div>';
+      } else html+='<p class="small">색인에 없는 새 장치는 없었다.</p>';
+      slot.innerHTML=html; pbBindTwist(slot);
+      [].slice.call(slot.querySelectorAll('button[data-undo]')).forEach(function(bt){
+        bt.addEventListener('click',function(){ pbUndo(added[+bt.getAttribute('data-undo')]); bt.textContent='뺐음'; bt.disabled=true; });
+      });
+      box.classList.remove('mini'); log.scrollTop=log.scrollHeight;
+    });
+  }
   function send(){
     var t=q.value.trim(); if(!t) return;
     q.value='';
     var qd=document.createElement('div'); qd.className='q'; qd.textContent=t; log.appendChild(qd);
     var slot=document.createElement('div'); log.appendChild(slot);
     if(!aiReady()){ slot.innerHTML='<p class="small"><a href="#ai">AI 연결</a>에서 키를 먼저 넣는다.</p>'; return; }
+    if(isWork(t)){ workReply(t, slot); log.scrollTop=log.scrollHeight; return; }
     var hit=ixSearch(t,45);
     aiBusy(slot,'답');
     log.scrollTop=log.scrollHeight;
