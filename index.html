@@ -3174,6 +3174,7 @@ function ormLoad(force){
   if(!force && cached && cached.at && Date.now()-cached.at<12*3600*1000 && cached.list && cached.list.length){
     ORM.list=cached.list; ORM.rec=ormPickRec(ORM.list); ormAfter(); return Promise.resolve();
   }
+  if(typeof fetch!=='function'){ if(cached&&cached.list){ ORM.list=cached.list; ORM.rec=ormPickRec(ORM.list); ormAfter(); } return Promise.resolve(); }
   ORM.loading=true;
   return fetch('https://openrouter.ai/api/v1/models').then(function(r){ return r.json(); }).then(function(j){
     var list=(j&&j.data||[]).filter(ormTextOK).map(function(m){ return {id:m.id,name:m.name,created:m.created,context_length:m.context_length,pricing:m.pricing}; });
@@ -3190,6 +3191,7 @@ function ormLoad(force){
 }
 function ormAfter(){
   var info=document.getElementById('ai-minfo'), note='';
+  if(!ORM.list) return;
   if(!AIMODEL || !ormHas(AIMODEL)){
     var old=AIMODEL, nu=ORM.rec[0]?ORM.rec[0].m.id:'openrouter/auto';
     AIMODEL=nu; aiSave();
@@ -3250,7 +3252,7 @@ var AISYS='당신은 한국 만화·웹툰 연출을 돕는 조력자다. 짧고
   var k=document.getElementById('ai-key'); if(!k) return;
   var m=document.getElementById('ai-model'), msg=document.getElementById('ai-msg');
   k.value=AIKEY;
-  ormLoad(false);
+  try{ ormLoad(false); }catch(e){}
   var ms=document.getElementById('ai-msearch');
   if(ms) ms.addEventListener('input',function(){ ormFill(ms.value); });
   k.addEventListener('input',function(){ AIKEY=k.value.trim(); aiSave(); aiBar(); favAiBar(); aiSlots(); if(typeof pbBar==='function') pbBar(); if(typeof apply==='function') apply(); if(window.__reSlots) window.__reSlots(); if(typeof renderFavs==='function') renderFavs(); });
