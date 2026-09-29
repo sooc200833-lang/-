@@ -440,6 +440,16 @@ textarea#pb-text{width:100%; font:inherit; font-size:.92rem; padding:.6rem .7rem
 #ix-box .ix-log .aires{border:0; background:none; padding:0}
 #ix-box .ix-log .aires .gen-h{font-size:.74rem; color:var(--ink-3); font-weight:400}
 @media (max-width:640px){ #ix-box.big{left:4px; right:4px; width:auto; height:85vh} }
+
+#fold-list .frow{display:flex; flex-wrap:wrap; gap:.35rem; align-items:center; padding:.45rem 0; border-bottom:1px solid var(--rule); font-size:.86rem}
+#fold-list .frow:last-child{border-bottom:0}
+#fold-list .frow .fn{flex:1; min-width:9rem}
+#fold-list .frow .fn b{font-family:"Hahmlet",serif}
+#fold-list .frow .fn span{color:var(--ink-3); font-size:.78rem; margin-left:.3rem}
+#fold-list .frow.cur .fn b::after{content:" · 담는 곳"; color:var(--note); font-weight:400; font-size:.76rem}
+#fold-list .chip[data-arm="1"]{border-color:var(--mark); color:var(--mark)}
+.favdel{border:0; background:none; color:var(--ink-3); cursor:pointer; font-size:.95rem; padding:0 .35rem; align-self:center}
+.favdel:hover{color:var(--mark)}
 .gen-top{display:flex; align-items:center; gap:.6rem; margin:.8rem 0 .4rem; font-family:"Hahmlet",serif}
 .gen-sec{border:1px solid var(--rule-hard); background:var(--paper-2); padding:.6rem .8rem; margin:.5rem 0}
 .gen-h{font-family:"Hahmlet",serif; font-weight:700; font-size:.92rem; display:flex; align-items:center; gap:.5rem; margin-bottom:.35rem}
@@ -1892,6 +1902,7 @@ details.gdet[open] summary{margin-bottom:.5rem}
     <button class="chip" id="ai-clear">키 지우기</button>
     <span class="count" id="ai-msg"></span>
   </div>
+  <p class="small" id="ai-lasterr"></p>
   <h3>쓸 수 있는 것</h3>
   <ul class="small">
     <li><b>비틀기</b> — 클리셰 색인의 각 항목 옆, 랜덤 구성기의 클리셰 칸, 즐겨찾기의 클리셰 옆에 있다. 뒤집기·결합·전복·해체 네 단계로 비튼다. 다시 누르면 접힌다.</li>
@@ -2071,9 +2082,13 @@ details.gdet[open] summary{margin-bottom:.5rem}
     <label>담는 곳 <select id="fav-cur"></select></label>
     <input id="fav-new" type="text" placeholder="새 폴더 이름">
     <button class="chip" id="fav-add">추가</button>
-    <button class="chip" id="fav-del">이 폴더 삭제</button>
+    <button class="chip" id="fav-del" hidden>이 폴더 삭제</button>
     <span class="count" id="fav-msg" style="color:var(--mark)"></span>
   </div>
+  <details class="aidet" id="fold-wrap" open><summary>폴더 정리</summary>
+    <p class="small">폴더마다 <b>비우기</b>(담은 항목만), <b>메모 비우기</b>, <b>삭제</b>(폴더와 그 안 항목·메모 전부)를 누른다. 한 번 더 눌러야 실행된다. 지운 것은 드라이브 동기화로도 지워진다.</p>
+    <div id="fold-list"></div>
+  </details>
   <div class="filterbar">
     <label style="font-size:.84rem">보기 <select id="fav-view"><option value="*">전체</option></select></label>
     <button class="chip" id="fav-copy">목록 복사</button>
@@ -2452,7 +2467,7 @@ details.gdet[open] summary{margin-bottom:.5rem}
 </footer>
 <button id="ix-open" title="색인에게 묻기">🔎</button>
 <div id="ix-box" hidden><div class="ix-head">AI와 이야기 <span class="small">— 눌러서 접기</span><button id="ix-big" aria-label="크게">⤢</button><button id="ix-min" aria-label="접기">─</button><button id="ix-close" aria-label="닫기">✕</button></div>
-<div class="ix-log" id="ix-log"><p class="small ix-hello">편하게 이야기한다. 앞에서 한 말을 기억하고 이어 간다. 관련된 사전 항목은 알아서 찾아 「」로 짚어 준다.<br>예) 복수극인데 중반이 늘어져, 뭘 넣지? / 방금 그거 좀 더 어둡게 / 《피노》 주인공 첫 등장 어떻게 할까<br>본 작품을 분석하려면 제목을 《》로 감싸고 「분석」을 붙인다. 예) 《기생충》 분석해줘 → 쓰인 장치를 찾고 새 장치는 색인에 <b>알아서 추가</b>.</p></div>
+<div class="ix-log" id="ix-log"><p class="small ix-hello">편하게 이야기한다. 앞에서 한 말을 기억하고 이어 간다. 관련된 사전 항목은 알아서 찾아 「」로 짚어 준다.<br>예) 복수극인데 중반이 늘어져, 뭘 넣지? / 방금 그거 좀 더 어둡게 / 《피노》 주인공 첫 등장 어떻게 할까<br>이야기한 장치를 사전에 남기려면 「방금 그거 색인에 넣어줘」 → 알아서 정리해 추가한다.<br>본 작품을 분석하려면 제목을 《》로 감싸고 「분석」을 붙인다. 예) 《기생충》 분석해줘 → 쓰인 장치를 찾고 새 장치는 색인에 <b>알아서 추가</b>.</p></div>
 <div class="ix-in"><textarea id="ix-q" rows="1" placeholder="편하게 말한다 (Shift+Enter 줄바꿈)"></textarea><button id="ix-send">보내기</button></div>
 <div class="ix-foot"><button id="ix-new" class="ix-newbtn">새 대화</button><label class="ix-web"><input type="checkbox" id="ix-web"> 🌐 웹 검색 <span class="small">(OpenRouter는 한 번에 약 10~30원, 제미나이는 검색 한도 안에서 무료)</span></label></div></div>
 <div id="tr-float" hidden><div class="face" id="tr-face">🙂</div><div class="time" id="tr-time">00:00</div><div class="msg" id="tr-msg"></div><button id="tr-min" title="접기">─</button><button id="tr-stop" title="멈추기">✕</button></div>
@@ -2707,11 +2722,20 @@ function renderFavs(){
       var dir=FAVDIR[k]||'기본';
       if(t==='x') memo='사전에서 빠지거나 이름이 바뀐 항목. 별표는 남겨 두었다.'+(memo?' — '+memo:'');
       html+='<li><button class="fav" data-k="'+k+'" aria-pressed="true">★</button><div class="body"><b>'+nm+'</b>'+(memo?'<span>'+memo+'</span>':'')+'</div>'+(t==='c'&&aiReady()?'<button class="twbtn" data-fw="'+encodeURIComponent(nm)+'">비틀기</button>':'')+
+        '<button class="favdel" data-fd="'+encodeURIComponent(k)+'" title="빼기">✕</button>'+
         '<select class="favmove" data-k="'+k+'">'+FOLDERS.map(function(f){return '<option'+(f===dir?' selected':'')+'>'+f+'</option>';}).join('')+'</select></li>';
     });
     html+='</ul></div>';
   });
   box.innerHTML = html || '<p class="small">아직 별표한 항목이 없다. 색인에서 ☆를 누르면 여기 모인다.</p>';
+  if(typeof foldList==='function') foldList();
+  var clb=document.getElementById('fav-clear'); if(clb && clb.getAttribute('data-arm')!=='1'){ var vv=document.getElementById('fav-view'); clb.textContent=(!vv||vv.value==='*')?'전체 비우기':'이 폴더 비우기'; }
+  [].slice.call(box.querySelectorAll('button[data-fd]')).forEach(function(bt){
+    bt.addEventListener('click',function(){ var k=decodeURIComponent(bt.getAttribute('data-fd'));
+      delete FAV[k]; delete FAVMETA[k]; delete FAVDIR[k]; gdIntent(); favSave(); foldSave();
+      [].slice.call(document.querySelectorAll('.fav[data-k="'+k.replace(/"/g,'\\"')+'"]')).forEach(function(b){ b.setAttribute('aria-pressed','false'); b.textContent='☆'; });
+      renderFavs(); if(typeof updateFavCount==='function') updateFavCount(); });
+  });
   [].slice.call(box.querySelectorAll('button[data-fw]')).forEach(function(bt){
     bt.addEventListener('click',function(){
       var li=bt.closest('li'), nx=li.nextElementSibling;
@@ -2742,10 +2766,14 @@ function renderFavs(){
     catch(e){ window.prompt('복사해서 쓰세요', txt); }
   });
   if(cl) cl.addEventListener('click',function(){
-    if(!window.confirm('즐겨찾기를 전부 비웁니다. 계속할까요?')) return;
-    FAV={}; FAVMETA={}; favSave();
-    [].slice.call(document.querySelectorAll('.fav')).forEach(function(b){ b.setAttribute('aria-pressed','false'); b.textContent='☆'; });
-    renderFavs();
+    var vs=document.getElementById('fav-view'), vw=vs?vs.value:'*';
+    if(cl.getAttribute('data-arm')!=='1'){ cl.setAttribute('data-arm','1'); cl.textContent='한 번 더 누르면 '+(vw==='*'?'전부':'「'+vw+'」') +' 비움';
+      setTimeout(function(){ cl.setAttribute('data-arm',''); cl.textContent=(vw==='*'?'전체 비우기':'이 폴더 비우기'); },4000); return; }
+    cl.setAttribute('data-arm','');
+    Object.keys(FAV).forEach(function(k){ if(vw==='*' || (FAVDIR[k]||'기본')===vw){ delete FAV[k]; delete FAVMETA[k]; delete FAVDIR[k]; } });
+    gdIntent(); favSave(); foldSave();
+    [].slice.call(document.querySelectorAll('.fav')).forEach(function(b){ var k=b.getAttribute('data-k'); if(k&&!FAV[k]){ b.setAttribute('aria-pressed','false'); b.textContent='☆'; } });
+    renderFavs(); if(typeof updateFavCount==='function') updateFavCount();
   });
   var fc=document.getElementById('fav-cur'), fn=document.getElementById('fav-new'),
       fa=document.getElementById('fav-add'), fd=document.getElementById('fav-del'),
@@ -3190,10 +3218,10 @@ function ormFill(filter){
   var sel=document.getElementById('ai-model'); if(!sel||!ORM.list) return;
   var q=(filter||'').trim().toLowerCase(), html='';
   if(!q && ORM.rec.length){
-    html+='<optgroup label="추천">'+ORM.rec.map(function(r){ var p=ormPrice(r.m); return '<option value="'+r.m.id+'">'+(r.m.name||r.m.id)+(p?' · '+p:'')+' — '+r.why+'</option>'; }).join('')+'</optgroup>';
+    html+='<optgroup label="추천">'+ORM.rec.map(function(r){ var p=ormPrice(r.m); return '<option value="'+r.m.id+'">'+(qIsOut(r.m.id)?'⛔ 오늘 한도 소진 · ':'')+(r.m.name||r.m.id)+(p?' · '+p:'')+' — '+r.why+'</option>'; }).join('')+'</optgroup>';
   }
   var all=ORM.list.filter(function(m){ return !q || (m.id+' '+(m.name||'')).toLowerCase().indexOf(q)>-1 || (q==='free'||q==='무료')&&/:free$/.test(m.id); });
-  html+='<optgroup label="'+(q?'검색 결과 '+all.length+'개':'전체 '+all.length+'개')+'">'+all.slice(0,300).map(function(m){ var p=ormPrice(m); return '<option value="'+m.id+'">'+(m.name||m.id)+(p?' · '+p:'')+'</option>'; }).join('')+'</optgroup>';
+  html+='<optgroup label="'+(q?'검색 결과 '+all.length+'개':'전체 '+all.length+'개')+'">'+all.slice(0,300).map(function(m){ var p=ormPrice(m); return '<option value="'+m.id+'">'+(qIsOut(m.id)?'⛔ ':'')+(m.name||m.id)+(p?' · '+p:'')+'</option>'; }).join('')+'</optgroup>';
   sel.innerHTML=html;
   if(AIMODEL && [].some.call(sel.options,function(o){ return o.value===AIMODEL; })) sel.value=AIMODEL;
 }
@@ -3275,13 +3303,41 @@ function aiClean(t){
 }
 
 
+
+function qOut(){ try{ return JSON.parse(localStorage.getItem('aiOut')||'{}')||{}; }catch(e){ return {}; } }
+function qIsOut(id){ var o=qOut(), t=o[PROV+'|'+id]; return !!(t && Date.now()<t); }
+function qMark(id){
+  // 구글 무료 한도는 미국 태평양 자정에 풀린다 → 다음 08:00 UTC 로 넉넉히 잡는다
+  var d=new Date(), n=new Date(Date.UTC(d.getUTCFullYear(),d.getUTCMonth(),d.getUTCDate(),8,0,0));
+  if(n.getTime()<=Date.now()) n=new Date(n.getTime()+86400000);
+  var o=qOut(); o[PROV+'|'+id]=n.getTime();
+  Object.keys(o).forEach(function(k){ if(o[k]<Date.now()) delete o[k]; });
+  try{ localStorage.setItem('aiOut',JSON.stringify(o)); }catch(e){}
+  aiLastErr('「'+aiShort(id)+'」 오늘 한도 소진 — 한국 시간 오후 4~5시쯤까지 건너뜀');
+  try{ if(typeof ormFill==='function'){ var ms=document.getElementById('ai-msearch'); ormFill(ms?ms.value:''); } }catch(e){}
+}
+function aiLastErr(t){ try{ localStorage.setItem('aiLastErr',new Date().toLocaleString()+' · '+t); }catch(e){} var el=document.getElementById('ai-lasterr'); if(el) el.textContent='최근 문제: '+new Date().toLocaleTimeString()+' · '+t; }
+function gmQuota(tx){
+  var r={perDay:false,perMin:false,limit:0};
+  try{ var j=JSON.parse(tx), d=(j.error&&j.error.details)||[];
+    d.forEach(function(x){ (x&&x.violations||[]).forEach(function(v){
+      var id=String(v.quotaId||'')+' '+String(v.quotaMetric||'');
+      if(/PerDay/i.test(id)) r.perDay=true; if(/PerMinute/i.test(id)) r.perMin=true;
+      if(v.quotaValue) r.limit=parseInt(v.quotaValue,10)||r.limit; }); });
+    var m=(j.error&&j.error.message)||'';
+    if(!r.perDay && /per ?day|daily/i.test(m)) r.perDay=true;
+    if(!r.perMin && /per ?minute/i.test(m)) r.perMin=true;
+    var lm=m.match(/limit:\s*(\d+)/); if(lm && !r.limit) r.limit=parseInt(lm[1],10);
+  }catch(e){}
+  return r;
+}
 function aiAlt(except, kind){
   // 붐빔·한도일 때 이번 호출만 대신 부를 모델. 무료로 쓰기 쉬운 가벼운 모델부터.
-  var rec=(ORM&&ORM.rec)||[], ids=rec.map(function(r){ return r.m.id; }).filter(function(id){ return id!==except; });
+  var rec=(ORM&&ORM.rec)||[], ids=rec.map(function(r){ return r.m.id; }).filter(function(id){ return id!==except && !qIsOut(id); });
   if(PROV==='gm'){
     var order=[/flash-lite/, /^gemini-2\.5-flash$/, /flash/];
     for(var i=0;i<order.length;i++){ for(var k=0;k<ids.length;k++){ if(order[i].test(ids[k]) && !/pro/.test(ids[k])) return ids[k]; } }
-    return except==='gemini-flash-lite-latest'?null:'gemini-flash-lite-latest';
+    return (except==='gemini-flash-lite-latest'||qIsOut('gemini-flash-lite-latest'))?null:'gemini-flash-lite-latest';
   }
   var cheap=ids.filter(function(id){ return !/:free$/.test(id) && !/sonnet|opus|pro\b/.test(id); });
   return cheap[0]||'openrouter/auto';
@@ -3295,6 +3351,10 @@ function aiRetryAfter(tx){
 function gmCall(system, user, onText, maxTok, _retry, opts){
   opts=opts||{};
   var model=opts.model||AIMODEL||'gemini-flash-latest';
+  if(!opts.model && qIsOut(model)){ var skip=aiAlt(model,'quota');
+    if(skip){ var o0=Object.assign({},opts,{model:skip,_alt:true,_n:0});
+      gmCall(system,user,function(t){ onText((t==='생각하는 중…'||aiIsErr(t))?t:t+'\n\n(「'+aiShort(model)+'」은 오늘 무료 한도를 다 써서 「'+aiShort(skip)+'」로 불렀다)'); },maxTok,_retry,o0); return; }
+    onText('오늘 쓸 수 있는 제미나이 모델의 무료 한도를 모두 썼다. 한국 시간 오후 4~5시쯤 풀린다. 급하면 AI 연결에서 OpenRouter로 바꾼다.'); return; }
   var body={systemInstruction:{parts:[{text:system}]},
     contents:(opts.history||[]).map(function(m){ return {role:(m.role==='assistant'?'model':'user'), parts:[{text:m.content}]}; }).concat([{role:'user',parts:[{text:user}]}]),
     generationConfig:{maxOutputTokens:(maxTok||900)+1500}};
@@ -3307,7 +3367,9 @@ function gmCall(system, user, onText, maxTok, _retry, opts){
       if(/API key not valid|API_KEY_INVALID/i.test(m)) throw new Error('키가 올바르지 않다. AI 연결에서 제미나이 키를 다시 확인한다.');
       if(opts.web && /google_search|search|grounding|tool/i.test(m) && (r.status===400||r.status===403))
         throw new Error('이 모델은 지금 등급에서 구글 검색을 쓸 수 없다. 무료 등급이면 추천의 「2.5 Flash」를 고르거나, 결제를 켠다.');
-      if(r.status===429){ var eq=new Error('RETRY'); eq.kind='quota'; eq.delay=aiRetryAfter(tx); eq.detail=m; throw eq; }
+      if(r.status===429){ var eq=new Error('RETRY'); eq.kind='quota'; eq.delay=aiRetryAfter(tx); eq.detail=m; var qq=gmQuota(tx); eq.perDay=qq.perDay; eq.limit=qq.limit;
+        if(qq.perDay){ qMark(model); eq.delay=0; } else aiLastErr('「'+aiShort(model)+'」 분당 한도'+(qq.limit?'('+qq.limit+'번)':'')+' — 잠깐 쉬었다 다시');
+        throw eq; }
       if(r.status===500||r.status===502||r.status===503||r.status===504||/overloaded|high demand|unavailable/i.test(m)){ var eb=new Error('RETRY'); eb.kind='busy'; eb.detail=m; throw eb; }
       if(r.status===403) throw new Error('권한이 없다 (403). 키를 만든 프로젝트에서 Gemini API가 켜져 있는지 확인한다.');
       if(r.status===404 || /not found|is not supported for generateContent/i.test(m)){ var e404=new Error('MODEL_GONE'); e404.detail=m; throw e404; }
@@ -3339,7 +3401,9 @@ function gmCall(system, user, onText, maxTok, _retry, opts){
           return; }
       }
       m = e.kind==='quota'
-        ? '무료 한도에 걸렸다 (429). 다른 모델로도 해 봤지만 안 됐다. 1분쯤 뒤에 다시 하거나, 하루 한도라면 내일 풀린다. 자주 걸리면 AI 연결에서 결제를 켜거나 OpenRouter로 바꾼다.'
+        ? (e.perDay
+            ? '무료 한도에 걸렸다 (429) — 「'+aiShort(model)+'」의 하루 한도'+(e.limit?'('+e.limit+'번)':'')+'를 다 썼고, 다른 모델도 막혔다. 한국 시간 오후 4~5시쯤 풀린다. 급하면 AI 연결에서 OpenRouter로 바꾼다.'
+            : '무료 한도에 걸렸다 (429) — 분당 호출 수'+(e.limit?'('+e.limit+'번)':'')+'를 넘었다. 1분쯤 쉬었다 다시 누른다.')
         : '구글 서버가 지금 붐빈다 (503). 몇 번 다시 시도하고 다른 모델로도 해 봤지만 안 됐다. 잠시 뒤 다시 누른다.';
       onText(m); return;
     }
@@ -3372,7 +3436,12 @@ function aiCall(system, user, onText, maxTok, _retry, opts){
        var m=''; try{ var j=JSON.parse(tx); m=(j.error&&(j.error.message||j.error.code))||tx; }catch(e){ m=tx; }
        if(r.status===401) throw new Error('키가 올바르지 않습니다 (401). AI 연결에서 키를 다시 확인하세요.');
        if(r.status===402) throw new Error('잔액이 부족합니다 (402). OpenRouter에서 크레딧을 충전하세요.');
-       if(r.status===429){ var eq=new Error('RETRY'); eq.kind='quota'; eq.detail=m; throw eq; }
+       if(r.status===429){
+         var cur0=opts.model||AIMODEL;
+         if(/free-models-per-day/i.test(m)){ qMark(cur0); var ed=new Error('OR_FREEDAY'); throw ed; }
+         var eq=new Error('RETRY'); eq.kind='quota'; eq.detail=m;
+         aiLastErr('「'+aiShort(cur0)+'」 '+(/upstream/i.test(m)?'제공사 쪽이 붐빔':(/per-min/i.test(m)?'분당 한도':'요청 한도'))); throw eq; }
+       if(r.status===402){ aiLastErr('OpenRouter 잔액 없음'); }
        if(r.status===500||r.status===502||r.status===503||r.status===504||/overloaded|high demand|temporarily unavailable/i.test(m)){ var eb=new Error('RETRY'); eb.kind='busy'; eb.detail=m; throw eb; }
        if(opts.web && !opts.legacyWeb && (r.status===400 || /tool|web_search|server tool/i.test(m))){
          var ew=new Error('WEB_LEGACY'); throw ew; }
@@ -3396,6 +3465,10 @@ function aiCall(system, user, onText, maxTok, _retry, opts){
    .catch(function(e){
      var m=e.message||String(e);
      if(m==='WEB_LEGACY'){ opts.legacyWeb=true; aiCall(system,user,onText,maxTok,_retry,opts); return; }
+     if(m==='OR_FREEDAY'){
+       onText('OpenRouter 무료 모델의 하루 한도를 다 썼다 (429). 한 번도 충전하지 않은 계정은 무료 모델이 하루 50번이다. openrouter.ai에서 10달러를 한 번 충전하면 하루 1,000번으로 늘고, 충전금으로 유료 모델도 쓸 수 있다. 또는 AI 연결에서 제미나이로 바꾼다.');
+       return;
+     }
      if(m==='RETRY'){
        var n=opts._n||0, cur=opts.model||AIMODEL;
        if(n<2){ opts._n=n+1; setTimeout(function(){ aiCall(system,user,onText,maxTok,_retry,opts); }, (e.kind==='quota'?3000:1500)*(n+1)); return; }
@@ -3430,7 +3503,7 @@ function aiAsk(system,user,maxTok,opts){
   return new Promise(function(res){ aiCall(system,user,function(t){ if(t!=='생각하는 중…') res(t); },maxTok,false,opts); });
 }
 function aiIsErr(t){
-  return /^(이 모델은 지금 등급에서|키가 올바르지|한도에 걸렸다|무료 한도에 걸렸다|구글 서버가 지금 붐빈다|서버가 지금 붐빈다|요청 한도에 걸렸다|권한이 없다|오류 \d|오류:|연결이 차단|잔액이 부족|요청이 너무|모델을 쓸 수 없다|AI 연결 페이지에서 키를|구글이 이 요청을 막았다|응답이 비어|답이 길이 한도|답이 중간에 멈췄다|호출 실패)/.test(String(t||'').trim());
+  return /^(OpenRouter 무료 모델의 하루 한도|오늘 쓸 수 있는 제미나이|이 모델은 지금 등급에서|키가 올바르지|한도에 걸렸다|무료 한도에 걸렸다|구글 서버가 지금 붐빈다|서버가 지금 붐빈다|요청 한도에 걸렸다|권한이 없다|오류 \d|오류:|연결이 차단|잔액이 부족|요청이 너무|모델을 쓸 수 없다|AI 연결 페이지에서 키를|구글이 이 요청을 막았다|응답이 비어|답이 길이 한도|답이 중간에 멈췄다|호출 실패)/.test(String(t||'').trim());
 }
 function webOn(){ try{ return localStorage.getItem('webOn')==='1'; }catch(e){ return false; } }
 function webPlot(title, media, hint){
@@ -3488,8 +3561,9 @@ var AISYS='당신은 한국 만화·웹툰 연출을 돕는 조력자다. 짧고
     aiCall('한 단어로만 답한다.','연결 확인. "정상"이라고만 답하라.',function(t){
       msg.textContent=(t==='생각하는 중…')?t:('「'+AIMODEL+'」 → '+String(t).slice(0,160)); });
   });
+  try{ var le=localStorage.getItem('aiLastErr'); var lel=document.getElementById('ai-lasterr'); if(le&&lel) lel.textContent='최근 문제: '+le; }catch(e){}
   var rl=document.getElementById('ai-reload');
-  if(rl) rl.addEventListener('click',function(){ msg.textContent='목록을 새로 받는 중…'; ormLoad(true).then(function(){ msg.textContent=''; }); });
+  if(rl) rl.addEventListener('click',function(){ msg.textContent='목록을 새로 받는 중…'; try{ localStorage.removeItem('aiOut'); }catch(e){} ormLoad(true).then(function(){ msg.textContent=''; }); });
 })();
 
 
@@ -3530,7 +3604,7 @@ function pinoContext(max, withMemo){
 // ----- 폴더 메모 · 백업 -----
 var FMEMO={};
 try{ FMEMO=JSON.parse(localStorage.getItem('folderMemo')||'{}')||{}; }catch(e){ FMEMO={}; }
-function fmGet(f){ if(f==='피노설정집') return (typeof pinoMemo==='function')?pinoMemo():''; return FMEMO[f]||''; }
+function fmGet(f){ if(f==='피노설정집') return (typeof pinoMemo==='function')?pinoMemo():''; return (FMEMO||{})[f]||''; }
 function fmSet(f,t){
   if(f==='피노설정집'){ try{ localStorage.setItem('pinoMemo',t); }catch(e){} var pm=document.getElementById('pm-text'); if(pm && pm!==document.activeElement) pm.value=t; }
   else { FMEMO[f]=t; try{ localStorage.setItem('folderMemo',JSON.stringify(FMEMO)); }catch(e){} }
@@ -3551,14 +3625,14 @@ function fmRender(){
 }
 (function(){
   var ta=document.getElementById('fm-text'); if(!ta) return;
-  ta.addEventListener('input',function(){ fmSet(CURFOLDER||'기본',ta.value); var c=document.getElementById('fm-count'); if(c) c.textContent=ta.value.length+'자'; });
+  ta.addEventListener('input',function(){ fmSet(CURFOLDER||'기본',ta.value); clearTimeout(ta._fl); ta._fl=setTimeout(function(){ if(typeof foldList==='function') foldList(); },800); var c=document.getElementById('fm-count'); if(c) c.textContent=ta.value.length+'자'; });
   document.getElementById('fm-copy').addEventListener('click',function(){
     var t=ta.value, b=this; try{ navigator.clipboard.writeText(t); b.textContent='복사됨'; setTimeout(function(){b.textContent='복사';},1200);}catch(e){ window.prompt('복사',t);} });
   var cl=document.getElementById('fm-clear');
   cl.addEventListener('click',function(){
     if(cl.getAttribute('data-arm')!=='1'){ cl.setAttribute('data-arm','1'); cl.textContent='한 번 더 누르면 비움';
       setTimeout(function(){ cl.setAttribute('data-arm',''); cl.textContent='비우기'; },3000); return; }
-    cl.setAttribute('data-arm',''); cl.textContent='비우기'; ta.value=''; fmSet(CURFOLDER||'기본',''); fmRender(); });
+    cl.setAttribute('data-arm',''); cl.textContent='비우기'; ta.value=''; gdIntent(); fmSet(CURFOLDER||'기본',''); fmRender(); if(typeof foldList==='function') foldList(); });
   fmRender();
 })();
 // 파일 받기 (브라우저 다운로드)
@@ -3624,6 +3698,8 @@ var GD_KEYS=['mangaFav','mangaFolders','folderMemo','pinoMemo','pinoTodo','arcFo
 var GD_AIKEYS=['orKey','gmKey','aiProv','orModel','gmModel','webOn'];
 function gdKeysOn(){ try{ return localStorage.getItem('gdKeys')!=='0'; }catch(e){ return true; } }
 function gdKeyList(){ return gdKeysOn()?GD_KEYS.concat(GD_AIKEYS):GD_KEYS; }
+function gdIntent(){ try{ localStorage.setItem('gdIntent',String(Date.now())); }catch(e){} }
+function gdIntentRecent(){ try{ var t=parseInt(localStorage.getItem('gdIntent')||'0',10); return t && Date.now()-t<10*60*1000; }catch(e){ return false; } }
 function gdLinked(){ try{ return localStorage.getItem('gdLinked')==='1'; }catch(e){ return false; } }
 function gdDevice(){
   try{ var d=localStorage.getItem('deviceId'); if(!d){ d=(/Mobi|Android|iPhone/i.test(navigator.userAgent)?'폰':'PC')+'-'+Math.random().toString(36).slice(2,6); localStorage.setItem('deviceId',d); } return d; }catch(e){ return '기기'; }
@@ -3754,13 +3830,13 @@ function gdSync(opts){
     if(opts.choice==='remote') merged=remote||local;
     else if(opts.choice==='local') merged=local;
     else if(!remote) merged=local;
-    else if(gdEmpty(local)) merged=remote;                       // 빈 기기는 받기만
+    else if(!base && gdEmpty(local)) merged=remote;              // 한 번도 동기화 안 한 빈 기기만 받기만
     else merged=gdMerge(local, remote, opts.choice==='merge'?{}:base);
     var changedLocal=!gdSame(merged, local);
     var needUp=!remote || !gdSame(merged, remote);
     if(gdEmpty(local) && !remote){ needUp=false; }                // 빈 상태는 절대 올리지 않음
     // 급감 감지
-    if(needUp && remote && !opts.force){
+    if(needUp && remote && !opts.force && !gdIntentRecent()){
       var a=gdSize(merged), b=gdSize(remote);
       if((b.fav>=6 && a.fav<b.fav*0.5) || (b.memo>=200 && a.memo<b.memo*0.5)){
         GD.busy=false; gdGuard(a,b,merged); gdStatus('확인','warn','올릴 내용이 드라이브보다 크게 줄었다. 확인이 필요하다.'); return;
@@ -3968,7 +4044,7 @@ function pbMine(){
     b.addEventListener('click',function(){
       if(b.getAttribute('data-arm')!=='1'){ b.setAttribute('data-arm','1'); b.textContent='한 번 더'; return; }
       var k=b.getAttribute('data-del'), t=k[0], i=+k.slice(1), u2=pbUser(), arr=u2[t]||[], r=arr[i]; if(!r) return;
-      arr.splice(i,1); u2[t]=arr; pbUserSave(u2);
+      arr.splice(i,1); u2[t]=arr; gdIntent(); pbUserSave(u2);
       if(t==='c'){ for(var x=ROWS.length-1;x>=0;x--) if(ROWS[x][0]===r[0] && String(ROWS[x][11]).indexOf('추가|')===0) ROWS.splice(x,1); }
       else { for(var y=MOTIFDATA.length-1;y>=0;y--) if(MOTIFDATA[y][0]===r[0]) MOTIFDATA.splice(y,1); }
       pbRefresh();
@@ -4040,6 +4116,7 @@ function pbCommit(list){
   pbUserSave(u); pbRefresh(); return added;
 }
 function pbUndo(it){
+  gdIntent();
   var u=pbUser(), t=it.t==='클리셰'?'c':'m';
   u[t]=(u[t]||[]).filter(function(r){ return r[0]!==it.row[0]; }); pbUserSave(u);
   if(t==='c'){ for(var x=ROWS.length-1;x>=0;x--) if(ROWS[x][0]===it.row[0] && String(ROWS[x][11]).indexOf('추가|')===0) ROWS.splice(x,1); }
@@ -4111,6 +4188,52 @@ function pbRun(){
     if(cb.checked && gdLinked()) gdSync();
   });
 })();
+
+// 폴더 정리
+function foldList(){
+  var box=document.getElementById('fold-list'); if(!box) return;
+  var cnt={}; Object.keys(FAV).forEach(function(k){ var f=FAVDIR[k]||'기본'; cnt[f]=(cnt[f]||0)+1; });
+  box.innerHTML=FOLDERS.map(function(f){
+    var memo=(typeof fmGet==='function')?fmGet(f):'', isBase=(f==='기본');
+    return '<div class="frow'+(f===CURFOLDER?' cur':'')+'"><div class="fn"><b>'+f.replace(/</g,'&lt;')+'</b><span>항목 '+(cnt[f]||0)+' · 메모 '+memo.length+'자</span></div>'+
+      '<button class="chip" data-fa="use" data-f="'+encodeURIComponent(f)+'">담는 곳으로</button>'+
+      '<button class="chip" data-fa="view" data-f="'+encodeURIComponent(f)+'">보기</button>'+
+      '<button class="chip" data-fa="empty" data-f="'+encodeURIComponent(f)+'"'+((cnt[f]||0)?'':' disabled')+'>비우기</button>'+
+      '<button class="chip" data-fa="memo" data-f="'+encodeURIComponent(f)+'"'+(memo.length?'':' disabled')+'>메모 비우기</button>'+
+      (isBase?'':'<button class="chip" data-fa="del" data-f="'+encodeURIComponent(f)+'">삭제</button>')+'</div>';
+  }).join('');
+  [].slice.call(box.querySelectorAll('button[data-fa]')).forEach(function(b){
+    b.addEventListener('click',function(){
+      var a=b.getAttribute('data-fa'), f=decodeURIComponent(b.getAttribute('data-f'));
+      if(a==='use'){ CURFOLDER=f; foldSave(); fillFolderSelects(); renderFavs(); if(typeof fmRender==='function') fmRender(); return; }
+      if(a==='view'){ var v=document.getElementById('fav-view'); if(v){ v.value=f; renderFavs(); var fb=document.getElementById('fav-body'); if(fb&&fb.scrollIntoView) fb.scrollIntoView({block:'start'}); } return; }
+      if(b.getAttribute('data-arm')!=='1'){
+        [].slice.call(box.querySelectorAll('button[data-arm="1"]')).forEach(function(o){ o.setAttribute('data-arm',''); o.textContent=o.getAttribute('data-t')||o.textContent; });
+        b.setAttribute('data-t',b.textContent); b.setAttribute('data-arm','1');
+        b.textContent=a==='del'?'정말 삭제 (항목·메모까지)':(a==='memo'?'정말 메모 비움':'정말 비움');
+        setTimeout(function(){ if(b.getAttribute('data-arm')==='1'){ b.setAttribute('data-arm',''); b.textContent=b.getAttribute('data-t'); } },4000);
+        return;
+      }
+      gdIntent();
+      if(a==='empty' || a==='del'){
+        Object.keys(FAV).forEach(function(k){ if((FAVDIR[k]||'기본')===f){ delete FAV[k]; delete FAVMETA[k]; delete FAVDIR[k]; } });
+        [].slice.call(document.querySelectorAll('.fav')).forEach(function(x){ var k=x.getAttribute('data-k'); if(k&&!FAV[k]){ x.setAttribute('aria-pressed','false'); x.textContent='☆'; } });
+      }
+      if(a==='memo' || (a==='del' && f!=='피노설정집')){
+        if(f==='피노설정집'){ try{ localStorage.setItem('pinoMemo',''); }catch(e){} var pm=document.getElementById('pm-text'); if(pm) pm.value=''; }
+        else { if(FMEMO){ delete FMEMO[f]; try{ localStorage.setItem('folderMemo',JSON.stringify(FMEMO)); }catch(e){} } }
+      }
+      if(a==='del'){
+        FOLDERS=FOLDERS.filter(function(x){ return x!==f; });
+        if(CURFOLDER===f) CURFOLDER='기본';
+        var v2=document.getElementById('fav-view'); if(v2 && v2.value===f) v2.value='*';
+      }
+      favSave(); foldSave(); fillFolderSelects(); renderFavs();
+      if(typeof fmRender==='function') fmRender(); if(typeof updateFavCount==='function') updateFavCount();
+      var msg=document.getElementById('fav-msg'); if(msg){ msg.textContent=(a==='del'?'「'+f+'」 삭제함':a==='memo'?'「'+f+'」 메모 비움':'「'+f+'」 비움'); setTimeout(function(){ msg.textContent=''; },2500); }
+    });
+  });
+}
 // ----- AI 확장 기능 -----
 function aiResult(box, title, text){
   box.innerHTML='<div class="aires"><div class="gen-h">'+(title||'')+' <button class="chip">복사</button><button class="chip memo">메모에 넣기</button></div><div class="gen-b"></div></div>';
@@ -4344,6 +4467,51 @@ function favAiBar(){
     if(idea && /아이디어|내 (생각|구상)|내가 적은/.test(t)) parts.push('[작가 아이디어]\n'+idea.slice(0,1500));
     return parts.join('\n\n');
   }
+  function isAddReq(t){ return /(색인|사전|데이터베이스|DB|db)\S*\s*(에|으로|로)?\s*(넣|추가|등록|저장)/.test(t) || /^(넣어|추가해)\s*줘/.test(t.trim()); }
+  function addFromChat(t, slot){
+    var convo=HIST.slice(-10).map(function(m){ return (m.role==='user'?'작가: ':'AI: ')+m.content; }).join('\n').slice(-6000)+'\n작가: '+t;
+    var names=ROWS.map(function(r){ return r[0]; }).join(' / '), mnames=MOTIFDATA.map(function(r){ return r[0]; }).join(' / ');
+    aiBusy(slot,'색인에 넣을 것 고르는 중');
+    aiAsk('당신은 만화 클리셰 사전의 편집자다. 반드시 유효한 JSON만 출력한다.',
+      '[대화]\n'+convo+'\n\n[색인의 클리셰 이름 전체]\n'+names+'\n\n[색인의 소재 이름 전체]\n'+mnames+
+      '\n\n작가가 마지막에 색인에 넣어 달라고 했다. 대화에서 이야기한 클리셰·연출 장치·소재 중 작가가 넣어 달라는 것을 고른다. 특정 항목을 지목했으면 그것만, 아니면 대화에서 뚜렷하게 다룬 것 전부(많아도 8개).\n'+
+      '색인에 이미 있는 것(이름만 다르고 같은 장치 포함)은 exists에 색인 이름 그대로 넣고, 없는 것만 new에 넣는다.\n'+
+      '형식:\n{"exists":["색인 이름"],"new":[{"type":"클리셰","name":"짧은 이름","genre":"'+PB_ENUM.g.join('|')+' 중 하나","fn":"'+PB_ENUM.fn.join('|')+' 중 하나","pos":"도입·초·중반·중반·정점·마무리 중 하나 이상을 |로","cost":"1–3컷|반쪽|1쪽|2쪽+ 중 하나","tool":"'+PB_ENUM.tool.join('|')+' 중 한두 개를 |로","def":"무엇인가 한 문장","point":"어떻게 그리는가 한 문장","src":"대화에서 나온 작품 이름, 없으면 빈칸"},'+
+      '{"type":"소재","name":"짧은 이름","cat":"'+PB_ENUM.mc.join('|')+' 중 하나","src":"작품 이름 또는 빈칸"}]}', 2000)
+    .then(function(r){
+      var j=null; try{ j=JSON.parse(String(r).replace(/```json|```/g,'').trim().replace(/^[^{]*/,'').replace(/[^}]*$/,'')); }catch(e){}
+      if(!j){ aiResult(slot,'',aiIsErr(r)?r:'무엇을 넣을지 알아듣지 못했다. 넣을 이름을 콕 집어 다시 말해 준다.'); return; }
+      var rowMap={}, motMap={}; ROWS.forEach(function(x){ rowMap[x[0]]=x; }); MOTIFDATA.forEach(function(x){ motMap[x[0]]=x; });
+      var exists=(j.exists||[]).filter(function(n){ return rowMap[n]||motMap[n]; });
+      var news=[], seen={};
+      (j['new']||[]).forEach(function(n){
+        var nm=String(n.name||'').trim().slice(0,30); if(!nm||rowMap[nm]||motMap[nm]||seen[nm]) return; seen[nm]=1;
+        var src=String(n.src||'').trim(), from=src?'《'+src.replace(/[《》]/g,'')+'》':'AI 대화';
+        if(String(n.type).indexOf('소재')>-1) news.push({t:'소재', row:[nm, pbPick(n.cat,PB_ENUM.mc,'세계 규칙'), src?'작품':'대화', src||'AI 대화'], w:''});
+        else {
+          var pos=String(n.pos||'').split('|').map(function(p){ return pbPick(p,PB_ENUM.pos,''); }).filter(Boolean);
+          var tool=String(n.tool||'').split('|').map(function(p){ return pbPick(p,PB_ENUM.tool,''); }).filter(Boolean);
+          news.push({t:'클리셰', row:[nm, pbPick(n.genre,PB_ENUM.g,'연출 문법 (장르 공통)'), pbPick(n.fn,PB_ENUM.fn,'갈등·위기 발생'),
+            (pos.length?pos:['중반']).filter(function(v,i,a){return a.indexOf(v)===i;}).join('|'), 'live','살아있음', pbPick(n.cost,PB_ENUM.cost,'1쪽'),
+            (tool.length?tool:['반응 컷']).slice(0,2).join('|'), String(n.def||'').trim()||nm+'.', String(n.point||'').trim()||'', '', '추가|'+from], w:''});
+        }
+      });
+      var added=pbCommit(news), html='';
+      if(added.length){
+        html+='<div class="pbsec"><h4>색인에 넣었다 — '+added.length+'개</h4><p class="small">클리셰·소재 색인, 랜덤 구성기에서 바로 쓰인다. 아니면 「빼기」.</p>';
+        added.forEach(function(n,i){ var meta=n.t==='클리셰'?(n.row[1]+' · '+n.row[2]+' · '+n.row[6]):n.row[1];
+          html+='<div class="pbrow"><div class="b"><b>'+pbEsc(n.row[0])+'</b> <span class="small">'+n.t+' · '+meta+'</span><span class="w">'+(n.t==='클리셰'?pbEsc(n.row[8])+' '+pbEsc(n.row[9]):'')+'</span></div><button class="chip" data-undo="'+i+'">빼기</button></div>'; });
+        html+='</div>';
+      }
+      if(exists.length) html+='<p class="small">이미 색인에 있다: '+exists.map(function(n){ return '「'+pbEsc(n)+'」'; }).join(', ')+'</p>';
+      if(!added.length && !exists.length) html+='<p class="small">대화에서 넣을 만한 장치를 찾지 못했다. 이름을 콕 집어 「○○ 색인에 넣어줘」라고 말해 준다.</p>';
+      slot.innerHTML=html;
+      [].slice.call(slot.querySelectorAll('button[data-undo]')).forEach(function(bt){
+        bt.addEventListener('click',function(){ pbUndo(added[+bt.getAttribute('data-undo')]); bt.textContent='뺐음'; bt.disabled=true; }); });
+      HIST.push({role:'user',content:t}); HIST.push({role:'assistant',content:'(색인에 '+added.length+'개 넣음: '+added.map(function(n){ return n.row[0]; }).join(', ')+')'}); histSave();
+      box.classList.remove('mini'); log.scrollTop=log.scrollHeight;
+    });
+  }
   function send(){
     var t=q.value.trim(); if(!t) return;
     q.value=''; q.style.height='';
@@ -4351,6 +4519,7 @@ function favAiBar(){
     addQ(t);
     var slot=document.createElement('div'); log.appendChild(slot);
     if(!aiReady()){ slot.innerHTML='<p class="small"><a href="#ai">AI 연결</a>에서 키를 먼저 넣는다.</p>'; return; }
+    if(isAddReq(t)){ addFromChat(t, slot); log.scrollTop=log.scrollHeight; return; }
     if(isWork(t)){ workReply(t.replace(/^\/분석\s*/,''), slot); HIST.push({role:'user',content:t}); HIST.push({role:'assistant',content:'(작품 분석을 했다)'}); histSave(); log.scrollTop=log.scrollHeight; return; }
     aiBusy(slot,'');
     log.scrollTop=log.scrollHeight;
