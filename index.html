@@ -3230,7 +3230,7 @@ function ormFill(filter){
 }
 function ormHas(id){ return !!(ORM.list && ORM.list.some(function(m){ return m.id===id; })); }
 function ormFallback(except){
-  var r=ORM.rec.filter(function(x){ return x.m.id!==except && !/:free$/.test(x.m.id); })[0];
+  var r=ORM.rec.filter(function(x){ return x.m.id!==except && !/:free$/.test(x.m.id) && !(typeof qIsOut==='function' && qIsOut(x.m.id)); })[0];
   return r?r.m.id:(PROV==='gm'?'gemini-flash-latest':'openrouter/auto');
 }
 function gmVer(id){ var m=String(id).match(/gemini-(\d+(?:\.\d+)?)/); return m?parseFloat(m[1]):0; }
@@ -3569,7 +3569,12 @@ var AISYS='당신은 한국 만화·웹툰 연출을 돕는 조력자다. 짧고
   var ms=document.getElementById('ai-msearch');
   if(ms) ms.addEventListener('input',function(){ ormFill(ms.value); });
   k.addEventListener('input',function(){ AIKEY=k.value.trim(); aiSave(); if(PROV==='gm'){ clearTimeout(k._t); k._t=setTimeout(function(){ try{ gmLoad(true); }catch(e){} },600); } aiBar(); favAiBar(); aiSlots(); if(typeof pbBar==='function') pbBar(); if(typeof apply==='function') apply(); if(window.__reSlots) window.__reSlots(); if(typeof renderFavs==='function') renderFavs(); });
-  if(m) m.addEventListener('change',function(){ AIMODEL=m.value; aiSave(); });
+  if(m) m.addEventListener('change',function(){
+    AIMODEL=m.value; aiSave();
+    try{ var o=JSON.parse(localStorage.getItem('aiOut')||'{}')||{}; if(o[PROV+'|'+AIMODEL]){ delete o[PROV+'|'+AIMODEL]; localStorage.setItem('aiOut',JSON.stringify(o)); } }catch(e){}
+    msg.textContent='「'+aiShort(AIMODEL)+'」로 바꿨다. 연결 확인으로 되는지 본다.';
+    if(typeof ormFill==='function'){ var ms2=document.getElementById('ai-msearch'); ormFill(ms2?ms2.value:''); }
+  });
   document.getElementById('ai-clear').addEventListener('click',function(){
     AIKEY=''; k.value=''; aiSave(); aiBar(); favAiBar(); aiSlots(); if(typeof pbBar==='function') pbBar(); if(typeof apply==='function') apply(); if(window.__reSlots) window.__reSlots(); if(typeof renderFavs==='function') renderFavs(); msg.textContent='지웠습니다.'; });
   document.getElementById('ai-test').addEventListener('click',function(){
