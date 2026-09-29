@@ -53,6 +53,8 @@ aiBar, favAiBar, twistAsk, writePrompt, wfmtHTML, aiAsk, aiCall, aiResult, ideaB
 - 제공처 두 개: OpenRouter(`or`)·구글 제미나이(`gm`). `PROV`, 키·모델은 `orKey/orModel`, `gmKey/gmModel`로 따로 저장. 제미나이는 `gmCall`(generateContent, 헤더 `x-goog-api-key`), 모델 목록 `gmLoad`, 웹 검색은 `tools:[{google_search:{}}]`. 무료 등급은 3.x 모델에서 구글 검색이 막힐 수 있다
 - 오류 문구는 `aiIsErr`로 판별한다(오류를 결과로 착각하지 않게)
 
+- 🔎 채팅창은 자유 대화. 최근 12개 메시지를 `opts.history`로 보내고, 대화는 localStorage `ixChat`(최근 40개, 동기화 안 함)에 남는다. 사전 검색 결과·피노 설정·지금 뽑힌 구성·아이디어를 말에 따라 붙인다(`ctxFor`). 작품 분석은 《제목》+분석 의도가 있을 때만(`isWork`)
+
 ## 저장 키
 arcForm, deviceId, folderMemo, gdBase, gdLast, gdLinked, ideaText, mangaDataVer, mangaFav, mangaFolders, mangaPreMigrate, mangaPreRestore, orKey, orModel, pinoMemo, pinoTodo, writeFmt
 - 동기화 대상: mangaFav, mangaFolders, folderMemo, pinoMemo, pinoTodo, arcForm, ideaText, userAdds (`GD_KEYS`)
