@@ -50,6 +50,9 @@ aiBar, favAiBar, twistAsk, writePrompt, wfmtHTML, aiAsk, aiCall, aiResult, ideaB
 
 - 웹 검색: `webPlot`이 `tools:[{type:'openrouter:web_search'}]`로 줄거리를 찾는다. 400이면 옛 방식 `plugins:[{id:'web'}]`로 한 번 재시도. 채팅창 🌐 체크(`webOn`, localStorage `webOn`)와 작품 분석의 「🌐 웹에서 줄거리 찾기」. 호출마다 검색비가 추가된다
 
+- 제공처 두 개: OpenRouter(`or`)·구글 제미나이(`gm`). `PROV`, 키·모델은 `orKey/orModel`, `gmKey/gmModel`로 따로 저장. 제미나이는 `gmCall`(generateContent, 헤더 `x-goog-api-key`), 모델 목록 `gmLoad`, 웹 검색은 `tools:[{google_search:{}}]`. 무료 등급은 3.x 모델에서 구글 검색이 막힐 수 있다
+- 오류 문구는 `aiIsErr`로 판별한다(오류를 결과로 착각하지 않게)
+
 ## 저장 키
 arcForm, deviceId, folderMemo, gdBase, gdLast, gdLinked, ideaText, mangaDataVer, mangaFav, mangaFolders, mangaPreMigrate, mangaPreRestore, orKey, orModel, pinoMemo, pinoTodo, writeFmt
 - 동기화 대상: mangaFav, mangaFolders, folderMemo, pinoMemo, pinoTodo, arcForm, ideaText, userAdds (`GD_KEYS`)
