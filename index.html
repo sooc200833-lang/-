@@ -3272,9 +3272,27 @@ function aiClean(t){
   return lines.join('\n').replace(/^\s+/,'').replace(/\s+$/,'');
 }
 
+
+function aiAlt(except, kind){
+  // 붐빔·한도일 때 이번 호출만 대신 부를 모델. 무료로 쓰기 쉬운 가벼운 모델부터.
+  var rec=(ORM&&ORM.rec)||[], ids=rec.map(function(r){ return r.m.id; }).filter(function(id){ return id!==except; });
+  if(PROV==='gm'){
+    var order=[/flash-lite/, /^gemini-2\.5-flash$/, /flash/];
+    for(var i=0;i<order.length;i++){ for(var k=0;k<ids.length;k++){ if(order[i].test(ids[k]) && !/pro/.test(ids[k])) return ids[k]; } }
+    return except==='gemini-flash-lite-latest'?null:'gemini-flash-lite-latest';
+  }
+  var cheap=ids.filter(function(id){ return !/:free$/.test(id) && !/sonnet|opus|pro\b/.test(id); });
+  return cheap[0]||'openrouter/auto';
+}
+function aiShort(id){ return String(id||'').replace(/^[^\/]+\//,''); }
+function aiRetryAfter(tx){
+  try{ var j=JSON.parse(tx), d=(j.error&&j.error.details)||[];
+    for(var i=0;i<d.length;i++){ if(d[i]&&d[i].retryDelay){ var s=parseFloat(String(d[i].retryDelay)); if(s>0) return s*1000; } } }catch(e){}
+  return 0;
+}
 function gmCall(system, user, onText, maxTok, _retry, opts){
   opts=opts||{};
-  var model=AIMODEL||'gemini-flash-latest';
+  var model=opts.model||AIMODEL||'gemini-flash-latest';
   var body={systemInstruction:{parts:[{text:system}]},
     contents:(opts.history||[]).map(function(m){ return {role:(m.role==='assistant'?'model':'user'), parts:[{text:m.content}]}; }).concat([{role:'user',parts:[{text:user}]}]),
     generationConfig:{maxOutputTokens:(maxTok||900)+1500}};
@@ -3287,7 +3305,8 @@ function gmCall(system, user, onText, maxTok, _retry, opts){
       if(/API key not valid|API_KEY_INVALID/i.test(m)) throw new Error('키가 올바르지 않다. AI 연결에서 제미나이 키를 다시 확인한다.');
       if(opts.web && /google_search|search|grounding|tool/i.test(m) && (r.status===400||r.status===403))
         throw new Error('이 모델은 지금 등급에서 구글 검색을 쓸 수 없다. 무료 등급이면 추천의 「2.5 Flash」를 고르거나, 결제를 켠다.');
-      if(r.status===429) throw new Error('한도에 걸렸다 (429). 무료 등급은 분당·하루 호출 수가 정해져 있다. 잠시 뒤 다시 하거나 Flash Lite를 고른다.');
+      if(r.status===429){ var eq=new Error('RETRY'); eq.kind='quota'; eq.delay=aiRetryAfter(tx); eq.detail=m; throw eq; }
+      if(r.status===500||r.status===502||r.status===503||r.status===504||/overloaded|high demand|unavailable/i.test(m)){ var eb=new Error('RETRY'); eb.kind='busy'; eb.detail=m; throw eb; }
       if(r.status===403) throw new Error('권한이 없다 (403). 키를 만든 프로젝트에서 Gemini API가 켜져 있는지 확인한다.');
       if(r.status===404 || /not found|is not supported for generateContent/i.test(m)){ var e404=new Error('MODEL_GONE'); e404.detail=m; throw e404; }
       throw new Error('오류 '+r.status+' — '+String(m).slice(0,160));
@@ -3307,6 +3326,21 @@ function gmCall(system, user, onText, maxTok, _retry, opts){
     onText(t||'응답이 비어 있다.');
   }).catch(function(e){
     var m=e.message||String(e);
+    if(m==='RETRY'){
+      var n=opts._n||0;
+      if(e.kind==='busy' && n<2){ opts._n=n+1; setTimeout(function(){ gmCall(system,user,onText,maxTok,_retry,opts); }, 1500*(n+1)); return; }
+      if(e.kind==='quota' && n<1 && e.delay && e.delay<=12000){ opts._n=n+1; setTimeout(function(){ gmCall(system,user,onText,maxTok,_retry,opts); }, e.delay+300); return; }
+      if(!opts._alt){
+        var alt=aiAlt(model, e.kind);
+        if(alt){ var o2=Object.assign({},opts,{model:alt,_alt:true,_n:0});
+          gmCall(system,user,function(t){ onText((t==='생각하는 중…'||aiIsErr(t))?t:t+'\n\n(「'+aiShort(model)+'」이 '+(e.kind==='quota'?'한도에 걸려':'붐벼서')+' 이번만 「'+aiShort(alt)+'」로 대신 불렀다)'); },maxTok,_retry,o2);
+          return; }
+      }
+      m = e.kind==='quota'
+        ? '무료 한도에 걸렸다 (429). 다른 모델로도 해 봤지만 안 됐다. 1분쯤 뒤에 다시 하거나, 하루 한도라면 내일 풀린다. 자주 걸리면 AI 연결에서 결제를 켜거나 OpenRouter로 바꾼다.'
+        : '구글 서버가 지금 붐빈다 (503). 몇 번 다시 시도하고 다른 모델로도 해 봤지만 안 됐다. 잠시 뒤 다시 누른다.';
+      onText(m); return;
+    }
     if(m==='MODEL_GONE'){
       if(!_retry){
         var old=AIMODEL, nu=ormFallback(old);
@@ -3328,7 +3362,7 @@ function aiCall(system, user, onText, maxTok, _retry, opts){
   fetch('https://openrouter.ai/api/v1/chat/completions',{
     method:'POST',
     headers:{'Content-Type':'application/json','Authorization':'Bearer '+AIKEY,'HTTP-Referer':location.origin||'https://localhost','X-Title':'Manga Cliche Dictionary'},
-    body:JSON.stringify(Object.assign({model:(AIMODEL||'openrouter/auto'), max_tokens:(maxTok||900)+1500, reasoning:{effort:'low', exclude:true},
+    body:JSON.stringify(Object.assign({model:(opts.model||AIMODEL||'openrouter/auto'), max_tokens:(maxTok||900)+1500, reasoning:{effort:'low', exclude:true},
       messages:[{role:'system',content:system}].concat(opts.history||[]).concat([{role:'user',content:user}])},
       opts.web ? (opts.legacyWeb ? {plugins:[{id:'web', max_results:5}]} : {tools:[{type:'openrouter:web_search'}]}) : {}))
   }).then(function(r){
@@ -3336,7 +3370,8 @@ function aiCall(system, user, onText, maxTok, _retry, opts){
        var m=''; try{ var j=JSON.parse(tx); m=(j.error&&(j.error.message||j.error.code))||tx; }catch(e){ m=tx; }
        if(r.status===401) throw new Error('키가 올바르지 않습니다 (401). AI 연결에서 키를 다시 확인하세요.');
        if(r.status===402) throw new Error('잔액이 부족합니다 (402). OpenRouter에서 크레딧을 충전하세요.');
-       if(r.status===429) throw new Error('요청이 너무 잦습니다 (429). 잠시 뒤 다시 시도하세요.');
+       if(r.status===429){ var eq=new Error('RETRY'); eq.kind='quota'; eq.detail=m; throw eq; }
+       if(r.status===500||r.status===502||r.status===503||r.status===504||/overloaded|high demand|temporarily unavailable/i.test(m)){ var eb=new Error('RETRY'); eb.kind='busy'; eb.detail=m; throw eb; }
        if(opts.web && !opts.legacyWeb && (r.status===400 || /tool|web_search|server tool/i.test(m))){
          var ew=new Error('WEB_LEGACY'); throw ew; }
        if(r.status===404 || /not a valid model|no endpoints|model.*(not found|does not exist|deprecated)/i.test(m)){
@@ -3359,6 +3394,20 @@ function aiCall(system, user, onText, maxTok, _retry, opts){
    .catch(function(e){
      var m=e.message||String(e);
      if(m==='WEB_LEGACY'){ opts.legacyWeb=true; aiCall(system,user,onText,maxTok,_retry,opts); return; }
+     if(m==='RETRY'){
+       var n=opts._n||0, cur=opts.model||AIMODEL;
+       if(n<2){ opts._n=n+1; setTimeout(function(){ aiCall(system,user,onText,maxTok,_retry,opts); }, (e.kind==='quota'?3000:1500)*(n+1)); return; }
+       if(!opts._alt){
+         var alt=aiAlt(cur, e.kind);
+         if(alt && alt!==cur){ var o2=Object.assign({},opts,{model:alt,_alt:true,_n:0});
+           aiCall(system,user,function(t){ onText((t==='생각하는 중…'||aiIsErr(t))?t:t+'\n\n(「'+aiShort(cur)+'」이 '+(e.kind==='quota'?'한도에 걸려':'붐벼서')+' 이번만 「'+aiShort(alt)+'」로 대신 불렀다)'); },maxTok,_retry,o2);
+           return; }
+       }
+       onText(e.kind==='quota'
+         ? '요청 한도에 걸렸다 (429). 다른 모델로도 해 봤지만 안 됐다. 무료 모델이면 1분쯤 뒤 다시 하거나 추천의 유료 모델을 고른다.'
+         : '서버가 지금 붐빈다 (503). 몇 번 다시 시도하고 다른 모델로도 해 봤지만 안 됐다. 잠시 뒤 다시 누른다.');
+       return;
+     }
      if(m==='MODEL_GONE'){
        if(!_retry){
          var old=AIMODEL, nu=ormFallback(old);
@@ -3379,7 +3428,7 @@ function aiAsk(system,user,maxTok,opts){
   return new Promise(function(res){ aiCall(system,user,function(t){ if(t!=='생각하는 중…') res(t); },maxTok,false,opts); });
 }
 function aiIsErr(t){
-  return /^(이 모델은 지금 등급에서|키가 올바르지|한도에 걸렸다|권한이 없다|오류 \d|오류:|연결이 차단|잔액이 부족|요청이 너무|모델을 쓸 수 없다|AI 연결 페이지에서 키를|구글이 이 요청을 막았다|응답이 비어|답이 길이 한도|답이 중간에 멈췄다|호출 실패)/.test(String(t||'').trim());
+  return /^(이 모델은 지금 등급에서|키가 올바르지|한도에 걸렸다|무료 한도에 걸렸다|구글 서버가 지금 붐빈다|서버가 지금 붐빈다|요청 한도에 걸렸다|권한이 없다|오류 \d|오류:|연결이 차단|잔액이 부족|요청이 너무|모델을 쓸 수 없다|AI 연결 페이지에서 키를|구글이 이 요청을 막았다|응답이 비어|답이 길이 한도|답이 중간에 멈췄다|호출 실패)/.test(String(t||'').trim());
 }
 function webOn(){ try{ return localStorage.getItem('webOn')==='1'; }catch(e){ return false; } }
 function webPlot(title, media, hint){
