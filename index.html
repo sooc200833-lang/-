@@ -1871,6 +1871,7 @@ details.gdet[open] summary{margin-bottom:.5rem}
 <section class="blk" id="ai">
   <h2 class="big">AI 연결</h2>
   <p class="lede">OpenRouter 또는 구글 제미나이 API 키를 넣으면 클리셰 비틀기·연관짓기·글쓰기(줄거리·컷별·웹소설)를 쓸 수 있다. 키는 <b>이 브라우저에만</b> 저장되며 파일에는 들어가지 않는다. 깃허브에 올려도 키가 노출되지 않는다.</p>
+  <div class="warnbox"><b>기기마다 넣기 번거로우면</b> 즐겨찾기 페이지에서 <b>구글 드라이브 동기화</b>를 켜 둔다. 한 기기에서 넣은 키가 다른 기기로 넘어간다.</div>
   <div class="warnbox"><b>주의.</b> 키를 넣은 뒤에도 파일 자체에는 아무것도 기록되지 않는다. 다만 공용 컴퓨터에서는 쓰고 나서 <b>키 지우기</b>를 누른다.</div>
   <div class="warnbox"><b>클로드 아티팩트 화면에서는 동작하지 않는다.</b> 미리보기 창이 외부 주소 호출을 막기 때문이다. 이 파일을 <b>깃허브 페이지</b>에 올리거나 내 컴퓨터에 내려받아 그 주소로 열면 정상 작동한다. 파일을 그냥 더블클릭해 여는 경우(file://)에도 막힐 수 있으니, 깃허브 주소로 쓰는 편이 확실하다.</div>
   <div class="arcform">
@@ -2093,13 +2094,14 @@ details.gdet[open] summary{margin-bottom:.5rem}
   <div id="fav-ai-out"></div>
   <div id="fav-body"></div>
   <details class="aidet" id="gd-wrap" open><summary>구글 드라이브 동기화</summary>
-    <p class="small">구글 드라이브의 <b>숨겨진 앱 전용 폴더</b>에 저장한다. 드라이브 화면에는 보이지 않고, 다른 파일은 건드리지 않는다. 즐겨찾기·폴더·모든 메모·아크 점검표·미정 체크가 이어지며, API 키는 올리지 않는다.</p>
+    <p class="small">구글 드라이브의 <b>숨겨진 앱 전용 폴더</b>에 저장한다. 드라이브 화면에는 보이지 않고, 다른 파일은 건드리지 않는다. 즐겨찾기·폴더·모든 메모·아크 점검표·미정 체크가 이어진다. 아래를 켜 두면 AI 키도 함께 넘어간다(백업 파일에는 키를 넣지 않는다).</p>
     <div class="filterbar">
       <button class="chip" id="gd-link">구글로 연결</button>
       <button class="chip" id="gd-now">지금 동기화</button>
       <button class="chip" id="gd-hist">되돌리기 목록</button>
       <button class="chip" id="gd-off">연결 끊기</button>
     </div>
+    <label class="small" style="display:block; margin:.2rem 0 .4rem"><input type="checkbox" id="gd-keys"> <b>AI 키도 함께 동기화</b> — 한 기기에서 넣은 OpenRouter·제미나이 키가 다른 기기에도 들어간다. 내 드라이브의 숨겨진 앱 폴더에만 저장된다. 공용 기기를 쓴다면 끈다.</label>
     <p class="small" id="gd-msg">연결되어 있지 않다.</p>
     <div id="gd-choice"></div>
     <div id="gd-list"></div>
@@ -3619,6 +3621,9 @@ function bkRestore(text){
 var GD={cid:'349312731183-t2bc2v3cbr90jci7aa4f8gumre6fdcd2.apps.googleusercontent.com', scope:'https://www.googleapis.com/auth/drive.appdata', file:'manga-sync.json',
   token:null, exp:0, client:null, fileId:null, busy:false, timer:null, applying:false, pending:false};
 var GD_KEYS=['mangaFav','mangaFolders','folderMemo','pinoMemo','pinoTodo','arcForm','ideaText','userAdds'];
+var GD_AIKEYS=['orKey','gmKey','aiProv','orModel','gmModel','webOn'];
+function gdKeysOn(){ try{ return localStorage.getItem('gdKeys')!=='0'; }catch(e){ return true; } }
+function gdKeyList(){ return gdKeysOn()?GD_KEYS.concat(GD_AIKEYS):GD_KEYS; }
 function gdLinked(){ try{ return localStorage.getItem('gdLinked')==='1'; }catch(e){ return false; } }
 function gdDevice(){
   try{ var d=localStorage.getItem('deviceId'); if(!d){ d=(/Mobi|Android|iPhone/i.test(navigator.userAgent)?'폰':'PC')+'-'+Math.random().toString(36).slice(2,6); localStorage.setItem('deviceId',d); } return d; }catch(e){ return '기기'; }
@@ -3629,7 +3634,7 @@ function gdStatus(t, cls){
   if(m && arguments[2]) m.textContent=arguments[2];
 }
 function gdLocal(){
-  var o={}; GD_KEYS.forEach(function(k){ try{ var v=localStorage.getItem(k); if(v!==null) o[k]=v; }catch(e){} }); return o;
+  var o={}; gdKeyList().forEach(function(k){ try{ var v=localStorage.getItem(k); if(v!==null) o[k]=v; }catch(e){} }); return o;
 }
 function gdEmpty(o){
   var f={}, m={}, p='';
@@ -3690,6 +3695,9 @@ function gdMerge(L,R,B){
   if(ua.c.length||ua.m.length||L.userAdds||R.userAdds) out.userAdds=JSON.stringify(Object.assign({},ru,lu,ua));
   ['pinoTodo','arcForm'].forEach(function(k){ var l=L[k], r=R[k], b=B[k];
     var v=(l===r)?l:(l===b?r:l); if(v!==undefined && v!==null) out[k]=v; });
+  if(gdKeysOn()) GD_AIKEYS.forEach(function(k){ var l=L[k]||'', r=R[k]||'', b=B[k]||'';
+    var v = !l ? r : (!r ? l : (l===r ? l : (l===b ? r : l)));
+    if(v) out[k]=v; });
   return out;
 }
 function gdAuth(prompt){
@@ -3726,10 +3734,10 @@ function gdUpload(pack){
 }
 function gdApply(data){
   GD.applying=true;
-  GD_KEYS.forEach(function(k){ try{ if(data[k]===undefined) localStorage.removeItem(k); else localStorage.setItem(k,data[k]); }catch(e){} });
+  gdKeyList().forEach(function(k){ try{ if(data[k]===undefined){ if(GD_AIKEYS.indexOf(k)>-1) return; localStorage.removeItem(k); } else localStorage.setItem(k,data[k]); }catch(e){} });
   GD.applying=false;
 }
-function gdSame(a,b){ return GD_KEYS.every(function(k){ return (a[k]||'')===(b[k]||''); }); }
+function gdSame(a,b){ return gdKeyList().every(function(k){ return (a[k]||'')===(b[k]||''); }); }
 function gdSync(opts){
   opts=opts||{};
   if(!gdLinked() || GD.busy) return Promise.resolve();
@@ -3770,7 +3778,8 @@ function gdSync(opts){
       GD.busy=false;
       var t=new Date(), s=t.getHours()+':'+('0'+t.getMinutes()).slice(-2);
       gdStatus('✓ '+s,'ok','마지막 동기화 '+s+' · 이 기기 '+gdDevice());
-      if(changedLocal){ gdApply(merged); gdStatus('✓ '+s,'ok','다른 기기의 변경을 받았다. 새로고침한다.'); setTimeout(function(){ location.reload(); },700); }
+      if(changedLocal){ var gotKey=GD_AIKEYS.some(function(k){ return /Key$/.test(k) && !local[k] && merged[k]; });
+        gdApply(merged); gdStatus('✓ '+s,'ok', gotKey?'드라이브에서 AI 키를 받았다. 새로고침하면 바로 쓸 수 있다.':'다른 기기의 변경을 받았다. 새로고침한다.'); setTimeout(function(){ location.reload(); },700); }
     });
   }).catch(function(e){
     GD.busy=false; gdStatus('!','warn',e.message+(/막혔|만료|로그인/.test(e.message)?' — 「구글로 연결」을 누른다.':''));
@@ -3819,7 +3828,7 @@ function gdHistory(){
   try{
     var orig=Storage.prototype.setItem;
     Storage.prototype.setItem=function(k,v){ orig.apply(this,arguments);
-      if(this===window.localStorage && !GD.applying && GD_KEYS.indexOf(k)>-1 && gdLinked()){
+      if(this===window.localStorage && !GD.applying && gdKeyList().indexOf(k)>-1 && gdLinked()){
         clearTimeout(GD.timer); GD.timer=setTimeout(function(){ gdSync(); },5000); } };
   }catch(e){}
 })();
@@ -4092,6 +4101,15 @@ function pbRun(){
   var c=document.getElementById('pb-count');
   ta.addEventListener('input',function(){ if(c) c.textContent=ta.value.length+'자'; });
   pbBar(); pbMine();
+})();
+
+(function(){
+  var cb=document.getElementById('gd-keys'); if(!cb) return;
+  cb.checked=gdKeysOn();
+  cb.addEventListener('change',function(){
+    try{ localStorage.setItem('gdKeys',cb.checked?'1':'0'); }catch(e){}
+    if(cb.checked && gdLinked()) gdSync();
+  });
 })();
 // ----- AI 확장 기능 -----
 function aiResult(box, title, text){
