@@ -155,6 +155,7 @@ blockquote{margin:1rem 0; padding:.1rem 0 .1rem 1rem; border-left:3px solid var(
 .idx td:first-child{font-weight:600; white-space:nowrap}
 .idx .g3{display:flex; gap:.5rem; white-space:nowrap}
 tr[hidden]{display:none}
+#ix-box[hidden], #ix-open[hidden]{display:none!important}
 .count{font-size:.8rem; color:var(--ink-3); margin-left:auto}
 footer{border-top:2px solid var(--ink); padding:2rem 0 4rem; font-size:.85rem; color:var(--ink-2)}
 </style>
@@ -414,6 +415,8 @@ li.twres{list-style:none; display:block}
 
 .addtag{color:var(--note)}
 .czwhy{color:var(--note)}
+.aistat{border:1px solid var(--rule-hard); background:var(--paper-2,rgba(0,0,0,.03)); padding:.55rem .75rem; margin:.6rem 0; font-size:.86rem; line-height:1.55}
+.aistat b{color:var(--mark)} .aistat .warn{color:var(--mark)} .aistat .chip{margin:.25rem .3rem 0 0}
 .aiwhy{display:block; color:var(--note); font-size:.8rem; margin-top:.2rem}
 .aiwhy .cand, .czwhy .cand{color:var(--ink-3)}
 .czhint{margin:.3rem 0}
@@ -1612,6 +1615,7 @@ details.gdet[open] summary{margin-bottom:.5rem}
       <option value="all">전부 (죽음 포함)</option>
     </select></label>
     <button class="chip" id="sf-go">전체 다시 뽑기</button>
+    <button class="chip" id="sf-fit" title="지금 칸들이 서로 잘 이어지는지 AI가 점검하고, 약한 칸을 알려 준다">궁합 점검</button>
     <button class="chip" id="sf-reset">처음부터</button>
     <span class="count" id="sf-sum"></span>
   </div>
@@ -1631,6 +1635,7 @@ details.gdet[open] summary{margin-bottom:.5rem}
   <div id="tr-panel"></div>
   <p class="recline" id="sf-rec"></p>
   <div id="sf-role"></div>
+  <div id="sf-aistat" class="aistat" hidden></div>
   <div class="czout" id="cz-out"></div>
   <div id="sf-out"></div>
   <div id="sf-endbox"></div>
@@ -5082,9 +5087,10 @@ function trBlock(kind){
 // 랜덤 구성기
 (function(){
   var out=document.getElementById('sf-out'); if(!out) return;
-  var gs=[]; ROWS.forEach(function(r){ if(r[1]!=='연출 문법 (장르 공통)' && gs.indexOf(r[1])<0) gs.push(r[1]); });
+  var gs=[]; ROWS.forEach(function(r){ if(r[1]!=='연출 문법 (장르 공통)' && r[1]!=='서사 구조 (장르 공통)' && gs.indexOf(r[1])<0) gs.push(r[1]); });
   var gsel=document.getElementById('sf-g');
   gs.sort().forEach(function(g){var o=document.createElement('option');o.value=g;o.textContent=g;gsel.appendChild(o);});
+  (function(){ var o=document.createElement('option'); o.value='서사 구조 (장르 공통)'; o.textContent='서사 구조 (장르 공통)만'; gsel.appendChild(o); })();   // 무작위 추천 장르에서는 뺀다
   var BAN=[['계약 연애','고백 착각'],['먼치킨','고구마 구간'],['먼치킨','힘숨찐'],['두 번째 회귀','회귀 발각']];
   var SLOTS=[['초반',['도입','초·중반']],['중반',['초·중반','중반']],['후반',['정점','마무리']]];
   function cutTotal(){ var s=document.getElementById('sf-cutn'); return s?parseInt(s.value,10)||70:70; }
@@ -5304,11 +5310,14 @@ function trBlock(kind){
       var openI=[]; SLOTS.forEach(function(_,i){ if(!(slock[i]&&picks[i])) openI.push(i); });
       var czAi=!!(window.__czIsAi && window.__czIsAi());
       if(!czAi && window.__czDraw) window.__czDraw();
+      if(!openI.length && elock && !czAi){ aiStat('<span class="small">모든 칸과 엔딩이 📌 고정돼 있어 다시 뽑을 칸이 없다. 바꿀 칸의 📌를 푼다.</span>'); return; }
       aiReview(openI, !elock && elvl()>=0, czAi);
       return;
     }
     if(!elock){ drawEnd(); eNote=''; emask=maskOn(); } renderEnd();
     SLOTS.forEach(function(_,i){ if(slock[i]&&picks[i]) return; picks[i]=draw(i); aiNote[i]=''; smask[i]=maskOn(); }); render();
+    if(gBooted){ var allLocked=SLOTS.every(function(_,i){ return slock[i]&&picks[i]; });
+      aiStat(sfAi&&sfAi.checked&&!aiReady()?'<span class="small">「AI가 후보 4개 중 고름」이 켜져 있지만 AI 키가 없어 무작위로 뽑았다. <a href="#ai">AI 연결</a>에서 키를 넣는다.</span>':(allLocked?'<span class="small">모든 칸이 📌 고정돼 있어 다시 뽑지 않았다. 바꿀 칸의 📌를 푼다.</span>':'')); }
     if(window.__czDraw) window.__czDraw();
   }
   // ----- AI 검토 뽑기: 칸마다 후보 4개를 무작위로 뽑고 AI가 하나를 고른다 -----
@@ -5319,9 +5328,15 @@ function trBlock(kind){
   function aiOn(){ return !!(sfAi && sfAi.checked && aiReady()); }
   function hEsc(t){ return String(t||'').replace(/</g,'&lt;'); }
   function candsFor(i){
-    var out=[], save=picks[i];
-    for(var t=0;t<40 && out.length<AIK;t++){ var c=draw(i); if(c && !out.some(function(x){ return x[0]===c[0]; })) out.push(c); }
-    picks[i]=save; return out;
+    // 장르를 정했으면 후보 4개 중 최소 2개는 그 장르 고유 클리셰로 (공통 항목만 나오지 않게)
+    var bag=[], save=picks[i], g=nowGenre();
+    for(var t=0;t<60 && bag.length<14;t++){ var c=draw(i); if(c && !bag.some(function(x){ return x[0]===c[0]; })) bag.push(c); }
+    picks[i]=save;
+    if(!g || g==='서사 구조 (장르 공통)') return bag.slice(0,AIK);
+    var own=bag.filter(function(r){ return r[1]===g; }), rest=bag.filter(function(r){ return r[1]!==g; });
+    var out=own.slice(0,2); rest.concat(own.slice(2)).forEach(function(r){ if(out.length<AIK) out.push(r); });
+    for(var k=out.length-1;k>0;k--){ var j=Math.floor(Math.random()*(k+1)); var tt=out[k]; out[k]=out[j]; out[j]=tt; }
+    return out;
   }
   function endCands(){
     var out=[], save=curEnd;
@@ -5348,11 +5363,17 @@ function trBlock(kind){
     if(EC) txt.push('['+(serialOn()?'마지막 컷':'엔딩')+' 후보]\n'+EC.map(function(e,k){ return (k+1)+'. '+plainEnd(e)+' ('+String(e.sub).replace(/<[^>]+>/g,'')+') — '+String(e.note).replace(/<[^>]+>/g,''); }).join('\n'));
     if(MC) MC.idxs.forEach(function(k,n){ txt.push('[소재 '+k+' 후보]\n'+MC.cands[n].map(function(x,q){ return (q+1)+'. '+x.plain+' ('+String(x.sub).replace(/<[^>]+>/g,'')+')'; }).join('\n')); });
     if(!txt.length){ slotIdx.forEach(function(i){ aiNote[i]=''; }); eNote=''; render(); renderEnd(); return; }
+    var nC=slotIdx.reduce(function(a,i){ return a+C[i].length; },0), parts=[];
+    if(slotIdx.length) parts.push('클리셰 '+slotIdx.length+'칸 × 후보 '+AIK+'개');
+    if(EC) parts.push('엔딩 후보 '+EC.length+'개'); if(MC&&MC.idxs.length) parts.push('소재 '+MC.idxs.length+'칸 × 후보 4개');
+    aiStat('<b>AI 검토 중</b> — '+parts.join(' · ')+'를 무작위로 뽑아 하나씩 고르는 중…');
     var g=nowGenre(), idea=ideaBlock('sf');
     var prompt=(idea?idea.replace(/^\n\n/,'')+'\n\n':'')+(g?'[장르] '+g+'\n':'')+'[분량] '+cutTotal()+'컷\n\n[이미 정해진 것]\n'+(fixed.length?fixed.join('\n'):'(없음)')+
       '\n\n'+txt.join('\n\n')+
-      '\n\n각 후보 묶음에서 하나씩 고른다. 기준: 작가 아이디어가 있으면 그것에 가장 맞는 것, 그다음 이미 정해진 것과 앞뒤 칸이 원인과 결과로 이어지는 것. 무난한 것보다 이야기에 힘을 주는 것을 고른다. 같은 장치를 두 칸에 고르지 않는다.\n'+
-      'JSON만 출력한다: {"slots":[{"slot":번호,"pick":후보번호,"why":"한 문장"}],"end":{"pick":후보번호,"why":"한 문장"},"motifs":[{"m":번호,"pick":후보번호,"why":"한 문장"}]}  없는 묶음은 빼도 된다.';
+      '\n\n각 후보 묶음에서 하나씩 고른다. 묶음마다 따로 고르지 말고, 고른 것들을 이어 붙였을 때 하나의 이야기가 되는 조합을 찾는다.\n'+
+      '기준: ① 작가 아이디어가 있으면 그것에 가장 맞는 것 ② 이미 정해진 것과 어울리는 것 ③ 초반의 결과가 중반의 원인이 되고, 중반의 결과가 후반·엔딩으로 이어지는 것 ④ 클리셰끼리 톤·장르·규모가 부딪히지 않는 것(일부러 부딪혀 힘이 생기면 괜찮다) ⑤ 같은 기능의 장치를 두 칸에 겹치지 않는 것.\n'+
+      '고른 뒤 flow에 초반→중반→후반→엔딩을 한 문장으로 이어 쓰고, 그래도 어색하게 맞물리는 곳이 있으면 check에 한 줄로 적는다(없으면 빈칸).\n'+
+      'JSON만 출력한다: {"slots":[{"slot":번호,"pick":후보번호,"why":"한 문장"}],"end":{"pick":후보번호,"why":"한 문장"},"motifs":[{"m":번호,"pick":후보번호,"why":"한 문장"}],"flow":"한 문장","check":""}  없는 묶음은 빼도 된다.';
     aiAsk('당신은 만화 구성 편집자다. 반드시 유효한 JSON만 출력한다.', prompt, 900).then(function(t){
       if(tok!==aiTokG) return;
       var j=null; try{ j=JSON.parse(String(t).replace(/```json|```/g,'').trim().replace(/^[^{]*/,'').replace(/[^}]*$/,'')); }catch(e){}
@@ -5361,21 +5382,60 @@ function trBlock(kind){
       SLOTS.forEach(function(s,i){ if(slotIdx.indexOf(i)<0 && picks[i]) used[picks[i][0]]=1; });
       slotIdx.forEach(function(i){
         var cs=C[i]; if(!cs.length){ aiNote[i]=''; return; }
-        var sj=j&&j.slots?j.slots.filter(function(x){ return +x.slot===i; })[0]:null, k=sj?(+sj.pick-1):-1, r=cs[k];
+        var sj=j&&j.slots?j.slots.filter(function(x){ return +x.slot===i; })[0]:null, k=sj?pIdx(sj.pick):-1, r=cs[k];
         if(!r || used[r[0]]) r=cs.filter(function(x){ return !used[x[0]]; })[0]||cs[0];
         picks[i]=r; used[r[0]]=1;
         var others=cs.filter(function(x){ return x!==r; }).map(function(x){ return x[0]; });
         aiNote[i]=(sj&&cs[k]===r?'AI: '+hEsc(sj.why||''):(bad?'AI 응답을 못 읽어 첫 후보 그대로'+(err?' ('+hEsc(err)+')':''):'AI 선택이 겹쳐 다른 후보로'))+(others.length?' <span class="cand">· 후보였던 것: '+hEsc(others.join(' / '))+'</span>':'');
       });
       if(EC){
-        var k2=j&&j.end?(+j.end.pick-1):-1, e=EC[k2]||EC[0];
+        var k2=j&&j.end?pIdx(j.end.pick):-1, e=EC[k2]||EC[0];
         curEnd=e; var oe=EC.filter(function(x){ return x!==e; }).map(plainEnd);
         eNote=(EC[k2]?'AI: '+hEsc(j.end.why||''):'AI 응답을 못 읽어 첫 후보 그대로')+(oe.length?' <span class="cand">· 후보였던 것: '+hEsc(oe.join(' / '))+'</span>':'');
       }
       render(); renderEnd();
       if(MC && window.__czPut) window.__czPut(MC, (j&&j.motifs)||[], bad?(err||'응답을 못 읽음'):'');
+      if(bad) aiStat('<b class="warn">AI 검토 실패</b> — '+hEsc(err||'응답을 읽지 못했다')+'. 칸마다 첫 후보를 그대로 두었다. <button class="chip" id="sf-aire">다시 검토</button> <span class="small">(무료 모델이면 자주 실패한다. AI 연결에서 다른 모델을 고르면 낫다)</span>', function(){ var b=document.getElementById('sf-aire'); if(b) b.addEventListener('click',function(){ aiReview(slotIdx, !!EC, !!MC); }); });
+      else aiStat('<b>AI 검토 완료</b> — '+parts.join(' · ')+' 중에서 골랐다.'+(j.flow?'<br>흐름: '+hEsc(j.flow):'')+(j.check?'<br><span class="warn">⚠ '+hEsc(j.check)+'</span>':'')+'<br><span class="small">칸 아래 「후보였던 것」에 비교 대상이 있다. 마음에 안 드는 칸은 ↻로 그 칸만 다시 검토한다.</span>');
     });
   }
+  function pIdx(v){ var n=parseInt(v,10); if(isNaN(n)) return -1; return n<=0?0:n-1; }
+  function aiStat(html, after){ var b=document.getElementById('sf-aistat'); if(!b) return; if(!html){ b.hidden=true; b.innerHTML=''; return; } b.hidden=false; b.innerHTML=html; if(after) after(); }
+  // 궁합 점검: 지금 칸들을 바꾸지 않고 서로 맞는지 보고, 약한 칸을 알려 준다
+  function fitCheck(){
+    if(!aiReady()){ aiStat('<b class="warn">AI 키가 없다</b> — <a href="#ai">AI 연결</a>에서 키를 넣는다.'); return; }
+    var L=[], role=document.querySelector('#sf-role b');
+    if(role) L.push('회차 역할: '+role.textContent.replace(/^[★☆]/,''));
+    SLOTS.forEach(function(s,i){ if(picks[i]) L.push('slot '+i+' '+s[0]+': '+picks[i][0]+' ('+picks[i][1]+' · '+picks[i][2]+') — '+picks[i][8]); });
+    if(curEnd && elvl()>=0) L.push('엔딩: '+plainEnd(curEnd)+' — '+String(curEnd.note).replace(/<[^>]+>/g,''));
+    [].slice.call(document.querySelectorAll('#cz-out .czreal')).forEach(function(x){ var t=x.childNodes[0]?x.textContent.split(' · AI')[0].trim():''; if(t) L.push('소재: '+t); });
+    if(!L.length){ aiStat('먼저 「전체 다시 뽑기」로 칸을 채운다.'); return; }
+    var idea=ideaBlock('sf'), g=nowGenre();
+    aiStat('<b>궁합 점검 중</b> — 지금 칸들이 서로 이어지는지 보는 중…');
+    aiAsk('당신은 만화 구성 편집자다. 반드시 유효한 JSON만 출력한다.',
+      (idea?idea.replace(/^\n\n/,'')+'\n\n':'')+(g?'[장르] '+g+'\n':'')+'[지금 구성]\n'+L.join('\n')+
+      '\n\n이 구성이 하나의 이야기로 이어지는지 점검한다. 칸끼리 원인과 결과가 이어지는지, 톤·장르·규모가 부딪히는지, 같은 기능이 겹치는지 본다. 작가 아이디어가 있으면 거기서 벗어난 칸도 짚는다.\n'+
+      'score는 1~5(5가 매우 잘 맞음). weak에는 가장 약한 칸을 최대 2개(slot 번호, 엔딩이면 "end"), 왜 약한지 한 문장. 좋으면 weak는 빈 배열.\n'+
+      'JSON만 출력한다: {"score":4,"flow":"초반→중반→후반→엔딩을 한 문장으로","good":"가장 잘 맞물리는 점 한 줄","weak":[{"slot":1,"why":""}]}', 700)
+    .then(function(t){
+      var j=null; try{ j=JSON.parse(String(t).replace(/```json|```/g,'').trim().replace(/^[^{]*/,'').replace(/[^}]*$/,'')); }catch(e){}
+      if(!j){ aiStat('<b class="warn">궁합 점검 실패</b> — '+hEsc(aiIsErr(t)?String(t).slice(0,90):'응답을 읽지 못했다')+' <button class="chip" id="sf-fit2">다시</button>', function(){ var b=document.getElementById('sf-fit2'); if(b) b.addEventListener('click',fitCheck); }); return; }
+      var sc=Math.max(1,Math.min(5,parseInt(j.score,10)||3)), stars='●●●●●'.slice(0,sc)+'○○○○○'.slice(0,5-sc);
+      var weak=(j.weak||[]).filter(function(w){ return w && (w.slot==='end' || (!isNaN(parseInt(w.slot,10)) && picks[parseInt(w.slot,10)])); }).slice(0,2);
+      var html='<b>궁합 '+stars+' '+sc+'/5</b>'+(j.flow?'<br>흐름: '+hEsc(j.flow):'')+(j.good?'<br>잘 맞는 점: '+hEsc(j.good):'');
+      weak.forEach(function(w,n){
+        var isEnd=(w.slot==='end'), i=isEnd?-1:parseInt(w.slot,10), name=isEnd?plainEnd(curEnd):picks[i][0], lab=isEnd?'엔딩':SLOTS[i][0];
+        html+='<br><span class="warn">⚠ '+hEsc(lab)+' 「'+hEsc(name)+'」 — '+hEsc(w.why||'')+'</span> <button class="chip" data-fix="'+(isEnd?'end':i)+'">이 칸 후보 4개로 다시 검토</button>';
+      });
+      if(!weak.length) html+='<br><span class="small">약한 칸을 찾지 못했다.</span>';
+      aiStat(html, function(){
+        [].slice.call(document.querySelectorAll('#sf-aistat button[data-fix]')).forEach(function(b){
+          b.addEventListener('click',function(){ var v=b.getAttribute('data-fix'); if(v==='end'){ elock=false; aiReview([], true, false); } else { var i=+v; slock[i]=false; aiReview([i], false, false); } });
+        });
+      });
+    });
+  }
+  document.getElementById('sf-fit').addEventListener('click',function(){ fitCheck(); });
   var curEnd=null;
   var EPAIR={'으로':['으로','로'],'로':['으로','로'],'이':['이','가'],'가':['이','가'],'은':['은','는'],'는':['은','는'],
              '을':['을','를'],'를':['을','를'],'과':['과','와'],'와':['과','와']};
@@ -5908,7 +5968,7 @@ var runChar=makeIndex({
   function putPicks(idxs, cands, arr, err){
     idxs.forEach(function(k,n){
       var cs=cands[n]; if(!cs||!cs.length){ return; }
-      var mj=(arr||[]).filter(function(x){ return +x.m===k; })[0], q=mj?(+mj.pick-1):-1, x=cs[q], ok=!!x;
+      var mj=(arr||[]).filter(function(x){ return +x.m===k; })[0], pn=mj?parseInt(mj.pick,10):NaN, q=isNaN(pn)?-1:(pn<=0?0:pn-1), x=cs[q], ok=!!x;
       if(!x) x=cs[0];
       var others=cs.filter(function(y){ return y!==x; }).map(function(y){ return y.plain; });
       items[k]={deco:x.deco, sub:x.sub+'<span class="czwhy"> · '+(ok?'AI: '+mEsc(mj.why||''):(err?'AI 오류로 첫 후보: '+mEsc(String(err).slice(0,80)):'AI가 고르지 않아 첫 후보'))+(others.length?' <span class="cand">· 후보였던 것: '+mEsc(others.join(' / '))+'</span>':'')+'</span>', plain:x.plain, ai:true};
