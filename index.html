@@ -7649,16 +7649,18 @@ var FIG_BRULES={
 // 캐릭터 모티브 → 부품 표(CHAR_FIG, 캐릭터 모티브 데이터 옆에 있다). 이름이 글에 나오면 그 부품을 먼저 넣는다(긴 이름부터)
 function figMotif(t, f){
   var cf=null; try{ cf=(typeof CHAR_FIG!=='undefined')?CHAR_FIG:window.CHAR_FIG; }catch(e){ cf=window.CHAR_FIG; }
-  if(!cf || typeof cf!=='object') return;
+  if(!cf || typeof cf!=='object') return t;
   Object.keys(cf).sort(function(a,b){ return b.length-a.length; }).forEach(function(nm){
     if(!nm || t.indexOf(nm)<0) return; var p=cf[nm]; if(!p || typeof p!=='object') return;
     FIG_SEL.forEach(function(s){ var v=p[s[0]]; if(!f[s[0]] && s[2].indexOf(v)>-1) f[s[0]]=v; });
     FIG_BOOL.forEach(function(k){ if(p[k]===true) f[k]=true; });
+    t=t.split(nm).join(' / ');   // 잡은 모티브 이름은 아래 낱말 규칙이 다시 읽지 않게 지운다(땋은 수염 → 묶은 머리 같은 오해)
   });
+  return t;
 }
 function castFigGuess(t){
   t=String(t||''); var f=figBlank();
-  figMotif(t, f);
+  t=figMotif(t, f);
   FIG_RULES.forEach(function(r){ if(!f[r[0]] && r[2].test(t)) f[r[0]]=r[1]; });
   Object.keys(FIG_BRULES).forEach(function(k){ if(FIG_BRULES[k].test(t)) f[k]=true; });
   if(f.glare) f.glasses=true;
