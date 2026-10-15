@@ -90,3 +90,4 @@ arcForm, deviceId, folderMemo, gdBase, gdLast, gdLinked, ideaText, mangaDataVer,
 - 사용자가 준 설정에 없는 내용을 채워 넣지 않는다. 미정은 미정으로 둔다
 
 - 색인의 「✎ 내가 추가 (n)」 칩: 클리셰 색인 `mineonly`(행 11번 칸이 `추가|`로 시작), 소재 색인 `mmine`(`motifMine`). 개수는 `mineCount`가 갱신한다
+- 채팅 AI의 폴더 담기: `<<담기>>{"folder":"이름","items":[{"type":"클리셰","name":"사전 이름"}]}<<끝>>` → `putApply`(없는 폴더는 `foldMake`, 이미 별표면 폴더만 옮김, 사전에 없는 이름은 missing). 「되돌리기」는 `putUndo`(새로 만든 빈 폴더는 지움). 폴더 이야기가 나오면 `ctxFor`가 [즐겨찾기 폴더] 목록을 붙인다
