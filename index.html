@@ -688,6 +688,16 @@ textarea.cast-in{resize:vertical; min-height:2.6em; overflow:hidden}
 .cast-figc label{display:inline-flex; gap:.25rem; align-items:center}
 .cast-figc .cast-fign{flex-basis:100%; color:var(--ink-3); font-size:.76rem}
 .cast-fillmsg{font-size:.78rem; color:var(--ink-3)}
+.cast-figbox .cast-figc{display:block; flex:1; min-width:0}
+.fig-sel{display:flex; flex-wrap:wrap; gap:.3rem .7rem; align-items:center; font-size:.84rem}
+.fig-sel label,.fig-g label{display:inline-flex; gap:.25rem; align-items:center}
+.fig-sel select{font:inherit; font-size:.82rem; padding:.12rem .25rem; border:1px solid var(--rule-hard); background:var(--paper); color:var(--ink); max-width:8.5rem}
+.fig-more{margin:.3rem 0 .1rem}
+.fig-more>summary{cursor:pointer; font-size:.8rem; color:var(--ink-3)}
+.fig-more .fig-n{color:var(--mark); font-size:.74rem}
+.fig-g{display:flex; flex-wrap:wrap; gap:.15rem .7rem; margin:.3rem 0; font-size:.8rem}
+.fig-g b{flex-basis:100%; font-size:.72rem; color:var(--ink-3); font-weight:600}
+.ct-ed .fig-sel label,.ct-ed .fig-g label{display:inline-flex}
 /* [[/CSS:cast]] */
 /* [[CSS:texts]] */
 #texts-root .lede{margin-bottom:1.2rem}
@@ -7381,23 +7391,96 @@ WS_DONE.push(function(st, box){
 });
 // ----- 입력 칸 -----
 // ----- 인물 그림 (콘티 구성기의 그림을 빌려 쓴다) -----
-var CAST_HAIRS=['짧은','긴','묶은','삐죽','민머리'], CAST_BUILDS=['작음','보통','큼'];
+// ----- 인물 그림 부품 (콘티 구성기의 그림과 같은 부품) -----
+// 고르는 칸: [키, 이름, 값들] — 값 ''은 미정(기본 모양)
+var FIG_SEL=[
+  ['hair','머리',['짧은','긴','단발','묶은','한쪽만 긴','각진','삐죽','민머리']],
+  ['eyes','눈매',['치켜올라간','처진','반쯤 감긴','감은','작은 동공']],
+  ['build','체격',['작음','보통','큼','마름','두꺼움']],
+  ['pose','자세',['구부정','곧은','팔짱','주머니에 손','뒷짐','무언가 안음','고개 기울임']],
+  ['outfit','옷',['교복','정장','큰 겉옷','긴 옷자락','교복+겉옷']]
+];
+// 켜고 끄는 칸: [묶음, [[키, 이름], …]]
+var FIG_CHK=[
+  ['머리·얼굴',[['dark','어두운 머리'],['grey','일부 흰머리'],['ahoge','머리 위 삐침'],['bangs','눈 가리는 앞머리'],['glasses','안경'],['glare','안경 반사'],['eyepatch','한쪽 눈 가림'],['oddeye','눈 색이 다름'],['bags','눈 밑 그늘'],['scar','얼굴 흉터'],['burn','화상 자국']]],
+  ['옷·소품',[['hat','모자'],['hood','후드'],['collar','높은 옷깃'],['scarf','목도리'],['neck','목에 건 것'],['gloves','장갑'],['earphone','한쪽 이어폰'],['bag','한쪽 어깨 가방'],['pack','등에 진 짐'],['umbrella','우산'],['holding','손에 든 것'],['snack','입에 문 것'],['bigshoes','큰 신발'],['barefoot','맨발']]],
+  ['몸의 흔적',[['bandage','붕대'],['tattoo','문신'],['neckscar','목의 흉터·자국'],['emptysleeve','빈 소매'],['shortsleeve','한쪽 짧은 소매']]]
+];
+var FIG_KEYS=FIG_SEL.map(function(x){ return x[0]; }), FIG_BOOL=[]; FIG_CHK.forEach(function(g){ g[1].forEach(function(c){ FIG_BOOL.push(c[0]); }); });
+var CAST_HAIRS=FIG_SEL[0][2], CAST_BUILDS=FIG_SEL[2][2];
+function figBlank(){ var f={}; FIG_KEYS.forEach(function(k){ f[k]=''; }); FIG_BOOL.forEach(function(k){ f[k]=false; }); return f; }
+function figClean(x){ var f=figBlank(); x=x||{};
+  FIG_SEL.forEach(function(s){ if(s[2].indexOf(x[s[0]])>-1) f[s[0]]=x[s[0]]; });
+  FIG_BOOL.forEach(function(k){ f[k]=x[k]===true; }); return f; }
+// 글 → 부품. 캐릭터 모티브 색인의 외모 모티브 이름도 그대로 잡는다
+var FIG_RULES=[
+  ['hair','민머리',/민머리|대머리|삭발|빡빡|머리를 완전히 밀/],
+  ['hair','한쪽만 긴',/한쪽만 긴 *머리|비대칭 *머리|한쪽 머리만 길/],
+  ['hair','각진',/짧고 각진 *머리|각진 *머리|스포츠 *머리|크루 *컷|군인 *머리/],
+  ['hair','묶은',/묶|포니테일|땋|올림머리|똥머리|양갈래|틀어 *올/],
+  ['hair','삐죽',/삐죽|부스스|곱슬|헝클|뻗친|까치집|뾰족/],
+  ['hair','단발',/단발|보브|턱선/],
+  ['hair','긴',/긴 *머리|장발|허리까지|어깨를 넘|긴 *생머리/],
+  ['hair','짧은',/짧은 *머리|숏컷|짧게 *깎|커트/],
+  ['eyes','치켜올라간',/치켜올라간|치켜 *뜬|날카로운 *눈|매서운 *눈|눈꼬리가 올라/],
+  ['eyes','처진',/눈꼬리가 처|처진 *눈|순한 *눈/],
+  ['eyes','반쯤 감긴',/반쯤 감긴|졸린 *눈|게슴츠레|나른한 *눈/],
+  ['eyes','감은',/웃을 때만 눈을|실눈|늘 눈을 감|눈을 감고 다/],
+  ['eyes','작은 동공',/동공이 작|작은 *동공|흰자가 많/],
+  ['build','작음',/극단적으로 작은 키|작은 *키|키가 *작|왜소|아담|조그만/],
+  ['build','마름',/길고 마른|마른 *체형|비쩍|호리호리|깡마른|가냘/],
+  ['build','두꺼움',/두꺼운 *상체|떡대|어깨가 넓|가슴이 두꺼|근육질/],
+  ['build','큼',/거구|덩치|장신|키가 *크|큰 *키|건장|우람/],
+  ['pose','구부정',/구부정|웅크|굽은 *등|등이 굽/],
+  ['pose','팔짱',/팔짱/],
+  ['pose','주머니에 손',/주머니에 손|손을 주머니/],
+  ['pose','뒷짐',/뒷짐|손을 뒤로/],
+  ['pose','무언가 안음',/안고 있|품에 안|끌어안/],
+  ['pose','고개 기울임',/고개를 (조금 )?기울|갸웃/],
+  ['pose','곧은',/곧은 *자세|꼿꼿|반듯한 *자세|군인 *같은 *자세/],
+  ['outfit','교복+겉옷',/교복 *위에 *(사복 )?겉옷|교복에 *(후드|점퍼|재킷)/],
+  ['outfit','교복',/교복|학생복|세일러/],
+  ['outfit','정장',/정장|양복|수트|단추를 끝까지|셔츠 *단추/],
+  ['outfit','긴 옷자락',/옷자락|망토|코트 *자락|로브|긴 *코트/],
+  ['outfit','큰 겉옷',/큰 *겉옷|오버핏|헐렁한 *(옷|겉옷|코트)|커다란 *(코트|점퍼)/]
+];
+var FIG_BRULES={
+  dark:/(검은|까만|새까만|어두운|흑갈색)[^,.。]{0,5}머리|흑발|머리[^,.。]{0,3}(검|까맣)/, grey:/흰머리|새치|머리색이 부분적으로 셈|백발/,
+  ahoge:/삐침|안테나|바보털/, bangs:/눈을 가리는 앞머리|앞머리가 눈|앞머리로 눈/,
+  glasses:/안경|고글/, glare:/안경 반사/, eyepatch:/한쪽 눈을 가|안대/, oddeye:/눈동자 색이 다름|한쪽 눈만 색|오드아이|짝눈/,
+  bags:/눈 밑 그늘|다크서클|눈 밑이 검/, scar:/(얼굴|뺨|눈가|이마|눈썹|코)[^,.。]{0,6}(흉터|상처)|칼자국/, burn:/화상/,
+  hat:/모자|캡|베레|두건|투구|헬멧/, hood:/후드/, collar:/목까지 올린 옷깃|옷깃을 세|높은 옷깃|터틀넥/, scarf:/목도리|스카프|머플러/,
+  neck:/목에 건|목걸이|펜던트|목에 걸/, gloves:/장갑/, earphone:/이어폰|헤드폰/, bag:/가방/, pack:/등에 진|배낭|등에 멘|짊어/,
+  umbrella:/우산/, holding:/한 손에 늘|손에 (늘 )?(뭔가|무언가|책|컵|지팡이)|들고 다니/, snack:/먹고 있|사탕|막대|담배|껌/,
+  bigshoes:/큰 신발|맞지 않는 큰 신발/, barefoot:/맨발/,
+  bandage:/붕대/, tattoo:/문신|타투/, neckscar:/목덜미의 흉터|목에 남은 자국|목[^,.。]{0,3}(흉터|자국|상처)/, emptysleeve:/소매가 비어|빈 소매|팔이 없|외팔/, shortsleeve:/한쪽만 짧은 소매/
+};
 function castFigGuess(t){
-  t=String(t||''); var f={hair:'', build:'', dark:false, glasses:false, hat:false, scar:false};
-  if(/민머리|대머리|삭발|빡빡/.test(t)) f.hair='민머리';
-  else if(/묶|포니테일|땋|올림머리|똥머리|양갈래/.test(t)) f.hair='묶은';
-  else if(/삐죽|부스스|곱슬|헝클|뻗친|까치집/.test(t)) f.hair='삐죽';
-  else if(/긴 *머리|장발|허리까지|어깨를 넘|긴 *생머리/.test(t)) f.hair='긴';
-  else if(/짧은 *머리|단발|숏컷|짧게 *깎|스포츠 *머리|커트/.test(t)) f.hair='짧은';
-  if(/(검은|까만|새까만|어두운|흑갈색)[^,.。]{0,5}머리|흑발|머리[^,.。]{0,3}(검|까맣)/.test(t)) f.dark=true;
-  if(/안경|고글/.test(t)) f.glasses=true;
-  if(/모자|후드|캡|베레|두건|투구|헬멧/.test(t)) f.hat=true;
-  if(/흉터|상처 *자국|칼자국|화상 *자국/.test(t)) f.scar=true;
-  if(/거구|덩치|장신|키가 *크|큰 *키|건장|우람|떡대/.test(t)) f.build='큼';
-  else if(/작은 *키|키가 *작|왜소|아담|조그만|꼬마/.test(t)) f.build='작음';
+  t=String(t||''); var f=figBlank();
+  FIG_RULES.forEach(function(r){ if(!f[r[0]] && r[2].test(t)) f[r[0]]=r[1]; });
+  Object.keys(FIG_BRULES).forEach(function(k){ if(FIG_BRULES[k].test(t)) f[k]=true; });
+  if(f.glare) f.glasses=true;
+  if(!f.scar && !f.neckscar && /흉터|상처 *자국/.test(t)) f.scar=true;   // 자리 말 없이 「흉터」만 있으면 얼굴
   return f;
 }
-function castFigSet(f){ return !!f && !!(f.hair||f.build||f.dark||f.glasses||f.hat||f.scar); }
+function castFigSet(f){ if(!f) return false; return FIG_KEYS.some(function(k){ return !!f[k]; }) || FIG_BOOL.some(function(k){ return f[k]===true; }); }
+// 고르는 칸 HTML (등장인물 카드·모티브 만들기 칸·콘티 인물 고치기에서 같이 쓴다)
+function figCtlHTML(f){
+  f=figClean(f); var on=FIG_BOOL.filter(function(k){ return f[k]; }).length;
+  var sel=FIG_SEL.map(function(s){ return '<label>'+s[1]+' <select class="cast-fg" data-g="'+s[0]+'"><option value="">'+(s[0]==='hair'?'미정':'보통')+'</option>'+
+    s[2].filter(function(v){ return v!=='보통'; }).map(function(v){ return '<option'+(f[s[0]]===v?' selected':'')+'>'+v+'</option>'; }).join('')+'</select></label>'; }).join('');
+  var chk=FIG_CHK.map(function(g){ return '<div class="fig-g"><b>'+g[0]+'</b>'+g[1].map(function(c){
+    return '<label><input type="checkbox" class="cast-fg" data-g="'+c[0]+'"'+(f[c[0]]?' checked':'')+'>'+c[1]+'</label>'; }).join('')+'</div>'; }).join('');
+  return '<div class="fig-sel">'+sel+'</div><details class="fig-more"'+(on?' open':'')+'><summary>얼굴·소품·흔적 <span class="fig-n">'+(on?on+'개':'')+'</span></summary>'+chk+'</details>';
+}
+function figTags(lk){
+  lk=lk||{}; var t=[];
+  t.push(lk.hair?[lk.hair+' 머리',0]:['머리 미정',1]);
+  FIG_SEL.slice(1).forEach(function(s){ if(lk[s[0]]) t.push([s[0]==='build'?'체격 '+lk[s[0]]:lk[s[0]],0]); });
+  FIG_CHK.forEach(function(g){ g[1].forEach(function(c){ if(lk[c[0]]===true) t.push([c[1],0]); }); });
+  if(!lk.build) t.push(['체격 미정',1]);
+  return t;
+}
 function castFigOf(m){ m=m||{}; return castFigSet(m.fig)?m.fig:castFigGuess([m.look,m.memo,m.desc].join(' ')); }
 function castSeed(t){ t=String(t||''); var h=0; for(var i=0;i<t.length;i++) h=(h*31+t.charCodeAt(i))%9973; return 500+h; }
 function castPicAttr(m){ return ' data-k="bs" data-x=".5" data-nolabel="1" data-seed="'+castSeed(m.id||m.name)+'" data-who="'+wsEsc(JSON.stringify([{name:m.name||'', look:castFigOf(m)}]))+'"'; }
@@ -7411,7 +7494,7 @@ function castFigHTML(m){
   function sel(g,list,lab){ return '<label>'+lab+' <select class="cast-fg" data-g="'+g+'"><option value="">미정</option>'+list.map(function(x){ return '<option'+(f[g]===x?' selected':'')+'>'+x+'</option>'; }).join('')+'</select></label>'; }
   function chk(g,lab){ return '<label><input type="checkbox" class="cast-fg" data-g="'+g+'"'+(f[g]?' checked':'')+'>'+lab+'</label>'; }
   return '<div class="cast-figbox"'+(set?' data-touched="1"':'')+'><canvas class="cast-pic" role="img" aria-label="생김새 그림"'+castPicAttr(m)+'></canvas>'+
-    '<div class="cast-figc">'+sel('hair',CAST_HAIRS,'머리')+sel('build',CAST_BUILDS,'체격')+chk('dark','어두운 머리')+chk('glasses','안경')+chk('hat','모자')+chk('scar','흉터')+
+    '<div class="cast-figc">'+figCtlHTML(f)+
     '<span class="cast-fign">'+(set?'고른 생김새로 그린다. 콘티 구성기 그림도 이것을 쓴다.':'외모 칸의 글에서 짐작해 그렸다. 고르면 그대로 저장한다.')+'</span></div></div>';
 }
 function castFigRead(box){
@@ -7429,6 +7512,7 @@ function castFigBind(root, onPick){
   function redraw(f){ cv.setAttribute('data-who', JSON.stringify([{name:nameOf(), look:f}])); castPics(fb); }
   [].slice.call(fb.querySelectorAll('.cast-fg')).forEach(function(el){
     el.addEventListener('change',function(){ fb.setAttribute('data-touched','1'); if(note) note.textContent='고른 생김새로 그린다. 콘티 구성기 그림도 이것을 쓴다.';
+      var fn=fb.querySelector('.fig-n'); if(fn){ var c=fb.querySelectorAll('.fig-more input:checked').length; fn.textContent=c?c+'개':''; }
       redraw(castFigRead(fb)); if(onPick) onPick(); }); });
   [].slice.call(root.querySelectorAll('.cast-in[data-f="look"],.cast-in[data-f="memo"],.cast-in[data-f="desc"]')).forEach(function(el){
     el.addEventListener('input',function(){ if(fb.getAttribute('data-touched')==='1') return;
@@ -7467,7 +7551,8 @@ function castFill(root, folder, selfId, say){
     '\n\n채울 칸: '+empty.join(', ')+
     '\n\n규칙:\n적힌 칸에서 자연스럽게 이어지는 것만 쓴다. 적힌 칸을 고치거나 되풀이하지 않는다.\n이름(name)은 작품 분위기에 맞는 이름 하나. 다른 인물과 겹치지 않게.\n'+
     '외모·성격·결핍·특징·말투·관계는 각각 한두 문장. 관계는 다른 인물이 없으면 빈 문자열.\n'+
-    'fig는 그림용 생김새다. 외모 칸(적힌 것 또는 새로 쓴 것)과 맞춘다: {"hair":"짧은|긴|묶은|삐죽|민머리","build":"작음|보통|큼","dark":true/false,"glasses":true/false,"hat":true/false,"scar":true/false}\n'+
+    'fig는 그림용 생김새다. 외모 칸(적힌 것 또는 새로 쓴 것)과 맞추고, 외모에 없는 부품은 넣지 않는다. 고르는 칸(값 하나, 없으면 빈 문자열): '+FIG_SEL.map(function(x){ return x[0]+'('+x[1]+': '+x[2].join('|')+')'; }).join(', ')+
+    '. 켜는 칸(true인 것만 적는다): '+FIG_BOOL.map(function(k){ var lb=''; FIG_CHK.forEach(function(g){ g[1].forEach(function(c){ if(c[0]===k) lb=c[1]; }); }); return k+'('+lb+')'; }).join(', ')+'\n'+
     '채울 칸만 담은 JSON 객체 하나만 출력한다. 예: {"name":"","role":"","desc":"","look":"","persona":"","lack":"","memo":"","speech":"","rel":"","fig":{}}';
   say('채우는 중…');
   aiAsk(CAST_FILLSYS, ask, 900).then(function(t){
@@ -7482,9 +7567,8 @@ function castFill(root, folder, selfId, say){
       el.value=k==='name'?v.slice(0,20):(k==='role'||k==='desc'?v.slice(0,80):v.slice(0,400)); castFit(el); filled.push(p[1]);
       try{ el.dispatchEvent(new Event('input',{bubbles:true})); }catch(e){} });
     if(fb && !figSet && j.fig && typeof j.fig==='object'){
-      var g=castFigGuess(''), x=j.fig;
-      if(CAST_HAIRS.indexOf(x.hair)>-1) g.hair=x.hair; if(CAST_BUILDS.indexOf(x.build)>-1) g.build=x.build;
-      ['dark','glasses','hat','scar'].forEach(function(k){ g[k]=x[k]===true; });
+      var g=figClean(j.fig), gg=castFigGuess(castRead(root).look||'');   // 외모 글에서 잡히는 부품은 빠뜨리지 않는다
+      FIG_KEYS.forEach(function(k){ if(!g[k] && gg[k]) g[k]=gg[k]; }); FIG_BOOL.forEach(function(k){ if(gg[k]) g[k]=true; });
       castFigWrite(fb,g); fb.setAttribute('data-touched','1'); var nt=fb.querySelector('.cast-fign'); if(nt) nt.textContent='AI가 고른 생김새다. 바꾸면 그대로 저장한다.';
       var one=fb.querySelector('.cast-fg'); if(one) try{ one.dispatchEvent(new Event('change',{bubbles:true})); }catch(e){}
       filled.push('그림');
@@ -7696,7 +7780,7 @@ window.__castList=function(folder){ return castAll().filter(function(m){ return 
 window.__castView=function(){ return castView(); };
 window.__castUpsert=function(o){
   var nm=String(o&&o.name||'').trim(); if(!nm) return '';
-  var m=castFind(nm), fig=o.fig&&castFigSet(o.fig)?{hair:o.fig.hair||'', build:o.fig.build||'', dark:!!o.fig.dark, glasses:!!o.fig.glasses, hat:!!o.fig.hat, scar:!!o.fig.scar}:null;
+  var m=castFind(nm), fig=o.fig&&castFigSet(o.fig)?figClean(o.fig):null;
   if(m){ if(fig) m.fig=fig; if(!m.role && o.role) m.role=String(o.role).trim(); if(!m.desc && o.desc) m.desc=String(o.desc).trim(); recPut(CAST_KEY,m); castRefresh(); return 'upd'; }
   m=castNew({name:nm, role:o.role||'', desc:o.desc||''}, castDef(), 'conti'); if(fig){ m.fig=fig; recPut(CAST_KEY,m); } castRefresh(); return 'new';
 };
@@ -8548,88 +8632,198 @@ function tilt(D,a){ var x=D.ctx; x.translate(D.w/2,D.h/2); x.rotate(a||-.22); x.
 /* ---------- 사람 ---------- */
 function geo(H,hs,ls){ hs=hs||1; ls=ls||1; var T=.13*hs+.03+.32+.5*ls, u=H/T, d=.13*hs*u; return {u:u, d:d, eye:.55*d}; }
 function figBody(D,x,top,H,o){
-  o = o||{}; var hs=o.hs||1, ls=o.ls||1, f=o.face||0, lk=o.look||{};
-  var g = geo(H,hs,ls), u=g.u, d=g.d, cy=top+d/2;
+  o = o||{}; var lk=o.look||{};
+  if(lk.build==='작음'){ top+=H*.14; H*=.86; }   // 작은 키는 실제로 작게
+  var hs=o.hs||1, ls=o.ls||1, f=o.face||0;
+  var g = geo(H,hs,ls), u=g.u, d=g.d, r=d/2;
+  var pose=lk.pose||'', out=lk.outfit||'';
+  var hx0 = x + (pose==='구부정'?(f||0)*.05*u:0) + (pose==='고개 기울임'?.03*u*(f||1):0);   // 머리 위치
+  var cy = top+d/2 + (pose==='구부정'?.04*u:0);
   var shY = top+d+.04*u, hipY = shY+.31*u, footY = top+H, kneeY = hipY+(footY-hipY)*.5;
-  var sw = (f?.13:.25)*u, hw = (f?.1:.17)*u, bk = lk.build==='작음'?.82:(lk.build==='큼'?1.3:1); sw*=bk; hw*=bk;
+  var sw = (f?.13:.25)*u, hw = (f?.1:.17)*u;
+  var bkS = {작음:.82, 큼:1.3, 마름:.74, 두꺼움:1.5}[lk.build]||1, bkH = {작음:.82, 큼:1.3, 마름:.78, 두꺼움:1.08}[lk.build]||1;
+  sw*=bkS; hw*=bkH;
+  var coat = (out==='큰 겉옷' || out==='교복+겉옷'), hem = hipY + (coat?.05*u:0);
+  var tsw = sw*(coat?1.16:1), thw = hw*(coat?1.4:1);
   var body = o.sil ? {fill:D.c.ink, fillStyle:'solid'} : {fill:D.c.paper, fillStyle:'solid'};
+  var det = !o.sil && d>=12, front = !o.back;
+  var markP = function(e){ return D.ink(Object.assign({stroke:D.c.mark, strokeWidth:1.2*D.sw}, e||{})); };
+  // 등에 진 짐 (몸 뒤)
+  if(lk.pack && !o.sil){
+    var px = o.back ? x-sw*.42 : x+(f?-f*sw*.9:sw*.12);
+    D.rc.rectangle(px, shY-.09*u, sw*(f?.7:.62), .3*u, D.ink({fill:D.c.paper, fillStyle:'solid'}));
+    if(o.back) D.rc.line(px+sw*.1, shY+.02*u, px+sw*.74, shY+.02*u, D.ink());
+  }
+  // 다리·발
   [-1,1].forEach(function(s){
-    var hx=x+s*hw*.28, kx=x+s*hw*.32, fx=x+s*hw*.42;
-    D.rc.linearPath([[hx,hipY],[kx,kneeY],[fx,footY]], D.ink());
-    D.rc.line(fx, footY, fx+(f||s)*.06*u, footY, D.ink());
+    var lx=x+s*hw*.28, kx=x+s*hw*.32, fx=x+s*hw*.42, dir=(f||s);
+    D.rc.linearPath([[lx,hipY],[kx,kneeY],[fx,footY]], D.ink());
+    if(lk.bigshoes) D.rc.ellipse(fx+dir*.05*u, footY-.012*u, .15*u, .045*u, D.ink(body));
+    else if(lk.barefoot){ D.rc.line(fx, footY, fx+dir*.045*u, footY, D.ink()); if(det) [0,1,2].forEach(function(k){ D.rc.circle(fx+dir*(.05+.012*k)*u, footY-.006*u, Math.max(1.5,.012*u), D.ink({roughness:.3})); }); }
+    else D.rc.line(fx, footY, fx+dir*.06*u, footY, D.ink());
   });
-  D.rc.polygon([[x-sw/2,shY],[x+sw/2,shY],[x+hw/2,hipY],[x-hw/2,hipY]], D.ink(body));
+  // 긴 옷자락
+  if(out==='긴 옷자락') D.rc.polygon([[x-thw*.55,hipY-.03*u],[x+thw*.55,hipY-.03*u],[x+thw*(f?1:1.25),kneeY+.08*u],[x-thw*(f?.9:1.25),kneeY+.1*u]], D.ink(body));
+  // 팔 모양
+  var arms={}, hands={};
   [-1,1].forEach(function(s){
-    var sx = x+s*(f? sw*.3 : sw/2), ex = sx+s*.035*u+f*.03*u, hx = sx+s*.02*u+f*.05*u;
-    D.rc.linearPath([[sx,shY],[ex,shY+.16*u],[hx,shY+.31*u]], D.ink());
+    var sx = x+s*(f? tsw*.3 : tsw/2), ex = sx+s*.035*u+f*.03*u, hx = sx+s*.02*u+f*.05*u, P;
+    if(f){
+      if(pose==='팔짱' || pose==='무언가 안음') P=[[sx,shY],[sx+s*.01*u,shY+.15*u],[x+f*.16*u,shY+.14*u]];
+      else if(pose==='주머니에 손') P=[[sx,shY],[ex,shY+.15*u],[x+s*.02*u+f*.02*u,hipY-.01*u]];
+      else if(pose==='곧은') P=[[sx,shY],[sx+s*.01*u,shY+.16*u],[sx+s*.01*u,shY+.31*u]];
+      else P=[[sx,shY],[ex,shY+.16*u],[hx,shY+.31*u]];
+    } else if(pose==='팔짱') P=[[sx,shY],[sx+s*.035*u,shY+.15*u],[x-s*tsw*.12,shY+.135*u]];
+    else if(pose==='주머니에 손') P=[[sx,shY],[sx+s*.05*u,shY+.16*u],[x+s*thw*.42,hipY-.005*u]];
+    else if(pose==='뒷짐') P=[[sx,shY],[sx+s*.04*u,shY+.15*u],[x+s*thw*.18,hipY-.03*u]];
+    else if(pose==='무언가 안음') P=[[sx,shY],[sx+s*.035*u,shY+.15*u],[x+s*tsw*.2,shY+.2*u]];
+    else if(pose==='곧은') P=[[sx,shY],[sx+s*.012*u,shY+.16*u],[sx+s*.012*u,shY+.31*u]];
+    else P=[[sx,shY],[ex,shY+.16*u],[hx,shY+.31*u]];
+    arms[s]=P;
+    var hidden = pose==='팔짱' || pose==='주머니에 손' || pose==='뒷짐' || (lk.emptysleeve && s===-1);
+    if(!hidden) hands[s]=P[2];
   });
-  D.rc.line(x, top+d*.95, x, shY, D.ink());
-  D.rc.circle(x, cy, d, D.ink(body));
-  var r = d/2;
+  var drawArm=function(s){
+    if(lk.emptysleeve && s===-1){ var P=arms[s]; D.rc.linearPath([P[0],[P[0][0]+s*.02*u,P[0][1]+.12*u],[P[0][0]+s*.015*u,P[0][1]+.22*u]], D.ink({strokeLineDash:[4,3]})); return; }
+    D.rc.linearPath(arms[s], D.ink());
+  };
+  if(pose==='뒷짐' && !f){ drawArm(-1); drawArm(1); }
+  // 몸통
+  D.rc.polygon([[x-tsw/2,shY],[x+tsw/2,shY],[x+thw/2,hem],[x-thw/2,hem]], D.ink(body));
+  // 옷
+  if(det && front && !f){
+    var nb=shY+.11*u;
+    if(out==='교복' || out==='교복+겉옷'){ D.rc.linearPath([[x-.05*u,shY],[x,nb],[x+.05*u,shY]], D.ink());
+      D.rc.polygon([[x-.018*u,nb-.01*u],[x+.018*u,nb-.01*u],[x+.01*u,nb+.08*u],[x-.01*u,nb+.08*u]], D.ink({fill:D.c.ink2, fillStyle:'solid'})); }
+    if(out==='정장'){ D.rc.linearPath([[x-.06*u,shY],[x,nb+.02*u],[x+.06*u,shY]], D.ink());
+      [0,1,2].forEach(function(k){ D.rc.circle(x, nb+.04*u+k*.055*u, Math.max(2,.016*u), D.ink({fill:D.c.ink, fillStyle:'solid', roughness:.3})); }); }
+    if(out==='교복+겉옷' || out==='큰 겉옷'){ [-1,1].forEach(function(s){ D.rc.line(x+s*tsw*.16, shY+.005*u, x+s*thw*.2, hem, D.ink()); }); }
+  } else if(det && f && (out==='정장' || out==='교복')) D.rc.line(x+f*.03*u, shY+.02*u, x+f*.05*u, shY+.12*u, D.ink());
+  // 무언가 안고 있음
+  if(pose==='무언가 안음' && !o.back){ var bx=f?x+f*.12*u:x-tsw*.3; D.rc.rectangle(bx, shY+.1*u, f?.12*u:tsw*.6, .15*u, D.ink({fill:D.c.paper, fillStyle:'solid'})); }
+  // 팔
+  if(!(pose==='뒷짐' && !f)){ drawArm(-1); drawArm(1); }
+  if(pose==='팔짱' && !f){ D.rc.rectangle(x-tsw*.36, shY+.11*u, tsw*.72, .055*u, D.ink(body)); }
+  // 팔의 흔적·소품
+  if(det){
+    var A1=arms[1], A0=arms[-1], mid=function(P,t){ return [P[1][0]+(P[2][0]-P[1][0])*t, P[1][1]+(P[2][1]-P[1][1])*t]; };
+    if(lk.bandage && !(pose==='팔짱')){ [.25,.45,.65].forEach(function(t){ var p=mid(A1,t); D.rc.line(p[0]-.025*u, p[1]-.005*u, p[0]+.025*u, p[1]+.005*u, D.ink({strokeWidth:1.1*D.sw})); }); }
+    if(lk.shortsleeve){ var q=A1[1]; D.rc.line(q[0]-.03*u, q[1]-.01*u, q[0]+.03*u, q[1]+.01*u, D.ink()); }
+    if(lk.tattoo && !(lk.emptysleeve)){ var t0=[A0[0][0]+(A0[1][0]-A0[0][0])*.6, A0[0][1]+(A0[1][1]-A0[0][1])*.6];
+      D.rc.linearPath([[t0[0]-.02*u,t0[1]],[t0[0]-.01*u,t0[1]-.015*u],[t0[0],t0[1]],[t0[0]+.01*u,t0[1]-.015*u],[t0[0]+.02*u,t0[1]]], markP()); }
+    if(lk.gloves) [-1,1].forEach(function(s){ var h=hands[s]; if(h) D.rc.circle(h[0], h[1], Math.max(3,.045*u), D.ink({fill:D.c.ink2, fillStyle:'solid'})); });
+    var h1=hands[1]||hands[-1];
+    if(lk.umbrella && h1){ var ux=h1[0]+.01*u;
+      D.rc.line(ux, h1[1]-.05*u, ux+.02*u, footY, D.ink({strokeWidth:1.2*D.sw}));
+      D.rc.polygon([[ux+.005*u,h1[1]+.04*u],[ux+.045*u,h1[1]+.22*u],[ux+.02*u,h1[1]+.25*u]], D.ink({fill:D.c.ink3, fillStyle:'solid'}));
+      D.rc.arc(ux-.02*u, h1[1]-.05*u, .04*u, .04*u, Math.PI, Math.PI*2, false, D.ink()); }
+    else if(lk.holding && h1) D.rc.rectangle(h1[0]-.02*u, h1[1]-.02*u, .05*u, .07*u, D.ink({fill:D.c.paper, fillStyle:'solid'}));
+    if(lk.bag && !o.back){ var s0=f?-f:-1, bxs=x+s0*tsw*.42, bxe=x-s0*thw*.62;
+      D.rc.line(bxs, shY+.005*u, bxe, hipY-.03*u, D.ink({strokeWidth:1.3*D.sw}));
+      D.rc.rectangle(bxe-.05*u, hipY-.06*u, .1*u, .09*u, D.ink({fill:D.c.paper, fillStyle:'solid'})); }
+  }
+  // 목
+  D.rc.line(hx0, cy+d*.45, x, shY, D.ink());
+  if(det && lk.neckscar) D.rc.line(x-.02*u, shY-.025*u, x+.02*u, shY-.012*u, markP());
+  if(det && lk.neck && !o.back){ D.rc.linearPath([[x-.045*u,shY],[x,shY+.08*u],[x+.045*u,shY]], D.ink({strokeWidth:.9*D.sw}));
+    D.rc.circle(x, shY+.088*u, Math.max(3,.03*u), D.ink({fill:D.c.mark, fillStyle:'solid'})); }
+  if(det && lk.scarf){ D.rc.rectangle(x-(f?.06:.08)*u, shY-.04*u, (f?.12:.16)*u, .06*u, D.ink({fill:D.c.ink3, fillStyle:'hachure', hachureGap:Math.max(2,d/14)}));
+    var tx=x+(f?-f*.04:.04)*u; D.rc.polygon([[tx,shY+.01*u],[tx+.035*u,shY+.01*u],[tx+.05*u,shY+.15*u],[tx+.015*u,shY+.15*u]], D.ink({fill:D.c.ink3, fillStyle:'hachure', hachureGap:Math.max(2,d/14)})); }
+  // 후드 (머리 뒤)
+  if(lk.hood) D.rc.circle(hx0, cy-r*.08, d*1.32, D.ink({fill:D.c.paper, fillStyle:'solid'}));
+  // 머리
+  D.rc.circle(hx0, cy, d, D.ink(body));
   if(o.back){
-    if(lk.hair!=='민머리') D.rc.circle(x, cy, d, D.ink(lk.dark?{fill:D.c.ink2, fillStyle:'solid'}:{fill:D.c.ink3, fillStyle:'hachure', hachureGap:Math.max(2.5,d/11), fillWeight:1}));
-    if(lk.hat) hatDraw(D,x,cy,r);
+    if(lk.hood){ D.rc.circle(hx0, cy, d*1.05, D.ink({fill:D.c.paper, fillStyle:'solid'})); }
+    else if(lk.hair!=='민머리') D.rc.circle(hx0, cy, d, D.ink(lk.dark?{fill:D.c.ink2, fillStyle:'solid'}:{fill:D.c.ink3, fillStyle:'hachure', hachureGap:Math.max(2.5,d/11), fillWeight:1}));
+    if(lk.hat && !lk.hood) hatDraw(D,hx0,cy,r);
+    if(lk.collar) D.rc.rectangle(x-.08*u, shY-.05*u, .16*u, .06*u, D.ink(body));
     return;
   }
   if(o.sil || d < 9) return;
-  hairDraw(D,x,cy,r,lk,f);
-  var ey = cy+.05*d, dot = function(px){ D.rc.circle(px, ey, Math.max(2,d*.07), D.ink({fill:D.c.ink, fillStyle:'solid', roughness:.3})); };
+  x=hx0;   // 얼굴은 머리 위치 기준
+  if(!lk.hood) hairDraw(D,x,cy,r,lk,f);
+  var ey = cy+.05*d, ew=lk.eyes||'';
+  var dot = function(px, col){ D.rc.circle(px, ey, Math.max(2,d*.07), D.ink({fill:col||D.c.ink, fillStyle:'solid', roughness:.3})); };
+  var eyeSides = f ? [0] : [-1,1];
+  eyeSides.forEach(function(s){
+    var ex = f ? x+f*.24*d : x+s*.19*d, pc=(lk.oddeye && s===1)?D.c.mark:D.c.ink;
+    if(lk.eyepatch && s===(f?0:1)) return;
+    if(d < 40){
+      if(ew==='감은') D.rc.line(ex-.06*d, ey, ex+.06*d, ey, D.ink({strokeWidth:1.3*D.sw}));
+      else { dot(ex, pc); if(ew==='반쯤 감긴') D.rc.line(ex-.07*d, ey-.04*d, ex+.07*d, ey-.04*d, D.ink()); }
+      return;
+    }
+    var sd = f?f:s, by = o.shock ? ey-.17*d : ey-.12*d, pr = (o.shock||ew==='작은 동공') ? .025*d : (f?.045*d:.055*d);   // 지름
+    if(ew==='감은'){ D.rc.arc(ex, ey+.03*d, .16*d, .1*d, Math.PI, Math.PI*2, false, D.ink({strokeWidth:1.3*D.sw})); }
+    else if(ew==='치켜올라간' || ew==='처진'){
+      var up = ew==='치켜올라간' ? 1 : -1;
+      D.rc.line(ex-sd*.09*d, ey+.01*d*up, ex+sd*.09*d, ey-.045*d*up, D.ink({strokeWidth:1.3*D.sw}));
+      D.rc.line(ex-sd*.06*d, ey+.04*d, ex+sd*.07*d, ey+.03*d-.01*d*up, D.ink({strokeWidth:.8*D.sw}));
+      D.rc.circle(ex, ey+.012*d, pr, D.ink({fill:pc, fillStyle:'solid', roughness:.3}));
+      D.rc.line(ex-sd*.09*d, by+.03*d*up, ex+sd*.09*d, by-.025*d*up, D.ink({strokeWidth:1.6*D.sw}));
+    } else {
+      D.rc.ellipse(ex, ey, (f?.09:.17)*d, (f?.08:.085)*d, D.ink({strokeWidth:1.1*D.sw}));
+      D.rc.circle(ex+(f?f*.015*d:0), ey+(ew==='반쯤 감긴'?.015*d:0), pr, D.ink({fill:pc, fillStyle:'solid', roughness:.3}));
+      if(ew==='반쯤 감긴') D.rc.line(ex-.09*d, ey-.01*d, ex+.09*d, ey-.01*d, D.ink({strokeWidth:1.8*D.sw}));
+      if(!f) D.rc.line(ex-.09*d, by+(o.shock?-.01*d*s:0), ex+.09*d, by-(o.shock?.03*d*s:.01*d), D.ink({strokeWidth:1.6*D.sw}));
+    }
+    if(lk.bags){ D.rc.arc(ex, ey+.07*d, .14*d, .05*d, 0, Math.PI, false, D.ink({stroke:D.c.ink3, strokeWidth:.9*D.sw})); }
+  });
   if(!f){
-    [-1,1].forEach(function(s){
-      var ex = x+s*.19*d;
-      if(d < 40) dot(ex);
-      else {
-        D.rc.ellipse(ex, ey, .17*d, .085*d, D.ink({strokeWidth:1.1*D.sw}));
-        D.rc.circle(ex, ey, o.shock ? .025*d : .055*d, D.ink({fill:D.c.ink, fillStyle:'solid', roughness:.3}));
-        var by = o.shock ? ey-.17*d : ey-.12*d;
-        D.rc.line(ex-.09*d, by+(o.shock?-.01*d*s:0), ex+.09*d, by-(o.shock?.03*d*s:.01*d), D.ink({strokeWidth:1.6*D.sw}));
-      }
-    });
     if(d >= 22){
       if(o.shock) D.rc.ellipse(x, cy+.3*d, .1*d, .12*d, D.ink());
       else D.rc.line(x-.08*d, cy+.29*d, x+.08*d, cy+.29*d, D.ink());
     }
-    if(o.shock && d >= 40){
-      D.rc.line(x+.42*d, cy-.12*d, x+.4*d, cy+.04*d, D.ink({stroke:D.c.note}));
-    }
-  } else {
-    var exs = x+f*.24*d;
-    if(d < 40) dot(exs); else { D.rc.ellipse(exs, ey, .09*d, .08*d, D.ink()); D.rc.circle(exs+f*.015*d, ey, .045*d, D.ink({fill:D.c.ink, fillStyle:'solid'})); }
-    if(d >= 22){
-      D.rc.linearPath([[x+f*.46*d, cy-.02*d],[x+f*.56*d, cy+.13*d],[x+f*.47*d, cy+.16*d]], D.ink());
-      D.rc.line(x+f*.28*d, cy+.29*d, x+f*.4*d, cy+.28*d, D.ink());
-    }
+    if(o.shock && d >= 40) D.rc.line(x+.42*d, cy-.12*d, x+.4*d, cy+.04*d, D.ink({stroke:D.c.note}));
+  } else if(d >= 22){
+    D.rc.linearPath([[x+f*.46*d, cy-.02*d],[x+f*.56*d, cy+.13*d],[x+f*.47*d, cy+.16*d]], D.ink());
+    D.rc.line(x+f*.28*d, cy+.29*d, x+f*.4*d, cy+.28*d, D.ink());
   }
   if(d >= 14){
-    if(lk.glasses){
-      var gl=D.ink({strokeWidth:1.1*D.sw, roughness:.4});
-      if(!f){ D.rc.circle(x-.19*d, ey, .26*d, gl); D.rc.circle(x+.19*d, ey, .26*d, gl); D.rc.line(x-.06*d, ey, x+.06*d, ey, gl); }
+    if(lk.bangs){ var bo=lk.dark?{fill:D.c.ink2, fillStyle:'solid'}:{fill:D.c.ink3, fillStyle:'hachure', hachureGap:Math.max(2.2,d/12), hachureAngle:-40};
+      D.rc.polygon([[x-r*.95,cy-r*.32],[x+r*.95,cy-r*.32],[x+r*.86,cy+r*.24],[x+r*.3,cy+r*.12],[x-r*.2,cy+r*.26],[x-r*.86,cy+r*.18]], D.ink(Object.assign({strokeWidth:.9*D.sw}, bo))); }
+    if(lk.glasses || lk.glare){
+      var gl=D.ink(Object.assign({strokeWidth:1.1*D.sw, roughness:.4}, lk.glare?{fill:D.c.paper, fillStyle:'solid'}:{}));
+      if(!f){ D.rc.circle(x-.19*d, ey, .26*d, gl); D.rc.circle(x+.19*d, ey, .26*d, gl); D.rc.line(x-.06*d, ey, x+.06*d, ey, gl);
+        if(lk.glare) [-1,1].forEach(function(s){ D.rc.line(x+s*.19*d-.06*d, ey+.04*d, x+s*.19*d+.02*d, ey-.06*d, D.ink({stroke:D.c.ink3, strokeWidth:.8})); }); }
       else { D.rc.circle(x+f*.24*d, ey, .24*d, gl); D.rc.line(x+f*.12*d, ey, x-f*.3*d, ey-.02*d, gl); }
     }
-    if(lk.scar){ var sx2=x+(f?f*.2:.24)*d; D.rc.line(sx2-.07*d, cy+.1*d, sx2+.08*d, cy+.24*d, D.ink({stroke:D.c.mark, strokeWidth:1.3*D.sw})); }
-    if(lk.hat) hatDraw(D,x,cy,r);
+    if(lk.eyepatch){ var px2=f?x+f*.24*d:x+.19*d; D.rc.circle(px2, ey, .24*d, D.ink({fill:D.c.ink, fillStyle:'solid'}));
+      D.rc.line(x-r*.95, cy-r*.45, px2, ey-.05*d, D.ink()); }
+    if(lk.scar){ var sx2=x+(f?f*.2:.24)*d; D.rc.line(sx2-.07*d, cy+.1*d, sx2+.08*d, cy+.24*d, markP({strokeWidth:1.3*D.sw})); }
+    if(lk.burn && d>=22){ var bx2=x-(f?f*.05:.22)*d; D.rc.ellipse(bx2, cy+.2*d, .2*d, .14*d, markP({fill:D.c.mark, fillStyle:'hachure', hachureGap:Math.max(2,d/16), strokeWidth:.8})); }
+    if(lk.snack && d>=22){ var mx=x+(f?f*.38:.08)*d, my=cy+.29*d; D.rc.line(mx, my, mx+(f||1)*.2*d, my+.04*d, D.ink()); D.rc.circle(mx+(f||1)*.24*d, my+.05*d, .1*d, D.ink({fill:D.c.mark, fillStyle:'solid'})); }
+    if(lk.earphone){ var ex3=x+(f?-f*.05:.98)*r*(f?1:1); D.rc.circle(ex3, cy+.08*d, Math.max(3,.1*d), D.ink({fill:D.c.ink, fillStyle:'solid'}));
+      D.rc.linearPath([[ex3, cy+.12*d],[ex3+.02*d, cy+d*.6],[x+.04*u, shY+.1*u]], D.ink({strokeWidth:.7})); }
+    if(lk.hood){ D.rc.arc(x, cy-r*.05, d*1.18, d*1.22, Math.PI*.82, Math.PI*2.18, false, D.ink({strokeWidth:1.2*D.sw})); }
+    else if(lk.hat) hatDraw(D,x,cy,r);
   }
+  if(det && lk.collar){ D.rc.polygon([[x-.06*u,shY+.01*u],[x-.05*u,cy+d*.4],[x+.05*u,cy+d*.4],[x+.06*u,shY+.01*u]], D.ink(body)); }
 }
 function hairDraw(D,x,cy,r,lk,f){
   var hair=lk.hair||'짧은', d=2*r;
   if(hair==='민머리'){ if(d>=30) D.rc.arc(x-r*.25, cy-r*.45, r*.5, r*.3, Math.PI*1.1, Math.PI*1.6, false, D.ink({stroke:D.c.ink3, strokeWidth:1})); return; }
   var fillO = lk.dark ? {fill:D.c.ink2, fillStyle:'solid'} : {fill:D.c.ink3, fillStyle:'hachure', hachureGap:Math.max(2.2,d/12), hachureAngle:-40};
-  var o=D.ink(Object.assign({strokeWidth:.9*D.sw}, fillO));
+  var o=function(){ return D.ink(Object.assign({strokeWidth:.9*D.sw}, fillO)); };
   if(hair==='삐죽'){
     var pts=[], n=9;
     for(var i=0;i<=n;i++){ var a=Math.PI*(1.03+.94*i/n), rr=r*(i%2?1.32:.98); pts.push([x+Math.cos(a)*rr, cy+Math.sin(a)*rr]); }
     pts.push([x+r*.9, cy-r*.2]); pts.push([x-r*.9, cy-r*.2]);
-    D.rc.polygon(pts, o); return;
+    D.rc.polygon(pts, o());
+  } else if(hair==='각진'){
+    D.rc.polygon([[x-r*.98,cy-r*.15],[x-r*.9,cy-r*.85],[x+r*.9,cy-r*.85],[x+r*.98,cy-r*.15],[x+r*.6,cy-r*.42],[x-r*.6,cy-r*.42]], o());
+  } else {
+    D.rc.path('M '+(x-r*.97)+' '+(cy-r*.24)+' A '+r+' '+r+' 0 0 1 '+(x+r*.97)+' '+(cy-r*.24)+' Q '+x+' '+(cy-r*.62)+' '+(x-r*.97)+' '+(cy-r*.24)+' Z', o());
+    var side=function(s, len){ if(f && s===f) return;
+      D.rc.polygon([[x+s*r*.97, cy-r*.24],[x+s*r*1.12, cy+r*.4*len],[x+s*r*1.05, cy+r*1.05*len],[x+s*r*.8, cy+r*1.0*len],[x+s*r*.86, cy+r*.15]], o()); };
+    if(hair==='긴'){ side(-1,1.4); side(1,1.4); }
+    if(hair==='단발'){ side(-1,.85); side(1,.85); }
+    if(hair==='한쪽만 긴'){ side(f?-f:-1,1.5); }
+    if(hair==='묶은'){ var bx=x-(f||1)*r*.95, by=cy-r*.55; D.rc.ellipse(bx-(f||1)*r*.18, by, r*.5, r*.38, o()); }
   }
-  D.rc.path('M '+(x-r*.97)+' '+(cy-r*.24)+' A '+r+' '+r+' 0 0 1 '+(x+r*.97)+' '+(cy-r*.24)+' Q '+x+' '+(cy-r*.62)+' '+(x-r*.97)+' '+(cy-r*.24)+' Z', o);
-  if(hair==='긴'){
-    [-1,1].forEach(function(s){ if(f && s===f) return;
-      D.rc.polygon([[x+s*r*.97, cy-r*.24],[x+s*r*1.12, cy+r*.6],[x+s*r*1.05, cy+r*1.45],[x+s*r*.8, cy+r*1.4],[x+s*r*.86, cy+r*.2]], D.ink(Object.assign({strokeWidth:.9*D.sw}, fillO))); });
-  }
-  if(hair==='묶은'){
-    var bx=x-(f||1)*r*.95, by=cy-r*.55;
-    D.rc.ellipse(bx-(f||1)*r*.18, by, r*.5, r*.38, D.ink(Object.assign({strokeWidth:.9*D.sw}, fillO)));
-  }
+  if(lk.grey && d>=20) D.rc.line(x-r*.15, cy-r*.98, x-r*.75, cy-r*.35, D.ink({stroke:D.c.paper, strokeWidth:Math.max(2,d*.09), roughness:.6}));
+  if(lk.ahoge) D.rc.path('M '+(x+r*.05)+' '+(cy-r*.97)+' Q '+(x+r*.55)+' '+(cy-r*1.75)+' '+(x+r*.1)+' '+(cy-r*1.6), D.ink({strokeWidth:1.3*D.sw}));
 }
 function hatDraw(D,x,cy,r){
   var hp={fill:D.c.paper, fillStyle:'solid'};
@@ -8868,7 +9062,7 @@ function parseComp(s){
 }
 
 /* ---------- 등장인물 ---------- */
-var HAIRS=['짧은','긴','묶은','삐죽','민머리'], BUILDS=['작음','보통','큼'];
+var HAIRS=CAST_HAIRS, BUILDS=CAST_BUILDS;
 function chars(){ return (B&&B.chars)||[]; }
 function charOf(name){ var n=String(name||'').trim(); if(!n) return null; var cs=chars();
   for(var i=0;i<cs.length;i++) if(cs[i].name===n) return cs[i];
@@ -8896,14 +9090,7 @@ function whoOf(c){
     hit.sort(function(a,b){ return a[0]-b[0]; }); names=hit.slice(0,2).map(function(x){ return x[1]; }); }
   return names.map(function(n){ var ch=charOf(n); return {name:n, look:ch?ch.look:{}}; });
 }
-function lookTags(lk){
-  lk=lk||{}; var t=[];
-  t.push(lk.hair?[lk.hair+' 머리',0]:['머리 미정',1]);
-  if(lk.dark) t.push(['어두운 머리',0]);
-  if(lk.glasses) t.push(['안경',0]); if(lk.hat) t.push(['모자',0]); if(lk.scar) t.push(['흉터',0]);
-  t.push(lk.build?['체격 '+lk.build,0]:['체격 미정',1]);
-  return t.map(function(x){ return '<span'+(x[1]?' class="un"':'')+'>'+cesc(x[0])+'</span>'; }).join('');
-}
+function lookTags(lk){ return figTags(lk).map(function(x){ return '<span'+(x[1]?' class="un"':'')+'>'+cesc(x[0])+'</span>'; }).join(''); }
 function renderChars(){
   var box=document.getElementById('ct-chars'); if(!box) return;
   box.innerHTML='';
@@ -8928,10 +9115,7 @@ function editChar(i){
   var card=box.children[i]; if(!card || card.querySelector('.ct-ed')) return;
   var lk=ch.look||{}, ed=document.createElement('div'); ed.className='ct-ed';
   ed.innerHTML='<label>이름 <input class="cn" type="text"></label><label>역할 <input class="cr" type="text" placeholder="예: 주인공, 라이벌"></label>'+
-    '<label>머리 <select class="ch">'+['<option value="">미정</option>'].concat(HAIRS.map(function(h){ return '<option'+(lk.hair===h?' selected':'')+'>'+h+'</option>'; })).join('')+'</select></label>'+
-    '<label>체격 <select class="cb">'+['<option value="">미정</option>'].concat(BUILDS.map(function(h){ return '<option'+(lk.build===h?' selected':'')+'>'+h+'</option>'; })).join('')+'</select></label>'+
-    '<div class="ct-chk"><label><input type="checkbox" class="cdk"'+(lk.dark?' checked':'')+'>어두운 머리</label><label><input type="checkbox" class="cg"'+(lk.glasses?' checked':'')+'>안경</label>'+
-    '<label><input type="checkbox" class="cht"'+(lk.hat?' checked':'')+'>모자</label><label><input type="checkbox" class="cs"'+(lk.scar?' checked':'')+'>흉터</label></div>'+
+    '<div class="ct-fig">'+figCtlHTML(lk)+'</div>'+
     '<label>메모 <input class="cm" type="text"></label>'+
     '<div class="filterbar"><button class="chip ok" type="button">저장</button><button class="chip x" type="button">닫기</button></div>';
   ed.querySelector('.cn').value=ch.name||''; ed.querySelector('.cr').value=ch.role||''; ed.querySelector('.cm').value=ch.note||'';
@@ -8940,8 +9124,7 @@ function editChar(i){
   ed.querySelector('.ok').addEventListener('click',function(){
     var old=ch.name, nn=ed.querySelector('.cn').value.trim()||old;
     ch.name=nn; ch.role=ed.querySelector('.cr').value.trim(); ch.note=ed.querySelector('.cm').value.trim();
-    ch.look={hair:ed.querySelector('.ch').value, build:ed.querySelector('.cb').value, dark:ed.querySelector('.cdk').checked,
-      glasses:ed.querySelector('.cg').checked, hat:ed.querySelector('.cht').checked, scar:ed.querySelector('.cs').checked};
+    ch.look=figClean(castFigRead(ed));
     if(old!==nn) B.cuts.forEach(function(c){ if(c.who) c.who=c.who.map(function(w){ return w===old?nn:w; }); });
     if(window.__castFind && window.__castFind(nn) && window.__castUpsert) window.__castUpsert({name:nn, fig:ch.look});   // 등장인물 페이지에 있는 인물이면 생김새를 같이 고친다
     save(); renderChars(); renderBoard();
@@ -8956,7 +9139,7 @@ function findChars(){
   var idp=window.__idPlan?window.__idPlan():null, motif=idp&&idp.ch&&idp.ch.length?'\n\n[아이디어 구성기의 캐릭터 모티브 — 이야기에 이름이 있는 인물과 맞을 때만 참고]\n'+idp.ch.map(function(r){ return r[2]+' · '+r[0]+' · '+r[1]+' — '+r[3]; }).join('\n'):'';
   setBusy(true); stat('이야기에서 인물을 찾는 중…');
   aiAsk(CHSYS, '[이야기]\n'+story.slice(0,6000)+motif+'\n\n이야기에 이름(또는 고정된 호칭)으로 나오는 인물을 많아야 8명 뽑는다. 형식:\n'+
-    '[{"name":"이름","role":"역할 한 마디","hair":"짧은|긴|묶은|삐죽|민머리|미정","dark":true/false,"glasses":true/false,"hat":true/false,"scar":true/false,"build":"작음|보통|큼|미정","note":"이야기에 적힌 외모·특징 한 줄, 없으면 빈칸"}]\n'+
+    '[{"name":"이름","role":"역할 한 마디","looktext":"이야기에 적힌 외모·옷·소품·흉터 묘사를 그대로 한 줄(없으면 빈 문자열)","hair":"짧은|긴|묶은|삐죽|민머리|미정","dark":true/false,"glasses":true/false,"hat":true/false,"scar":true/false,"build":"작음|보통|큼|미정","note":"이야기에 적힌 외모·특징 한 줄, 없으면 빈칸"}]\n'+
     '이야기에 적혀 있지 않은 항목은 미정 또는 false로 둔다. 성격이나 역할로 외모를 짐작하지 않는다.', 1400).then(function(t){
     setBusy(false);
     if(aiIsErr(t)){ stat(String(t).slice(0,90)); return; }
@@ -8965,7 +9148,8 @@ function findChars(){
     var added=0, kept=0;
     j.forEach(function(x){ if(!x||!x.name) return;
       var nm=String(x.name).trim().slice(0,20), ex=charOf(nm);
-      var lk={hair:HAIRS.indexOf(x.hair)>=0?x.hair:'', build:BUILDS.indexOf(x.build)>=0?x.build:'', dark:x.dark===true, glasses:x.glasses===true, hat:x.hat===true, scar:x.scar===true};
+      var lk=figClean({hair:x.hair, build:x.build, dark:x.dark===true, glasses:x.glasses===true, hat:x.hat===true, scar:x.scar===true}), gl=castFigGuess(String(x.looktext||'')+' '+String(x.note||''));
+      FIG_KEYS.forEach(function(k){ if(!lk[k] && gl[k]) lk[k]=gl[k]; }); FIG_BOOL.forEach(function(k){ if(gl[k]) lk[k]=true; });
       if(ex && ex.name===nm){ kept++; return; }
       B.chars.push({name:nm, role:String(x.role||'').slice(0,30), look:lk, note:String(x.note||'').slice(0,80)}); added++;
     });
