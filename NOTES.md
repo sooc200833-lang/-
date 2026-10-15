@@ -117,3 +117,6 @@ arcForm, deviceId, folderMemo, gdBase, gdLast, gdLinked, ideaText, mangaDataVer,
 - AI 콘티 쓰기(`writeAll`): 구간을 14컷 안쪽 묶음(`chunks`)으로 나눠 **차례로** 부른다. 형식 「번호|구도|화면|대사」, 구도는 샷 코드(ELS LS FS MS BS CU ECU TWO OTS STAND FRAME BIRD)+앵글(부감·앙각·더치). `parseComp`가 한글 이름도 읽는다. 실패하면 그 묶음에서 멈추고 「이어서 쓰기」(`ct-resume`). 새 AI 기능이 아니라 글쓰기의 연장으로 본다
 - 그림: Rough.js 4.6.6(MIT)을 jsDelivr에서 페이지를 열 때 불러온다(`needRough`). 그리기 코드는 컷 구도 스케치 시안에서 옮김(`figure`, `K`). 화면 글에 놀람·충격 → 놀란 얼굴, 실루엣·역광 → 검은 실루엣
 - 컷 누르면 편집(구도·앵글·화면·대사, 뒤에 추가, 두 번 눌러 삭제). 저장 키 `contiBoard`(로컬만, 동기화 안 함), `contiSrc`
+- **등장인물 (콘티 구성기 2번)**: `B.chars=[{name, role, look:{hair(짧은·긴·묶은·삐죽·민머리·''=미정), dark, glasses, hat, scar, build(작음·보통·큼·'')}, note}]`. 「이야기에서 인물 찾기」(`findChars`)는 이야기 칸에 **적힌 것만** 뽑게 한다(성격으로 외모를 짐작하지 않음, 없으면 미정). 아이디어 구성기 캐릭터 모티브(`window.__idPlan().ch`)는 참고로만 붙인다. 구성기에서 다시 가져와도 인물은 유지
+- 콘티 줄 형식은 「번호|구도|인물|화면|대사」(인물은 왼쪽부터 쉼표). 4칸 옛 형식도 읽는다. 인물 칸이 비면 화면 글에서 등록된 이름을 찾는다(`whoOf`). 그림은 `figure`가 `D.cast`에서 차례로 인물을 받아 생김새(`figBody`의 `lk`, `hairDraw`, `hatDraw`)와 이름표(`nameTag`)를 붙인다. 어깨 너머 숏은 두 번째 인물이 등 쪽
+- **작업 전에 꼭 `git fetch` 후 최신 main의 index.html로 시작한다.** 다른 대화에서 올린 변경을 옛 파일로 덮어쓴 적이 있다(2026-10-16, 바로 되살림)

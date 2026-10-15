@@ -633,6 +633,17 @@ details.gdet[open] summary{margin-bottom:.5rem}
 .ct-ed label{display:grid; gap:.15rem}
 .ct-ed select,.ct-ed textarea,.ct-ed input{font:inherit; font-size:.84rem; background:var(--paper); color:var(--ink); border:1px solid var(--rule-hard); padding:.2rem .3rem; min-width:0}
 .ct-ed .filterbar{margin:0}
+#ct-chars{display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:14px 10px; margin:0 0 1rem}
+.ct-ch{display:grid; gap:4px; align-content:start; min-width:0}
+.ct-ch canvas{display:block; width:100%; aspect-ratio:4/3}
+.ct-ch b{font-family:"Hahmlet",serif; font-size:.98rem}
+.ct-ch .ct-tags{display:flex; flex-wrap:wrap; gap:.2rem; font-size:.72rem}
+.ct-ch .ct-tags span{border:1px solid var(--rule-hard); padding:0 .3rem; color:var(--ink-2)}
+.ct-ch .ct-tags span.un{border-style:dashed; color:var(--ink-3)}
+.ct-ch .filterbar{margin:0}
+.ct-chk{display:flex; flex-wrap:wrap; gap:.2rem .6rem}
+.ct-chk label{display:flex; gap:.2rem; align-items:center}
+.ct-who{color:var(--note)}
 </style>
 <body>
 <div class="wrap">
@@ -1747,7 +1758,11 @@ details.gdet[open] summary{margin-bottom:.5rem}
   <label class="small ct-lab" for="ct-story">대강 이야기 — 글쓰기의 줄거리·컷별 콘티·웹소설 결과가 들어온다. 직접 고쳐도 된다.</label>
   <textarea id="ct-story" rows="7" placeholder="비워 두면 구성만 보고 콘티를 짠다."></textarea>
   <div class="filterbar"><button class="chip" id="ct-plot" type="button">AI로 줄거리 짜기</button></div>
-  <h3>2. 콘티</h3>
+  <h3>2. 등장인물</h3>
+  <p class="small">인물을 적어 두면 콘티 그림에 <b>이름표</b>와 <b>생김새</b>(머리·안경·모자·흉터·체격)가 붙는다. 이야기에 적힌 특징만 넣고, 적혀 있지 않은 건 미정으로 둔다.</p>
+  <div class="filterbar"><button class="chip" id="ct-findch" type="button">이야기에서 인물 찾기</button><button class="chip" id="ct-addch" type="button">인물 추가</button></div>
+  <div id="ct-chars"></div>
+  <h3>3. 콘티</h3>
   <div class="filterbar"><button class="chip" id="ct-skel" type="button">뼈대만 깔기</button><button class="chip" id="ct-write" type="button">AI로 콘티 쓰기</button><button class="chip" id="ct-resume" type="button" hidden>이어서 쓰기</button><button class="chip" id="ct-redraw" type="button">선 다시 긋기</button><button class="chip" id="ct-copy" type="button">글로 복사</button></div>
   <p class="small" id="ct-stat" role="status"></p>
   <p class="small">컷을 누르면 구도·앵글·화면·대사를 고칠 수 있다. 빨간 테두리는 넘김 훅, 「무음」은 대사 없는 컷이다. 그림은 Rough.js(MIT)로 그린다.</p>
@@ -6736,7 +6751,8 @@ function mk(cv){
   var k = 0, base = (+(cv.dataset.seed||0))*37 + SEED*997;
   var sw = clamp(Math.min(w,h)/150, 1, 1.9);
   function pen(p){ return function(e){ return Object.assign({seed: base + (++k)}, p, e||{}); }; }
-  return { ctx:ctx, w:w, h:h, c:c, rc:rough.canvas(cv), opt:cv.dataset, sw:sw,
+  var cast=null; try{ cast=cv.dataset.who?JSON.parse(cv.dataset.who):null; }catch(e){}
+  return { ctx:ctx, w:w, h:h, c:c, rc:rough.canvas(cv), opt:cv.dataset, sw:sw, cast:cast, castI:0,
     ink: pen({stroke:c.ink, strokeWidth:1.3*sw, roughness:1, bowing:.8}),
     guide: pen({stroke:c.note, strokeWidth:.9, roughness:.35, bowing:.3}),
     mk: pen({stroke:c.mark, strokeWidth:1.2, roughness:.5}) };
@@ -6760,11 +6776,11 @@ function tilt(D,a){ var x=D.ctx; x.translate(D.w/2,D.h/2); x.rotate(a||-.22); x.
 
 /* ---------- 사람 ---------- */
 function geo(H,hs,ls){ hs=hs||1; ls=ls||1; var T=.13*hs+.03+.32+.5*ls, u=H/T, d=.13*hs*u; return {u:u, d:d, eye:.55*d}; }
-function figure(D,x,top,H,o){
-  o = o||{}; var hs=o.hs||1, ls=o.ls||1, f=o.face||0;
+function figBody(D,x,top,H,o){
+  o = o||{}; var hs=o.hs||1, ls=o.ls||1, f=o.face||0, lk=o.look||{};
   var g = geo(H,hs,ls), u=g.u, d=g.d, cy=top+d/2;
   var shY = top+d+.04*u, hipY = shY+.31*u, footY = top+H, kneeY = hipY+(footY-hipY)*.5;
-  var sw = (f?.13:.25)*u, hw = (f?.1:.17)*u;
+  var sw = (f?.13:.25)*u, hw = (f?.1:.17)*u, bk = lk.build==='작음'?.82:(lk.build==='큼'?1.3:1); sw*=bk; hw*=bk;
   var body = o.sil ? {fill:D.c.ink, fillStyle:'solid'} : {fill:D.c.paper, fillStyle:'solid'};
   [-1,1].forEach(function(s){
     var hx=x+s*hw*.28, kx=x+s*hw*.32, fx=x+s*hw*.42;
@@ -6780,12 +6796,12 @@ function figure(D,x,top,H,o){
   D.rc.circle(x, cy, d, D.ink(body));
   var r = d/2;
   if(o.back){
-    D.rc.circle(x, cy, d, D.ink({fill:D.c.ink3, fillStyle:'hachure', hachureGap:Math.max(2.5,d/11), fillWeight:1}));
+    if(lk.hair!=='민머리') D.rc.circle(x, cy, d, D.ink(lk.dark?{fill:D.c.ink2, fillStyle:'solid'}:{fill:D.c.ink3, fillStyle:'hachure', hachureGap:Math.max(2.5,d/11), fillWeight:1}));
+    if(lk.hat) hatDraw(D,x,cy,r);
     return;
   }
   if(o.sil || d < 9) return;
-  D.rc.path('M '+(x-r*.97)+' '+(cy-r*.24)+' A '+r+' '+r+' 0 0 1 '+(x+r*.97)+' '+(cy-r*.24)+' Q '+x+' '+(cy-r*.62)+' '+(x-r*.97)+' '+(cy-r*.24)+' Z',
-    D.ink({fill:D.c.ink3, fillStyle:'hachure', hachureGap:Math.max(2.2,d/12), hachureAngle:-40, strokeWidth:.9*D.sw}));
+  hairDraw(D,x,cy,r,lk,f);
   var ey = cy+.05*d, dot = function(px){ D.rc.circle(px, ey, Math.max(2,d*.07), D.ink({fill:D.c.ink, fillStyle:'solid', roughness:.3})); };
   if(!f){
     [-1,1].forEach(function(s){
@@ -6813,6 +6829,59 @@ function figure(D,x,top,H,o){
       D.rc.line(x+f*.28*d, cy+.29*d, x+f*.4*d, cy+.28*d, D.ink());
     }
   }
+  if(d >= 14){
+    if(lk.glasses){
+      var gl=D.ink({strokeWidth:1.1*D.sw, roughness:.4});
+      if(!f){ D.rc.circle(x-.19*d, ey, .26*d, gl); D.rc.circle(x+.19*d, ey, .26*d, gl); D.rc.line(x-.06*d, ey, x+.06*d, ey, gl); }
+      else { D.rc.circle(x+f*.24*d, ey, .24*d, gl); D.rc.line(x+f*.12*d, ey, x-f*.3*d, ey-.02*d, gl); }
+    }
+    if(lk.scar){ var sx2=x+(f?f*.2:.24)*d; D.rc.line(sx2-.07*d, cy+.1*d, sx2+.08*d, cy+.24*d, D.ink({stroke:D.c.mark, strokeWidth:1.3*D.sw})); }
+    if(lk.hat) hatDraw(D,x,cy,r);
+  }
+}
+function hairDraw(D,x,cy,r,lk,f){
+  var hair=lk.hair||'짧은', d=2*r;
+  if(hair==='민머리'){ if(d>=30) D.rc.arc(x-r*.25, cy-r*.45, r*.5, r*.3, Math.PI*1.1, Math.PI*1.6, false, D.ink({stroke:D.c.ink3, strokeWidth:1})); return; }
+  var fillO = lk.dark ? {fill:D.c.ink2, fillStyle:'solid'} : {fill:D.c.ink3, fillStyle:'hachure', hachureGap:Math.max(2.2,d/12), hachureAngle:-40};
+  var o=D.ink(Object.assign({strokeWidth:.9*D.sw}, fillO));
+  if(hair==='삐죽'){
+    var pts=[], n=9;
+    for(var i=0;i<=n;i++){ var a=Math.PI*(1.03+.94*i/n), rr=r*(i%2?1.32:.98); pts.push([x+Math.cos(a)*rr, cy+Math.sin(a)*rr]); }
+    pts.push([x+r*.9, cy-r*.2]); pts.push([x-r*.9, cy-r*.2]);
+    D.rc.polygon(pts, o); return;
+  }
+  D.rc.path('M '+(x-r*.97)+' '+(cy-r*.24)+' A '+r+' '+r+' 0 0 1 '+(x+r*.97)+' '+(cy-r*.24)+' Q '+x+' '+(cy-r*.62)+' '+(x-r*.97)+' '+(cy-r*.24)+' Z', o);
+  if(hair==='긴'){
+    [-1,1].forEach(function(s){ if(f && s===f) return;
+      D.rc.polygon([[x+s*r*.97, cy-r*.24],[x+s*r*1.12, cy+r*.6],[x+s*r*1.05, cy+r*1.45],[x+s*r*.8, cy+r*1.4],[x+s*r*.86, cy+r*.2]], D.ink(Object.assign({strokeWidth:.9*D.sw}, fillO))); });
+  }
+  if(hair==='묶은'){
+    var bx=x-(f||1)*r*.95, by=cy-r*.55;
+    D.rc.ellipse(bx-(f||1)*r*.18, by, r*.5, r*.38, D.ink(Object.assign({strokeWidth:.9*D.sw}, fillO)));
+  }
+}
+function hatDraw(D,x,cy,r){
+  var hp={fill:D.c.paper, fillStyle:'solid'};
+  D.rc.path('M '+(x-r*.85)+' '+(cy-r*.35)+' Q '+(x-r*.8)+' '+(cy-r*1.25)+' '+x+' '+(cy-r*1.25)+' Q '+(x+r*.8)+' '+(cy-r*1.25)+' '+(x+r*.85)+' '+(cy-r*.35)+' Z', D.ink(hp));
+  D.rc.line(x-r*1.35, cy-r*.35, x+r*1.35, cy-r*.35, D.ink({strokeWidth:1.6*D.sw}));
+}
+function nameTag(D,x,y,t,al){
+  var ctx=D.ctx; ctx.save();
+  var fs=Math.round(clamp(D.h/13,10,13)); ctx.font='600 '+fs+'px "IBM Plex Sans KR", sans-serif';
+  var w=ctx.measureText(t).width+8, x0=al==='right'?x-w:(al==='left'?x:x-w/2);
+  x0=clamp(x0, 6, D.w-6-w); var y0=clamp(y-fs, 6, D.h-fs-8);
+  ctx.fillStyle=D.c.paper; ctx.globalAlpha=.88; ctx.fillRect(x0, y0, w, fs+4); ctx.globalAlpha=1;
+  ctx.fillStyle=D.c.note; ctx.textAlign='left'; ctx.fillText(t, x0+4, y0+fs); ctx.restore();
+}
+function castNext(D){ return (D.cast && D.castI < D.cast.length) ? D.cast[D.castI++] : null; }
+function figure(D,x,top,H,o){
+  o=o||{}; var who=o.noCast?null:castNext(D);
+  figBody(D,x,top,H,Object.assign({},o,{look:(who&&who.look)||o.look||{}}));
+  if(!who || !who.name || D.opt.nolabel) return;
+  var d=geo(H,o.hs||1,o.ls||1).d, cy=top+d/2;
+  if(top-6 > 16) nameTag(D, x, top-8, who.name, 'center');
+  else if(x+d/2+50 < D.w) nameTag(D, x+d/2+6, cy, who.name, 'left');
+  else nameTag(D, x-d/2-6, cy, who.name, 'right');
 }
 
 /* ---------- 구도 ---------- */
@@ -6827,8 +6896,8 @@ var K = {
   els:{n:'익스트림 롱숏', e:'ELS', u:'장소와 분위기를 먼저 깔 때. 인물은 점처럼 작게.', draw:function(D){
     var w=D.w, h=D.h, hy=h*.6; horizon(D,hy);
     D.rc.linearPath([[-5,hy],[w*.12,hy-h*.16],[w*.24,hy-h*.05],[w*.38,hy-h*.27],[w*.52,hy-h*.08],[w*.7,hy-h*.21],[w*.86,hy-h*.04],[w+5,hy-h*.13]], D.ink({strokeWidth:1.1*D.sw}));
-    var H=h*.12, fx=w*.66; figure(D, fx, h*.84-H, H);
-    label(D, fx+10, h*.84-H-2, '인물', D.c.mark);
+    var H=h*.12, fx=w*.66, who0=D.cast&&D.cast[0]; figure(D, fx, h*.84-H, H, {noCast:true});
+    if(who0&&who0.name) nameTag(D, fx+10, h*.84-H-2, who0.name, 'left'); else label(D, fx+10, h*.84-H-2, '인물', D.c.mark);
   }},
   ls:{n:'롱숏', e:'LS', u:'인물과 주변을 함께. 상황 설명용.', draw:function(D){
     var H=D.h*.46, foot=D.h*.88, top=foot-H, ey=top+geo(H).eye;
@@ -6852,6 +6921,7 @@ var K = {
       D.rc.path('M '+(cx-ew*.55)+' '+(ey-ew*.4)+' Q '+cx+' '+(ey-ew*.62)+' '+(cx+ew*.5)+' '+(ey-ew*.38), D.ink({strokeWidth:2.6*D.sw}));
     });
     horizon(D, ey);
+    var e0=castNext(D); if(e0&&e0.name) nameTag(D, 10, h-10, e0.name+'의 눈', 'left');
   }},
   eye:{n:'아이 레벨', e:'Eye level', u:'관객과 같은 높이. 가장 중립적인 시선.', draw:function(D){
     var H=D.h*.62, foot=D.h*.9, top=foot-H, ey=top+geo(H).eye;
@@ -6888,7 +6958,7 @@ var K = {
     [-1,1].forEach(function(t){ D.rc.line(cx+t*h*.13, cy, cx+t*h*.16, cy+h*.13, D.ink()); });
     D.rc.ellipse(cx, cy, h*.28, h*.12, D.ink({fill:D.c.paper, fillStyle:'solid'}));
     D.rc.circle(cx, cy-h*.005, h*.13, D.ink({fill:D.c.ink3, fillStyle:'hachure', hachureGap:2.5}));
-    label(D, 12, h*.14, '정수리가 보인다', D.c.mark);
+    var b0=castNext(D); if(b0&&b0.name) nameTag(D, cx+h*.1, cy-h*.1, b0.name, 'left'); else label(D, 12, h*.14, '정수리가 보인다', D.c.mark);
   }},
   dutch:{n:'더치 앵글', e:'Dutch angle', u:'화면을 기울인다. 불안, 혼란, 광기.', draw:function(D){
     var w=D.w, h=D.h; tilt(D, -.24);
@@ -6907,8 +6977,9 @@ var K = {
     figure(D, w*.68, top, H, {face:-1});
     D.rc.polygon([[-w*.18,h+8],[-w*.02,h*.82],[w*.4,h*.8],[w*.56,h+8]], D.ink({fill:D.c.paper, fillStyle:'solid'}));
     D.rc.circle(w*.2, h*.5, h*.58, D.ink({fill:D.c.paper, fillStyle:'solid'}));
-    D.rc.circle(w*.2, h*.5, h*.58, D.ink({fill:D.c.ink3, fillStyle:'hachure', hachureGap:4}));
-    label(D, w*.2, h*.15, '전경: 듣는 쪽', D.c.mark, 'center');
+    var lis=castNext(D), lk2=(lis&&lis.look)||{};
+    D.rc.circle(w*.2, h*.5, h*.58, D.ink(lk2.hair==='민머리'?{}:(lk2.dark?{fill:D.c.ink2, fillStyle:'solid'}:{fill:D.c.ink3, fillStyle:'hachure', hachureGap:4})));
+    if(lis&&lis.name) nameTag(D, w*.2, h*.16, lis.name+' (등)', 'center'); else label(D, w*.2, h*.15, '전경: 듣는 쪽', D.c.mark, 'center');
   }},
   stand:{n:'대치', e:'Standoff', u:'좌우로 마주 선다. 180도 선을 넘지 않는다.', draw:function(D){
     var w=D.w, h=D.h, H=h*.56, foot=h*.88, top=foot-H, ey=top+geo(H).eye;
@@ -6943,6 +7014,94 @@ function parseComp(s){
   for(var i=0;i<T.length;i++) if(T[i][1].test(u)){ k=T[i][0]; break; }
   if(/부감|HIGH/.test(u)) ang='high'; else if(/앙각|LOW/.test(u)) ang='low'; else if(/더치|DUTCH/.test(u)) ang='dutch';
   return {k:k, ang:ang};
+}
+
+/* ---------- 등장인물 ---------- */
+var HAIRS=['짧은','긴','묶은','삐죽','민머리'], BUILDS=['작음','보통','큼'];
+function chars(){ return (B&&B.chars)||[]; }
+function charOf(name){ var n=String(name||'').trim(); if(!n) return null; var cs=chars();
+  for(var i=0;i<cs.length;i++) if(cs[i].name===n) return cs[i];
+  for(var j=0;j<cs.length;j++) if(cs[j].name && (n.indexOf(cs[j].name)===0 || cs[j].name.indexOf(n)===0)) return cs[j];
+  return null; }
+function whoOf(c){
+  var names=(c.who&&c.who.length)?c.who:[];
+  if(!names.length && c.scr){ var hit=[]; chars().forEach(function(ch){ var i=c.scr.indexOf(ch.name); if(ch.name && i>=0) hit.push([i,ch.name]); });
+    hit.sort(function(a,b){ return a[0]-b[0]; }); names=hit.slice(0,2).map(function(x){ return x[1]; }); }
+  return names.map(function(n){ var ch=charOf(n); return {name:n, look:ch?ch.look:{}}; });
+}
+function lookTags(lk){
+  lk=lk||{}; var t=[];
+  t.push(lk.hair?[lk.hair+' 머리',0]:['머리 미정',1]);
+  if(lk.dark) t.push(['어두운 머리',0]);
+  if(lk.glasses) t.push(['안경',0]); if(lk.hat) t.push(['모자',0]); if(lk.scar) t.push(['흉터',0]);
+  t.push(lk.build?['체격 '+lk.build,0]:['체격 미정',1]);
+  return t.map(function(x){ return '<span'+(x[1]?' class="un"':'')+'>'+cesc(x[0])+'</span>'; }).join('');
+}
+function renderChars(){
+  var box=document.getElementById('ct-chars'); if(!box) return;
+  box.innerHTML='';
+  var cs=chars();
+  if(!cs.length){ box.innerHTML='<p class="small" style="grid-column:1/-1">아직 인물이 없다. 「이야기에서 인물 찾기」나 「인물 추가」로 넣는다.</p>'; return; }
+  cs.forEach(function(ch,i){
+    var f=document.createElement('div'); f.className='ct-ch';
+    var cv=document.createElement('canvas'); cv.dataset.k='bs'; cv.dataset.seed=900+i; cv.dataset.x='.5'; cv.dataset.nolabel='1';
+    cv.dataset.who=JSON.stringify([{name:ch.name, look:ch.look||{}}]); cv.setAttribute('role','img'); cv.setAttribute('aria-label', ch.name+' 생김새');
+    if(ro) ro.observe(cv); else setTimeout(function(){ queue(cv); },0);
+    f.appendChild(cv);
+    f.insertAdjacentHTML('beforeend','<b>'+cesc(ch.name)+'</b>'+(ch.role?'<span class="small">'+cesc(ch.role)+'</span>':'')+
+      '<div class="ct-tags">'+lookTags(ch.look)+'</div>'+(ch.note?'<span class="small">'+cesc(ch.note)+'</span>':'')+
+      '<div class="filterbar"><button class="chip" type="button" data-ce="'+i+'">고치기</button><button class="chip" type="button" data-cd="'+i+'">지우기</button></div>');
+    box.appendChild(f);
+  });
+}
+function editChar(i){
+  var ch=chars()[i], box=document.getElementById('ct-chars'); if(!ch||!box) return;
+  var card=box.children[i]; if(!card || card.querySelector('.ct-ed')) return;
+  var lk=ch.look||{}, ed=document.createElement('div'); ed.className='ct-ed';
+  ed.innerHTML='<label>이름 <input class="cn" type="text"></label><label>역할 <input class="cr" type="text" placeholder="예: 주인공, 라이벌"></label>'+
+    '<label>머리 <select class="ch">'+['<option value="">미정</option>'].concat(HAIRS.map(function(h){ return '<option'+(lk.hair===h?' selected':'')+'>'+h+'</option>'; })).join('')+'</select></label>'+
+    '<label>체격 <select class="cb">'+['<option value="">미정</option>'].concat(BUILDS.map(function(h){ return '<option'+(lk.build===h?' selected':'')+'>'+h+'</option>'; })).join('')+'</select></label>'+
+    '<div class="ct-chk"><label><input type="checkbox" class="cdk"'+(lk.dark?' checked':'')+'>어두운 머리</label><label><input type="checkbox" class="cg"'+(lk.glasses?' checked':'')+'>안경</label>'+
+    '<label><input type="checkbox" class="cht"'+(lk.hat?' checked':'')+'>모자</label><label><input type="checkbox" class="cs"'+(lk.scar?' checked':'')+'>흉터</label></div>'+
+    '<label>메모 <input class="cm" type="text"></label>'+
+    '<div class="filterbar"><button class="chip ok" type="button">저장</button><button class="chip x" type="button">닫기</button></div>';
+  ed.querySelector('.cn').value=ch.name||''; ed.querySelector('.cr').value=ch.role||''; ed.querySelector('.cm').value=ch.note||'';
+  card.appendChild(ed);
+  ed.querySelector('.x').addEventListener('click',function(){ ed.remove(); });
+  ed.querySelector('.ok').addEventListener('click',function(){
+    var old=ch.name, nn=ed.querySelector('.cn').value.trim()||old;
+    ch.name=nn; ch.role=ed.querySelector('.cr').value.trim(); ch.note=ed.querySelector('.cm').value.trim();
+    ch.look={hair:ed.querySelector('.ch').value, build:ed.querySelector('.cb').value, dark:ed.querySelector('.cdk').checked,
+      glasses:ed.querySelector('.cg').checked, hat:ed.querySelector('.cht').checked, scar:ed.querySelector('.cs').checked};
+    if(old!==nn) B.cuts.forEach(function(c){ if(c.who) c.who=c.who.map(function(w){ return w===old?nn:w; }); });
+    save(); renderChars(); renderBoard();
+  });
+}
+function ensureB(){ if(!B){ B={total:+document.getElementById('ct-total').value||70, band:[], cl:[], drawn:'', story:document.getElementById('ct-story').value, cuts:[], chars:[]}; } if(!B.chars) B.chars=[]; return B; }
+var CHSYS='당신은 원고에서 등장인물을 정리하는 편집자다. 원고에 적힌 내용만 쓴다. 적혀 있지 않은 외모는 지어내지 않는다. JSON만 출력한다.';
+function findChars(){
+  if(!aiReady()){ stat('AI 연결에서 키를 넣어야 쓸 수 있다.'); return; }
+  ensureB(); var story=document.getElementById('ct-story').value.trim();
+  if(!story){ stat('대강 이야기 칸이 비어 있다. 이야기를 먼저 넣는다.'); return; }
+  var idp=window.__idPlan?window.__idPlan():null, motif=idp&&idp.ch&&idp.ch.length?'\n\n[아이디어 구성기의 캐릭터 모티브 — 이야기에 이름이 있는 인물과 맞을 때만 참고]\n'+idp.ch.map(function(r){ return r[2]+' · '+r[0]+' · '+r[1]+' — '+r[3]; }).join('\n'):'';
+  setBusy(true); stat('이야기에서 인물을 찾는 중…');
+  aiAsk(CHSYS, '[이야기]\n'+story.slice(0,6000)+motif+'\n\n이야기에 이름(또는 고정된 호칭)으로 나오는 인물을 많아야 8명 뽑는다. 형식:\n'+
+    '[{"name":"이름","role":"역할 한 마디","hair":"짧은|긴|묶은|삐죽|민머리|미정","dark":true/false,"glasses":true/false,"hat":true/false,"scar":true/false,"build":"작음|보통|큼|미정","note":"이야기에 적힌 외모·특징 한 줄, 없으면 빈칸"}]\n'+
+    '이야기에 적혀 있지 않은 항목은 미정 또는 false로 둔다. 성격이나 역할로 외모를 짐작하지 않는다.', 1400).then(function(t){
+    setBusy(false);
+    if(aiIsErr(t)){ stat(String(t).slice(0,90)); return; }
+    var j=null; try{ var m=String(t).match(/\[[\s\S]*\]/); j=JSON.parse(m?m[0]:t); }catch(e){}
+    if(!Array.isArray(j) || !j.length){ stat('인물 목록을 읽지 못했다. 다시 눌러 보거나 「인물 추가」로 넣는다.'); return; }
+    var added=0, kept=0;
+    j.forEach(function(x){ if(!x||!x.name) return;
+      var nm=String(x.name).trim().slice(0,20), ex=charOf(nm);
+      var lk={hair:HAIRS.indexOf(x.hair)>=0?x.hair:'', build:BUILDS.indexOf(x.build)>=0?x.build:'', dark:x.dark===true, glasses:x.glasses===true, hat:x.hat===true, scar:x.scar===true};
+      if(ex && ex.name===nm){ kept++; return; }
+      B.chars.push({name:nm, role:String(x.role||'').slice(0,30), look:lk, note:String(x.note||'').slice(0,80)}); added++;
+    });
+    save(); renderChars(); renderBoard();
+    stat('인물 '+added+'명을 넣었다.'+(kept?' 이미 있던 '+kept+'명은 그대로 뒀다.':'')+' 생김새는 「고치기」로 바꿀 수 있다.');
+  });
 }
 
 /* ---------- 저장 ---------- */
@@ -6999,7 +7158,8 @@ function pull(){
   var story=document.getElementById('ct-story').value;
   var src=srcGet();
   if(src && src.text && (!story.trim() || (B && src.at>(B.srcAt||0)))){ story=src.text; }
-  B={total:total, band:band, cl:cl, drawn:(typeof aiDrawn==='function'?aiDrawn(true):''), story:story, srcAt:src?src.at:0, cuts:skeleton(total, band, cl)};
+  var keepCh=(B&&B.chars)||[];
+  B={chars:keepCh, total:total, band:band, cl:cl, drawn:(typeof aiDrawn==='function'?aiDrawn(true):''), story:story, srcAt:src?src.at:0, cuts:skeleton(total, band, cl)};
   document.getElementById('ct-story').value=story;
   save(); renderAll(); stat('구성기에서 가져왔다. 클리셰 '+cl.length+'개, '+total+'컷.');
   return true;
@@ -7063,6 +7223,7 @@ function cvFor(c){
   if(/실루엣|그림자만|역광/.test(c.scr)) cv.dataset.sil='1';
   if(c.silent) cv.dataset.silent='1';
   if(c.hook) cv.dataset.hook='1';
+  var wl=whoOf(c); if(wl.length) cv.dataset.who=JSON.stringify(wl);
   cv.setAttribute('role','img'); cv.setAttribute('aria-label', c.n+'번 컷 '+shotName(c.k)+' 구도');
   if(ro) ro.observe(cv); else setTimeout(function(){ queue(cv); },0);
   return cv;
@@ -7081,13 +7242,13 @@ function renderPlan(){
 }
 function cardHTML(c){
   return '<figcaption><div class="ct-h"><b>'+c.n+'</b><span>'+cesc(shotName(c.k))+(c.ang?' · '+angName(c.ang):'')+'</span>'+
-    (c.hook?'<i class="ct-hook">넘김</i>':'')+(c.cl?'<em>'+cesc(c.cl)+'</em>':'')+'</div>'+
+    (c.hook?'<i class="ct-hook">넘김</i>':'')+(function(){ var w=whoOf(c); return w.length?'<span class="ct-who">'+cesc(w.map(function(x){ return x.name; }).join(', '))+'</span>':''; })()+(c.cl?'<em>'+cesc(c.cl)+'</em>':'')+'</div>'+
     (c.scr?'<p class="ct-scr">'+cesc(c.scr)+'</p>':'<p class="ct-scr ct-empty">화면 미정</p>')+
     (c.line?'<p class="ct-line">'+cesc(c.line)+'</p>':'')+'</figcaption>';
 }
 function renderBoard(){
   var box=document.getElementById('ct-board'); if(!box) return;
-  if(ro) ro.disconnect();
+  if(ro) root.querySelectorAll('#ct-board canvas').forEach(function(x){ ro.unobserve(x); });
   box.innerHTML='';
   if(!B || !B.cuts || !B.cuts.length){ box.innerHTML='<p class="small">콘티 칸이 여기에 깔린다.</p>'; return; }
   B.band.forEach(function(b){
@@ -7108,7 +7269,7 @@ function refreshCut(n){
   var old=f.querySelector('canvas'); if(ro&&old) ro.unobserve(old);
   f.innerHTML=''; f.className='ct-cut'+(c.cl?' has-cl':''); f.appendChild(cvFor(c)); f.insertAdjacentHTML('beforeend', cardHTML(c));
 }
-function renderAll(){ renderPlan(); renderBoard(); }
+function renderAll(){ renderPlan(); renderChars(); renderBoard(); }
 
 /* ---------- 컷 고치기 ---------- */
 function openEdit(f){
@@ -7116,16 +7277,18 @@ function openEdit(f){
   var ed=document.createElement('div'); ed.className='ct-ed';
   ed.innerHTML='<label>구도 <select class="ct-k">'+SHOTS.map(function(s){ return '<option value="'+s[0]+'"'+(s[0]===c.k?' selected':'')+'>'+s[2]+'</option>'; }).join('')+'</select></label>'+
     '<label>앵글 <select class="ct-a">'+ANGS.map(function(a){ return '<option value="'+a[0]+'"'+(a[0]===(c.ang||'')?' selected':'')+'>'+a[2]+'</option>'; }).join('')+'</select></label>'+
+    '<label>인물 (왼쪽부터, 쉼표) <input class="ct-w" type="text"></label>'+
     '<label>화면 <textarea class="ct-s" rows="2"></textarea></label><label>대사 <input class="ct-l" type="text"></label>'+
     '<div class="filterbar"><button class="chip ct-ok" type="button">저장</button><button class="chip ct-x" type="button">닫기</button>'+
     '<button class="chip ct-add" type="button">뒤에 컷 추가</button><button class="chip ct-del" type="button">이 컷 지우기</button></div>';
-  ed.querySelector('.ct-s').value=c.scr||''; ed.querySelector('.ct-l').value=c.line||'';
+  ed.querySelector('.ct-s').value=c.scr||''; ed.querySelector('.ct-l').value=c.line||''; ed.querySelector('.ct-w').value=whoOf(c).map(function(x){ return x.name; }).join(', ');
   f.appendChild(ed);
   ed.addEventListener('click',function(e){ e.stopPropagation(); });
   ed.querySelector('.ct-x').addEventListener('click',function(){ ed.remove(); });
   ed.querySelector('.ct-ok').addEventListener('click',function(){
     c.k=ed.querySelector('.ct-k').value; c.ang=ed.querySelector('.ct-a').value||'';
     c.scr=ed.querySelector('.ct-s').value.trim(); c.line=ed.querySelector('.ct-l').value.trim();
+    c.who=ed.querySelector('.ct-w').value.split(/[,，、]/).map(function(x){ return x.trim(); }).filter(Boolean).slice(0,3);
     save(); refreshCut(n);
   });
   ed.querySelector('.ct-add').addEventListener('click',function(){ insertCut(n); });
@@ -7180,10 +7343,12 @@ function cutPrompt(ch){
   L.push('[컷 배정표]\n'+rows.join('\n'));
   var cls=B.cl.filter(function(c){ return used[c.name]; });
   if(cls.length) L.push('[이번 구간의 클리셰]\n'+cls.map(function(c){ return '「'+c.name+'」 '+c.a+'–'+c.b+'번 컷 · 지면 '+c.cost+' · '+c.def+' 연출: '+c.point; }).join('\n'));
-  var prev=[]; for(var p=Math.max(1,ch.a-3);p<ch.a;p++){ var q=B.cuts[p-1]; if(q&&q.scr) prev.push(p+'|'+compText(q)+'|'+q.scr+'|'+(q.line||'')); }
+  if(chars().length) L.push('[등장인물]\n'+chars().map(function(x){ return x.name+(x.role?' — '+x.role:'')+(x.note?' · '+x.note:''); }).join('\n'));
+  var prev=[]; for(var p=Math.max(1,ch.a-3);p<ch.a;p++){ var q=B.cuts[p-1]; if(q&&q.scr) prev.push(p+'|'+compText(q)+'|'+whoOf(q).map(function(x){ return x.name; }).join(',')+'|'+q.scr+'|'+(q.line||'')); }
   if(prev.length) L.push('[바로 앞 컷]\n'+prev.join('\n'));
   L.push('규칙\n'+
-    '- 한 줄에 한 컷. 형식: 번호|구도|화면|대사\n'+
+    '- 한 줄에 한 컷. 형식: 번호|구도|인물|화면|대사\n'+
+    '- 인물 칸에는 그 컷에 보이는 인물 이름을 화면 왼쪽부터 쉼표로 적는다(많아야 2명). 등장인물 목록의 이름을 그대로 쓴다. 인물이 없으면 비운다.\n'+
     '- 구도는 샷 하나에 필요하면 앵글 하나를 +로 붙인다. 샷: ELS LS FS MS BS CU ECU TWO OTS STAND FRAME BIRD. 앵글: 부감 앙각 더치. 예: BS+부감\n'+
     '- 추천 구도를 기본으로 따르고, 이야기에 더 맞으면 바꾼다.\n'+
     '- 클리셰가 배정된 컷에서는 그 클리셰의 연출을 실제 화면으로 보여 준다.\n'+
@@ -7195,11 +7360,15 @@ function cutPrompt(ch){
 function applyLines(t, ch){
   var got=0;
   String(t).split(/\n/).forEach(function(line){
-    var m=/^\s*(\d+)\s*[.)]?\s*[|｜]\s*([^|｜]*)[|｜]([^|｜]*)(?:[|｜](.*))?$/.exec(line.replace(/[*#]/g,''));
-    if(!m) return; var n=+m[1]; if(n<ch.a || n>ch.b) return;
+    var parts=line.replace(/[*#]/g,'').split(/[|｜]/);
+    if(parts.length<3) return; var mn=/^\s*(\d+)\s*[.)]?\s*$/.exec(parts[0]); if(!mn) return;
+    var n=+mn[1]; if(n<ch.a || n>ch.b) return;
     var c=B.cuts[n-1]; if(!c) return;
-    var p=parseComp(m[2]); c.k=p.k; c.ang=p.ang;
-    c.scr=m[3].trim(); c.line=(m[4]||'').trim().replace(/^[「“"']|[」”"']$/g,'');
+    var p=parseComp(parts[1]); c.k=p.k; c.ang=p.ang;
+    var who='', scr, ln;
+    if(parts.length>=5){ who=parts[2]; scr=parts[3]; ln=parts.slice(4).join(' '); } else { scr=parts[2]; ln=parts.slice(3).join(' '); }
+    c.who=String(who).split(/[,，、]/).map(function(x){ return x.trim(); }).filter(function(x){ return x && !/^(없음|-|—)$/.test(x); }).slice(0,3);
+    c.scr=String(scr).trim(); c.line=String(ln||'').trim().replace(/^[「“"']|[」”"']$/g,'');
     if(/^[-—–(없음)]*$/.test(c.line)) c.line='';
     got++;
   });
@@ -7236,12 +7405,19 @@ function writeAll(fromN){
   document.getElementById('ct-resume').hidden=true;
   next();
 }
-function setBusy(on){ ['ct-write','ct-pull','ct-skel','ct-plot'].forEach(function(id){ var b=document.getElementById(id); if(b) b.disabled=on; }); }
+function setBusy(on){ ['ct-write','ct-pull','ct-skel','ct-plot','ct-findch'].forEach(function(id){ var b=document.getElementById(id); if(b) b.disabled=on; }); }
 
 /* ---------- 연결 ---------- */
 var tsel=document.getElementById('ct-total');
 [20,30,40,50,60,70,80,100].forEach(function(n){ var o=document.createElement('option'); o.value=String(n); o.textContent=n+'컷'; tsel.appendChild(o); });
 document.getElementById('ct-pull').addEventListener('click', pull);
+document.getElementById('ct-findch').addEventListener('click', findChars);
+document.getElementById('ct-addch').addEventListener('click', function(){ ensureB(); B.chars.push({name:'인물 '+(B.chars.length+1), role:'', look:{}, note:''}); save(); renderChars(); editChar(B.chars.length-1); });
+document.getElementById('ct-chars').addEventListener('click', function(e){
+  var t=e.target.closest('button'); if(!t||!B) return;
+  if(t.dataset.ce!=null) editChar(+t.dataset.ce);
+  if(t.dataset.cd!=null){ if(t.dataset.arm){ B.chars.splice(+t.dataset.cd,1); save(); renderChars(); renderBoard(); } else { t.dataset.arm='1'; t.textContent='한 번 더'; } }
+});
 document.getElementById('ct-skel').addEventListener('click', function(){
   if(!B){ pull(); return; }
   var t=+tsel.value||B.total;
@@ -7253,7 +7429,7 @@ document.getElementById('ct-resume').addEventListener('click', function(){ write
 document.getElementById('ct-redraw').addEventListener('click', function(){ SEED++; root.querySelectorAll('.ct-cut canvas').forEach(queue); });
 document.getElementById('ct-copy').addEventListener('click', function(){
   if(!B) return;
-  var txt=B.cuts.map(function(c){ return c.n+'|'+compText(c)+'|'+(c.scr||'')+'|'+(c.line||''); }).join('\n'), b=this;
+  var txt=B.cuts.map(function(c){ return c.n+'|'+compText(c)+'|'+whoOf(c).map(function(x){ return x.name; }).join(',')+'|'+(c.scr||'')+'|'+(c.line||''); }).join('\n'), b=this;
   try{ navigator.clipboard.writeText(txt).then(function(){ b.textContent='복사됨'; setTimeout(function(){ b.textContent='글로 복사'; },1200); }, function(){ window.prompt('복사',txt); }); }catch(e){ window.prompt('복사',txt); }
 });
 document.getElementById('ct-plot').addEventListener('click', function(){
