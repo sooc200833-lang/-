@@ -604,6 +604,14 @@ details.gdet[open] summary{margin-bottom:.5rem}
 .reflist span{display:block; font-size:.86rem; color:var(--ink-2); margin-top:.2rem; line-height:1.6}
 .two{display:grid; grid-template-columns:1fr 1fr; gap:0 1.6rem}
 @media (max-width:700px){.two{grid-template-columns:1fr}}
+/* [[CSS:favpick]] */
+/* [[/CSS:favpick]] */
+/* [[CSS:cast]] */
+/* [[/CSS:cast]] */
+/* [[CSS:texts]] */
+/* [[/CSS:texts]] */
+/* [[CSS:desk]] */
+/* [[/CSS:desk]] */
 </style>
 <body>
 <div class="wrap">
@@ -1709,6 +1717,11 @@ details.gdet[open] summary{margin-bottom:.5rem}
   </ul>
 </section>
 
+<section class="blk" id="texts">
+  <h2 class="big">글 보관함</h2>
+  <div id="texts-root"></div>
+</section>
+
 <section class="blk" id="arc">
   <h2 class="big">아크 점검표</h2>
   <p class="lede">아크는 연재에서 하나로 묶이는 이야기 덩어리다. 10~25화쯤 되는 단위다. 여기서는 아크를 <b>뽑지 않는다.</b> 아크의 목표는 작품마다 다르고 유형으로 나눌 만한 근거가 얇다. 대신 <b>이미 생각해 둔 아크가 성립하는지</b>를 네 칸으로 점검한다.</p>
@@ -2134,6 +2147,11 @@ details.gdet[open] summary{margin-bottom:.5rem}
   <div class="filterbar"><input id="cq" type="search" placeholder="모티브·캐릭터 검색" aria-label="캐릭터 검색"><button class="chip" id="cfav" aria-pressed="false">★ 즐겨찾기만</button><button class="chip" id="creset">초기화</button><span class="count" id="ccount"></span></div>
   <div class="tw"><table class="idx" id="ctbl"><thead><tr><th style="width:30%">모티브</th><th style="width:14%">갈래</th><th style="width:28%">메모</th><th>대표 사례</th></tr></thead><tbody></tbody></table></div>
   <p class="small">대표 사례는 그 모티브가 <b>또렷하게 드러나는</b> 인물만 적었다. 사례를 그대로 가져오면 복제가 되니, <b>같은 모티브에 다른 결핍</b>을 붙이는 쪽으로 쓴다.</p>
+</section>
+
+<section class="blk" id="cast">
+  <h2 class="big">등장인물</h2>
+  <div id="cast-root"></div>
 </section>
 
 <section class="blk" id="favs">
@@ -2649,6 +2667,7 @@ function hsUse(h, F){
   try{ if(typeof runMotif==='function') runMotif(); if(typeof runEnd==='function') runEnd(); if(typeof runEp==='function') runEp(); if(typeof runChar==='function') runChar(); }catch(e){}
 }
 
+window.PAGE_ON=window.PAGE_ON||{};   // 페이지를 열 때 부를 함수 (id → fn)
 var PAGES=[
  {g:'기초',id:'oneshot',t:'단편은 주인공을 판다',d:'설정에 지면을 쓰지 않는 법. 이 문서 전체의 전제.'},
  {g:'기초',id:'length',t:'첫 작품을 너무 길게 잡는 문제',d:'80화 구상이 아니라 단편 하나. 왜 단편부터인가.'},
@@ -2658,6 +2677,7 @@ var PAGES=[
  {g:'기초',id:'pagemap',t:'페이지 배분 설계',d:'도입·초반·중반·정점·마무리 다섯 구간의 지면 계산.'},
  {g:'도구',id:'shuffle',t:'랜덤 구성기',d:'소재·클리셰·엔딩을 한 번에. 연재 모드와 고정 지원.'},
  {g:'도구',id:'ideacomp',t:'아이디어 구성기',d:'적어 둔 아이디어로 소재·클리셰·엔딩·주인공을 골라 구성안을 만든다.'},
+ {g:'도구',id:'texts',t:'글 보관함',d:'구성기에서 쓴 줄거리·웹소설·컷별 콘티를 모아 둔다.'},
  {g:'도구',id:'arc',t:'아크 점검표',d:'장편용. 네 칸을 채워 점검하고 장르별 예시 48개.'},
  {g:'도구',id:'epidx',t:'에피소드 소재 색인',d:'220개. 한 화를 채우는 작은 사건. 로맨스·개그·일상.'},
  {g:'도구',id:'ai',t:'AI 연결',d:'OpenRouter 키를 넣고 비틀기·연관짓기·글쓰기를 쓴다.'},
@@ -2665,6 +2685,7 @@ var PAGES=[
  {g:'도구',id:'index',t:'클리셰 색인',d:'813개. 기능·연출 도구·배치·상태·지면으로 검색.'},
  {g:'도구',id:'motifidx',t:'소재 색인',d:'138개. 세계 규칙·사회 조건·인물 처지. 원작 표시 포함.'},
  {g:'도구',id:'chars',t:'캐릭터 모티브 색인',d:'221개. 외모·성격·결핍 세 축의 재료.'},
+ {g:'도구',id:'cast',t:'등장인물',d:'내 작품의 인물. 구성기가 글을 쓸 때 이름이 나오면 여기 적힌 특징을 따른다.'},
  {g:'도구',id:'endidx',t:'엔딩 색인',d:'334개. 구조·승패·인물·관계·세계·정서·반전·연재.'},
  {g:'도구',id:'favs',t:'즐겨찾기',d:'별표한 클리셰·소재·캐릭터를 한 화면에 모아 본다.'},
  {g:'도구',id:'combo',t:'금지 조합과 표준 체인',d:'서로 죽이는 짝 20개, 덩어리로 움직이는 줄 9개.'},
@@ -2708,12 +2729,13 @@ if(pinoOn()) pinoInsert();
 var home=document.getElementById('home');
 function buildHome(){
   if(!home) return;
-  var html='<p class="lede" style="margin-top:1.4rem">보고 싶은 항목을 고른다. 각 페이지는 따로 열리므로 폰에서도 가볍다.</p>', g=null;
+  var html='<div id="desk-root"></div><p class="lede" style="margin-top:1.4rem">보고 싶은 항목을 고른다. 각 페이지는 따로 열리므로 폰에서도 가볍다.</p>', g=null;
   PAGES.forEach(function(p){
     if(p.g!==g){ if(g)html+='</div>'; html+='<div class="hsec">'+p.g+'</div><div class="homegrid">'; g=p.g; }
     html+='<a href="#'+p.id+'"><b>'+p.t+'</b><span>'+p.d+'</span></a>';
   });
   html+='</div>'; home.innerHTML=html;
+  if(window.__deskRender) try{ window.__deskRender(); }catch(e){}
 }
 function buildRail(){
   var ol=document.getElementById('railol'); if(!ol) return;
@@ -2748,6 +2770,7 @@ function show(id){
   var _ps=document.getElementById('pagesel'); if(_ps) _ps.value=id;
   try{ if(id==='index') ensureIndex(); }catch(e){}
   if(id==='favs') renderFavs();
+  if(window.PAGE_ON && PAGE_ON[id]) try{ PAGE_ON[id](); }catch(e){}
   try{ window.scrollTo(0,0); }catch(e){}
 }
 window.addEventListener('hashchange',function(){ show((location.hash||'#home').slice(1)); });
@@ -3788,7 +3811,7 @@ function saveFile(name, text, type){
   }catch(e){ return false; }
 }
 function stampName(){ var d=new Date(); return d.getFullYear()+('0'+(d.getMonth()+1)).slice(-2)+('0'+d.getDate()).slice(-2); }
-var BK_KEYS=['mangaFav','mangaFolders','folderMemo','pinoMemo','pinoTodo','arcForm','ideaText','userAdds','orModel','mangaDataVer'];
+var BK_KEYS=['mangaFav','mangaFolders','folderMemo','pinoMemo','pinoTodo','arcForm','ideaText','userAdds','mangaCast','mangaTexts','deskLayout','favPick','orModel','mangaDataVer'];
 function bkDump(){
   var o={app:'manga-cliche-dictionary', v:1, dataVer:DATA_VER, at:new Date().toISOString(), data:{}};
   BK_KEYS.forEach(function(k){ try{ var v=localStorage.getItem(k); if(v!==null) o.data[k]=v; }catch(e){} });
@@ -3837,7 +3860,24 @@ function bkRestore(text){
 // ----- 구글 드라이브 동기화 -----
 var GD={cid:'349312731183-t2bc2v3cbr90jci7aa4f8gumre6fdcd2.apps.googleusercontent.com', scope:'https://www.googleapis.com/auth/drive.appdata', file:'manga-sync.json',
   token:null, exp:0, client:null, fileId:null, busy:false, timer:null, applying:false, pending:false};
-var GD_KEYS=['mangaFav','mangaFolders','folderMemo','pinoMemo','pinoTodo','arcForm','ideaText','userAdds'];
+var GD_KEYS=['mangaFav','mangaFolders','folderMemo','pinoMemo','pinoTodo','arcForm','ideaText','userAdds','mangaCast','mangaTexts','deskLayout','favPick'];
+// 기록 묶음 형식 {items:{id:{…, at:ms}}, gone:{id:ms}} — 등장인물(mangaCast)·글 보관함(mangaTexts)
+var REC_KEYS=['mangaCast','mangaTexts'];
+function recLoad(key){ var o=null; try{ o=JSON.parse(localStorage.getItem(key)||'null'); }catch(e){}
+  if(!o||typeof o!=='object') o={}; if(!o.items||typeof o.items!=='object') o.items={}; if(!o.gone||typeof o.gone!=='object') o.gone={}; return o; }
+function recSave(key,o){ if(window.__stale) return; try{ localStorage.setItem(key, JSON.stringify(o)); }catch(e){} }
+function recId(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,7); }
+function recPut(key,item){ var o=recLoad(key); if(!item.id) item.id=recId(); item.at=Date.now(); o.items[item.id]=item; delete o.gone[item.id]; recSave(key,o); return item; }
+function recDel(key,id){ var o=recLoad(key); if(!o.items[id]) return; delete o.items[id]; o.gone[id]=Date.now(); recSave(key,o); if(typeof gdIntent==='function') gdIntent(); }
+function recList(key){ var o=recLoad(key); return Object.keys(o.items).map(function(k){ return o.items[k]; }); }
+function recMerge(l,r){
+  l=l||{}; r=r||{}; var gone={}, items={};
+  [l.gone,r.gone].forEach(function(g){ if(g) Object.keys(g).forEach(function(k){ if(!(gone[k]>=g[k])) gone[k]=g[k]; }); });
+  [l.items,r.items].forEach(function(m){ if(m) Object.keys(m).forEach(function(k){ var x=m[k]; if(!x) return;
+    if(!items[k] || (x.at||0)>(items[k].at||0)) items[k]=x; }); });
+  Object.keys(items).forEach(function(k){ if(gone[k] && gone[k]>=(items[k].at||0)) delete items[k]; });
+  return {items:items, gone:gone};
+}
 var GD_AIKEYS=['orKey','orModel','webOn','orAutoFree'];
 function gdKeysOn(){ try{ return localStorage.getItem('gdKeys')!=='0'; }catch(e){ return true; } }
 function gdKeyList(){ return gdKeysOn()?GD_KEYS.concat(GD_AIKEYS):GD_KEYS; }
@@ -3862,7 +3902,8 @@ function gdEmpty(o){
   p=o.pinoMemo||'';
   var memoLen=Object.keys(m).reduce(function(a,k){ return a+String(m[k]||'').length; },0)+p.length;
   var ua=J(o.userAdds,{}); var uan=((ua&&ua.c)||[]).length+((ua&&ua.m)||[]).length;
-  return !Object.keys(f).length && !memoLen && !o.arcForm && !o.ideaText && !uan;
+  var recn=REC_KEYS.reduce(function(a,k){ var x=J(o[k],{}); return a+Object.keys((x&&x.items)||{}).length; },0);
+  return !Object.keys(f).length && !memoLen && !o.arcForm && !o.ideaText && !uan && !recn;
 }
 function gdSize(o){
   var f={}, m={}; try{ f=(JSON.parse(o.mangaFav||'{}').f)||{}; }catch(e){} try{ m=JSON.parse(o.folderMemo||'{}')||{}; }catch(e){}
@@ -3918,7 +3959,8 @@ function gdMerge(L,R,B){
       if((inL&&inR)||(inL&&!inB)||(inR&&!inB)) arr.push(ln[k]||rn[k]); });
     ua[t]=arr; });
   if(ua.c.length||ua.m.length||L.userAdds||R.userAdds) out.userAdds=JSON.stringify(Object.assign({},ru,lu,ua));
-  ['pinoTodo','arcForm'].forEach(function(k){ var l=L[k], r=R[k], b=B[k];
+  REC_KEYS.forEach(function(k){ if(L[k]===undefined && R[k]===undefined) return; out[k]=JSON.stringify(recMerge(J(L[k],{}),J(R[k],{}))); });
+  ['pinoTodo','arcForm','deskLayout','favPick'].forEach(function(k){ var l=L[k], r=R[k], b=B[k];
     var v=(l===r)?l:(l===b?r:l); if(v!==undefined && v!==null) out[k]=v; });
   if(gdKeysOn()) GD_AIKEYS.forEach(function(k){ var l=L[k]||'', r=R[k]||'', b=B[k]||'';
     var v = !l ? r : (!r ? l : (l===r ? l : (l===b ? r : l)));
@@ -4375,7 +4417,7 @@ function ideaWriteBar(){
     var cut=parseInt(sel.value,10)||70, fmt=chain?'plot':wfmtVal('wfi');
     var w=writePrompt(src, fmt, cut);
     var lab=document.getElementById('idw-src'); if(lab) lab.textContent=plan?'구성안 + 아이디어로':'아이디어만으로';
-    wsStart(out, w.title+(plan?' — 구성안':' — 아이디어'), w, {fmt:fmt, cut:cut, ref:src, save:'idwChain', chain:chain});
+    wsStart(out, w.title+(plan?' — 구성안':' — 아이디어'), w, {fmt:fmt, cut:cut, ref:src, save:'idwChain', chain:chain, from:'ideacomp'});
   }
 }
 
@@ -4695,7 +4737,12 @@ function novelRule(cut){
   return {text:'웹소설 문체로 한 화 본문을 쓴다. 분량은 '+len+'. 3인칭 시점, 짧은 문단, 대사는 큰따옴표. 감정은 설명하지 않고 행동과 대사로 보여 준다. 첫 문장은 상황 한가운데에서 시작한다. 마지막 문단은 다음 화가 궁금하게 끊는다. 소제목·요약·작가 후기 없이 본문만 쓴다.',
     maxTok: cut<=20?1800:(cut<=40?2800:4200)};
 }
+// 글쓰기 훅: WS_CTX 함수(text)→프롬프트에 붙일 글, WS_TOOLS {label, fn(ctx)} 결과 머리 버튼, WS_DONE fn(stage, box, opt) 글이 하나 완성될 때
+var WS_CTX=[], WS_TOOLS=[], WS_DONE=[];
+function wsCtx(text){ var out=[]; WS_CTX.forEach(function(f){ try{ var v=f(String(text||'')); if(v) out.push(v); }catch(e){} }); return out.join('\n\n'); }
+function wsDone(st,box,opt){ WS_DONE.forEach(function(f){ try{ f(st,box,opt); }catch(e){} }); }
 function writePrompt(src, fmt, cut){
+  var cx=wsCtx(src); if(cx) src=src+'\n\n'+cx;
   if(fmt==='plot') return {prompt:plotPrompt(src,cut), maxTok:1200, title:'줄거리'};
   var head=src+'\n\n[분량] '+cut+'컷\n\n';
   var common='재료의 초반·중반·후반 클리셰를 순서대로 모두 쓰고, 앞 사건이 원인이 되어 다음 사건이 일어나게 잇는다. 우연으로 넘어가지 않는다. 재료에 엔딩이 있으면 그 엔딩으로 닫는다. 재료에 없는 설정을 새로 만들지 않는다. 작가 아이디어가 있으면 최우선으로 따른다. ';
@@ -4709,7 +4756,8 @@ var WOBJ={plot:'줄거리를', novel:'웹소설을', cuts:'컷별 콘티를'};
 var WNEXT={plot:['novel','cuts'], novel:['cuts','plot'], cuts:['novel','plot']};
 function wsEsc(t){ return String(t==null?'':t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 function convPrompt(text, from, to, cut, ref){
-  var head='[원본 — '+WNAME[from]+']\n'+text.trim()+'\n\n'+
+  var cx=wsCtx(text+'\n'+(ref||''));
+  var head='[원본 — '+WNAME[from]+']\n'+text.trim()+'\n\n'+(cx?cx+'\n\n':'')+
     (ref?'[처음 재료 — 참고만 한다. 원본과 다르면 원본을 따른다]\n'+String(ref).slice(0,1500)+'\n\n':'')+'[분량] '+cut+'컷\n\n';
   var keep='원본의 사건 순서·인물·관계·결말을 그대로 따른다. 원본은 작가가 직접 고친 글일 수 있으니 고친 내용을 그대로 존중한다. 원본에 없는 사건·인물·설정을 새로 만들지 않는다. ';
   if(to==='plot'){
@@ -4726,14 +4774,14 @@ function convPrompt(text, from, to, cut, ref){
 }
 function wsSave(box){
   var S=box._ws; if(!S||!S.opt.save) return;
-  try{ localStorage.setItem(S.opt.save, JSON.stringify({cut:S.opt.cut, ref:String(S.opt.ref||'').slice(0,1500),
+  try{ localStorage.setItem(S.opt.save, JSON.stringify({from:S.opt.from||'', cut:S.opt.cut, ref:String(S.opt.ref||'').slice(0,1500),
     stages:S.stages.filter(function(x){ return !x.busy; }).map(function(x){ return {fmt:x.fmt,title:x.title,text:x.text||'',err:x.err||''}; })})); }catch(e){}
 }
 function wsRestore(box, key){
   if(!box || box.innerHTML.trim()) return false;
   var d=null; try{ d=JSON.parse(localStorage.getItem(key)||'null'); }catch(e){}
   if(!d || !d.stages || !d.stages.length) return false;
-  box._ws={opt:{cut:d.cut||70, ref:d.ref||'', save:key}, stages:d.stages};
+  box._ws={opt:{cut:d.cut||70, ref:d.ref||'', save:key, from:d.from||''}, stages:d.stages};
   wsRender(box); return true;
 }
 function wsRows(t){ var lines=String(t||'').split('\n'); var n=0; lines.forEach(function(l){ n+=1+Math.floor(l.length/48); }); return Math.max(6, Math.min(40, n+1)); }
@@ -4746,7 +4794,8 @@ function wsRender(box){
       conv='<span class="wconv">바꾸기 '+WNEXT[st.fmt].map(function(f,j){
         return '<button class="chip'+(j===0&&st.fmt!=='cuts'?' next':'')+'" data-to="'+f+'">'+WNAME[f]+'로</button>'; }).join('')+'</span>';
     }
-    var tools=(!st.busy && !st.err)?'<button class="chip" data-a="copy">복사</button><button class="chip" data-a="memo">메모에 넣기</button>':'';
+    var tools=(!st.busy && !st.err)?'<button class="chip" data-a="copy">복사</button><button class="chip" data-a="memo">메모에 넣기</button>'+
+      WS_TOOLS.map(function(t,k){ return '<button class="chip" data-wt="'+k+'">'+wsEsc(t.label)+'</button>'; }).join(''):'';
     var body= st.busy ? '<div class="gen-b busy">'+(i?WOBJ[S.stages[i-1].fmt]+' '+wsEsc(WNAME[st.fmt])+'로 바꾸는 중…':'만드는 중…')+'</div>'
       : st.err ? '<div class="gen-b">'+wsEsc(st.err)+'</div>'+(i?'<button class="chip" data-a="retry">다시</button>':'')
       : '<textarea class="wedit" rows="'+wsRows(st.text)+'" spellcheck="false"></textarea>'+(i===S.stages.length-1?'<div class="whint">글을 직접 고친 뒤 바꾸기를 누르면 고친 글로 바꾼다.</div>':'');
@@ -4759,7 +4808,8 @@ function wsRender(box){
       ta.addEventListener('focus',function(){ wsFit(ta); }); }
     [].slice.call(el.querySelectorAll('button')).forEach(function(b){
       b.addEventListener('click',function(){
-        var a=b.getAttribute('data-a'), to=b.getAttribute('data-to'), txt=ta?ta.value:(st.text||'');
+        var a=b.getAttribute('data-a'), to=b.getAttribute('data-to'), txt=ta?ta.value:(st.text||''), wt=b.getAttribute('data-wt');
+        if(wt!==null && WS_TOOLS[+wt]){ try{ WS_TOOLS[+wt].fn({stage:st, text:txt, box:box, button:b, index:i, opt:S.opt, stages:S.stages}); }catch(e){} return; }
         if(to){ wsConv(box,i,to,false); return; }
         if(a==='retry'){ wsConv(box,i-1,st.fmt,false); return; }
         if(a==='memo'){ var f=fmAppend(st.title,txt); b.textContent='「'+f+'」에 넣음'; setTimeout(function(){ b.textContent='메모에 넣기'; },1600); return; }
@@ -4782,7 +4832,7 @@ function wsConv(box, i, to, auto){
   aiAsk(WSYS, w.prompt, w.maxTok).then(function(t){
     if(S.stages.indexOf(st)<0 || box._ws!==S) return;
     st.busy=false; if(aiIsErr(t)) st.err=t; else st.text=t;
-    wsRender(box); wsSave(box);
+    wsRender(box); wsSave(box); if(!st.err) wsDone(st,box,S.opt);
     if(auto && !st.err && to==='novel') wsConv(box, S.stages.indexOf(st), 'cuts', false);
   });
 }
@@ -4793,7 +4843,7 @@ function wsStart(box, title, w, opt){
   aiAsk(WSYS, w.prompt, w.maxTok).then(function(t){
     if(box._ws!==S) return;
     st.busy=false; if(aiIsErr(t)) st.err=t; else st.text=t;
-    wsRender(box); wsSave(box);
+    wsRender(box); wsSave(box); if(!st.err) wsDone(st,box,opt);
     if(opt.chain && !st.err) wsConv(box, 0, 'novel', true);
   });
 }
@@ -4821,7 +4871,7 @@ function aiBar(){
     if(window.unmaskAllNow) window.unmaskAllNow();
     var src='[지금 구성]\n'+aiDrawn(), cut=window.__cutTotal?window.__cutTotal():70, fmt=chain?'plot':wfmtVal('wfg');
     var w=writePrompt(src, fmt, cut);
-    wsStart(out, w.title, w, {fmt:fmt, cut:cut, ref:src, save:'sfChain', chain:chain});
+    wsStart(out, w.title, w, {fmt:fmt, cut:cut, ref:src, save:'sfChain', chain:chain, from:'shuffle'});
   }
   document.getElementById('ai-write').addEventListener('click',function(){ sfWrite(false); });
   document.getElementById('ai-chain').addEventListener('click',function(){ sfWrite(true); });
@@ -4862,7 +4912,7 @@ function favAiBar(){
     var memo=(typeof fmGet==='function')?fmGet(s.vw==='*'?(CURFOLDER||'기본'):s.vw):'';
     var src='[즐겨찾기 재료]\n'+s.text+(memo?'\n\n[폴더 메모]\n'+memo.slice(0,2500):''), cut=parseInt(sel.value,10)||70, fmt=chain?'plot':wfmtVal('wff');
     var w=writePrompt(src, fmt, cut);
-    wsStart(box, '「'+(s.vw==='*'?'전체':s.vw)+'」 '+w.title, w, {fmt:fmt, cut:cut, ref:src, save:'favChain', chain:chain});
+    wsStart(box, '「'+(s.vw==='*'?'전체':s.vw)+'」 '+w.title, w, {fmt:fmt, cut:cut, ref:src, save:'favChain', chain:chain, from:'favs'});
   }
 }
 
@@ -6648,6 +6698,15 @@ var runChar=makeIndex({
     if(typeof renderFavs==='function') renderFavs(); }); }
   updateFavCount();
 })();
+// ===== 모듈 자리: 각 기능은 자기 표시 안에만 코드를 넣는다 =====
+// [[MOD:favpick]] 즐겨찾기 우선 뽑기
+// [[/MOD:favpick]]
+// [[MOD:cast]] 등장인물
+// [[/MOD:cast]]
+// [[MOD:texts]] 글 보관함
+// [[/MOD:texts]]
+// [[MOD:desk]] 홈 바탕화면
+// [[/MOD:desk]]
 aiBar(); favAiBar(); aiSlots(); if(typeof ideaWriteBar==='function') ideaWriteBar();
 if(window.__reSlots) window.__reSlots(); if(typeof renderFavs==='function') renderFavs();
 dataMigrate();
