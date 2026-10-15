@@ -116,3 +116,16 @@ arcForm, deviceId, folderMemo, gdBase, gdLast, gdLinked, ideaText, mangaDataVer,
 - 글쓰기 결과 「인물 뽑아 넣기」(`castExtract`: 글에 적힌 사실만, 고유 이름만, 이미 있는 인물 제외): 체크해서 넣기·되돌리기. 「글이 완성되면 새 인물을 자동으로 넣기」는 첫 글(바꾸기 제외)마다 한 번 불러 바로 넣고 이름마다 「빼기」. 결과 칸은 결과 상자 바로 뒤 `.cast-ws`
 - **글 보관함(`texts`, 2026-10)**: 구성기에서 쓴 글을 `mangaTexts`(`{id,fmt,title,text,from,cut,ref,parent,created,at}`, 동기화)에 모은다. 결과 머리 「보관함에 저장」(`TXTOOL`)과 「쓴 글 자동 저장」(`textsAuto`, 기본 켬, `WS_DONE`). 저장한 칸은 `stage.tid`, 자동 저장이 켜져 있으면 결과 칸을 고친 것도 0.8초 뒤 따라 저장. 버튼 글자는 `txDeco`(MutationObserver). 페이지: 전체·줄거리·웹소설·컷별 콘티 탭(`textsTab`), 검색, 바로 고치기, 복사·메모·삭제(두 번), 「○○로」 바꾸기(`txConv`, 새 기록에 `parent`), 「원본 보기」·「바꾼 글」 링크(`txGo`)
 - 시험에서 `WS_TOOLS` 버튼은 순서가 모듈 순서(등장인물 → 글 보관함)라 글자로 찾는다
+
+## 콘티 구성기 (2026-10, 섹션 `conti`)
+- 「구성기에서 가져오기」(`pull`): `window.__sfState()`(랜덤 구성기 IIFE 안, `placeHint` 바로 뒤)가 컷 배분 다섯 구간(`band`, 인스타 모드면 INSTA 행)과 칸별 클리셰 행·배정 컷 범위(a–b)를 준다. 분량을 바꾸면 `rescale`로 비율 조정. 아이디어로 추천받기는 `__sfApply`로 구성기에 들어오므로 같은 길로 온다
+- 대강 이야기: `aiResult`가 제목이 줄거리·컷별 콘티·웹소설이면 localStorage `contiSrc`에 남기고, 콘티 페이지가 가져온다. 「AI로 줄거리 짜기」는 `writePrompt(...,'plot')`
+- 뼈대(`skeleton`): 클리셰 칸은 도구(r[7])로 구도 순서를 만든다(`toolSeq`: 원경·생략→ELS, 반응 컷→OTS·BS, 클로즈업→CU·ECU, 무음·여백→LS 무음, 넘김·전환→마지막 컷 넘김 훅). 나머지 컷은 구간별 기본 패턴(`SECPAT`)
+- AI 콘티 쓰기(`writeAll`): 구간을 14컷 안쪽 묶음(`chunks`)으로 나눠 **차례로** 부른다. 형식 「번호|구도|화면|대사」, 구도는 샷 코드(ELS LS FS MS BS CU ECU TWO OTS STAND FRAME BIRD)+앵글(부감·앙각·더치). `parseComp`가 한글 이름도 읽는다. 실패하면 그 묶음에서 멈추고 「이어서 쓰기」(`ct-resume`). 새 AI 기능이 아니라 글쓰기의 연장으로 본다
+- 그림: Rough.js 4.6.6(MIT)을 jsDelivr에서 페이지를 열 때 불러온다(`needRough`). 그리기 코드는 컷 구도 스케치 시안에서 옮김(`figure`, `K`). 화면 글에 놀람·충격 → 놀란 얼굴, 실루엣·역광 → 검은 실루엣
+- 컷 누르면 편집(구도·앵글·화면·대사, 뒤에 추가, 두 번 눌러 삭제). 저장 키 `contiBoard`(로컬만, 동기화 안 함), `contiSrc`
+- **등장인물 (콘티 구성기 2번)**: `B.chars=[{name, role, look:{hair(짧은·긴·묶은·삐죽·민머리·''=미정), dark, glasses, hat, scar, build(작음·보통·큼·'')}, note}]`. 「이야기에서 인물 찾기」(`findChars`)는 이야기 칸에 **적힌 것만** 뽑게 한다(성격으로 외모를 짐작하지 않음, 없으면 미정). 아이디어 구성기 캐릭터 모티브(`window.__idPlan().ch`)는 참고로만 붙인다. 구성기에서 다시 가져와도 인물은 유지
+- 콘티 줄 형식은 「번호|구도|인물|화면|대사」(인물은 왼쪽부터 쉼표). 4칸 옛 형식도 읽는다. 인물 칸이 비면 화면 글에서 등록된 이름을 찾는다(`whoOf`). 그림은 `figure`가 `D.cast`에서 차례로 인물을 받아 생김새(`figBody`의 `lk`, `hairDraw`, `hatDraw`)와 이름표(`nameTag`)를 붙인다. 어깨 너머 숏은 두 번째 인물이 등 쪽
+- **작업 전에 꼭 `git fetch` 후 최신 main의 index.html로 시작한다.** 다른 대화에서 올린 변경을 옛 파일로 덮어쓴 적이 있다(2026-10-16, 바로 되살림)
+- **추가 구도 (2026-10)**: INSERT(인서트 — 화면 글에 폰·문자면 휴대폰, 아니면 쪽지 + 손 `hand`), POV(시점 — 가운데 인물 + 앞쪽 두 손), BACK(뒷모습), EMPTY(빈 배경 — 화면 글로 교실·창 / 하늘·노을 / 거리 중 고름), CROWD(군중 — 뒤 두 줄은 이름 없는 사람, 앞줄 가운데·왼쪽이 등장인물). 효과: `+집중선`(`focusLines`, 컷 `focus`), `+회상`(옅은 톤 + 검은 테두리, 컷 `flash`). 편집기 체크박스로도 켠다
+- 뼈대 규칙 추가: 무음·여백 → EMPTY 무음, 클리셰 이름에 관전·군중·환호 등 → 두 번째 컷 CROWD, 기능이 감정 폭발·정점 → 마지막 CU/ECU에 집중선, 이름에 회상·과거·기억 → 첫 컷 뒤로 회상 테두리. 구간 기본 패턴에 INSERT·POV·EMPTY·BACK 섞음
