@@ -1683,16 +1683,21 @@ details.gdet[open] summary{margin-bottom:.5rem}
   <p class="lede">그리고 싶은 만화를 한두 줄 적으면, AI가 <b>장르와 연관어</b>를 뽑고 그 말로 사전을 찾아 <b>소재 → 초반 → 중반 → 후반 → 엔딩 → 주인공</b>을 이어지게 골라 <b>구성안</b>을 만든다. 무작위로 굴리는 <a href="#shuffle">랜덤 구성기</a>와 달리 여기서는 내 아이디어가 출발점이다.</p>
   <div class="idbox">
     <textarea class="id-text" id="id-text" rows="6" placeholder="예) 기억을 파는 가게 / 주인공은 동생 병원비 때문에 자기 기억을 판다 / 끝은 씁쓸하게"></textarea>
-    <div class="filterbar"><button class="chip" id="id-rec"><b>구성안 만들기</b></button><label style="font-size:.84rem"><input type="checkbox" class="id-use" id="id-use" checked> 다른 AI 글쓰기에도 반영</label><span class="count id-count"></span></div>
-    <p class="small">이 아이디어는 즐겨찾기 페이지의 아이디어 칸과 같은 내용이다. 「다른 AI 글쓰기에도 반영」을 켜 두면 랜덤 구성기·즐겨찾기의 줄거리 쓰기에도 함께 들어간다.</p>
+    <div class="filterbar"><button class="chip" id="id-rec"><b>구성안 만들기</b></button><input type="checkbox" class="id-use" id="id-use" checked hidden><span class="count id-count"></span></div>
+    <p class="small">이 아이디어는 즐겨찾기 페이지의 아이디어 칸과 같은 내용이다. 랜덤 구성기는 이 메모를 읽지 않는다.</p>
   </div>
   <div id="id-recout"></div>
+  <h3>글쓰기</h3>
+  <p class="small">구성안이 있으면 <b>구성안 + 아이디어</b>로, 아직 없으면 <b>아이디어만으로</b> 쓴다. 줄거리·컷별·웹소설 중에서 고른다.</p>
+  <div class="filterbar" id="idw-bar"></div>
+  <div id="idw-out"></div>
   <h3>쓰는 법</h3>
   <ul class="small">
     <li><b>구성안 만들기</b> — AI를 두 번 부른다. ① 아이디어에서 핵심·장르·연관어 ② 연관어로 사전에서 찾은 후보 중에서 고르기. 빠른 모델이면 몇 초.</li>
     <li>맨 위 <b>구성안</b>은 갈래마다 첫 번째 추천을 이어 놓은 것이다. 아래 갈래에서 다른 항목의 <b>구성안에</b>를 누르면 그걸로 바뀐다.</li>
     <li>갈래 제목 옆 <b>↻</b>는 검색 결과의 다음 후보를 보여 준다(AI를 다시 부르지 않는다).</li>
-    <li><b>랜덤 구성기로 보내기</b>는 구성안을 랜덤 구성기 칸에 넣고 📌 고정한 뒤 그 페이지로 넘어간다. 거기서 궁합 점검·줄거리 쓰기를 이어 할 수 있다.</li>
+    <li><b>랜덤 구성기로 보내기</b>는 구성안을 랜덤 구성기 칸에 넣고 📌 고정한 뒤 그 페이지로 넘어간다. 거기서 궁합 점검을 할 수 있다.</li>
+    <li><b>글쓰기</b>는 이 페이지에서 바로 한다. 구성안에서 바꾼 항목도 그대로 반영된다.</li>
   </ul>
 </section>
 
@@ -3352,7 +3357,7 @@ function aiDrawn(noIdea){
   var cut=document.getElementById('sf-cutn');
   if(cut) L.push('분량: '+cut.value);
   var out=L.join('\n');
-  if(!noIdea) out+=ideaBlock('sf');
+  // 아이디어 메모는 넣지 않는다 (아이디어로 쓰는 글은 아이디어 구성기에서)
   return out;
 }
 
@@ -3496,7 +3501,7 @@ function aiRefresh(){
   try{ AIKEY=localStorage.getItem('orKey')||''; AIMODEL=localStorage.getItem('orModel')||AIMODEL; localStorage.removeItem('aiOut'); }catch(e){}
   aiNoCreditMark(false);
   var k=document.getElementById('ai-key'); if(k) k.value=AIKEY;
-  try{ aiBar(); favAiBar(); aiSlots(); if(typeof pbBar==='function') pbBar(); if(window.__reSlots) window.__reSlots(); }catch(e){}
+  try{ aiBar(); favAiBar(); aiSlots(); if(typeof ideaWriteBar==='function') ideaWriteBar(); if(typeof pbBar==='function') pbBar(); if(window.__reSlots) window.__reSlots(); }catch(e){}
   if(!AIKEY){ set('키 없음','warn','AI 연결 페이지에서 OpenRouter 키를 넣는다.'); return Promise.resolve(); }
   set('…','busy','모델 목록을 새로 받고 연결을 확인하는 중');
   var p0=(typeof ormLoad==='function')?ormLoad(true):Promise.resolve();
@@ -3668,11 +3673,11 @@ var AISYS='당신은 한국 만화·웹툰 연출을 돕는 조력자다. 짧고
   var k=document.getElementById('ai-key'); if(!k) return;
   var m=document.getElementById('ai-model'), msg=document.getElementById('ai-msg');
   k.value=AIKEY;
-  function refreshAll(){ aiBar(); favAiBar(); aiSlots(); if(typeof pbBar==='function') pbBar(); if(typeof apply==='function') apply(); if(window.__reSlots) window.__reSlots(); if(typeof renderFavs==='function') renderFavs(); }
+  function refreshAll(){ aiBar(); favAiBar(); aiSlots(); if(typeof ideaWriteBar==='function') ideaWriteBar(); if(typeof ideaWriteBar==='function') ideaWriteBar(); if(typeof pbBar==='function') pbBar(); if(typeof apply==='function') apply(); if(window.__reSlots) window.__reSlots(); if(typeof renderFavs==='function') renderFavs(); }
   try{ ormLoad(false); }catch(e){}
   var ms=document.getElementById('ai-msearch');
   if(ms) ms.addEventListener('input',function(){ ormFill(ms.value); });
-  k.addEventListener('input',function(){ AIKEY=k.value.trim(); aiSave(); aiBar(); favAiBar(); aiSlots(); if(typeof pbBar==='function') pbBar(); if(typeof apply==='function') apply(); if(window.__reSlots) window.__reSlots(); if(typeof renderFavs==='function') renderFavs(); });
+  k.addEventListener('input',function(){ AIKEY=k.value.trim(); aiSave(); aiBar(); favAiBar(); aiSlots(); if(typeof ideaWriteBar==='function') ideaWriteBar(); if(typeof pbBar==='function') pbBar(); if(typeof apply==='function') apply(); if(window.__reSlots) window.__reSlots(); if(typeof renderFavs==='function') renderFavs(); });
   if(m) m.addEventListener('change',function(){
     AIMODEL=m.value; aiSave(); if(!/:free$/.test(AIMODEL)) aiNoCreditMark(false);
     try{ var o=JSON.parse(localStorage.getItem('aiOut')||'{}')||{}; if(o[PROV+'|'+AIMODEL]){ delete o[PROV+'|'+AIMODEL]; localStorage.setItem('aiOut',JSON.stringify(o)); } }catch(e){}
@@ -3680,7 +3685,7 @@ var AISYS='당신은 한국 만화·웹툰 연출을 돕는 조력자다. 짧고
     if(typeof ormFill==='function'){ var ms2=document.getElementById('ai-msearch'); ormFill(ms2?ms2.value:''); }
   });
   document.getElementById('ai-clear').addEventListener('click',function(){
-    AIKEY=''; k.value=''; aiSave(); aiBar(); favAiBar(); aiSlots(); if(typeof pbBar==='function') pbBar(); if(typeof apply==='function') apply(); if(window.__reSlots) window.__reSlots(); if(typeof renderFavs==='function') renderFavs(); msg.textContent='지웠습니다.'; });
+    AIKEY=''; k.value=''; aiSave(); aiBar(); favAiBar(); aiSlots(); if(typeof ideaWriteBar==='function') ideaWriteBar(); if(typeof pbBar==='function') pbBar(); if(typeof apply==='function') apply(); if(window.__reSlots) window.__reSlots(); if(typeof renderFavs==='function') renderFavs(); msg.textContent='지웠습니다.'; });
   var afc=document.getElementById('ai-autofree');
   if(afc){ afc.checked=aiAutoFree(); afc.addEventListener('change',function(){ try{ localStorage.setItem('orAutoFree',afc.checked?'1':'0'); }catch(e){} }); }
   aiCreditUI();
@@ -4248,6 +4253,7 @@ function ideaRec(box){
     var ch=(R.ch||[]).map(function(o){ return o.r[0]+' '+o.r[2]; }); if(ch.length) L.push('주인공: '+ch.join(' / '));
     return L.join('\n');
   }
+  ideaRec.plan=function(){ return (tok===ideaRec.tok)?planText():''; };
   function renderPlan(){
     var d=el('idr-plan'); if(!d) return;
     var rows=[['m','소재',0],['early','초반',0],['mid','중반',0],['late','후반',0],['e','엔딩',1]].map(function(x){ var o=(R[x[0]]||[])[0]; return o?'<li><b>'+x[1]+'</b> '+esc(o.r[x[2]])+' <span class="small">— '+esc(o.why)+'</span></li>':''; }).join('');
@@ -4341,6 +4347,26 @@ function ideaRec(box){
   };
 }
 (function(){ var b=document.getElementById('id-rec'), o=document.getElementById('id-recout'); if(b&&o) b.addEventListener('click',function(){ ideaRec(o); }); })();
+// 아이디어 구성기 글쓰기 (줄거리 / 컷별 / 웹소설)
+function ideaWriteBar(){
+  var bar=document.getElementById('idw-bar'); if(!bar) return;
+  if(!aiReady()){ bar.innerHTML='<span class="count">AI 연결에서 키를 넣으면 쓸 수 있다. <a href="#ai">AI 연결</a></span>'; return; }
+  var c0=window.__cutTotal?window.__cutTotal():70;
+  bar.innerHTML=wfmtHTML('wfi')+'<label class="wcut">분량 <select id="idw-cut"><option value="20">20컷</option><option value="40">40컷</option><option value="70">70컷</option><option value="100">100컷</option></select></label>'+
+    '<button class="chip" id="idw-go">글쓰기</button><span class="count" id="idw-src"></span>';
+  wfmtBind(bar,'wfi');
+  var sel=document.getElementById('idw-cut'); sel.value=String(c0<=20?20:(c0<=40?40:(c0<=70?70:100)));
+  document.getElementById('idw-go').addEventListener('click',function(){
+    var out=document.getElementById('idw-out'), ta=document.getElementById('id-text'), idea=(ta&&ta.value||'').trim();
+    var plan=(ideaRec.plan&&ideaRec.plan())||'';
+    if(!idea && !plan){ out.innerHTML='<p class="small">아이디어를 먼저 적는다.</p>'; return; }
+    var src=(plan?'[구성안]\n'+plan+'\n\n':'')+(idea?'[작가 아이디어 — 최우선으로 반영한다]\n'+idea:'');
+    var w=writePrompt(src, wfmtVal('wfi'), parseInt(sel.value,10)||70);
+    var lab=document.getElementById('idw-src'); if(lab) lab.textContent=plan?'구성안 + 아이디어로':'아이디어만으로';
+    aiBusy(out, w.title);
+    aiAsk(WSYS, w.prompt, w.maxTok).then(function(t){ aiResult(out, w.title+(plan?' — 구성안':' — 아이디어'), t); });
+  });
+}
 
 // ----- 작품 분석 -----
 var PB_ENUM={
@@ -6505,7 +6531,7 @@ var runChar=makeIndex({
     if(typeof renderFavs==='function') renderFavs(); }); }
   updateFavCount();
 })();
-aiBar(); favAiBar(); aiSlots();
+aiBar(); favAiBar(); aiSlots(); if(typeof ideaWriteBar==='function') ideaWriteBar();
 if(window.__reSlots) window.__reSlots(); if(typeof renderFavs==='function') renderFavs();
 dataMigrate();
 hsLoad();
