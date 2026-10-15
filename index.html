@@ -6892,7 +6892,86 @@ function crop(frac,topR){ return function(D){
   if(D.opt.ang==='high') label(D, 10, D.h-10, '부감', D.c.mark);
   if(D.opt.ang==='low') label(D, 10, D.h-10, '앙각', D.c.mark);
 }; }
+function hand(D,x,y,s,dir){
+  var p={fill:D.c.paper, fillStyle:'solid'}, X=function(dx){ return x+dir*dx*s; };
+  D.rc.polygon([[X(.02),y+s*.12],[X(.18),y-s*.1],[X(.95),y+s*.55],[X(.62),y+s*.95]], D.ink(p));
+  D.rc.ellipse(X(-.02), y, s*.44, s*.32, D.ink(p));
+  for(var i=0;i<4;i++) D.rc.ellipse(X(-.2+i*.1), y-s*.2+Math.abs(i-1.5)*s*.025, s*.085, s*.22, D.ink(p));
+  D.rc.ellipse(X(-.24), y+s*.04, s*.22, s*.09, D.ink(p));
+}
+function lcg(D){ var sd=((+D.opt.seed||1)*9301+SEED*49297)%233280; return function(){ sd=(sd*9301+49297)%233280; return sd/233280; }; }
+function focusLines(D){
+  var ctx=D.ctx, w=D.w, h=D.h, cx=w/2, cy=h*.45, R0=Math.min(w,h)*.34, R1=Math.hypot(w,h), rnd=lcg(D), n=56;
+  ctx.save(); ctx.fillStyle=D.c.ink; ctx.globalAlpha=.8;
+  for(var i=0;i<n;i++){
+    var a=(i+rnd()*.6)/n*Math.PI*2, r0=R0*(.9+rnd()*.55), wd=.006+rnd()*.012;
+    ctx.beginPath(); ctx.moveTo(cx+Math.cos(a)*r0, cy+Math.sin(a)*r0*.8);
+    ctx.lineTo(cx+Math.cos(a-wd)*R1, cy+Math.sin(a-wd)*R1); ctx.lineTo(cx+Math.cos(a+wd)*R1, cy+Math.sin(a+wd)*R1); ctx.closePath(); ctx.fill();
+  }
+  ctx.restore();
+}
 var K = {
+  insert:{n:'인서트', e:'INSERT', u:'사물이나 손만 크게. 쪽지·휴대폰·쥔 주먹.', draw:function(D){
+    var w=D.w, h=D.h, ctx=D.ctx, scr=D.opt.scr||'', who0=castNext(D), cx=w*.46, cy=h*.46, s=Math.min(w,h)*.5;
+    if(/폰|휴대|스마트|화면|문자|메시지|알림/.test(scr)){
+      var pw=Math.min(w*.24,h*.4), ph=pw*1.85;
+      D.rc.rectangle(cx-pw/2, cy-ph/2, pw, ph, D.ink({fill:D.c.paper, fillStyle:'solid', strokeWidth:1.6*D.sw}));
+      D.rc.rectangle(cx-pw*.4, cy-ph*.4, pw*.8, ph*.74, D.ink({stroke:D.c.ink2, strokeWidth:1}));
+      for(var i=0;i<3;i++) D.rc.rectangle(cx-pw*.32+(i%2)*pw*.16, cy-ph*.32+i*ph*.18, pw*.46, ph*.1, D.ink({stroke:D.c.note, strokeWidth:.8, roughness:.4}));
+      hand(D, cx+pw*.42, cy+ph*.22, s, 1);
+    } else {
+      var qw=Math.min(w*.52,h*.95), qh=qw*.64;
+      ctx.save(); ctx.translate(cx,cy); ctx.rotate(-.12);
+      D.rc.rectangle(-qw/2,-qh/2,qw,qh, D.ink({fill:D.c.paper, fillStyle:'solid'}));
+      for(var j=0;j<4;j++) D.rc.line(-qw*.38, -qh*.24+j*qh*.16, qw*(j===3?.04:.36), -qh*.24+j*qh*.16, D.ink({stroke:D.c.ink3, strokeWidth:.9}));
+      ctx.restore();
+      hand(D, cx+qw*.36, cy+qh*.3, s, 1);
+    }
+    if(who0&&who0.name) nameTag(D, 10, h-10, who0.name+'의 손', 'left');
+  }},
+  pov:{n:'시점 숏', e:'POV', u:'인물의 눈으로 본 화면. 앞에 손이 걸린다.', draw:function(D){
+    var w=D.w, h=D.h, H=h*.72/.37, top=h*.16;
+    horizon(D, top+geo(H).eye);
+    figure(D, w*.5, top, H, {shock: !!D.opt.shock});
+    var s=Math.min(w,h)*.42; hand(D, w*.12, h*.86, s, -1); hand(D, w*.88, h*.86, s, 1);
+    label(D, 12, 20, '시점', D.c.mark);
+  }},
+  back:{n:'뒷모습', e:'BACK', u:'떠나는 인물, 엔딩. 표정을 숨긴다.', draw:function(D){
+    var w=D.w, h=D.h, H=h*.62, foot=h*.9, top=foot-H, ey=top+geo(H).eye;
+    D.rc.line(w*.5, ey, -w*.1, h, D.guide({strokeWidth:.8})); D.rc.line(w*.5, ey, w*1.1, h, D.guide({strokeWidth:.8}));
+    horizon(D, ey);
+    figure(D, w*.5, top, H, {back:true});
+  }},
+  empty:{n:'빈 배경', e:'EMPTY', u:'사람 없는 공간. 여운·시간 경과·무음.', draw:function(D){
+    var w=D.w, h=D.h, scr=D.opt.scr||'';
+    if(/교실|창|방|실내|복도|집/.test(scr)){
+      D.rc.rectangle(w*.18, h*.14, w*.64, h*.6, D.ink());
+      D.rc.line(w*.5, h*.14, w*.5, h*.74, D.ink()); D.rc.line(w*.18, h*.44, w*.82, h*.44, D.ink());
+      D.rc.arc(w*.34, h*.32, w*.14, h*.1, Math.PI, Math.PI*2, false, D.ink({stroke:D.c.ink3, strokeWidth:1}));
+      D.rc.arc(w*.66, h*.58, w*.12, h*.08, Math.PI, Math.PI*2, false, D.ink({stroke:D.c.ink3, strokeWidth:1}));
+      for(var i=0;i<4;i++) D.rc.line(w*(.08+i*.02), h*.08, w*(.06+i*.025), h*.86, D.ink({stroke:D.c.ink3, strokeWidth:.8}));
+      D.rc.line(0, h*.86, w, h*.86, D.ink({stroke:D.c.ink2}));
+    } else if(/하늘|노을|구름|달|별|바다/.test(scr)){
+      var hy=h*.78; horizon(D, hy);
+      D.rc.circle(w*.68, hy-h*.12, h*.22, D.ink({stroke:D.c.ink2}));
+      [[.22,.26],[.48,.18]].forEach(function(c){ D.rc.arc(w*c[0], h*c[1], w*.2, h*.12, Math.PI, Math.PI*2, false, D.ink({stroke:D.c.ink3, strokeWidth:1})); });
+      [[.3,.42],[.36,.38]].forEach(function(c){ D.rc.linearPath([[w*c[0]-6,h*c[1]-4],[w*c[0],h*c[1]],[w*c[0]+6,h*c[1]-4]], D.ink({strokeWidth:1})); });
+    } else {
+      var vy=h*.55; floor(D, w*.55, vy, 9); horizon(D, vy);
+      D.rc.rectangle(w*.06, h*.18, w*.22, vy-h*.18, D.ink({stroke:D.c.ink2}));
+      D.rc.rectangle(w*.72, h*.26, w*.2, vy-h*.26, D.ink({stroke:D.c.ink2}));
+      D.rc.line(w*.38, h*.2, w*.38, h*.92, D.ink()); D.rc.line(w*.38, h*.2, w*.46, h*.2, D.ink());
+    }
+  }},
+  crowd:{n:'군중', e:'CROWD', u:'세 명 이상. 관전·환호·술렁임.', draw:function(D){
+    var w=D.w, h=D.h, hy=h*.42; horizon(D, hy);
+    [.1,.28,.46,.64,.82,.97].forEach(function(x){ var H=h*.3; figure(D, w*x, h*.64-H, H, {noCast:true}); });
+    [.2,.42,.62,.84].forEach(function(x){ var H=h*.46; figure(D, w*x, h*.84-H, H, {noCast:true}); });
+    var H2=h*.78, t2=h*.28;
+    figure(D, w*.5, t2, H2, {shock: !!D.opt.shock});
+    figure(D, w*.15, t2+h*.04, H2, {face:1});
+    figure(D, w*.85, t2+h*.04, H2, {face:-1, noCast:true});
+  }},
   els:{n:'익스트림 롱숏', e:'ELS', u:'장소와 분위기를 먼저 깔 때. 인물은 점처럼 작게.', draw:function(D){
     var w=D.w, h=D.h, hy=h*.6; horizon(D,hy);
     D.rc.linearPath([[-5,hy],[w*.12,hy-h*.16],[w*.24,hy-h*.05],[w*.38,hy-h*.27],[w*.52,hy-h*.08],[w*.7,hy-h*.21],[w*.86,hy-h*.04],[w+5,hy-h*.13]], D.ink({strokeWidth:1.1*D.sw}));
@@ -7001,19 +7080,20 @@ var K = {
 
 function cesc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 var SHOTS=[['els','ELS','익스트림 롱숏'],['ls','LS','롱숏'],['fs','FS','풀숏'],['ms','MS','미디엄숏'],['bs','BS','바스트숏'],['cu','CU','클로즈업'],['ecu','ECU','익스트림 클로즈업'],
-  ['two','TWO','투숏'],['ots','OTS','어깨 너머'],['stand','STAND','대치'],['frame','FRAME','프레임 속 프레임'],['bird','BIRD','버즈아이']];
+  ['two','TWO','투숏'],['ots','OTS','어깨 너머'],['stand','STAND','대치'],['frame','FRAME','프레임 속 프레임'],['bird','BIRD','버즈아이'],
+  ['insert','INSERT','인서트'],['pov','POV','시점 숏'],['back','BACK','뒷모습'],['empty','EMPTY','빈 배경'],['crowd','CROWD','군중']];
 var ANGS=[['','','앵글 보통'],['high','부감','부감'],['low','앙각','앙각'],['dutch','더치','더치']];
 function shotName(k){ for(var i=0;i<SHOTS.length;i++) if(SHOTS[i][0]===k) return SHOTS[i][2]; return k; }
 function shotCode(k){ for(var i=0;i<SHOTS.length;i++) if(SHOTS[i][0]===k) return SHOTS[i][1]; return 'MS'; }
 function angName(a){ return a==='high'?'부감':a==='low'?'앙각':a==='dutch'?'더치':''; }
-function compText(c){ return shotCode(c.k)+(c.ang?'+'+angName(c.ang):''); }
+function compText(c){ return shotCode(c.k)+(c.ang?'+'+angName(c.ang):'')+(c.focus?'+집중선':'')+(c.flash?'+회상':''); }
 function parseComp(s){
   var u=String(s||'').toUpperCase(), k='ms', ang='';
-  var T=[['els',/ELS|익스트림 *롱/],['ecu',/ECU|익스트림 *클로즈/],['ots',/OTS|어깨/],['two',/TWO|투 *숏/],['stand',/STAND|대치/],['frame',/FRAME|프레임/],['bird',/BIRD|버즈/],
+  var T=[['insert',/INSERT|인서트|사물/],['pov',/POV|시점/],['back',/BACK|뒷모습/],['empty',/EMPTY|빈 *배경|배경만/],['crowd',/CROWD|군중/],['els',/ELS|익스트림 *롱/],['ecu',/ECU|익스트림 *클로즈/],['ots',/OTS|어깨/],['two',/TWO|투 *숏/],['stand',/STAND|대치/],['frame',/FRAME|프레임/],['bird',/BIRD|버즈/],
          ['ls',/\bLS\b|롱 *숏/],['fs',/\bFS\b|풀 *숏|전신/],['ms',/\bMS\b|미디엄/],['bs',/\bBS\b|바스트/],['cu',/\bCU\b|클로즈/]];
   for(var i=0;i<T.length;i++) if(T[i][1].test(u)){ k=T[i][0]; break; }
   if(/부감|HIGH/.test(u)) ang='high'; else if(/앙각|LOW/.test(u)) ang='low'; else if(/더치|DUTCH/.test(u)) ang='dutch';
-  return {k:k, ang:ang};
+  return {k:k, ang:ang, focus:/집중선|FOCUS/.test(u), flash:/회상|FLASH/.test(u)};
 }
 
 /* ---------- 등장인물 ---------- */
@@ -7111,7 +7191,7 @@ function save(){ try{ if(B){ B.at=Date.now(); localStorage.setItem('contiBoard',
 function srcGet(){ try{ return JSON.parse(localStorage.getItem('contiSrc')||'null'); }catch(e){ return null; } }
 
 /* ---------- 클리셰의 연출 도구 → 구도 순서 ---------- */
-function toolSeq(tools, n, cost){
+function toolSeq(tools, n, cost, name, fn){
   var t=String(tools||''), has=function(x){ return t.indexOf(x)>=0; }, s=[];
   if(has('원경·생략')) s.push({k:'els'});
   if(has('글자·말풍선')) s.push({k:'ms'});
@@ -7119,7 +7199,7 @@ function toolSeq(tools, n, cost){
   if(has('컷 리듬·톤')) s.push({k:'ms'},{k:'cu'});
   if(has('반응 컷')) s.push({k:'ots'},{k:'bs',react:1});
   if(has('클로즈업')) s.push({k:'cu'},{k:'ecu'});
-  if(has('무음·여백')) s.push({k:'ls',silent:1});
+  if(has('무음·여백')) s.push({k:'empty',silent:1});
   if(!s.length) s=[{k:'ms'},{k:'cu'}];
   if(cost==='2쪽+' && !has('원경·생략')) s.unshift({k:'ls'});
   var out=[], FILL=['ms','bs','two','ots'];
@@ -7134,15 +7214,19 @@ function toolSeq(tools, n, cost){
     }
     out[n-1]=Object.assign({}, s[s.length-1]);
   }
+  if(/관전|군중|구경|환호|관중|해설|청중/.test(name||'') && out.length>1) out[1]={k:'crowd'};
+  if(fn==='감정 폭발·정점'){ for(var q=out.length-1;q>=0;q--) if(/^(cu|ecu)$/.test(out[q].k)){ out[q].focus=1; break; } }
+  if(/회상|과거|플래시백|기억/.test(name||'')) out.forEach(function(c,i){ if(i>0 || out.length===1) c.flash=1; });
   if(has('넘김·전환') && out.length) out[out.length-1].hook=1;
   return out;
 }
-var SECPAT={'도입':['els','ls','ms','bs','ms','cu'],'전개':['ms','ots','bs','two','ms','cu','ls','bs'],'전환':['ls','ms','cu','ots','bs'],
-  '절정':['ms','cu','fs','ecu','ls','cu'],'마지막 훅':['bs','ms','cu','ls']};
+var SECPAT={'도입':['els','ls','ms','bs','insert','cu'],'전개':['ms','ots','bs','two','insert','cu','ls','pov'],'전환':['empty','ls','ms','cu','ots','bs'],
+  '절정':['ms','cu','fs','ecu','ls','cu'],'마지막 훅':['bs','ms','back','cu']};
 function secDefault(name, i, len){
   var p=SECPAT[name] || (/훅|다음/.test(name)?SECPAT['마지막 훅']:/정점|절정/.test(name)?SECPAT['절정']:/상황|첫/.test(name)?SECPAT['도입']:SECPAT['전개']);
   var c={k:p[i%p.length]};
   if(name==='절정' && i===Math.floor(len/2)) c.ang='low';
+  if(name==='절정' && i===1) c.focus=1;
   if((name==='마지막 훅'||/훅|다음/.test(name)) && i===len-1) c.hook=1;
   return c;
 }
@@ -7154,7 +7238,7 @@ function pull(){
   var total=+document.getElementById('ct-total').value||st.total;
   if(total!==st.total) st=rescale(st,total);
   var acc=0, band=st.band.map(function(b){ var o={name:b.name, a:acc+1, b:acc+b.n}; acc+=b.n; return o; });
-  var cl=st.slots.map(function(s){ var r=s.row; return {label:s.label, name:r[0], genre:r[1], cost:r[6], tools:r[7], def:r[8], point:r[9], a:s.a, b:s.b}; });
+  var cl=st.slots.map(function(s){ var r=s.row; return {label:s.label, name:r[0], genre:r[1], fn:r[2], cost:r[6], tools:r[7], def:r[8], point:r[9], a:s.a, b:s.b}; });
   var story=document.getElementById('ct-story').value;
   var src=srcGet();
   if(src && src.text && (!story.trim() || (B && src.at>(B.srcAt||0)))){ story=src.text; }
@@ -7174,7 +7258,7 @@ function bandOf(n){ for(var i=0;i<B.band.length;i++) if(n>=B.band[i].a && n<=B.b
 function clOf(n, cl){ cl=cl||B.cl; for(var i=0;i<cl.length;i++) if(n>=cl[i].a && n<=cl[i].b) return cl[i]; return null; }
 function skeleton(total, band, cl){
   var cuts=[], seqs={};
-  cl.forEach(function(c,i){ seqs[i]=toolSeq(c.tools, c.b-c.a+1, c.cost); });
+  cl.forEach(function(c,i){ seqs[i]=toolSeq(c.tools, c.b-c.a+1, c.cost, c.name, c.fn); });
   for(var n=1;n<=total;n++){
     var bd=band[band.length-1]; for(var j=0;j<band.length;j++) if(n>=band[j].a && n<=band[j].b){ bd=band[j]; break; }
     var ci=-1; for(var q=0;q<cl.length;q++) if(n>=cl[q].a && n<=cl[q].b){ ci=q; break; }
@@ -7206,8 +7290,11 @@ function drawCv(cv){
   if(o.ang==='high' && /^(fs|ls|els)$/.test(k)) kind='high';
   if(o.ang==='low' && /^(fs|ls|els)$/.test(k)) kind='low';
   try{ (K[kind]||K.ms).draw(D); }catch(e){}
+  if(o.focus) focusLines(D);
+  if(o.flash){ ctx.save(); ctx.globalAlpha=.09; ctx.fillStyle=D.c.ink; ctx.fillRect(0,0,w,h); ctx.restore(); }
   ctx.restore();
   if(o.silent) label(D, w-10, 18, '무음', D.c.note, 'right');
+  if(o.flash){ ctx.fillStyle=D.c.ink; ctx.fillRect(0,0,w,7); ctx.fillRect(0,h-7,w,7); ctx.fillRect(0,0,7,h); ctx.fillRect(w-7,0,7,h); nameTag(D, 12, 26, '회상', 'left'); }
   D.rc.rectangle(3,3,w-6,h-6, D.ink({strokeWidth:(o.hook?3:2)*D.sw, roughness:.5, bowing:.3, stroke:o.hook?D.c.mark:D.c.ink}));
 }
 var pend=new Set(), raf=0;
@@ -7223,6 +7310,8 @@ function cvFor(c){
   if(/실루엣|그림자만|역광/.test(c.scr)) cv.dataset.sil='1';
   if(c.silent) cv.dataset.silent='1';
   if(c.hook) cv.dataset.hook='1';
+  if(c.focus) cv.dataset.focus='1'; if(c.flash) cv.dataset.flash='1';
+  if(c.scr) cv.dataset.scr=c.scr;
   var wl=whoOf(c); if(wl.length) cv.dataset.who=JSON.stringify(wl);
   cv.setAttribute('role','img'); cv.setAttribute('aria-label', c.n+'번 컷 '+shotName(c.k)+' 구도');
   if(ro) ro.observe(cv); else setTimeout(function(){ queue(cv); },0);
@@ -7242,7 +7331,7 @@ function renderPlan(){
 }
 function cardHTML(c){
   return '<figcaption><div class="ct-h"><b>'+c.n+'</b><span>'+cesc(shotName(c.k))+(c.ang?' · '+angName(c.ang):'')+'</span>'+
-    (c.hook?'<i class="ct-hook">넘김</i>':'')+(function(){ var w=whoOf(c); return w.length?'<span class="ct-who">'+cesc(w.map(function(x){ return x.name; }).join(', '))+'</span>':''; })()+(c.cl?'<em>'+cesc(c.cl)+'</em>':'')+'</div>'+
+    (c.focus?'<span>· 집중선</span>':'')+(c.flash?'<span>· 회상</span>':'')+(c.hook?'<i class="ct-hook">넘김</i>':'')+(function(){ var w=whoOf(c); return w.length?'<span class="ct-who">'+cesc(w.map(function(x){ return x.name; }).join(', '))+'</span>':''; })()+(c.cl?'<em>'+cesc(c.cl)+'</em>':'')+'</div>'+
     (c.scr?'<p class="ct-scr">'+cesc(c.scr)+'</p>':'<p class="ct-scr ct-empty">화면 미정</p>')+
     (c.line?'<p class="ct-line">'+cesc(c.line)+'</p>':'')+'</figcaption>';
 }
@@ -7277,6 +7366,7 @@ function openEdit(f){
   var ed=document.createElement('div'); ed.className='ct-ed';
   ed.innerHTML='<label>구도 <select class="ct-k">'+SHOTS.map(function(s){ return '<option value="'+s[0]+'"'+(s[0]===c.k?' selected':'')+'>'+s[2]+'</option>'; }).join('')+'</select></label>'+
     '<label>앵글 <select class="ct-a">'+ANGS.map(function(a){ return '<option value="'+a[0]+'"'+(a[0]===(c.ang||'')?' selected':'')+'>'+a[2]+'</option>'; }).join('')+'</select></label>'+
+    '<div class="ct-chk"><label><input type="checkbox" class="ct-f"'+(c.focus?' checked':'')+'>집중선</label><label><input type="checkbox" class="ct-fl"'+(c.flash?' checked':'')+'>회상 테두리</label></div>'+
     '<label>인물 (왼쪽부터, 쉼표) <input class="ct-w" type="text"></label>'+
     '<label>화면 <textarea class="ct-s" rows="2"></textarea></label><label>대사 <input class="ct-l" type="text"></label>'+
     '<div class="filterbar"><button class="chip ct-ok" type="button">저장</button><button class="chip ct-x" type="button">닫기</button>'+
@@ -7286,7 +7376,7 @@ function openEdit(f){
   ed.addEventListener('click',function(e){ e.stopPropagation(); });
   ed.querySelector('.ct-x').addEventListener('click',function(){ ed.remove(); });
   ed.querySelector('.ct-ok').addEventListener('click',function(){
-    c.k=ed.querySelector('.ct-k').value; c.ang=ed.querySelector('.ct-a').value||'';
+    c.k=ed.querySelector('.ct-k').value; c.ang=ed.querySelector('.ct-a').value||''; c.focus=ed.querySelector('.ct-f').checked?1:0; c.flash=ed.querySelector('.ct-fl').checked?1:0;
     c.scr=ed.querySelector('.ct-s').value.trim(); c.line=ed.querySelector('.ct-l').value.trim();
     c.who=ed.querySelector('.ct-w').value.split(/[,，、]/).map(function(x){ return x.trim(); }).filter(Boolean).slice(0,3);
     save(); refreshCut(n);
@@ -7349,7 +7439,8 @@ function cutPrompt(ch){
   L.push('규칙\n'+
     '- 한 줄에 한 컷. 형식: 번호|구도|인물|화면|대사\n'+
     '- 인물 칸에는 그 컷에 보이는 인물 이름을 화면 왼쪽부터 쉼표로 적는다(많아야 2명). 등장인물 목록의 이름을 그대로 쓴다. 인물이 없으면 비운다.\n'+
-    '- 구도는 샷 하나에 필요하면 앵글 하나를 +로 붙인다. 샷: ELS LS FS MS BS CU ECU TWO OTS STAND FRAME BIRD. 앵글: 부감 앙각 더치. 예: BS+부감\n'+
+    '- 구도는 샷 하나에 필요하면 앵글 하나를 +로 붙인다. 샷: ELS LS FS MS BS CU ECU TWO OTS STAND FRAME BIRD INSERT(사물·손만) POV(인물이 보는 화면) BACK(뒷모습) EMPTY(사람 없는 배경) CROWD(세 명 이상). 앵글: 부감 앙각 더치. 예: BS+부감\n'+
+    '- 효과는 꼭 필요한 컷에만 +집중선(충격·각성·결정적 순간), +회상(과거 장면)을 붙인다. 예: CU+집중선\n'+
     '- 추천 구도를 기본으로 따르고, 이야기에 더 맞으면 바꾼다.\n'+
     '- 클리셰가 배정된 컷에서는 그 클리셰의 연출을 실제 화면으로 보여 준다.\n'+
     '- 화면은 누가 어디서 무엇을 하는지 40자 안쪽. 대사는 한 문장까지. 대사가 없으면 비운다. 무음 컷은 대사를 비운다.\n'+
@@ -7364,7 +7455,7 @@ function applyLines(t, ch){
     if(parts.length<3) return; var mn=/^\s*(\d+)\s*[.)]?\s*$/.exec(parts[0]); if(!mn) return;
     var n=+mn[1]; if(n<ch.a || n>ch.b) return;
     var c=B.cuts[n-1]; if(!c) return;
-    var p=parseComp(parts[1]); c.k=p.k; c.ang=p.ang;
+    var p=parseComp(parts[1]); c.k=p.k; c.ang=p.ang; c.focus=p.focus?1:0; c.flash=p.flash?1:0;
     var who='', scr, ln;
     if(parts.length>=5){ who=parts[2]; scr=parts[3]; ln=parts.slice(4).join(' '); } else { scr=parts[2]; ln=parts.slice(3).join(' '); }
     c.who=String(who).split(/[,，、]/).map(function(x){ return x.trim(); }).filter(function(x){ return x && !/^(없음|-|—)$/.test(x); }).slice(0,3);
