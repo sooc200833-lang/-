@@ -54,10 +54,12 @@ a:focus-visible, button:focus-visible, input:focus-visible{outline:2px solid var
 @media (max-width:900px){.layout{grid-template-columns:1fr}}
 
 /* ---------- hero ---------- */
-.hero{border-bottom:2px solid var(--ink); padding:clamp(40px,7vw,84px) 0 clamp(26px,4vw,40px)}
-.hero .kick{font-size:.8rem; color:var(--ink-2); letter-spacing:.02em; margin:0 0 1.1rem}
+.hero{border-bottom:2px solid var(--ink); padding:clamp(18px,3.4vw,40px) 0 clamp(10px,2vw,18px)}
+.hero-more>summary{cursor:pointer; font-size:.8rem; color:var(--ink-3); margin-top:.6rem}
+.hero-more[open]>summary{margin-bottom:.2rem}
+.hero .kick{font-size:.8rem; color:var(--ink-2); letter-spacing:.02em; margin:0 0 .6rem}
 .hero h1{
-  font-size:clamp(2.5rem,7.4vw,4.6rem); font-weight:900; margin:0 0 .5rem;
+  font-size:clamp(1.9rem,6vw,3.4rem); font-weight:900; margin:0 0 .3rem;
   letter-spacing:-.035em; line-height:1.02;
 }
 .hero h1 em{font-style:normal; display:block; font-weight:300; font-size:.42em; letter-spacing:-.01em; color:var(--ink-2); margin-top:.7rem; line-height:1.4}
@@ -82,6 +84,7 @@ a:focus-visible, button:focus-visible, input:focus-visible{outline:2px solid var
 /* ---------- nav rail ---------- */
 nav.rail{position:sticky; top:24px; padding:2.6rem 0 2rem; font-size:.83rem; line-height:1.5}
 @media (max-width:900px){nav.rail{position:static; padding-bottom:0; border-bottom:1px solid var(--rule); margin-bottom:1rem}}
+@media (max-width:900px){body:not(.sub) nav.rail{display:none}}   /* 좁은 화면 홈에서는 바탕화면이 목차를 대신한다 */
 nav.rail ol{list-style:none; margin:0; padding:0}
 nav.rail li{margin:0 0 .1rem}
 nav.rail a{display:block; padding:.28rem .5rem .28rem .6rem; color:var(--ink-2); text-decoration:none; border-left:2px solid transparent}
@@ -542,6 +545,12 @@ textarea.wedit:focus{outline:none; border-style:solid}
 .topbar .favlink span{color:#D9A526}
 .topbar .favlink i{font-style:normal; font-size:.76rem; color:var(--ink-3)}
 @media (max-width:640px){.topbar{flex-wrap:wrap}.topbar #pagesel{flex:1 1 100%}.topbar .tf{margin-left:0}}
+@media (max-width:520px){   /* 폰: 윗줄을 두 줄 안으로 */
+  .topbar{gap:.3rem; padding:.35rem 0}
+  .topbar > label[for]{position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap}
+  .topbar #pagesel{flex:1 1 55%} .topbar #topfolder{flex:1 1 28%; max-width:none}
+  .topbar .trainbtn,.topbar .synclink,.topbar .favlink{padding-top:.12rem; padding-bottom:.12rem; font-size:.74rem}
+}
 .motifs{display:flex; flex-wrap:wrap; gap:.35rem; margin:0 0 .9rem}
 .motif{border:1px solid var(--note); background:var(--paper); color:var(--ink); font:inherit; font-size:.85rem;
   padding:.22rem .6rem; cursor:pointer}
@@ -723,7 +732,8 @@ textarea.cast-in{resize:vertical; min-height:2.6em; overflow:hidden}
 }
 /* [[/CSS:texts]] */
 /* [[CSS:desk]] */
-#desk-root{margin-top:1.4rem}
+#desk-root{margin-top:.4rem}
+body:not(.sub) main{padding-top:1rem}
 .dk-bar{display:flex; flex-wrap:wrap; align-items:baseline; gap:.3rem .8rem; margin:0 0 .5rem}
 .dk-bar h3{margin:0; font-size:1.05rem}
 .dk-bar .dk-tip{font-size:.78rem; color:var(--ink-3); flex:1 1 16rem}
@@ -785,10 +795,40 @@ body.dk-drag, body.dk-drag *{user-select:none!important; -webkit-user-select:non
 .dk-toast span{min-width:0; word-break:keep-all; overflow-wrap:anywhere}
 .dk-toast button{font:inherit; font-size:.82rem; background:none; border:0; color:inherit; text-decoration:underline; cursor:pointer; padding:0; white-space:nowrap}
 @media (max-width:520px){
-  .dk-g, .dk-g svg{width:40px; height:33px}
+  .dk-g, .dk-g svg{width:36px; height:30px}
+  .dk-ic{padding:.4rem .15rem .15rem}
+  .dk-pgs{grid-template-columns:1fr 1fr}
   .dk-t{font-size:.72rem}
   .dk-bar .dk-tip{order:3; flex-basis:100%}
 }
+.home-all{margin:1.1rem 0 2rem}
+.home-all>summary{cursor:pointer; font-size:.84rem; color:var(--ink-3); padding:.3rem 0}
+.home-all[open]>summary{margin-bottom:.2rem}
+.dk-ic.dk-armed .dk-g{transform:scale(1.12); transition:transform .12s}
+.dk-ic.dk-armed{background:var(--paper-3)}
+.dk-it.dk-armed,.dk-pg.dk-armed{border-color:var(--ink)}
+.dk-pgs{display:grid; grid-template-columns:repeat(auto-fill,minmax(190px,1fr)); gap:.35rem; margin:.35rem 0; padding:0; list-style:none}
+.dk-pg{border:1px solid var(--rule-hard); background:var(--paper-2); padding:.4rem .55rem; cursor:pointer; user-select:none; -webkit-user-select:none; -webkit-touch-callout:none; touch-action:manipulation; outline:none}
+.dk-pg:hover,.dk-pg:focus-visible{border-color:var(--ink-3)}
+.dk-pg b{display:block; font-size:.88rem; font-weight:600}
+.dk-pg span{display:block; font-size:.74rem; color:var(--ink-3); line-height:1.4}
+.dk-pg i{font-style:normal; font-size:.66rem; color:var(--mark)}
+.dk-rows{list-style:none; margin:.2rem 0; padding:0}
+.dk-row{display:flex; gap:.5rem; align-items:baseline; padding:.38rem .15rem; border-bottom:1px dotted var(--rule); cursor:pointer; min-width:0}
+.dk-row:hover{background:var(--paper-2)}
+.dk-row b{font-weight:600; font-size:.88rem; white-space:nowrap}
+.dk-row span{color:var(--ink-3); font-size:.78rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; min-width:0}
+.dk-row em{font-style:normal; font-size:.7rem; color:var(--note); white-space:nowrap}
+.dk-sub{margin:.55rem 0 .15rem; font-size:.78rem; color:var(--ink-3); font-family:"Hahmlet",serif}
+.dk-info{padding:.45rem .7rem .3rem; display:grid; gap:.5rem}
+.dk-info .dk-fr{display:flex; flex-wrap:wrap; gap:.4rem; align-items:center; font-size:.86rem}
+.dk-info .dk-fr>span:first-child{min-width:4.5rem; color:var(--ink-3); font-size:.8rem}
+.dk-info input[type=text],.dk-info select,.dk-info textarea{font:inherit; font-size:.86rem; padding:.24rem .45rem; border:1px solid var(--rule-hard); background:var(--paper); color:var(--ink); min-width:0; max-width:100%}
+.dk-info input[type=text]{width:12rem}
+.dk-info textarea{width:100%; box-sizing:border-box; min-height:4.5em; resize:vertical; line-height:1.55}
+.dk-info .chip[data-arm="1"]{border-color:var(--mark); color:var(--mark)}
+.dk-info .dk-note{font-size:.8rem; color:var(--ink-2); line-height:1.55}
+.dk-info .dk-ok{font-size:.76rem; color:var(--note)}
 /* [[/CSS:desk]] */
 /* 콘티 구성기 */
 .ct-band{display:flex; gap:2px; margin:.2rem 0 .8rem; font-size:.78rem}
@@ -837,6 +877,7 @@ body.dk-drag, body.dk-drag *{user-select:none!important; -webkit-user-select:non
 <header class="hero">
   <p class="kick">만화 전용 · 클리셰와 연출 설계 매뉴얼</p>
   <h1>만화 클리셰 사전<em>무엇을 쓰느냐보다, 몇 컷에 어떻게 놓느냐가 결정한다</em></h1>
+  <details class="hero-more"><summary>이 사전에 대해</summary>
   <p class="thesis">만화에서 클리셰의 성패는 소재가 아니라 <b>컷 배분과 페이지 넘김</b>에서 갈린다. 같은 각성 장면도 3컷이면 진부하고, 참는 컷 두 장을 앞에 두고 넘김 뒤 스프레드로 터뜨리면 독자는 같은 장면을 처음 보는 것처럼 읽는다.</p>
   <div class="hero-meta">
     <span>본편 10개 · 색인 813개</span>
@@ -849,6 +890,7 @@ body.dk-drag, body.dk-drag *{user-select:none!important; -webkit-user-select:non
     <div><h4><span class="dot d-dead"></span>죽음</h4><p>등장 즉시 작가의 편의로 읽힌다.</p></div>
     <div><h4><span class="dot d-req"></span>장르 필수</h4><p>빼면 독자가 계약 위반으로 받아들인다.</p></div>
   </div>
+  </details>
 </header>
 
 <div class="topbar"><label for="pagesel">페이지</label><select id="pagesel"></select><label for="topfolder" class="tf">담는 곳</label><select id="topfolder"></select><label class="trainbtn"><input type="checkbox" id="tr-on"> 트레이닝</label>
@@ -2970,12 +3012,12 @@ if(pinoOn()) pinoInsert();
 var home=document.getElementById('home');
 function buildHome(){
   if(!home) return;
-  var html='<div id="desk-root"></div><p class="lede" style="margin-top:1.4rem">보고 싶은 항목을 고른다. 각 페이지는 따로 열리므로 폰에서도 가볍다.</p>', g=null;
+  var html='<div id="desk-root"></div><details class="home-all"><summary>페이지 전체 목록</summary>', g=null;
   PAGES.forEach(function(p){
     if(p.g!==g){ if(g)html+='</div>'; html+='<div class="hsec">'+p.g+'</div><div class="homegrid">'; g=p.g; }
     html+='<a href="#'+p.id+'"><b>'+p.t+'</b><span>'+p.d+'</span></a>';
   });
-  html+='</div>'; home.innerHTML=html;
+  html+='</div></details>'; home.innerHTML=html;
   if(window.__deskRender) try{ window.__deskRender(); }catch(e){}
 }
 function buildRail(){
@@ -7861,13 +7903,23 @@ var DK_SVG={
   person:'<svg viewBox="0 0 46 38" aria-hidden="true"><rect x="5.5" y="2.5" width="35" height="33" rx="2"/><circle class="dk-ff" cx="23" cy="14" r="5.5"/><path class="dk-ff" d="M12.5 31.5c1.2-6.2 5.2-9.5 10.5-9.5s9.3 3.3 10.5 9.5z"/></svg>',
   conti:'<svg viewBox="0 0 46 38" aria-hidden="true"><rect x="4.5" y="2.5" width="37" height="33" rx="1.5"/><path class="dk-ff" d="M8 6h14v12H8z"/><path d="M25 6h13v12H25zM8 21h30v11H8z"/></svg>',
   doc:'<svg viewBox="0 0 46 38" aria-hidden="true"><path d="M10.5 1.5h19l7 7v28h-26z"/><path class="dk-ff" d="M29.5 1.5v7h7z"/><path class="ln" d="M15 14h16M15 19h16M15 24h16M15 29h10"/></svg>',
+  group:'<svg viewBox="0 0 46 38" aria-hidden="true"><path d="M2.5 6.5h14l4 4.5h22.5v24.5H2.5z"/><path class="dk-ff" d="M2.5 14h41v21.5h-41z"/><path class="ln" d="M10 19.5h7v5h-7zM20 19.5h7v5h-7zM30 19.5h6v5h-6zM10 27.5h7v4h-7zM20 27.5h7v4h-7z"/></svg>',
+  page:'<svg viewBox="0 0 46 38" aria-hidden="true"><path d="M11.5 1.5h23v35h-23z"/><path class="dk-ff" d="M11.5 1.5h23v8h-23z"/><path class="ln" d="M16 15h14M16 20h14M16 25h14M16 30h9"/></svg>',
   trash:'<svg viewBox="0 0 46 38" aria-hidden="true"><path d="M11.5 8.5h23l-2.2 27.5H13.7z"/><path class="ln" d="M8.5 8.5h29M18.5 8.5V4.5h9v4"/><path class="ln" d="M18.5 14v17M23 14v17M27.5 14v17"/></svg>',
   trashFull:'<svg viewBox="0 0 46 38" aria-hidden="true"><path class="dk-ff" d="M14 5.5l7-3 4 3.5 6-2 2 4.5z"/><path d="M11.5 8.5h23l-2.2 27.5H13.7z"/><path class="ln" d="M8.5 8.5h29"/><path class="ln" d="M18.5 14v17M23 14v17M27.5 14v17"/></svg>'
 };
 function dkLoad(){ var o=null; try{ o=JSON.parse(localStorage.getItem('deskLayout')||'null'); }catch(e){}
   if(!o||typeof o!=='object') o={}; if(!o.pos||typeof o.pos!=='object') o.pos={}; return o; }
 function dkSave(L){ if(window.__stale) return; L.v=1; L.at=Date.now(); try{ localStorage.setItem('deskLayout', JSON.stringify(L)); }catch(e){} }
-function dkIds(){ return dkSC().map(function(x){ return x.id; }).concat(FOLDERS.map(function(f){ return 'f:'+f; })).concat(['s:trash']); }
+// 정보 페이지 묶음(g:갈래)과 꺼내 둔 페이지(p:id). 바로 가기가 있는 페이지는 묶음에서 뺀다
+var DK_SCP=['favs','cast','texts','conti'];
+function dkGroups(){ var gs=[]; PAGES.forEach(function(p){ if(DK_SCP.indexOf(p.id)<0 && gs.indexOf(p.g)<0) gs.push(p.g); }); return gs; }
+function dkGroupPages(g){ return PAGES.filter(function(p){ return p.g===g && DK_SCP.indexOf(p.id)<0; }); }
+function dkPage(id){ for(var i=0;i<PAGES.length;i++) if(PAGES[i].id===id) return PAGES[i]; return null; }
+function dkPins(){ var L=DK.L||dkLoad(); return (Array.isArray(L.pins)?L.pins:[]).filter(function(id){ return !!dkPage(id) && DK_SCP.indexOf(id)<0; }); }
+function dkLabel(id, def){ var L=DK.L||dkLoad(); return (L.names && L.names[id]) || def; }
+function dkIds(){ return dkSC().map(function(x){ return x.id; }).concat(dkGroups().map(function(g){ return 'g:'+g; })).concat(dkPins().map(function(p){ return 'p:'+p; }))
+  .concat(FOLDERS.map(function(f){ return 'f:'+f; })).concat(['s:trash']); }
 function dkCount(){ var c={}; Object.keys(FAV).forEach(function(k){ var f=FAVDIR[k]||'기본'; c[f]=(c[f]||0)+1; }); return c; }
 function dkName(k){ return String(k).slice(String(k).indexOf('|')+1); }
 function dkVisible(){ var h=document.getElementById('home'); return !!(h && h.classList.contains('page-on')); }
@@ -7890,15 +7942,17 @@ function dkPlace(cols, persist){
 function dkGrid(field){
   var w=field?field.clientWidth:0, real=w>0;
   if(real) DK.w=w; else w=DK.w||640;
-  var base=w<520?80:100, cols=Math.max(3, Math.floor(w/base));
-  return {w:w, real:real, cols:cols, cw:w/cols, ch:w<520?92:100};
+  var base=w<520?70:92, cols=Math.max(4, Math.floor(w/base));
+  return {w:w, real:real, cols:cols, cw:w/cols, ch:w<520?82:92};
 }
 function dkIcon(id, c, g, cnt){
   var f=id.indexOf('f:')===0?id.slice(2):null, sc=null, label, glyph, n=0, cls='dk-ic', aria;
   if(f!==null){ label=f; glyph=DK_SVG.folder; n=cnt[f]||0; if(f===CURFOLDER) cls+=' cur';
     aria='폴더 '+f+', 항목 '+n+'개'+(f===CURFOLDER?', 지금 폴더':''); }
   else if(id==='s:trash'){ label='휴지통'; glyph=DK.trash.length?DK_SVG.trashFull:DK_SVG.trash; n=DK.trash.length; aria='휴지통'; }
-  else { DK_SC.forEach(function(s){ if(s.id===id) sc=s; }); label=sc.t; glyph=DK_SVG[sc.g];
+  else if(id.indexOf('g:')===0){ label=dkLabel(id, id.slice(2)); glyph=DK_SVG.group; n=dkGroupPages(id.slice(2)).length; aria=label+' 페이지 묶음, '+n+'개'; }
+  else if(id.indexOf('p:')===0){ var pg=dkPage(id.slice(2)); label=dkLabel(id, pg?pg.t:id.slice(2)); glyph=DK_SVG.page; aria=label+' 열기'; }
+  else { DK_SC.forEach(function(s){ if(s.id===id) sc=s; }); label=dkLabel(id, sc.t); glyph=DK_SVG[sc.g];
     n=id==='s:favs'?Object.keys(FAV).length:(id==='s:cast'?dkRec('mangaCast'):(id==='s:texts'?dkRec('mangaTexts'):0)); aria=label+' 열기'; }
   if(DK.sel===id) cls+=' sel'; if(DK.open===id) cls+=' open';
   return '<div class="'+cls+'" data-id="'+wsEsc(id)+'" tabindex="0" role="button" aria-label="'+wsEsc(aria)+'" title="'+wsEsc(label)+'" style="left:'+(c[0]*g.cw).toFixed(1)+'px;top:'+(c[1]*g.ch)+'px;width:'+g.cw.toFixed(1)+'px;height:'+g.ch+'px">'+
@@ -7907,6 +7961,7 @@ function dkIcon(id, c, g, cnt){
 }
 function dkField(root){
   var field=root.querySelector('.dk-field'); if(!field) return;
+  DK.L=dkLoad();
   var g=dkGrid(field), P=dkPlace(g.cols, g.real||window.__dkForce), cnt=dkCount(), ids=dkIds(), maxR=0;
   DK.g=g; DK.disp=P.disp; DK.occ=P.occ;
   ids.forEach(function(id){ if(P.disp[id][1]>maxR) maxR=P.disp[id][1]; });
@@ -7915,14 +7970,119 @@ function dkField(root){
   field.style.height=(DK.rows*g.ch)+'px';
   field.style.backgroundSize=g.cw.toFixed(1)+'px '+g.ch+'px';
   field.style.backgroundPosition=(g.cw/2).toFixed(1)+'px '+(g.ch/2)+'px';
+  DK.L=dkLoad();
   field.innerHTML=ids.map(function(id){ return dkIcon(id, P.disp[id], g, cnt); }).join('')+'<div class="dk-slot" hidden></div>';
+  DK.L=null;
   if(foc){ var el=dkIconEl(field, foc); if(el) try{ el.focus({preventScroll:true}); }catch(e){} }
 }
 function dkIconEl(scope, id){ var r=null; [].slice.call(scope.querySelectorAll('.dk-ic')).forEach(function(x){ if(x.getAttribute('data-id')===id) r=x; }); return r; }
+function dkHead(t, sub){ return '<div class="dk-wh"><b>'+t+'</b>'+(sub?'<span class="small">'+sub+'</span>':'')+'<button class="chip dk-x" data-dk="close">닫기</button></div>'; }
+function dkCastAll(){ try{ return (typeof castAll==='function')?castAll():[]; }catch(e){ return []; } }
+function dkTexts(){ try{ return (typeof recList==='function')?recList('mangaTexts'):[]; }catch(e){ return []; } }
+var DK_FMT={plot:'줄거리', novel:'웹소설', cuts:'컷별 콘티'};
+function dkWhen(t){ if(!t) return ''; var d=new Date(t); return (d.getMonth()+1)+'/'+d.getDate(); }
+// 바로 가기·묶음을 눌렀을 때 보이는 내용
+function dkContent(id){
+  var h='';
+  if(id.indexOf('g:')===0){
+    var g=id.slice(2), ps=dkGroupPages(g), pins=dkPins();
+    h=dkHead(wsEsc(dkLabel(id,g)), '페이지 '+ps.length+'개')+'<div class="dk-wb"><ul class="dk-pgs">'+ps.map(function(p){
+      return '<li class="dk-pg" tabindex="0" role="link" data-p="'+wsEsc(p.id)+'"><b>'+wsEsc(p.t)+(pins.indexOf(p.id)>-1?' <i>바탕화면에 있음</i>':'')+'</b><span>'+wsEsc(p.d||'')+'</span></li>'; }).join('')+'</ul></div>'+
+      '<p class="dk-hint">누르면 페이지를 연다. 길게 누르면 바탕화면에 따로 꺼내 둘 수 있다.</p>';
+    return h;
+  }
+  if(id==='s:favs'){
+    var cnt=dkCount();
+    h=dkHead(wsEsc(dkLabel(id,'즐겨찾기')), '★ '+Object.keys(FAV).length+'개 · 폴더 '+FOLDERS.length+'개')+'<div class="dk-wb"><ul class="dk-rows">'+FOLDERS.map(function(f){
+      return '<li class="dk-row" data-dk="openf" data-f="'+wsEsc(f)+'"><b>📁 '+wsEsc(f)+'</b><span>'+(cnt[f]||0)+'개'+(f===CURFOLDER?' · 지금 폴더':'')+'</span></li>'; }).join('')+'</ul></div>'+
+      '<div class="dk-wt" style="padding-bottom:.6rem"><button class="chip" data-dk="go" data-h="favs">즐겨찾기 페이지 열기</button></div>';
+    return h;
+  }
+  if(id==='s:cast'){
+    var all=dkCastAll(), byF={}, fs=[];
+    all.forEach(function(m){ var f=m.folder||'기본'; if(!byF[f]){ byF[f]=[]; fs.push(f); } byF[f].push(m); });
+    h=dkHead(wsEsc(dkLabel(id,'등장인물')), all.length+'명')+'<div class="dk-wb">'+(all.length?fs.map(function(f){
+      return '<div class="dk-sub">'+wsEsc(f)+' · '+byF[f].length+'명</div><ul class="dk-rows">'+byF[f].map(function(m){
+        return '<li class="dk-row" data-dk="castgo" data-id="'+wsEsc(m.id)+'"><b>'+wsEsc(m.name||'(이름 없음)')+'</b>'+(m.role?'<em>'+wsEsc(m.role)+'</em>':'')+'<span>'+wsEsc(m.desc||'')+'</span></li>'; }).join('')+'</ul>'; }).join('')
+      :'<p class="dk-empty">아직 인물이 없다.</p>')+'</div><div class="dk-wt" style="padding-bottom:.6rem"><button class="chip" data-dk="go" data-h="cast">등장인물 페이지 열기</button></div>';
+    return h;
+  }
+  if(id==='s:texts'){
+    var ts=dkTexts().sort(function(a,b){ return (b.at||0)-(a.at||0); }), c={plot:0,novel:0,cuts:0};
+    ts.forEach(function(t){ if(c[t.fmt]!=null) c[t.fmt]++; });
+    h=dkHead(wsEsc(dkLabel(id,'글 보관함')), '줄거리 '+c.plot+' · 웹소설 '+c.novel+' · 컷별 '+c.cuts)+'<div class="dk-wb">'+(ts.length?'<ul class="dk-rows">'+ts.slice(0,10).map(function(t){
+      return '<li class="dk-row" data-dk="txgo" data-id="'+wsEsc(t.id)+'"><em>'+(DK_FMT[t.fmt]||'')+'</em><b>'+wsEsc(String(t.title||'').slice(0,40))+'</b><span>'+dkWhen(t.at)+'</span></li>'; }).join('')+'</ul>'
+      :'<p class="dk-empty">아직 모아 둔 글이 없다.</p>')+'</div><div class="dk-wt" style="padding-bottom:.6rem"><button class="chip" data-dk="go" data-h="texts">글 보관함 열기</button></div>';
+    return h;
+  }
+  return '';
+}
+// 길게 눌렀을 때: 간단히 바꿀 수 있는 정보
+function dkInfoHTML(){
+  var I=DK.info, b='', t='', sub='정보';
+  function row(lab, html){ return '<div class="dk-fr"><span>'+lab+'</span>'+html+'</div>'; }
+  function lbl(id, def){ return row('표시 이름','<input type="text" class="dk-ilbl" maxlength="20" value="'+wsEsc(dkLabel(id,def))+'"><button class="chip" data-dk="ilbl">바꾸기</button>'+
+    (dkLabel(id,def)!==def?'<button class="chip" data-dk="ilblreset">처음 이름으로</button>':'')); }
+  function ck(k, on, lab){ return '<label class="dk-fr"><input type="checkbox" data-dkc="'+k+'"'+(on?' checked':'')+'> '+lab+'</label>'; }
+  function fsel(k, cur, list){ return '<select data-dkc="'+k+'">'+list.map(function(f){ return '<option'+(f===cur?' selected':'')+' value="'+wsEsc(f)+'">'+wsEsc(f)+'</option>'; }).join('')+'</select>'; }
+  if(I.kind==='item'){
+    var k=I.k; if(!FAV[k]) return null;
+    var ty=k.split('|')[0]; t=wsEsc(dkName(k));
+    b=row('종류', wsEsc(LABELS[ty]||ty))+(FAVMETA[k]?row('메모','<span class="dk-note">'+wsEsc(FAVMETA[k])+'</span>'):'')+
+      row('폴더', fsel('mvf', FAVDIR[k]||'기본', FOLDERS))+'<div class="dk-fr"><button class="chip" data-dk="unstar">별표 빼기</button></div>';
+  } else if(I.kind==='page'){
+    var pg=dkPage(I.p); if(!pg) return null; var pinned=dkPins().indexOf(pg.id)>-1;
+    t=wsEsc(pg.t); b='<div class="dk-note">'+wsEsc(pg.d||'')+'</div><div class="dk-fr"><button class="chip" data-dk="go" data-h="'+wsEsc(pg.id)+'">열기</button>'+
+      '<button class="chip" data-dk="'+(pinned?'unpin':'pin')+'" data-p="'+wsEsc(pg.id)+'">'+(pinned?'바탕화면에서 빼기':'바탕화면에 꺼내기')+'</button></div>';
+  } else {
+    var id=I.id;
+    if(id.indexOf('f:')===0){
+      var f=id.slice(2); if(FOLDERS.indexOf(f)<0) return null; var memo=''; try{ memo=String(fmGet(f)||''); }catch(e){}
+      t='📁 '+wsEsc(f); sub=(dkCount()[f]||0)+'개'+(f===CURFOLDER?' · 지금 폴더':'');
+      b=(f==='기본'?'':row('이름','<input type="text" class="dk-iren" maxlength="30" value="'+wsEsc(f)+'"><button class="chip" data-dk="iren">바꾸기</button><span class="dk-err"></span>'))+
+        '<div class="dk-fr" style="display:block"><span style="display:block;margin-bottom:.2rem">폴더 메모</span><textarea class="dk-imemo" rows="3" placeholder="이 폴더에 대한 메모">'+wsEsc(memo)+'</textarea><span class="dk-ok"></span></div>'+
+        '<div class="dk-fr"><button class="chip" data-dk="iuse"'+(f===CURFOLDER?' disabled':'')+'>'+(f===CURFOLDER?'지금 폴더':'지금 폴더로')+'</button><button class="chip" data-dk="iopen">열기</button>'+
+        (f==='기본'?'':'<button class="chip" data-dk="idel"'+(DK.infoArm?' data-arm="1"':'')+'>'+(DK.infoArm?'한 번 더 누르면 삭제 (항목·메모까지)':'삭제')+'</button>')+'</div>';
+    } else if(id.indexOf('g:')===0){
+      var g=id.slice(2), ps=dkGroupPages(g); t=wsEsc(dkLabel(id,g)); sub='페이지 '+ps.length+'개';
+      b=lbl(id,g)+'<div class="dk-note">'+ps.map(function(p){ return wsEsc(p.t); }).join(' · ')+'</div><div class="dk-fr"><button class="chip" data-dk="iopen">열기</button></div>';
+    } else if(id.indexOf('p:')===0){
+      var pp=dkPage(id.slice(2)); if(!pp) return null; t=wsEsc(dkLabel(id,pp.t));
+      b=lbl(id,pp.t)+'<div class="dk-note">'+wsEsc(pp.d||'')+'</div><div class="dk-fr"><button class="chip" data-dk="go" data-h="'+wsEsc(pp.id)+'">열기</button><button class="chip" data-dk="unpin" data-p="'+wsEsc(pp.id)+'">바탕화면에서 빼기</button></div>';
+    } else if(id==='s:favs'){
+      t=wsEsc(dkLabel(id,'즐겨찾기')); sub='★ '+Object.keys(FAV).length+'개';
+      b=lbl(id,'즐겨찾기')+row('담는 곳', fsel('curf', CURFOLDER, FOLDERS))+
+        (typeof fpCfg==='function'?ck('favpick', fpCfg().on, '구성기에서 즐겨찾기 먼저 뽑기'):'');
+    } else if(id==='s:cast'){
+      var ca=dkCastAll(); t=wsEsc(dkLabel(id,'등장인물')); sub=ca.length+'명';
+      var cf=(typeof castFolders==='function')?castFolders():['기본'], cd=(typeof castDef==='function')?castDef():'기본', au=(typeof castAutoOn==='function')?castAutoOn():false;
+      b=lbl(id,'등장인물')+ck('castauto', au, '글이 완성되면 새 인물을 자동으로 넣기')+row('넣을 폴더', fsel('castdef', cd, cf));
+    } else if(id==='s:texts'){
+      var ts=dkTexts(); t=wsEsc(dkLabel(id,'글 보관함')); sub=ts.length+'편';
+      b=lbl(id,'글 보관함')+ck('textsauto', (typeof txAuto==='function')?txAuto():true, '구성기에서 쓴 글 자동 저장');
+    } else if(id==='s:conti'){
+      t=wsEsc(dkLabel(id,'콘티 구성기')); b=lbl(id,'콘티 구성기')+'<div class="dk-fr"><button class="chip" data-dk="go" data-h="conti">열기</button></div>';
+    } else if(id==='s:trash'){
+      t='휴지통'; sub=DK.trash.length+'개';
+      b='<div class="dk-note">끌어 놓아 지운 것이 여기 남는다. 새로고침하면 목록은 비워진다(지운 것은 그대로).</div><div class="dk-fr"><button class="chip" data-dk="iopen">열기</button>'+
+        (DK.trash.length?'<button class="chip" data-dk="trclear">목록 비우기</button>':'')+'</div>';
+    } else return null;
+  }
+  return '<div class="dk-wh"><b>'+t+'</b><span class="small">'+sub+'</span><button class="chip dk-x" data-dk="close">닫기</button></div><div class="dk-info">'+b+'</div>'+
+    '<p class="dk-hint">길게 누르면 이 창이 뜬다. 누르면 연다.</p>';
+}
 function dkWin(root){
   var win=root.querySelector('.dk-win'); if(!win) return;
+  if(DK.info){ var ih=dkInfoHTML(); if(ih===null){ DK.info=null; } else {
+    var ta=win.querySelector('.dk-imemo'), tf=!!(ta && document.activeElement===ta);
+    win.innerHTML=ih; win.hidden=false; win.setAttribute('data-mode','info');
+    if(tf){ var t2=win.querySelector('.dk-imemo'); if(t2) try{ t2.value=ta.value; t2.focus(); }catch(e){} }
+    return; } }
+  win.removeAttribute('data-mode');
   var id=DK.open;
   if(!id){ win.hidden=true; win.innerHTML=''; return; }
+  var ct=(id.indexOf('g:')===0 || id==='s:favs' || id==='s:cast' || id==='s:texts')?dkContent(id):'';
+  if(ct){ win.innerHTML=ct; win.hidden=false; return; }
   var ri=win.querySelector('.dk-ren input'), rv=ri?ri.value:null, rf=!!(ri && document.activeElement===ri), html='';
   if(id==='s:trash'){
     html='<div class="dk-wh"><b>휴지통</b><span class="small">'+DK.trash.length+'개</span><button class="chip dk-x" data-dk="close">닫기</button></div><div class="dk-wb">';
@@ -7961,15 +8121,20 @@ function dkAskBox(root){
   a.hidden=false;
 }
 function dkShell(root){
-  root.innerHTML='<div class="dk"><div class="dk-bar"><h3>바탕화면</h3><span class="dk-tip">아이콘을 끌어 자리를 옮긴다. 폴더를 열고 항목을 다른 폴더나 휴지통으로 끌어 놓는다.</span><button class="chip" data-dk="new">새 폴더</button></div>'+
+  root.innerHTML='<div class="dk"><div class="dk-bar"><h3>바탕화면</h3><span class="dk-tip">누르면 연다. 길게 누르면 정보를 고친다. 끌어서 자리를 옮기고, 항목은 다른 폴더나 휴지통에 놓는다.</span><button class="chip" data-dk="new">새 폴더</button></div>'+
     '<div class="dk-new" hidden><input type="text" maxlength="30" placeholder="새 폴더 이름" aria-label="새 폴더 이름"><button class="chip" data-dk="mk">만들기</button><button class="chip" data-dk="nocancel">취소</button><span class="dk-err"></span></div>'+
     '<div class="dk-ask" hidden></div><div class="dk-field" role="group" aria-label="바탕화면 아이콘"></div><div class="dk-win" hidden></div></div>';
   root._dk=1;
   root.addEventListener('pointerdown', dkDown);
   root.addEventListener('click', dkClick);
-  root.addEventListener('dblclick', function(e){ var ic=e.target.closest&&e.target.closest('.dk-ic'); if(ic && !e.target.closest('.dk-ghost')) dkOpen(ic.getAttribute('data-id')); });
   root.addEventListener('keydown', dkKey);
-  root.addEventListener('contextmenu', function(e){ if((DK.drag || DK.lastType==='touch') && e.target.closest && e.target.closest('.dk-ic,.dk-it')) e.preventDefault(); });
+  root.addEventListener('change', dkChange);
+  root.addEventListener('input', dkInput);
+  root.addEventListener('contextmenu', function(e){
+    var el=e.target.closest && e.target.closest('.dk-field .dk-ic, .dk-win .dk-it[data-k], .dk-win .dk-pg[data-p]'); if(!el) return;
+    e.preventDefault(); if(DK.drag) return;
+    if(DK.lastType==='touch' && Date.now()-DK.noClick<800) return;   // 길게 누르기로 이미 열었다
+    dkInfoOf(el); });
 }
 function dkRender(){
   var root=document.getElementById('desk-root'); if(!root) return;
@@ -7983,7 +8148,9 @@ function dkRender(){
 }
 function dkSoon(){ if(!dkVisible()){ DK.dirty=true; return; } if(DK.t) return; DK.t=setTimeout(function(){ DK.t=0; dkRender(); },0); }
 // 화면 위에 붙어 있는 줄(.topbar 등)의 아래 끝
-function dkInset(){ var b=0; [].slice.call(document.querySelectorAll('.topbar,.verbar')).forEach(function(el){ try{ var r=el.getBoundingClientRect(); if(r.height && r.top<=1 && r.bottom>b) b=r.bottom; }catch(e){} }); return b; }
+function dkInset(){ var b=0; [].slice.call(document.querySelectorAll('.topbar,.verbar')).forEach(function(el){ try{ var r=el.getBoundingClientRect(); if(!r.height) return;
+  var cs=getComputedStyle(el), pos=cs.position, v=(r.top<=1)?r.bottom:((pos==='sticky'||pos==='fixed')?(parseFloat(cs.top)||0)+r.height:0);   // 아직 붙기 전이어도 붙을 높이를 잰다
+  if(v>b) b=v; }catch(e){} }); return b; }
 function dkScroll(v){ try{ window.scrollBy({top:v, left:0, behavior:'instant'}); }catch(e){ try{ window.scrollBy(0,v); }catch(e2){} } }
 function dkRoot(){ return document.getElementById('desk-root'); }
 // ----- 알림 -----
@@ -8083,11 +8250,24 @@ function dkRename(old, nw){
 }
 function dkUse(f){ if(FOLDERS.indexOf(f)<0) return; CURFOLDER=f; foldSave(); fillFolderSelects(); dkAfterFav(); if(typeof fmRender==='function') fmRender(); dkRender(); }
 function dkView(f){ fillFolderSelects(); var v=document.getElementById('fav-view'); if(v) v.value=f; location.hash='#favs'; }
+function dkInfoOf(el){
+  var I=el.classList.contains('dk-ic')?{kind:'icon', id:el.getAttribute('data-id')}:(el.classList.contains('dk-pg')?{kind:'page', p:el.getAttribute('data-p')}:{kind:'item', k:el.getAttribute('data-k')});
+  dkInfo(I);
+}
+function dkInfo(I){ DK.info=I; DK.infoArm=false; if(I.kind==='icon') DK.sel=I.id; dkRender(); dkReveal(); }
+function dkReveal(){
+  var r=dkRoot(), w=r&&r.querySelector('.dk-win'), fl=r&&r.querySelector('.dk-field');
+  if(w && fl && w.getBoundingClientRect) try{ var wr=w.getBoundingClientRect(), fr=fl.getBoundingClientRect(), vh=window.innerHeight||800;
+    var top=dkInset()+8; if(fr.height && wr.height && (wr.bottom>vh || fr.top<top)) dkScroll(Math.min(fr.top, wr.top)-top); }catch(e){}
+}
+function dkGo(h){ location.hash='#'+h; }
 function dkOpen(id){
   if(!id) return;
-  if(id.indexOf('s:')===0 && id!=='s:trash'){ DK_SC.forEach(function(s){ if(s.id===id) location.hash='#'+s.h; }); return; }
+  if(id==='s:conti'){ dkGo('conti'); return; }
+  if(id.indexOf('p:')===0){ dkGo(id.slice(2)); return; }
+  if(DK.open===id && !DK.info && Date.now()-(DK.openAt||0)>450){ DK.open=null; DK.ren=false; DK.delArm=false; dkRender(); return; }   // 다시 누르면 닫는다
   if(DK.open!==id){ DK.ren=false; DK.delArm=false; }
-  DK.open=id; DK.sel=id; dkRender();
+  DK.info=null; DK.open=id; DK.sel=id; DK.openAt=Date.now(); dkRender();
   // 창이 화면 밖이면 바탕화면 맨 위를 화면 위에 맞춘다 (아이콘과 창이 함께 보여야 끌어 놓을 수 있다)
   var r=dkRoot(), w=r&&r.querySelector('.dk-win'), fl=r&&r.querySelector('.dk-field');
   if(w && fl && w.getBoundingClientRect) try{ var wr=w.getBoundingClientRect(), fr=fl.getBoundingClientRect(), vh=window.innerHeight||800;
@@ -8096,12 +8276,36 @@ function dkOpen(id){
 function dkSelect(id){ DK.sel=id; var r=dkRoot(); if(!r) return; [].slice.call(r.querySelectorAll('.dk-field .dk-ic')).forEach(function(x){ x.classList.toggle('sel', x.getAttribute('data-id')===id); }); }
 function dkClick(e){
   var b=e.target.closest && e.target.closest('[data-dk]'), root=dkRoot(); if(!root) return;
+  if(Date.now()-(DK.lpAt||0)<600){ e.preventDefault(); return; }   // 길게 누른 뒤 따라오는 클릭이 새로 뜬 창의 버튼을 누르지 않게
   if(b){ var a=b.getAttribute('data-dk'), f=DK.open&&DK.open.indexOf('f:')===0?DK.open.slice(2):null;
     var ni=root.querySelector('.dk-new input'), ne=root.querySelector('.dk-new .dk-err');
     if(a==='new'){ DK.newOn=!DK.newOn; root.querySelector('.dk-new').hidden=!DK.newOn; if(ne) ne.textContent=''; if(DK.newOn && ni){ ni.value=''; try{ ni.focus(); }catch(er){} } return; }
     if(a==='mk'){ var m=dkNew(ni?ni.value:''); if(m){ if(ne) ne.textContent=m; } else { if(ni) ni.value=''; if(ne) ne.textContent=''; } return; }
     if(a==='nocancel'){ DK.newOn=false; root.querySelector('.dk-new').hidden=true; return; }
-    if(a==='close'){ DK.open=null; DK.ren=false; DK.delArm=false; dkRender(); return; }
+    if(a==='close'){ if(DK.info){ DK.info=null; dkRender(); return; } DK.open=null; DK.ren=false; DK.delArm=false; dkRender(); return; }
+    if(a==='go'){ dkGo(b.getAttribute('data-h')); return; }
+    if(a==='openf'){ dkOpen('f:'+b.getAttribute('data-f')); return; }
+    if(a==='castgo'){ var cid=b.getAttribute('data-id');
+      try{ if(typeof CP!=='undefined'){ CP.open[cid]=1; } if(typeof castLs==='function') castLs('castView',''); }catch(er){}
+      dkGo('cast'); setTimeout(function(){ var c=document.querySelector('#cast-list .cast-card[data-id="'+cid+'"]'); if(c) try{ c.scrollIntoView({block:'start'}); }catch(er){} },120); return; }
+    if(a==='txgo'){ var tid=b.getAttribute('data-id'); dkGo('texts'); setTimeout(function(){ if(typeof txGo==='function') txGo(tid); },120); return; }
+    if(a==='pin' || a==='unpin'){ var pid=b.getAttribute('data-p'), L=dkLoad(), pins=Array.isArray(L.pins)?L.pins.slice():[];
+      if(a==='pin'){ if(pins.indexOf(pid)<0) pins.push(pid); } else { pins=pins.filter(function(x){ return x!==pid; }); delete L.pos['p:'+pid]; if(L.names) delete L.names['p:'+pid]; }
+      L.pins=pins; dkSave(L); var pg=dkPage(pid);
+      if(a==='unpin' && DK.info && DK.info.kind==='icon') DK.info=null; else if(DK.info) DK.info={kind:'page', p:pid};
+      dkRender(); dkToast(a==='pin'?'「'+(pg?pg.t:pid)+'」을(를) 바탕화면에 꺼냈다':'바탕화면에서 뺐다 (페이지 묶음에는 그대로 있다)'); return; }
+    if(a==='ilbl' || a==='ilblreset'){ var iid=DK.info&&DK.info.id; if(!iid) return; var inp=root.querySelector('.dk-ilbl'), L2=dkLoad(); L2.names=L2.names||{};
+      var nv=a==='ilbl'?String(inp&&inp.value||'').trim().slice(0,20):''; if(nv) L2.names[iid]=nv; else delete L2.names[iid]; dkSave(L2); dkRender(); return; }
+    if(a==='iren'){ var of=DK.info&&DK.info.id?DK.info.id.slice(2):'', ri2=root.querySelector('.dk-iren'), nv2=String(ri2&&ri2.value||'').trim();
+      var er=dkRename(of, nv2); if(er){ var ee=root.querySelector('.dk-info .dk-err'); if(ee) ee.textContent=er; return; }
+      if(nv2 && nv2!==of){ DK.info={kind:'icon', id:'f:'+nv2}; dkRender(); dkToast('「'+of+'」 → 「'+nv2+'」'); } return; }
+    if(a==='iuse'){ dkUse(DK.info.id.slice(2)); return; }
+    if(a==='iopen'){ var oid=DK.info.id; DK.info=null; DK.open=null; dkOpen(oid); return; }
+    if(a==='idel'){ var df=DK.info.id.slice(2);
+      if(!DK.infoArm){ DK.infoArm=true; dkRender(); clearTimeout(DK.iaT); DK.iaT=setTimeout(function(){ if(DK.infoArm){ DK.infoArm=false; dkRender(); } },4000); return; }
+      DK.infoArm=false; DK.info=null; dkDelFolder(df); return; }
+    if(a==='unstar'){ var uk=DK.info&&DK.info.k; DK.info=null; if(uk) dkTrashItem(uk); dkRender(); return; }
+    if(a==='trclear'){ DK.trash=[]; dkRender(); return; }
     if(a==='restore'){ var t=DK.trash[+b.getAttribute('data-i')]; if(t) t.undo(); dkRender(); return; }
     if(a==='askyes'){ if(DK.ask) dkDelFolder(DK.ask); return; }
     if(a==='askno'){ DK.ask=null; dkRender(); return; }
@@ -8117,16 +8321,38 @@ function dkClick(e){
     return;
   }
   if(Date.now()-DK.noClick<450) return;
+  var pg=e.target.closest && e.target.closest('.dk-win .dk-pg[data-p]');
+  if(pg){ dkGo(pg.getAttribute('data-p')); return; }
   var ic=e.target.closest && e.target.closest('.dk-field .dk-ic');
-  if(ic){ var id=ic.getAttribute('data-id'); if(DK.lastType==='touch') dkOpen(id); else dkSelect(id); return; }
+  if(ic){ dkOpen(ic.getAttribute('data-id')); return; }
   if(e.target.closest && e.target.closest('.dk-field')) dkSelect(null);
+}
+function dkChange(e){
+  var el=e.target, k=el.getAttribute && el.getAttribute('data-dkc'); if(!k) return;
+  if(k==='mvf'){ var ik=DK.info&&DK.info.k; if(ik) dkMoveItem(ik, el.value); dkRender(); return; }
+  if(k==='curf'){ dkUse(el.value); return; }
+  if(k==='favpick'){ if(typeof fpCfgSave==='function'){ fpCfgSave({on:!!el.checked}); if(typeof fpRefresh==='function') try{ fpRefresh(); }catch(er){} } return; }
+  if(k==='castauto'){ if(typeof castLs==='function') castLs('castAuto', el.checked?'1':'0'); if(typeof castRefresh==='function') castRefresh(); return; }
+  if(k==='castdef'){ if(typeof castLs==='function') castLs('castDef', el.value); if(typeof castRefresh==='function') castRefresh(); return; }
+  if(k==='textsauto'){ try{ localStorage.setItem('textsAuto', el.checked?'1':'0'); }catch(er){} return; }
+}
+function dkInput(e){
+  var el=e.target; if(!el.classList || !el.classList.contains('dk-imemo') || !DK.info) return;
+  var f=DK.info.id.slice(2), ok=el.parentNode.querySelector('.dk-ok');
+  clearTimeout(DK.memoT); DK.memoT=setTimeout(function(){ try{ fmSet(f, el.value); if(typeof fmRender==='function') fmRender(); if(ok){ ok.textContent='저장됨'; setTimeout(function(){ ok.textContent=''; },1200); } }catch(er){} },500);
 }
 function dkKey(e){
   var root=dkRoot(); if(!root) return;
   var t=e.target;
   if(t.matches && t.matches('.dk-new input')){ if(e.key==='Enter'){ e.preventDefault(); root.querySelector('[data-dk="mk"]').click(); } else if(e.key==='Escape'){ DK.newOn=false; root.querySelector('.dk-new').hidden=true; } return; }
   if(t.matches && t.matches('.dk-ren input')){ if(e.key==='Enter'){ e.preventDefault(); root.querySelector('[data-dk="rendo"]').click(); } else if(e.key==='Escape'){ DK.ren=false; dkRender(); } return; }
-  if(e.key==='Escape'){ if(DK.drag){ dkEnd(); return; } if(DK.ask){ DK.ask=null; dkRender(); return; } if(DK.open){ DK.open=null; dkRender(); } return; }
+  if(e.key==='Escape'){ if(DK.drag){ dkEnd(); return; } if(DK.ask){ DK.ask=null; dkRender(); return; } if(DK.info){ DK.info=null; dkRender(); return; } if(DK.open){ DK.open=null; dkRender(); } return; }
+  if(t.matches && t.matches('.dk-ilbl') && e.key==='Enter'){ e.preventDefault(); var lb=root.querySelector('[data-dk="ilbl"]'); if(lb) lb.click(); return; }
+  if(t.matches && t.matches('.dk-iren') && e.key==='Enter'){ e.preventDefault(); var rb=root.querySelector('[data-dk="iren"]'); if(rb) rb.click(); return; }
+  var ie=t.closest && t.closest('.dk-ic, .dk-it[data-k], .dk-pg[data-p]');
+  if(ie && (e.key==='ContextMenu' || (e.key==='F10' && e.shiftKey))){ e.preventDefault(); dkInfoOf(ie); return; }
+  var pgk=t.closest && t.closest('.dk-pg[data-p]');
+  if(pgk && (e.key==='Enter' || e.key===' ')){ e.preventDefault(); dkGo(pgk.getAttribute('data-p')); return; }
   var ic=t.closest && t.closest('.dk-ic');
   if(ic && (e.key==='Enter' || e.key===' ')){ e.preventDefault(); dkOpen(ic.getAttribute('data-id')); return; }
   var it=t.closest && t.closest('.dk-it[data-k]');
@@ -8134,16 +8360,16 @@ function dkKey(e){
 }
 // ----- 끌어 놓기 (마우스·터치 공통 Pointer Events, 터치는 길게 눌러야 시작) -----
 function dkDown(e){
-  var el=e.target.closest && e.target.closest('.dk-field .dk-ic, .dk-win .dk-it[data-k]');
+  var el=e.target.closest && e.target.closest('.dk-field .dk-ic, .dk-win .dk-it[data-k], .dk-win .dk-pg[data-p]');
   DK.lastType=e.pointerType||'mouse';
   if(!el || (e.target.closest('button,input,select,textarea'))) return;
   if(DK.lastType==='mouse' && e.button!==0) return;
   if(DK.drag) dkEnd();
-  var D={el:el, kind:el.classList.contains('dk-ic')?'icon':'item', id:el.getAttribute('data-id'), k:el.getAttribute('data-k'),
+  var D={el:el, kind:el.classList.contains('dk-ic')?'icon':(el.classList.contains('dk-pg')?'page':'item'), id:el.getAttribute('data-id'), k:el.getAttribute('data-k'), p:el.getAttribute('data-p'),
     x0:e.clientX, y0:e.clientY, x:e.clientX, y:e.clientY, pid:e.pointerId, touch:DK.lastType==='touch', started:false};
   if(!D.touch){ e.preventDefault(); try{ el.focus({preventScroll:true}); }catch(er){} }
   DK.drag=D;
-  if(D.touch) D.timer=setTimeout(function(){ if(DK.drag===D && !D.started) dkStart(D); },300);
+  D.timer=setTimeout(function(){ if(DK.drag===D && !D.started){ D.armed=true; D.el.classList.add('dk-armed'); if(D.touch && navigator.vibrate) try{ navigator.vibrate(10); }catch(er){} } }, D.touch?450:550);
   document.addEventListener('pointermove', dkMove, true);
   document.addEventListener('pointerup', dkUp, true);
   document.addEventListener('pointercancel', dkCancel, true);
@@ -8182,8 +8408,9 @@ function dkMove(e){
   D.x=e.clientX; D.y=e.clientY;
   var d=Math.abs(D.x-D.x0)+Math.abs(D.y-D.y0);
   if(!D.started){
-    if(D.touch){ if(d>10) dkEnd(); return; }   // 길게 누르기 전에 움직이면 스크롤로 본다
-    if(d>5) dkStart(D); else return;
+    if(D.touch && !D.armed){ if(d>10) dkEnd(); return; }   // 길게 누르기 전에 움직이면 스크롤로 본다
+    if(D.kind==='page'){ if(d>10){ dkEnd(); } return; }      // 페이지 칸은 끌지 않는다
+    if(d>(D.touch?8:5)) dkStart(D); else return;
   }
   e.preventDefault(); dkGhost(D); dkHit(D);
 }
@@ -8208,19 +8435,21 @@ function dkHit(D){
 }
 function dkUp(e){
   var D=DK.drag; if(!D || e.pointerId!==D.pid) return;
-  if(!D.started){ dkEnd(); return; }
+  if(!D.started){ var armed=D.armed; dkEnd(); if(armed){ DK.noClick=DK.lpAt=Date.now(); dkInfoOf(D.el); } return; }
   D.x=e.clientX; D.y=e.clientY; dkHit(D);
   var target=D.target, cell=D.cell;
   dkEnd(true); DK.noClick=Date.now();
   dkDrop(D, target, cell);
 }
-function dkCancel(e){ var D=DK.drag; if(!D || e.pointerId!==D.pid) return; dkEnd(); }
+function dkCancel(e){ var D=DK.drag; if(!D || e.pointerId!==D.pid) return;
+  if(D.armed && !D.started){ dkEnd(); DK.noClick=DK.lpAt=Date.now(); dkInfoOf(D.el); return; }   // 길게 누르면 브라우저가 누르기를 취소한다 → 정보
+  dkEnd(); }
 function dkEnd(keep){
   var D=DK.drag; if(!D) return;
   clearTimeout(D.timer); if(DK.af && window.cancelAnimationFrame) cancelAnimationFrame(DK.af); DK.af=0;
   if(D.ghost && D.ghost.parentNode) D.ghost.parentNode.removeChild(D.ghost);
   if(D.target) D.target.classList.remove('dk-drop');
-  D.el.classList.remove('dk-lift'); document.body.classList.remove('dk-drag');
+  D.el.classList.remove('dk-lift'); D.el.classList.remove('dk-armed'); document.body.classList.remove('dk-drag');
   var root=dkRoot(), slot=root&&root.querySelector('.dk-slot'); if(slot) slot.hidden=true;
   if(D.grew && DK.g){ DK.rows--; var fl=root&&root.querySelector('.dk-field'); if(fl) fl.style.height=(DK.rows*DK.g.ch)+'px'; }
   document.removeEventListener('pointermove', dkMove, true);
@@ -8257,7 +8486,7 @@ function dkSwap(a, b){
   var L=dkLoad(); L.pos[a]=[pb[0],pb[1]]; L.pos[b]=[pa[0],pa[1]]; dkSave(L); DK.sel=a; dkRender();
 }
 // 터치로 끄는 중에는 화면이 스크롤되지 않게
-document.addEventListener('touchmove', function(e){ if(DK.drag && DK.drag.started && e.cancelable) e.preventDefault(); }, {passive:false});
+document.addEventListener('touchmove', function(e){ if(DK.drag && (DK.drag.started || DK.drag.armed) && e.cancelable) e.preventDefault(); }, {passive:false});
 document.addEventListener('selectstart', function(e){ if(DK.drag && DK.drag.started) e.preventDefault(); });
 document.addEventListener('keydown', function(e){ if(e.key==='Escape' && DK.drag) dkEnd(); });
 window.addEventListener('resize', function(){ clearTimeout(DK.rz); DK.rz=setTimeout(function(){
@@ -8272,7 +8501,7 @@ window.addEventListener('resize', function(){ clearTimeout(DK.rz); DK.rz=setTime
   window.PAGE_ON=window.PAGE_ON||{}; var ph=window.PAGE_ON.home; window.PAGE_ON.home=function(){ if(ph) try{ ph(); }catch(e){} dkRender(); };
 })();
 window.__deskRender=dkRender;
-window.__desk={DK:DK, load:dkLoad, place:dkPlace, moveItem:dkMoveItem, trashItem:dkTrashItem, delFolder:dkDelFolder, rename:dkRename, mk:dkNew, use:dkUse, open:dkOpen, swap:dkSwap, moveIcon:dkMoveIcon};
+window.__desk={DK:DK, info:dkInfo, ids:dkIds, load:dkLoad, place:dkPlace, moveItem:dkMoveItem, trashItem:dkTrashItem, delFolder:dkDelFolder, rename:dkRename, mk:dkNew, use:dkUse, open:dkOpen, swap:dkSwap, moveIcon:dkMoveIcon};
 dkRender();
 // [[/MOD:desk]]
 // ===== 콘티 구성기 (2026-10) =====
