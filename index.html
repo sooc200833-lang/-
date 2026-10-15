@@ -379,6 +379,7 @@ tr.twrow td{background:var(--paper-2); font-size:.86rem; line-height:1.7; white-
 .synclink{display:inline-flex; align-items:center; gap:.25rem; text-decoration:none; border:1px solid var(--rule-hard);
   padding:.28rem .45rem; color:var(--ink-2); background:var(--paper-2); white-space:nowrap}
 .synclink i{font-style:normal; font-size:.72rem; color:var(--ink-3)}
+button.synclink{font:inherit; cursor:pointer}
 .synclink.ok i{color:var(--green)} .synclink.busy i{color:var(--note)} .synclink.warn i{color:var(--mark)}
 .gdrow{display:flex; gap:.5rem; align-items:center; padding:.3rem 0; border-bottom:1px solid var(--rule); font-size:.84rem}
 .gdrow:last-child{border-bottom:0}
@@ -601,6 +602,7 @@ details.gdet[open] summary{margin-bottom:.5rem}
 </header>
 
 <div class="topbar"><label for="pagesel">페이지</label><select id="pagesel"></select><label for="topfolder" class="tf">담는 곳</label><select id="topfolder"></select><label class="trainbtn"><input type="checkbox" id="tr-on"> 트레이닝</label>
+<button class="synclink airef" id="ai-refresh" type="button" title="AI 새로고침 — 키·모델 다시 읽기, 막힘 표시 풀기, 연결 확인">🔄<i id="ai-ref-st">AI</i></button>
 <a class="synclink" id="sync-dot" href="#favs" title="드라이브 동기화">☁<i id="sync-st">꺼짐</i></a>
 <a class="favlink" href="#favs" title="즐겨찾기"><span>★</span><i id="topfavn">0</i></a></div>
 <div class="minihead"><a href="#home">← 만화 클리셰 사전</a><span id="mh-t"></span></div>
@@ -3366,6 +3368,31 @@ function aiRetryAfter(tx){
     for(var i=0;i<d.length;i++){ if(d[i]&&d[i].retryDelay){ var s=parseFloat(String(d[i].retryDelay)); if(s>0) return s*1000; } } }catch(e){}
   return 0;
 }
+// ----- 상단 「🔄 AI」: 키·모델 다시 읽고, 막힘 표시 풀고, 연결 확인 -----
+function aiRefresh(){
+  var b=document.getElementById('ai-refresh'), st=document.getElementById('ai-ref-st');
+  function set(t,cls,tip){ if(st) st.textContent=t; if(b){ b.className='synclink airef'+(cls?' '+cls:''); if(tip) b.title=tip; } }
+  try{ AIKEY=localStorage.getItem('orKey')||''; AIMODEL=localStorage.getItem('orModel')||AIMODEL; localStorage.removeItem('aiOut'); }catch(e){}
+  aiNoCreditMark(false);
+  var k=document.getElementById('ai-key'); if(k) k.value=AIKEY;
+  try{ aiBar(); favAiBar(); aiSlots(); if(typeof pbBar==='function') pbBar(); if(window.__reSlots) window.__reSlots(); }catch(e){}
+  if(!AIKEY){ set('키 없음','warn','AI 연결 페이지에서 OpenRouter 키를 넣는다.'); return Promise.resolve(); }
+  set('…','busy','모델 목록을 새로 받고 연결을 확인하는 중');
+  var p0=(typeof ormLoad==='function')?ormLoad(true):Promise.resolve();
+  return Promise.resolve(p0).catch(function(){}).then(function(){
+    return new Promise(function(res){
+      aiCall('한 단어로만 답한다.','연결 확인. "정상"이라고만 답하라.',function(t){
+        if(t==='생각하는 중…') return;
+        var bad=aiIsErr(t), free=/무료 모델/.test(t);
+        set(bad?'안 됨':(free?'무료':'✓'), bad?'warn':'ok', (bad?'AI 연결 문제: ':'AI 정상 · ')+aiShort(AIMODEL)+(bad?' — '+String(t).slice(0,120):(free?' (잔액이 없어 무료 모델로 동작)':'')));
+        var msg=document.getElementById('ai-msg'); if(msg) msg.textContent=(bad?'':'정상 · ')+String(t).slice(0,160);
+        setTimeout(function(){ if(st && st.textContent!=='…') set('AI',''); },8000);
+        res();
+      },60);
+    });
+  });
+}
+(function(){ var b=document.getElementById('ai-refresh'); if(b) b.addEventListener('click',function(){ aiRefresh(); }); })();
 // ----- 잔액 없음 → 무료 모델 자동 전환 -----
 function aiAutoFree(){ try{ return localStorage.getItem('orAutoFree')!=='0'; }catch(e){ return true; } }
 function aiNoCredit(){ try{ var t=parseInt(localStorage.getItem('orNoCredit')||'0',10); return !!t && Date.now()<t; }catch(e){ return false; } }
