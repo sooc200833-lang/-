@@ -415,10 +415,6 @@ li.twres{list-style:none; display:block}
 
 .addtag{color:var(--note)}
 .czwhy{color:var(--note)}
-#idr-plan .plan{border:2px solid var(--mark); padding:.6rem .9rem; margin:.6rem 0 1rem; background:var(--paper)}
-#idr-plan .plan h4{margin:0 0 .3rem} #idr-plan ol{margin:0; padding-left:1.2rem} #idr-plan li{margin:.15rem 0}
-#id-recout .pbrow .inplan{color:var(--mark); white-space:nowrap}
-#ideacomp .idbox textarea{width:100%}
 .aistat{border:1px solid var(--rule-hard); background:var(--paper-2,rgba(0,0,0,.03)); padding:.55rem .75rem; margin:.6rem 0; font-size:.86rem; line-height:1.55}
 .aistat b{color:var(--mark)} .aistat .warn{color:var(--mark)} .aistat .chip{margin:.25rem .3rem 0 0}
 .aiwhy{display:block; color:var(--note); font-size:.8rem; margin-top:.2rem}
@@ -484,14 +480,6 @@ textarea#pb-text{width:100%; font:inherit; font-size:.92rem; padding:.6rem .7rem
 .gen-h .chip, .gen-top .chip{font-size:.74rem; padding:.1rem .45rem}
 .gen-b{white-space:pre-wrap; font-size:.9rem; line-height:1.75}
 .gen-b.busy{color:var(--ink-3)}
-.wstage .gen-h{flex-wrap:wrap}
-.wstage .wconv{display:inline-flex; gap:.3rem; align-items:center; font-weight:400; font-size:.78rem; color:var(--ink-3); margin-left:auto}
-.wstage .wconv .chip.next{border-color:var(--mark); color:var(--mark)}
-.wstage + .wstage{margin-top:0}
-.wstage + .wstage::before{content:"↓"; display:block; text-align:center; color:var(--ink-3); margin:-.45rem 0 .2rem; font-size:.8rem}
-textarea.wedit{display:block; width:100%; box-sizing:border-box; border:1px dashed var(--rule-hard); background:transparent; color:inherit; font:inherit; font-size:.9rem; line-height:1.75; padding:.35rem .45rem; resize:vertical; min-height:6em}
-textarea.wedit:focus{outline:none; border-style:solid}
-.wstage .whint{font-size:.74rem; color:var(--ink-3); margin-top:.2rem}
 #ai-out{margin:.4rem 0 1rem; font-size:.9rem; line-height:1.7; white-space:pre-wrap}
 #ai-out:empty{display:none}
 #ai-out.busy{color:var(--ink-3)}
@@ -604,6 +592,35 @@ details.gdet[open] summary{margin-bottom:.5rem}
 .reflist span{display:block; font-size:.86rem; color:var(--ink-2); margin-top:.2rem; line-height:1.6}
 .two{display:grid; grid-template-columns:1fr 1fr; gap:0 1.6rem}
 @media (max-width:700px){.two{grid-template-columns:1fr}}
+/* 콘티 구성기 */
+.ct-band{display:flex; gap:2px; margin:.2rem 0 .8rem; font-size:.78rem}
+.ct-band > div{background:var(--paper-2); border-top:3px solid var(--ink-3); padding:.25rem .4rem; min-width:0; overflow:hidden}
+.ct-band b{display:block; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis} .ct-band span{color:var(--ink-3); font-variant-numeric:tabular-nums}
+.ct-cl{list-style:none; padding:0; margin:0 0 1rem; display:grid; gap:.5rem}
+.ct-cl li{border-left:3px solid var(--mark); padding:.1rem 0 .1rem .7rem}
+.ct-cl .ct-rng{display:inline-block; font-size:.78rem; color:var(--mark); margin-right:.5rem; font-variant-numeric:tabular-nums}
+.ct-cl .ct-pt{display:block}
+.ct-lab{display:block; margin:.4rem 0 .3rem}
+#ct-story{width:100%; box-sizing:border-box; font:inherit; font-size:.9rem; line-height:1.6; padding:.6rem; background:var(--paper); color:var(--ink); border:1px solid var(--rule-hard)}
+.ct-sec{margin:1.2rem 0 0}
+.ct-sec > h4{font-family:"Hahmlet",serif; margin:0 0 .5rem; font-size:1rem; border-bottom:1px solid var(--rule); padding-bottom:.2rem}
+.ct-sec > h4 span{font-family:"IBM Plex Sans KR",sans-serif; font-weight:400; font-size:.78rem; color:var(--ink-3)}
+.ct-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:14px 10px}
+.ct-cut{margin:0; display:grid; gap:4px; align-content:start; min-width:0; cursor:pointer}
+.ct-cut:focus-visible{outline:2px solid var(--note); outline-offset:3px}
+.ct-cut canvas{display:block; width:100%; aspect-ratio:4/3}
+.ct-h{display:flex; flex-wrap:wrap; gap:.15rem .4rem; align-items:baseline; font-size:.76rem; color:var(--ink-3)}
+.ct-h b{font-size:.9rem; color:var(--ink); font-variant-numeric:tabular-nums}
+.ct-h em{font-style:normal; color:var(--mark); flex-basis:100%; line-height:1.3}
+.ct-h .ct-hook{font-style:normal; color:var(--mark); border:1px solid var(--mark); padding:0 .25rem; font-size:.7rem}
+.ct-scr{margin:0; font-size:.84rem; line-height:1.5; color:var(--ink)}
+.ct-scr.ct-empty{color:var(--ink-3)}
+.ct-line{margin:0; font-size:.84rem; line-height:1.5; color:var(--note)}
+.ct-line::before{content:"“"} .ct-line::after{content:"”"}
+.ct-ed{display:grid; gap:.35rem; padding:.5rem; background:var(--paper-2); font-size:.8rem; cursor:auto}
+.ct-ed label{display:grid; gap:.15rem}
+.ct-ed select,.ct-ed textarea,.ct-ed input{font:inherit; font-size:.84rem; background:var(--paper); color:var(--ink); border:1px solid var(--rule-hard); padding:.2rem .3rem; min-width:0}
+.ct-ed .filterbar{margin:0}
 </style>
 <body>
 <div class="wrap">
@@ -1614,7 +1631,7 @@ details.gdet[open] summary{margin-bottom:.5rem}
     <span class="shuflabel">구성</span>
     <label>장르 <select id="sf-g"><option value="rec">무작위 추천</option><option value="all">전체 섞기</option></select></label>
     <label id="sf-elvwrap">엔딩 <select id="sf-elv"><option value="-1">없음</option><option value="0" selected>단일</option><option value="1">난해한 엔딩</option><option value="2">두 개 조합</option></select></label>
-    <label title="소재 먼저: 소재를 정하고, 그 소재에 맞는 장르·연관어로 클리셰와 엔딩 후보를 찾는다">뽑는 방식 <select id="sf-mode"><option value="ai" selected>소재 먼저 → AI가 고름</option><option value="fast">소재 먼저 → 바로 (AI 없음)</option><option value="rand">무작위</option></select></label>
+    <label title="뽑을 때마다 칸마다 후보 4개를 무작위로 뽑고, AI가 아이디어·장르·앞뒤 흐름을 보고 하나를 고른다"><input type="checkbox" id="sf-ai" checked> AI가 후보 4개 중 고름</label>
     <label><input type="checkbox" id="sf-serial"> 연재 모드</label>
     <label id="sf-cutwrap">분량 <select id="sf-cutn"><option>20컷</option><option>30컷</option><option>40컷</option><option>50컷</option><option>60컷</option><option selected>70컷</option><option>80컷</option><option>90컷</option><option>100컷</option></select></label>
     <label><input type="checkbox" id="sf-link" checked> 장르 연동</label>
@@ -1652,7 +1669,13 @@ details.gdet[open] summary{margin-bottom:.5rem}
   <div id="sf-out"></div>
   <div id="sf-endbox"></div>
   <div id="sf-cut"></div>
-  <p class="small">내 아이디어에서 출발해 짜려면 → <a href="#ideacomp"><b>아이디어 구성기</b></a>. 이 구성기는 아이디어와 상관없이 소재와 후보로만 굴린다(줄거리 쓰기만 아이디어를 함께 읽는다).</p>
+  <details class="aidet idbox" open><summary>아이디어</summary>
+    <p class="small">떠오른 것을 대충 적는다. 체크해 두면 이 구성기의 AI 결과에 함께 반영되고, 색인에서 어울리는 항목도 찾아 붙인다. 두 곳의 아이디어 칸은 같은 내용이다.</p>
+    <textarea class="id-text" id="id-text" rows="5" placeholder="예) 기억을 파는 가게 / 주인공은 동생 병원비 때문에 자기 기억을 판다 / 끝은 씁쓸하게"></textarea>
+    <div class="filterbar"><label style="font-size:.84rem"><input type="checkbox" class="id-use" id="id-use" checked> AI에 반영</label><span class="count id-count"></span><button class="chip" id="id-rec">아이디어로 추천받기</button></div>
+    <p class="small">「아이디어로 추천받기」 — 적어 둔 내용만 보고 사전에서 <b>소재 → 클리셰(초반·중반·후반) → 엔딩 → 캐릭터 모티브</b>를 하나씩 차례로 골라 채운다. 앞에서 고른 것과 이어지게 고른다. 갈래마다 ↻로 그것만 다시. 마음에 들면 ☆로 담거나 구성기에 바로 채운다.</p>
+    <div id="id-recout"></div>
+  </details>
   <div class="filterbar" id="ai-bar"></div>
   <div id="ai-out"></div>
 
@@ -1686,28 +1709,22 @@ details.gdet[open] summary{margin-bottom:.5rem}
 </section>
 
 
-<section class="blk" id="ideacomp">
-  <h2 class="big">아이디어 구성기</h2>
-  <p class="lede">그리고 싶은 만화를 한두 줄 적으면, AI가 <b>장르와 연관어</b>를 뽑고 그 말로 사전을 찾아 <b>소재 → 초반 → 중반 → 후반 → 엔딩 → 주인공</b>을 이어지게 골라 <b>구성안</b>을 만든다. 무작위로 굴리는 <a href="#shuffle">랜덤 구성기</a>와 달리 여기서는 내 아이디어가 출발점이다.</p>
-  <div class="idbox">
-    <textarea class="id-text" id="id-text" rows="6" placeholder="예) 기억을 파는 가게 / 주인공은 동생 병원비 때문에 자기 기억을 판다 / 끝은 씁쓸하게"></textarea>
-    <div class="filterbar"><button class="chip" id="id-rec"><b>구성안 만들기</b></button><input type="checkbox" class="id-use" id="id-use" checked hidden><span class="count id-count"></span></div>
-    <p class="small">이 아이디어는 즐겨찾기 페이지의 아이디어 칸과 같은 내용이다. 랜덤 구성기는 이 메모를 읽지 않는다.</p>
-  </div>
-  <div id="id-recout"></div>
-  <h3>글쓰기</h3>
-  <p class="small">구성안이 있으면 <b>구성안 + 아이디어</b>로, 아직 없으면 <b>아이디어만으로</b> 쓴다. 줄거리·컷별·웹소설 중에서 고른다.</p>
-  <div class="filterbar" id="idw-bar"></div>
-  <div id="idw-out"></div>
-  <h3>쓰는 법</h3>
-  <ul class="small">
-    <li><b>구성안 만들기</b> — AI를 두 번 부른다. ① 아이디어에서 핵심·장르·연관어 ② 연관어로 사전에서 찾은 후보 중에서 고르기. 빠른 모델이면 몇 초.</li>
-    <li>맨 위 <b>구성안</b>은 갈래마다 첫 번째 추천을 이어 놓은 것이다. 아래 갈래에서 다른 항목의 <b>구성안에</b>를 누르면 그걸로 바뀐다.</li>
-    <li>갈래 제목 옆 <b>↻</b>는 검색 결과의 다음 후보를 보여 준다(AI를 다시 부르지 않는다).</li>
-    <li><b>랜덤 구성기로 보내기</b>는 구성안을 랜덤 구성기 칸에 넣고 📌 고정한 뒤 그 페이지로 넘어간다. 거기서 궁합 점검을 할 수 있다.</li>
-    <li><b>글쓰기</b>는 이 페이지에서 바로 한다. 구성안에서 바꾼 항목도 그대로 반영된다.</li>
-  </ul>
+<section class="blk" id="conti">
+  <h2 class="big">콘티 구성기</h2>
+  <p class="lede">랜덤 구성기(아이디어로 추천받기로 채운 것 포함)의 구성과 대강 이야기를 가져와 <b>컷마다 구도 그림과 글</b>을 붙인다. 클리셰마다 정해진 지면·연출 도구와 구성기의 컷 배분을 그대로 따른다.</p>
+  <h3>1. 재료</h3>
+  <div class="filterbar"><button class="chip" id="ct-pull" type="button">구성기에서 가져오기</button><label class="small">분량 <select id="ct-total"></select></label><span class="count" id="ct-srcinfo"></span></div>
+  <div id="ct-plan"></div>
+  <label class="small ct-lab" for="ct-story">대강 이야기 — 글쓰기의 줄거리·컷별 콘티·웹소설 결과가 들어온다. 직접 고쳐도 된다.</label>
+  <textarea id="ct-story" rows="7" placeholder="비워 두면 구성만 보고 콘티를 짠다."></textarea>
+  <div class="filterbar"><button class="chip" id="ct-plot" type="button">AI로 줄거리 짜기</button></div>
+  <h3>2. 콘티</h3>
+  <div class="filterbar"><button class="chip" id="ct-skel" type="button">뼈대만 깔기</button><button class="chip" id="ct-write" type="button">AI로 콘티 쓰기</button><button class="chip" id="ct-resume" type="button" hidden>이어서 쓰기</button><button class="chip" id="ct-redraw" type="button">선 다시 긋기</button><button class="chip" id="ct-copy" type="button">글로 복사</button></div>
+  <p class="small" id="ct-stat" role="status"></p>
+  <p class="small">컷을 누르면 구도·앵글·화면·대사를 고칠 수 있다. 빨간 테두리는 넘김 훅, 「무음」은 대사 없는 컷이다. 그림은 Rough.js(MIT)로 그린다.</p>
+  <div id="ct-board"></div>
 </section>
+
 
 <section class="blk" id="arc">
   <h2 class="big">아크 점검표</h2>
@@ -2569,8 +2586,6 @@ TVNEW.forEach(function(r){ if(!ROWS.some(function(x){ return x[0]===r[0]; })) RO
 var ENDNEW=[["구조","신문 기사로 닫기","사건의 결과를 기사 한 장으로 보여 주며 끝낸다","","","제목만 읽히게 하고 본문은 흐리게. 사진 한 장이 핵심"],["구조","첫 화를 다시 읽게 만드는 결말","결말을 알고 나면 첫 화가 다른 뜻으로 읽힌다","","","첫 화의 한 컷을 마지막에 그대로 다시 보여 준다"],["구조","질문으로 끝나는 대사","마지막 대사가 물음표로 끝나 답을 독자에게 넘긴다","","","질문한 인물의 얼굴을 보여 주지 않는다"],["구조","이야기 속 이야기가 끝남","인물이 읽거나 듣던 이야기가 끝나며 본 이야기도 닫힌다","","","안쪽 이야기의 마지막 장과 바깥 인물의 반응을 나란히"],["구조","시계·달력으로 닫기","시간이 흘렀음을 시계나 달력 한 컷으로 보여 주고 끝낸다","","","날짜에 동그라미 하나. 무슨 날인지는 앞에서 알려 둔다"],["구조","사진첩을 덮으며","사진을 한 장씩 넘기며 지나온 이야기를 정리하고 덮는다","","","마지막 장은 빈칸이거나 새 사진 한 장"],["구조","다음 이야기의 첫 문장","마지막 쪽에 다음 이야기가 시작되는 첫 문장을 둔다","","","문장만 두고 그림은 그리지 않는다"],["구조","같은 날의 다른 아침","첫 화와 같은 날짜·시간의 아침을 다시 보여 준다","","","알람·창문 같은 첫 화 소품을 그대로 쓴다"],["승패","이긴 쪽이 진 쪽을 대신 삶","이긴 사람이 진 사람의 몫까지 짊어지고 살아간다","","","진 사람의 물건을 이긴 사람이 지니고 있다"],["승패","패배가 다음 승리의 씨앗","지고 끝나지만 다음에 이길 실마리를 쥔 채 닫는다","","","패배 장면에서 주인공이 무언가를 발견하는 눈빛"],["승패","모두가 조금씩 짐","누구도 온전히 이기지 못하고 각자 하나씩 잃는다","","","잃은 것을 인물마다 한 컷씩 나눠 보여 준다"],["승패","아무도 이기지 않기로 함","끝까지 싸우는 대신 승부를 그만두기로 한다","","","무기를 내려놓는 손 클로즈업"],["승패","진 줄 알았는데 이겼음","패배로 보였던 결과가 사실 승리였다는 게 뒤늦게 드러난다","","","결과 발표를 한 박자 늦춰 넘김 뒤에"],["승패","승리를 숨김","이겼지만 그 사실을 아무에게도 알리지 않는다","","","혼자만 아는 미소 한 컷"],["승패","상대의 승리를 축하함","진 쪽이 진심으로 이긴 쪽을 축하하며 끝난다","","","악수하는 손을 위에서 내려다보는 구도"],["승패","승부 대신 대화로 끝","마지막 대결이 싸움이 아니라 대화로 풀린다","","","두 사람이 앉는 순간 배경의 긴장이 풀린다"],["인물","처음으로 울음","한 번도 울지 않던 인물이 마지막에 처음 운다","","","눈물보다 무너지는 어깨를 먼저 보여 준다"],["인물","거짓말을 멈춤","내내 거짓말로 버티던 인물이 처음으로 진실을 말한다","","","진실을 말하는 컷은 말풍선을 작게"],["인물","원하는 것을 얻고 비어 버림","바라던 것을 손에 넣었지만 마음이 텅 빈다","","","얻은 물건을 손에 쥔 채 멍하니 선 원경"],["인물","미워하던 사람을 닮아 감","주인공이 미워하던 인물과 같은 행동을 하게 된다","","","그 인물이 하던 버릇을 같은 구도로 반복"],["인물","누군가의 영웅이 됨","주인공이 모르는 사이 다른 사람에게 영웅이 되어 있었다","","","낯선 아이가 주인공 흉내를 내는 컷"],["인물","가면을 벗음","늘 쓰던 가면·별명·역할을 내려놓고 맨얼굴로 끝난다","","","가면을 벗는 손, 맨얼굴, 가면만 남은 바닥"],["인물","마지막 선택을 남에게 맡김","결정적 선택을 스스로 하지 않고 다른 사람에게 넘긴다","","","선택권을 건네는 물건(동전·열쇠) 클로즈업"],["인물","처음 장소에 혼자 서 있음","모든 일이 끝난 뒤 처음 시작한 장소에 혼자 돌아와 선다","","","첫 화와 같은 구도, 인물만 혼자"],["관계","같은 약속을 다시 함","예전에 깨졌던 약속을 다시 한다","","","새끼손가락 같은 동작을 처음과 같은 구도로"],["관계","끝내 이름을 부르지 못함","마지막까지 상대의 이름을 부르지 못하고 끝난다","","","입을 여는 컷 다음에 아무것도 없는 말풍선"],["관계","함께 밥을 먹으며 끝","다툼과 사건이 끝나고 모두 함께 밥을 먹는다","","","밥상을 위에서 내려다보는 구도. 빈자리 하나를 남겨도 된다"],["관계","연락처를 지우지 못함","헤어졌지만 상대의 연락처를 끝내 지우지 못한다","","","삭제 버튼 위에 멈춘 손가락"],["관계","각자의 도시에서","헤어진 두 사람이 서로 다른 곳에서 각자 살아가는 장면으로 끝난다","","","분할 화면으로 두 사람을 같은 자세로 나란히"],["관계","아이가 둘을 잇는다","갈라졌던 두 사람이 아이를 통해 다시 이어진다","","","아이 손을 하나씩 잡은 원경"],["관계","원수의 자식을 거둠","원수의 아이를 거두어 기르며 끝난다","","","아이가 원수와 닮은 얼굴로 웃는 컷"],["관계","마지막 편지가 늦게 도착","떠난 사람의 편지가 한참 뒤에야 도착한다","","","봉투의 소인 날짜를 클로즈업"],["관계","헤어지기로 하고 웃음","이별을 결정하고도 둘이 웃으며 끝난다","","","웃는 얼굴 뒤에 돌아서는 발"],["세계","새 질서의 첫 아침","모든 것이 바뀐 세계의 첫날 아침으로 닫는다","","","평범한 아침 소리(새·문 여는 소리)만 넣는다"],["세계","영웅 없는 세계","영웅이 사라졌지만 세계는 그대로 굴러간다","","","영웅이 서 있던 자리를 같은 구도로 비워 둔다"],["세계","전설이 된 사건","이야기의 사건이 훗날 전설·동화로 전해진다","","","아이들에게 이야기를 들려주는 노인의 장면"],["세계","지도에서 사라진 장소","이야기의 무대가 지도에서 지워진다","","","지도 위의 이름을 줄로 긋는 손"],["세계","같은 비극이 다른 곳에서 시작","해결된 줄 알았던 비극이 다른 곳에서 똑같이 시작된다","","","첫 화의 비극 장면과 같은 구도를 다른 장소로"],["세계","평화가 지루해짐","평화를 얻었지만 인물들이 오히려 허전해한다","","","하품하는 영웅. 웃기면서 쓸쓸하게"],["세계","신이 떠난 세계","세계를 다스리던 존재가 떠나고 사람들만 남는다","","","빈 신전이나 빈 하늘을 크게"],["세계","아무도 믿지 않는 진실","진실이 공개됐지만 아무도 믿지 않는다","","","진실을 외치는 인물과 무심히 지나가는 군중"],["세계","기념비가 세워짐","사건을 기리는 기념비·묘비가 세워지고 사람들이 지나간다","","","기념비에 새겨진 이름 하나를 클로즈업"],["정서","미련","끝났지만 손을 놓지 못하는 마음이 남는다","","","돌아보다 멈춘 고개"],["정서","설렘","무언가 시작될 것 같은 두근거림으로 끝난다","","","가슴에 손을 얹는 컷과 열린 문"],["정서","쓴웃음","씁쓸하지만 웃을 수밖에 없는 기분으로 닫는다","","","한쪽 입꼬리만 올라간 얼굴"],["정서","섬뜩함","평화로워 보이지만 무언가 어긋난 기분이 남는다","","","마지막 컷 구석에 작은 이상 하나"],["정서","회한","지나간 선택을 후회하는 마음으로 끝난다","","","같은 장소에 늙은 인물이 혼자 앉아 있다"],["정서","기대","다음을 기다리게 만드는 마음으로 닫는다","","","출발 직전의 신발끈 묶기"],["정서","무력감","아무것도 할 수 없었다는 감정이 남는다","","","내려다보는 시점으로 작아진 인물"],["정서","다정함","서로를 챙기는 작은 행동으로 따뜻하게 닫는다","","","담요를 덮어 주는 손"],["정서","낯섦","익숙했던 것이 낯설게 느껴지며 끝난다","","","익숙한 방을 처음 보는 사람처럼 둘러보는 시선"],["정서","아련함","멀어진 시절을 그리워하는 마음으로 닫는다","","","흐릿하게 처리한 옛 장면 위로 현재의 인물"],["반전","이미 반복 중이었음","주인공이 처음부터 같은 시간을 되풀이하고 있었다","","","첫 화의 사소한 컷에 반복의 흔적을 숨겨 둔다"],["반전","조연이 진짜 주인공","조연으로 보이던 인물의 이야기가 사실 중심이었다","","","그 조연이 모든 중요한 장면 구석에 있었음을 보여 준다"],["반전","처음부터 아는 사이였음","처음 만난 줄 알았던 두 사람이 예전부터 아는 사이였다","","","옛 사진 속 두 사람"],["반전","이 이야기가 누군가의 고백이었음","지금까지의 이야기가 한 인물의 고백·진술이었다","","","마지막에 듣는 사람의 얼굴을 처음 보여 준다"],["반전","적이 주인공을 지켜 왔음","적이라 여긴 인물이 내내 주인공을 몰래 지켜 왔다","","","앞 장면들의 그림자·뒷모습이 그 인물이었음을 다시 보여 준다"],["반전","결말이 첫 장면의 앞부분","마지막 장면이 이야기 첫 장면 바로 직전의 일이다","","","마지막 컷의 다음 컷이 첫 화의 첫 컷이 되게 맞춘다"],["반전","살린 사람이 원수였음","주인공이 구해 준 사람이 사실 원수였다","","","구해 주던 장면에서 원수의 표식을 살짝 보여 둔다"],["반전","거짓말이 진실이었음","거짓말이라 여긴 말이 사실 진실이었다","","","그 말을 했던 장면을 다시 보여 주며 표정만 다르게"],["반전","주인공이 잘못 기억하고 있었음","주인공의 기억 속 장면이 실제와 달랐다","","","같은 장면을 기억판·실제판 두 번 보여 준다"],["반전","행복한 결말이 연출이었음","행복해 보이던 결말이 누군가 꾸민 무대였다","","","무대 뒤 조명·대본을 한 컷에"],["연재","1부 완결 표시","이야기를 끝내지 않고 1부를 닫는다고 알린다","","","마지막 컷 아래 「1부 끝」 한 줄"],["연재","다음 시즌 첫 컷 미리 보기","완결 직후 다음 시즌의 첫 장면 한 컷을 보여 준다","","","맥락 없는 한 컷만. 설명하지 않는다"],["연재","회차 번호가 1로 돌아감","마지막 화 번호를 「1화」로 표시해 새 시작을 알린다","","","표시만 바꾸고 본문은 담담히"],["연재","마지막 화 제목이 1화 제목","마지막 화에 1화와 같은 제목을 붙인다","","","제목 아래 작은 글씨로 다른 부제"],["연재","등장인물 근황 SNS 화면","인물들의 근황을 SNS 게시물 화면으로 보여 준다","","","게시물마다 다른 인물이 댓글을 단다"],["연재","마지막 화를 둘로 나눔","마지막 화를 앞뒤 두 편으로 나눠 공개한다","","","앞편은 정점에서 끊고 뒤편은 여운만"],["연재","완결 기념 일러스트","마지막 화 끝에 인물들이 모인 기념 그림을 붙인다","","","본편에서 못 만난 인물들을 한자리에"],["연재","첫 장면 다시 그리기","1화의 첫 장면을 지금의 그림체로 다시 그려 붙인다","","","옛 그림과 새 그림을 나란히 두면 연재의 세월이 보인다"]];
 ENDNEW.forEach(function(r){ if(!ENDINGS.some(function(x){ return x[1]===r[1]; })) ENDINGS.push(r); });
 var TVNEWSET={}; TVNEW.forEach(function(r){ TVNEWSET[r[0]]=1; });
-/* 소재 → [어울리는 장르들, 연관어들]. 「소재 먼저」 뽑기에서 장르와 검색어로 쓴다 */
-var MTAG={"시간이 화폐로 거래됨":[["SF·메카","미스터리·스릴러"],["시간","화폐","거래","수명","빈부","대가","생존"]],"기억을 사고팔 수 있음":[["SF·메카","미스터리·스릴러","로맨스"],["기억","거래","망각","정체성","대가","과거","조작"]],"꿈에 들어갈 수 있음":[["SF·메카","판타지·이세계","미스터리·스릴러"],["꿈","무의식","침투","기억","환상","현실"]],"이름을 빼앗기면 자신을 잃음":[["판타지·이세계","호러·오컬트"],["이름","정체성","계약","망각","정령","저주"]],"이름을 적으면 죽음":[["미스터리·스릴러","호러·오컬트"],["이름","죽음","노트","처벌","정의","심판","살인"]],"죽는 날짜가 통보됨":[["직업·일상 드라마","로맨스","SF·메카"],["죽음","시한부","날짜","이별","버킷리스트","가족"]],"거짓말이 물리적으로 불가능함":[["직업·일상 드라마","로맨스","미스터리·스릴러"],["거짓말","진실","고백","비밀","정직","들통"]],"감정이 수치로 표시됨":[["SF·메카","로맨스","학원·청춘"],["감정","수치","표정","숨김","관찰","사랑"]],"감정을 느끼는 것이 금지됨":[["SF·메카","로맨스"],["감정","금지","통제","체제","사랑","반항"]],"AI가 범죄를 예측해 처벌함":[["SF·메카","미스터리·스릴러"],["예측","범죄","감시","처벌","누명","정의","시스템"]],"능력이 등급으로 매겨짐":[["현대판타지·헌터","소년만화·배틀","학원·청춘"],["등급","능력","서열","차별","각성","시험","랭킹"]],"성인이 되면 적성이 배정됨":[["SF·메카","학원·청춘"],["적성","배정","진로","체제","반항","선택"]],"유전자로 신분이 정해짐":[["SF·메카","미스터리·스릴러"],["유전자","신분","차별","위장","계급","꿈"]],"죽으면 시간이 되감김":[["회귀·전생","소년만화·배틀","SF·메카"],["죽음","되감기","반복","회귀","전투","학습"]],"같은 하루가 반복됨":[["회귀·전생","로맨스","미스터리·스릴러"],["반복","하루","회귀","루프","후회","변화"]],"괴물과 인간이 공존함":[["판타지·이세계","호러·오컬트","현대판타지·헌터"],["괴물","공존","차별","요괴","경계","이해"]],"죽은 자와 대화할 수 있음":[["호러·오컬트","판타지·이세계","직업·일상 드라마"],["죽은","자","영혼","대화","이별","유언","원한"]],"신이 실제로 응답함":[["판타지·이세계","호러·오컬트"],["신","응답","기도","계시","신앙","대가"]],"소리를 내면 죽음":[["호러·오컬트","포스트 아포칼립스"],["소리","침묵","생존","괴물","가족","공포"]],"특정 나이에 죽는 것이 정해짐":[["SF·메카","직업·일상 드라마"],["나이","죽음","정해진","운명","반항","탈출"]],"몸을 바꿔 살 수 있음":[["SF·메카","미스터리·스릴러","판타지·이세계"],["몸","교체","정체성","거래","부자","젊음"]],"계약으로만 관계가 성립함":[["판타지·이세계","로맨스"],["계약","관계","조건","결혼","거래","신뢰"]],"혈통이 능력을 결정함":[["판타지·이세계","무협·사극·전쟁","소년만화·배틀"],["혈통","능력","가문","출생","차별","숨겨진"]],"봉인이 서서히 풀리는 중":[["판타지·이세계","소년만화·배틀","호러·오컬트"],["봉인","해제","고대","악","위기","수호"]],"예언이 공개적으로 발표됨":[["판타지·이세계","소년만화·배틀"],["예언","운명","선택받은","공개","두려움"]],"한 사람만 진실을 알고 있음":[["미스터리·스릴러","SF·메카"],["진실","비밀","조작","감시","각성","탈출"]],"세계가 게임 시스템으로 작동함":[["현대판타지·헌터","판타지·이세계"],["게임","시스템","상태창","레벨","퀘스트","스킬"]],"죽으면 다른 세계에서 깨어남":[["판타지·이세계","회귀·전생"],["죽음","전생","이세계","환생","새","삶"]],"모두에게 초능력이 있고 없는 쪽이 소수":[["소년만화·배틀","현대판타지·헌터","학원·청춘"],["초능력","무능력","소수","차별","영웅"]],"특정 시각 이후 밖에 나갈 수 없음":[["호러·오컬트","포스트 아포칼립스","미스터리·스릴러"],["통금","밤","바깥","위험","규칙","괴물"]],"나이를 거꾸로 먹음":[["로맨스","직업·일상 드라마"],["나이","거꾸로","시간","이별","사랑","인생"]],"고통을 남에게 옮길 수 있음":[["미스터리·스릴러","호러·오컬트","SF·메카"],["고통","전가","대가","희생","죄책감"]],"국가 대신 기업이 통치함":[["SF·메카","미스터리·스릴러"],["기업","지배","자본","감시","반란","노동"]],"계급이 층으로 나뉘어 있음":[["SF·메카","미스터리·스릴러","포스트 아포칼립스"],["계급","층","빈부","반란","생존","격차"]],"생존을 걸고 게임에 참가함":[["미스터리·스릴러","SF·메카","포스트 아포칼립스"],["생존","게임","데스게임","상금","배신","규칙"]],"도박으로 인생이 결정됨":[["미스터리·스릴러","직업·일상 드라마"],["도박","빚","승부","인생","심리전","운"]],"복수가 합법인 제도":[["미스터리·스릴러","SF·메카"],["복수","합법","제도","원한","정의","대가"]],"시험 성적이 신분을 정함":[["학원·청춘","직업·일상 드라마","SF·메카"],["시험","성적","신분","경쟁","입시","압박"]],"기록이 조직적으로 조작됨":[["SF·메카","미스터리·스릴러"],["기록","조작","진실","체제","감시","저항"]],"책과 기록이 금지됨":[["SF·메카","미스터리·스릴러"],["책","금지","기록","검열","지식","저항"]],"외부인 출입이 금지된 구역":[["미스터리·스릴러","호러·오컬트","포스트 아포칼립스"],["금지","구역","출입","비밀","바깥","탐험"]],"이주민만 사는 지역":[["직업·일상 드라마","미스터리·스릴러"],["이주민","차별","공동체","정착","경계"]],"한 세대만 남은 종족":[["판타지·이세계","SF·메카"],["종족","멸종","마지막","세대","생존","계승"]],"아이가 태어나지 않음":[["SF·메카","포스트 아포칼립스"],["출산","미래","절망","아이","희망"]],"모두가 감시받는 도시":[["SF·메카","미스터리·스릴러"],["감시","도시","사생활","통제","탈출"]],"직업이 세습됨":[["무협·사극·전쟁","직업·일상 드라마","SF·메카"],["세습","직업","가업","운명","반항"]],"결혼이 국가에 의해 배정됨":[["SF·메카","로맨스"],["결혼","배정","국가","사랑","반항","통제"]],"빚이 대물림됨":[["직업·일상 드라마","미스터리·스릴러"],["빚","대물림","가족","가난","채무"]],"얼굴을 드러내면 안 됨":[["판타지·이세계","무협·사극·전쟁","SF·메카"],["얼굴","가면","정체","금기","신분"]],"한 사람만 도시를 떠날 수 있음":[["SF·메카","포스트 아포칼립스","미스터리·스릴러"],["떠남","선택","한","사람","희생","도시"]],"모두가 같은 얼굴로 성형함":[["SF·메카","미스터리·스릴러","직업·일상 드라마"],["얼굴","성형","개성","획일","정체성"]],"특정 언어를 쓰면 처벌받음":[["무협·사극·전쟁","SF·메카"],["언어","처벌","금지","저항","정체성"]],"전쟁이 막 끝난 직후":[["무협·사극·전쟁","직업·일상 드라마"],["전쟁","직후","상처","귀향","재건","병사"]],"역병 이후의 격리 사회":[["포스트 아포칼립스","호러·오컬트","SF·메카"],["역병","격리","감염","봉쇄","생존"]],"재해로 반쯤 무너진 도시":[["포스트 아포칼립스","직업·일상 드라마"],["재해","도시","무너짐","생존","재건"]],"문명이 붕괴한 뒤":[["포스트 아포칼립스","SF·메카"],["문명","붕괴","폐허","생존","약탈","여정"]],"기술이 퇴보한 미래":[["SF·메카","포스트 아포칼립스"],["기술","퇴보","미래","잃어버린","지식"]],"왕조가 바뀌는 시기":[["무협·사극·전쟁"],["왕조","교체","권력","반역","충성","혼란"]],"개항 직후의 항구":[["무협·사극·전쟁","직업·일상 드라마","로맨스"],["개항","항구","외국","근대","교역"]],"혁명 전야":[["무협·사극·전쟁","미스터리·스릴러"],["혁명","전야","봉기","동지","배신","신념"]],"통금이 있는 도시":[["미스터리·스릴러","무협·사극·전쟁","호러·오컬트"],["통금","밤","도시","감시","비밀","만남"]],"탄광이 문 닫은 지방 도시":[["직업·일상 드라마"],["탄광","지방","도시","쇠락","고향","일자리"]],"재개발 예정인 동네":[["직업·일상 드라마","로맨스"],["재개발","동네","이웃","철거","추억","이별"]],"마지막 해를 앞둔 우주 정거장":[["SF·메카"],["우주","정거장","마지막","고립","귀환"]],"던전이 관광지가 된 세계":[["현대판타지·헌터","판타지·이세계","직업·일상 드라마"],["던전","관광","일상","상업","모험"]],"영웅이 은퇴한 시대":[["소년만화·배틀","현대판타지·헌터","직업·일상 드라마"],["영웅","은퇴","노년","복귀","세대"]],"마왕이 이미 죽은 뒤":[["판타지·이세계","직업·일상 드라마"],["마왕","이후","평화","목적","상실","일상"]],"이민이 유일한 출구인 나라":[["직업·일상 드라마"],["이민","출구","가족","이별","생존"]],"축제 준비 기간":[["학원·청춘","로맨스","직업·일상 드라마"],["축제","준비","동아리","협력","설렘"]],"졸업을 앞둔 마지막 학기":[["학원·청춘","로맨스"],["졸업","마지막","학기","이별","진로","추억"]],"회사가 인수합병되는 중":[["직업·일상 드라마"],["회사","인수합병","구조조정","생존","정치"]],"장마가 끝나지 않는 여름":[["로맨스","학원·청춘","직업·일상 드라마"],["장마","여름","비","우울","만남"]],"지구를 떠나기 직전":[["SF·메카"],["지구","떠남","우주","가족","이별","희망"]],"괴수가 물러간 다음 날":[["현대판타지·헌터","판타지·이세계","직업·일상 드라마"],["괴수","이후","복구","일상","상처"]],"팀이 해체되기 직전":[["직업·일상 드라마","스포츠·승부","소년만화·배틀"],["팀","해체","동료","위기","마지막"]],"가게가 폐업을 앞둔 시점":[["직업·일상 드라마"],["가게","폐업","이웃","추억","마지막"]],"대회 예선에서 탈락한 뒤":[["스포츠·승부"],["탈락","예선","좌절","재도전","성장"]],"정체를 숨기고 입학한 상태":[["학원·청춘","미스터리·스릴러"],["정체","숨김","입학","위장","비밀"]],"계약 만료 한 달 전":[["직업·일상 드라마","로맨스"],["계약","만료","이별","기한","선택"]],"은퇴를 번복한 직후":[["스포츠·승부","직업·일상 드라마","소년만화·배틀"],["은퇴","번복","복귀","재기","나이"]],"무명으로 보낸 십 년":[["직업·일상 드라마","스포츠·승부"],["무명","십","년","꿈","좌절","버팀"]],"전학 첫날":[["학원·청춘","로맨스"],["전학","첫날","낯섦","만남","적응"]],"조직에서 쫓겨난 직후":[["미스터리·스릴러","직업·일상 드라마","무협·사극·전쟁"],["추방","조직","배신","복수","홀로"]],"스승을 잃은 해":[["무협·사극·전쟁","소년만화·배틀"],["스승","상실","홀로서기","유지","슬픔"]],"첫 제자를 받은 날":[["무협·사극·전쟁","스포츠·승부","직업·일상 드라마"],["제자","스승","가르침","책임","성장"]],"경쟁자가 먼저 성공한 뒤":[["직업·일상 드라마","스포츠·승부"],["경쟁자","성공","질투","열등감","자극"]],"빚을 떠안은 상태":[["직업·일상 드라마","미스터리·스릴러"],["빚","가난","압박","선택","위험"]],"이름을 바꾸고 사는 중":[["미스터리·스릴러","직업·일상 드라마"],["이름","바꿈","과거","숨김","도망","정체"]],"가짜 신분으로 일하는 중":[["미스터리·스릴러","직업·일상 드라마"],["가짜","신분","위장","잠입","들통"]],"전 직장 사람과 재회":[["직업·일상 드라마","로맨스"],["전","직장","재회","과거","화해"]],"병을 숨기고 일하는 중":[["직업·일상 드라마","로맨스"],["병","숨김","시한부","일","비밀","책임"]],"가족을 대신해 나선 상태":[["직업·일상 드라마","소년만화·배틀"],["가족","대신","책임","희생","대리"]],"남의 자리를 물려받음":[["직업·일상 드라마","무협·사극·전쟁"],["자리","물려받음","후계","부담","비교"]],"죽은 사람 행세를 하는 중":[["미스터리·스릴러","호러·오컬트"],["죽은","사람","행세","위장","정체","가족"]],"기억의 일부만 남아 있음":[["미스터리·스릴러","로맨스"],["기억","일부","망각","과거","정체성"]],"돌아갈 곳이 사라짐":[["직업·일상 드라마","포스트 아포칼립스"],["돌아갈","곳","상실","고향","방황"]],"한 번 살려 준 상대와 재회":[["소년만화·배틀","무협·사극·전쟁","로맨스"],["재회","은혜","적","인연","갚음"]],"적의 아이를 맡게 됨":[["무협·사극·전쟁","미스터리·스릴러","직업·일상 드라마"],["적의","아이","양육","복수","화해"]],"약속이 하나 남아 있음":[["로맨스","직업·일상 드라마"],["약속","남음","지킴","이별","의리"]],"돌려주지 못한 것이 있음":[["로맨스","직업·일상 드라마"],["돌려주지","못함","미련","물건","후회"]],"같은 날을 두 번 겪음":[["회귀·전생","로맨스"],["같은","날","두","번","반복","기회","후회"]],"한 번만 되돌릴 수 있음":[["회귀·전생","미스터리·스릴러"],["되돌림","한","번","선택","대가","후회"]],"서로를 알아보면 안 됨":[["로맨스","미스터리·스릴러"],["알아보면","안","됨","정체","비밀","인연"]],"진실을 말하면 지는 게임":[["미스터리·스릴러"],["진실","거짓","게임","심리전","승부"]],"이기면 잃는 조건":[["미스터리·스릴러","소년만화·배틀","스포츠·승부"],["승리","대가","상실","선택","딜레마"]],"도움을 청할 수 없는 상황":[["미스터리·스릴러","호러·오컬트"],["도움","고립","혼자","위기","비밀"]],"모두가 알면서 침묵함":[["미스터리·스릴러","호러·오컬트","직업·일상 드라마"],["침묵","공모","비밀","마을","진실"]],"기록에 남지 않는 일":[["미스터리·스릴러","직업·일상 드라마"],["기록","없음","비밀","무명","진실"]],"증명할 방법이 없음":[["미스터리·스릴러"],["증명","불가","누명","진실","믿음"]],"시간이 얼마 없음":[["미스터리·스릴러","소년만화·배틀"],["시간","부족","기한","긴박","선택"]],"두 번은 쓸 수 없는 능력":[["소년만화·배틀","판타지·이세계"],["능력","한","번","비장","결단","대가"]],"말하면 사라지는 비밀":[["판타지·이세계","로맨스"],["비밀","말하면","사라짐","금기","침묵"]],"만지면 안 되는 상대":[["판타지·이세계","로맨스","호러·오컬트"],["접촉","금지","저주","사랑","거리"]],"밤에만 만날 수 있음":[["로맨스","판타지·이세계","호러·오컬트"],["밤","만남","금기","비밀","낮"]],"뒤를 돌아보면 안 됨":[["호러·오컬트","판타지·이세계"],["뒤돌아봄","금기","저승","상실"]],"이름을 부르면 안 됨":[["호러·오컬트","판타지·이세계"],["이름","금기","부르면","불러냄","저주"]],"떠나면 돌아올 수 없음":[["판타지·이세계","포스트 아포칼립스"],["떠남","귀환","불가","선택","결별"]],"한 사람만 데려갈 수 있음":[["포스트 아포칼립스","판타지·이세계"],["한","사람","선택","데려감","희생","딜레마"]],"대가를 먼저 치러야 함":[["판타지·이세계","호러·오컬트"],["대가","선불","계약","희생","소원"]],"같은 실수를 반복하게 됨":[["회귀·전생","미스터리·스릴러","호러·오컬트"],["반복","실수","저주","운명","습관"]],"죽은 자를 그대로 흉내 내는 존재가 있음":[["호러·오컬트","포스트 아포칼립스"],["흉내","모방","죽은","자","괴물","의심"]],"먹은 대상의 기억을 갖게 됨":[["호러·오컬트","판타지·이세계","SF·메카"],["먹음","기억","흡수","변이","정체성"]],"복제된 것과 원본을 구별할 수 없음":[["SF·메카","호러·오컬트","미스터리·스릴러"],["복제","원본","구별","정체성","의심"]],"안전한 구역 안에만 사람이 산다":[["포스트 아포칼립스","SF·메카"],["안전","구역","바깥","통제","거짓"]],"자신이 무엇인지 모르는 채로 살아감":[["SF·메카","호러·오컬트","미스터리·스릴러"],["정체","모름","자아","진실","발견"]],"유언이 여정의 지도가 됨":[["직업·일상 드라마","포스트 아포칼립스","로맨스"],["유언","여정","지도","유품","길"]],"바깥에도 사람이 살고 있음":[["포스트 아포칼립스","SF·메카"],["바깥","사람","진실","거짓","발견"]],"한 사람의 기억이 여럿에게 나뉘어 있음":[["SF·메카","미스터리·스릴러","판타지·이세계"],["기억","나뉨","조각","여럿","연결"]],"물이 배급되는 사회":[["포스트 아포칼립스","SF·메카"],["물","배급","부족","통제","생존"]],"바깥은 갈 수 없는 곳으로 표시됨":[["포스트 아포칼립스","SF·메카"],["바깥","금지","지도","거짓","탐험"]],"전기가 하루 한 시간만 들어옴":[["포스트 아포칼립스","SF·메카"],["전기","부족","한","시간","일상","생존"]],"아이가 옛 세계를 모름":[["포스트 아포칼립스","SF·메카"],["옛","세계","무지","세대","기억","상실"]],"보급로가 끊긴 정착지":[["포스트 아포칼립스"],["보급","단절","고립","정착지","생존"]],"사람인지 확인하는 절차가 있음":[["포스트 아포칼립스","호러·오컬트","SF·메카"],["사람","확인","검사","의심","감염"]],"떠난 사람은 돌아오지 않는다":[["포스트 아포칼립스","호러·오컬트"],["떠남","귀환","없음","상실","기다림"]],"무리를 벗어나면 살 수 없음":[["포스트 아포칼립스","호러·오컬트"],["무리","생존","이탈","공동체","규칙"]],"옛 문명의 물건을 쓰는 법을 잊음":[["포스트 아포칼립스","SF·메카"],["옛","물건","사용법","망각","문명"]],"정착지마다 규칙이 다름":[["포스트 아포칼립스","SF·메카"],["정착지","규칙","차이","여행","갈등"]]};
 /* 클리셰 → TV Tropes 대응 트로프. '?'로 시작하면 대응이 느슨해서 검색으로 연결. '제목|주소이름'은 주소가 특이한 것 */
 var TVT={"첫 컷 실전 등장":"In Medias Res","먼치킨":"Invincible Hero","힘숨찐":"Hidden Badass","절단신공":"Cliffhanger","첫 화 3초 훅":"Cold Open","회상 회차":"Flashback Episode","세로 롱컷":"Infinite Canvas","말풍선을 손으로 깨뜨리기":"Medium Awareness","컷 경계를 넘는 인물":"Medium Awareness","각성 · 한계 돌파":"Heroic Second Wind","기술명 외치기":"Calling Your Attacks","라이벌과의 공투":"Enemy Mine","적의 사연 공개":"Freudian Excuse","수련 편":"Training Arc","각성의 대가":"Power at a Price","첫 완패":"Curb-Stomp Battle","봉인 해제":"Power Limiter","등급·서열 공개":"Power Levels","힘의 총량 규칙":"Conservation of Ninjutsu","사천왕·간부 서열":"Elite Four","주인공 부재 회차":"Day in the Limelight","잡졸 일소 컷":"One-Man Army","일격 후의 정적":"Single-Stroke Battle","마지막 힘 쥐어짜기 (핏줄 폭발)":"Determinator","동귀어진 (폭사)":"Taking You with Me","동료의 무기 계승":"Passing the Torch","악당의 자폭 자멸":"Self-Destruct Mechanism","죽기 직전 유언 장문":"Final Speech","납치된 인물 구하기":"Damsel in Distress","발목을 잡는 동행":"Escort Mission","아직 30%밖에 안 썼다":"I Am Not Left-Handed","사실 봐주고 있었다":"I Am Not Left-Handed","분노로 갑자기 강해짐":"Unstoppable Rage","죽은 스승의 목소리":"Spirit Advisor","동료들이 힘을 나눠 줌":"The Power of Friendship","조연이 주인공을 칭찬함":"Character Shilling","다 함께 웃으며 끝":"Everybody Laughs Ending","관전자의 해설":"Battle Commentator Duo","토너먼트 편":"Tournament Arc","약체팀 결성":"Ragtag Bunch of Misfits","종료 직전 역전":"Down to the Last Play","벤치 멤버의 한 순간":"Day in the Limelight","라이벌 재대결":"Worthy Opponent","첫 시합 대패":"Curb-Stomp Battle","데이터형 상대":"Awesomeness by Analysis","이면 규칙 발견":"Loophole Abuse","배신하는 동맹":"Et Tu, Brute?","은퇴한 프로의 복귀":"Retired Badass","스카우팅 리포트 분석":"Awesomeness by Analysis","비 내리는 운동장의 혼자 훈련":"Training Montage","등번호 유니폼 전달":"Passing the Torch","말로 흔들기":"Trash Talk","해설진의 시선":"Battle Commentator Duo","실력 은폐와 폭로":"Hidden Badass","등급 판정":"Power Levels","출근하는 주인공":"Punch-Clock Hero","각성자 협회·정부":"Super Registration Act","일반인 시점 회차":"?Perspective Flip","각성 전 밑바닥":"Zero to Hero","장비 상점":"Ye Olde Item Shoppe","튜토리얼 구간":"?Tutorial Level","리셋·재도전":"Save Scumming","공략 정보 우위":"Genre Savvy","페널티·데스 룰":"?Deadly Game","등급 측정기 파괴":"?It's Over 9000!","보스의 2페이즈 변신":"One-Winged Angel","길드장의 아우라 압박":"Battle Aura","최악의 첫 만남":"?Meet Ugly","고백 직전 방해":"Moment Killer","문화제·축제 편":"School Festival","계약 연애":"Fake Relationship","소꿉친구의 패배":"Unlucky Childhood Friend","첫 데이트":"First Date","취한 밤":"?Intoxication Ensues","병간호":"Florence Nightingale Effect","가족에게 소개":"Meet the Parents","외모의 변화":"She Cleans Up Nicely","연적의 등장":"Romantic Rival","배경 꽃·톤 연출":"Bishie Sparkle","삼각관계":"Love Triangle","옥상·계단참":"?School Rooftop","내면 독백 박스":"Inner Monologue","짝사랑 관찰":"Secret Admirer","쪽지·편지":"Love Letter Lunacy","마음을 접는 장면":"I Want My Beloved to Be Happy","둘만 아는 별명":"Affectionate Nickname","우연히 본 다른 얼굴":"Hidden Depths","돌려주지 못한 물건":"Memento MacGuffin|MementoMacguffin","비 오는 날 마중":"Umbrella of Togetherness","닮은 사람":"Replacement Goldfish","질투를 들킴":"Green-Eyed Monster","고백을 미룸":"Will They or Won't They?","친구들의 부추김":"Shipper on Deck","약을 대신 마심":"Taking the Bullet","기억상실":"Easy Amnesia","불치병 시한부":"Incurable Cough of Death","넘어지며 키스":"Accidental Kiss","임신 오해":"Pregnancy Scare","오해하고 뛰쳐나감":"Poor Communication Kills","말하려는데 전화가 옴":"Moment Killer","편지를 못 읽고 잃어버림":"Poor Communication Kills","연적이 스스로 물러남":"Romantic Runner-Up","부모의 반대":"Parental Marriage Veto","전학생 등장":"New Transfer Student","옥상 결투":"?School Rooftop","학생회 권력":"Absurdly Powerful Student Council","수학여행 밤":"School Trip","교사와의 대립":"Sadist Teacher","등굣길":"Late for School","교복의 변주":"School Uniforms Are the New Black","옥상 펜스 잡고 소리치기":"?School Rooftop","빵 셔틀 반격":"The Worm That Turned","골목의 정면충돌":"Toast of Tardiness","종이비행기 고백 편지":"Love Letter Lunacy","지각해서 담 넘기":"Late for School","목욕탕·탈의실 사고":"Accidental Pervert","친구가 대신 고백해 줌":"?Cyrano de Bergerac","소환·전이":"Trapped in Another World","상태창·시스템":"Stat-O-Vision","첫 던전 공략":"Dungeon Crawling","감정·판별 스킬":"Stat-O-Vision","마법 학교 입학":"Wizarding School","계약 소환수":"Summon Magic","마도구 상점":"Ye Olde Item Shoppe","세계의 진실":"Awful Truth","마을 구하기 회":"Monster of the Week","마법 결투의 규칙":"Wizard Duel","변신 뱅크신":"Transformation Sequence","마스코트의 계약":"Mentor Mascot","정체 은폐":"Secret Identity","동료의 타락":"Face–Heel Turn","마지막 변신":"Super Mode","성검의 선택 (빛의 기둥)":"Sword in the Stone","고대 유적의 함정 발동":"Booby Trap","정체를 아는 친구":"Secret Keeper","선대 마법소녀":"Legacy Character","일상으로 돌아가기":"Status Quo Is God","죽음 직전 회귀":"Peggy Sue","원작 지식 보유":"Genre Savvy","첫 화 절단":"Cliffhanger","원작 강제력":"You Can't Fight Fate","날짜 확인":"What Year Is This?","두 번째 회귀":"Groundhog Day Loop","미래 지식 활용":"Peggy Sue","실존 인물과의 대면":"Historical Domain Character","바꿀 수 없는 사건":"You Can't Fight Fate","신분 상승":"Rags to Riches","위생·의학 개혁":"?Technology Uplift","화약·기술 도입":"?Technology Uplift","역사서와 다른 전개":"Alternate History","전생·회귀의 기억":"Past-Life Memories","과장 리액션":"Wild Take","반복 개그":"Running Gag","사족 마지막 컷":"?Stinger","제4의 벽 붕괴":"Breaking the Fourth Wall","장르 패러디 회":"Affectionate Parody","무표정 츳코미":"Boke and Tsukkomi Routine","이름·간판 개그":"Punny Name","시간 무시":"Comic Book Time","갑작스러운 스케일 확대":"Escalating War","작업 몰입 몽타주":"Training Montage","열애설·과거 폭로":"Paparazzi","무대 뒤 민낯":"Stepford Smiler","임종 화해":"Deathbed Confession","밥상 장면":"Food as Characterization","유품 정리":"Memento MacGuffin|MementoMacguffin","형제의 격차":"Sibling Rivalry","첫 출근":"Naïve Newcomer|NaiveNewcomer","회식 자리":"Office Party","성과와 공로 가로채기":"Stealing the Credit","퇴사 결심":"Take This Job and Shove It","무대 위 사고":"The Show Must Go On","이름을 부르는 순간":"First-Name Basis","후배가 생김":"Senpai/Kohai","교통사고":"Bus Crash","회상으로 성격 설명":"Flashback","독백으로 심경 정리":"Inner Monologue","나레이션으로 이후 요약":"Where Are They Now? Epilogue","유품이 도착함":"Memento MacGuffin|MementoMacguffin","유언이 지시가 됨":"Last Request","열지 말라는 문":"Pandora's Box","배경에 숨은 존재":"Monster Delay","여백 침묵":"Nothing Is Scarier","흩어지자는 제안":"Let's Split Up, Gang!","거울·유리 반사":"Mirror Scare","아이의 그림·낙서":"Creepy Child","살아남은 자의 저주":"Survivor Guilt","기록 매체":"Found Footage Films","아무도 없음":"Nothing Is Scarier","동행자의 이상":"Body Snatcher","끝난 뒤 한 컷":"Sequel Hook","이름을 알면 지배":"?True Name","봉인된 존재의 해방":"Sealed Evil in a Can","요괴가 된 지인":"Was Once a Man","첫 감염 목격":"Patient Zero","물린 것을 숨김":"?Zombie Infectee","동행하는 아이":"Tagalong Kid","목만 180도 돌아간 형상":"Exorcist Head","혈흔으로 그려진 벽면 문자":"Bloody Writing","천장 구석에 붙은 존재":"Wall Crawl","동공이 여러 개로 갈라짐":"Extra Eyes","귀 밑까지 찢어지는 미소":"Slasher Smile","풀리지 않는 저주 인형":"Creepy Doll","동상의 방향이 바뀜":"Living Statue","피 흘리는 성상":"?Weeping Statue","새벽 3시의 초인종":"?The Witching Hour","부적이 타는 순간":"Paper Talisman","계약의 대가":"Deal with the Devil","마을의 침묵":"Town with a Dark Secret","대체된 존재의 귀환":"Body Snatcher","죽여야 한다는 조언":"Mercy Kill","모방의 실패":"Uncanny Valley","폐쇄 공간":"Closed Circle","독백과 사실의 어긋남":"Unreliable Narrator","안락의자 추리":"Armchair Detective","시간표·도표":"?Conspiracy Corkboard","조수의 질문":"The Watson","경찰과의 마찰":"Inspector Lestrade","범인 시점 컷":"?Killer POV","해결 후의 뒷맛":"Bittersweet Ending","마지막 한탕":"One Last Job","배신의 순간":"Et Tu, Brute?","빚과 이자":"Loan Shark","형사와 범죄자의 거울":"Not So Different","잠입 수사":"Deep Cover Agent","완전범죄 설계":"?Perfect Crime","추격전":"Chase Scene","내부 밀고자":"The Mole","마지막 자백":"Engineered Public Confession","가해자의 몰락":"Laser-Guided Karma","그림자가 다른 방향을 가리킴":"Living Shadow","같은 문장이 반복되는 노트":"Room Full of Crazy","시체의 눈동자에 반사된 범인":"?Optography","밀실에서의 러시안룰렛":"Russian Roulette","경찰 신분증 밟고 지나가기":"Turn in Your Badge","배지를 뜯어 던지기":"Turn in Your Badge","트렁크 안에서 보는 시선":"Trunk Shot","담뱃불로 서류 태우기":"Burn After Reading","컨테이너 사이의 추격":"Chase Scene","돌을 묶어 가라앉히기":"Cement Shoes","초침 소리의 압박":"Ticking Clock","증거 조작":"Frame-Up","무죄 판결":"Karma Houdini","쌍둥이 바꿔치기":"Twin Switch","목걸이가 총알을 막음":"Pocket Protector","자기 정체를 의심하는 순간":"Tomato in the Mirror","자기 영정사진":"?Attending Your Own Funeral","자기 무덤 앞에 서기":"?Attending Your Own Funeral","의체와 인간성":"More Machine Than Man","거대 기업 지배":"Mega-Corp","기억 조작":"Fake Memories","AI의 자아":"A.I. Is a Crapshoot","전뇌 다이브":"Cyberspace","폐허가 된 미래":"Bad Future","복제·대체된 나":"Clone Angst","첫 탑승":"Falling into the Cockpit","합체·변형":"Combining Mecha","스마트 글래스 분석":"Robo Cam","AI의 붉은 렌즈":"Red Eyes, Take Warning","사부의 죽음":"Mentor Occupational Hazard","객잔 난투":"Bar Brawl","절벽 낙하 후 기연":"Not the Fall That Kills You","초식명 대결":"Calling Your Attacks","은거 고수":"Old Master","폐관 수련":"Training from Hell","독과 암기":"Poisoned Weapons","무림 대회":"Tournament Arc","지도 위의 전략":"War Room","이름 없는 병사":"Red Shirt Army","승리 후의 폐허":"Pyrrhic Victory","실존 인물의 등장":"Historical Domain Character","세대 교체":"Passing the Torch","사문 배신 (도복 찢기)":"Face–Heel Turn","귀향한 병사":"Shell-Shocked Veteran","폐허가 된 익숙한 장소":"Ruins of the Modern Age","물자 수색":"Scavenger World","옛 세계의 물건":"Future Imperfect","다음 세대의 무지":"Future Imperfect","머리 옆 큰 땀방울":"Sweat Drop","이마의 십자 핏대":"Cross-Popping Veins","뒤로 자빠지는 리액션":"Face Fault","갑자기 SD 체형":"Super-Deformed","안경 반사로 눈 가리기":"Glasses Glint","눈을 덮는 그림자":"Hidden Eyes","하이라이트가 사라진 눈":"Dull Eyes of Unhappiness","효과음 글자로 때리기":"Written Sound Effect","말없음표만 든 말풍선":"?Ellipsis Bubble","볼의 사선 홍조":"Blush Stickers","하트가 된 눈":"?Heart Eyes","까마귀가 지나가는 침묵":"Cue the Crickets","스포트라이트 독백":"Dramatic Spotlight","실루엣만 보이는 흑막":"Mysterious Watcher","어둠 속에서 빛나는 눈":"Glowing Eyes of Doom","세피아 톤 회상":"?Flashback Effects","극적인 바람":"Dramatic Wind","폭발을 등지고 걷기":"Cool Guys Don't Look at Explosions","분할 화면 통화":"Split-Screen Phone Call","노을로 걸어가는 뒷모습":"Riding into the Sunset","하늘만 바뀌는 시간 경과":"?Time Passes Montage","앞에 놓아둔 총":"Chekhov's Gun","사망 플래그 대사":"Death Flag","넘김 깜짝 컷":"Jump Scare","날씨가 기분을 따라감":"Empathic Environment","맨손으로 칼 받기":"Blade Catch","등을 맞대고 싸우기":"Back-to-Back Badasses","무게추를 벗자 빨라짐":"Weighted Training Gear","싸우고 나면 동료":"Defeat Means Friendship","인정하는 적":"Worthy Opponent","머리색이 바뀌는 각성":"Super Mode","연기 속에서 걸어 나옴":"?Not Quite Dead","잔상만 남기는 이동":"Afterimage Technique","이미 베었다":"You Are Already Dead","보고 따라 하는 천재":"Power Copying","빔 줄다리기":"Beam-O-War","슈퍼히어로 착지":"Three-Point Landing","마음속 세계에서의 대면":"Mental World","몸 안의 다른 존재":"Superpowered Evil Side","악당의 승리 연설":"Just Between You and Me","내가 막을 테니 먼저 가":"Hold the Line","필살 슛의 이름":"Signature Move","부상 투혼":"?Playing Through the Pain","약체팀의 역전승":"Underdogs Never Lose","팀의 엄마 역 매니저":"Team Mom","아공간 인벤토리":"Hyperspace Arsenal","그 시절 이름이 다시 들림":"The Dreaded","평범한 척하는 랭커":"Retired Badass","수명이 다른 동료":"Mayfly–December Friendship","착한 마왕":"Dark Is Not Evil","주점에서 시작하는 모험":"You All Meet in an Inn","마력 고갈":"Cast from Hit Points","금지된 마법":"Black Magic","영창 시간 벌기":"?Magic Incantation","현대 요리로 이세계 사로잡기":"Fish out of Water","공개 파혼 선언":"?Broken Engagement","악역 영애 빙의":"?Villainess Isekai","몬스터로 전생":"Reincarnation","같은 하루의 반복":"Groundhog Day Loop","작은 변화의 나비효과":"Butterfly of Doom","다른 회귀자의 존재":"Peggy Sue","미래의 나와 만남":"Future Me Scares Me","내공 전수":"?Power Transfer","혈도 짚기":"Pressure Point","지붕 위 경공":"Wire Fu","주화입마":"?Qi Deviation","최후의 저항":"Last Stand","간접 키스":"Indirect Kiss","무릎베개":"Lap Pillow","공주님 안기":"Bridal Carry","외투를 걸쳐 줌":"Coat Over a Puddle","괜히 화내며 챙기기":"Tsundere","어깨에 기대 잠듦":"?Sleep Cute","머리 쓰다듬기":"?Head Pat","깜짝 생일 파티":"Surprise Party","정략결혼":"Arranged Marriage","공항으로 달려가기":"Race for Your Love","첫눈 오는 날의 약속":"Snow Means Love","키스 직전에 멈춤":"Almost Kiss","계약 결혼":"Marriage of Convenience","어릴 적 결혼 약속":"Childhood Marriage Promise","운명의 붉은 실":"Red String of Fate","학교 7대 불가사의":"?School Ghost Story","체육대회 계주 마지막 주자":"?Sports Festival","보건실 침대":"?School Nurse","축제 연극의 대역":"?The School Play","반장 선거":"?Student Council President","다잉 메시지":"?Dying Clue","모두 모아 놓고 범인 지목":"The Summation","가짜 단서":"Red Herring","신문 헤드라인 몽타주":"Spinning Paper","CCTV 사각지대":"?Security Camera","암호 해독":"?Cipher","비명으로 시작하는 시체 발견":"Scream Discretion Shot","사실은 죽어 있었다":"Dead All Along","분신사바·강령술":"?Summoning Ritual","거울 속의 다른 나":"?Mirror Monster","전화는 집 안에서 걸려 왔다":"The Call Is Coming from Inside the House","흉가 체험":"Haunted House","폐병원 탐사":"?Abandoned Hospital","눈을 감으면 다가오는 것":"?Only Moves When You're Not Looking","도시 전설이 실재함":"Urban Legends","보면 죽는 영상":"?Cursed Videotape","고양이였다":"Cat Scare","붉은 비상등":"Red Alert","냉동 수면에서 깨어남":"Human Popsicle","할아버지 역설":"Grandfather Paradox","홀로그램 유언":"Apocalyptic Log","감시 사회":"Big Brother Is Watching","단체 사진으로 끝":"?Group Picture Ending","앞뒤 잘린 엿듣기":"Out-of-Context Eavesdropping","일기장을 들킴":"Dear Diary","몸이 바뀜":"Freaky Friday Flip","바다 회":"Beach Episode","온천 회":"Hot Springs Episode","크리스마스 회":"Christmas Episode","요리 테러":"Lethal Chef","알고 보니 꿈":"All Just a Dream","계획대로":"Just as Planned","장례식엔 비":"Empathic Environment","엘리베이터에 갇힘":"?Stuck in an Elevator","정전된 밤":"?Power Outage","반려동물의 죽음":"Old Yeller","부모가 못 이룬 꿈":"?Living Vicariously","죽기 전 해야 할 목록":"?Bucket List","타임캡슐":"?Time Capsule"};
 (function(){ var add={"소명을 거부하는 주인공":"Refusal of the Call","돌아갈 수 없는 문턱":"Point of No Return","멘토의 퇴장":"Mentor Occupational Hazard","중반의 가짜 승리":"?False Victory","가장 어두운 순간":"Darkest Hour","주인공의 정신적 붕괴":"Heroic BSoD","액자식 구성":"Framing Device","시작과 끝이 같은 장면":"Bookends","결말부터 보여 주기":"How We Got Here","두 이야기 교차 진행":"Two Lines, No Waiting","흩어진 이야기가 하나로":"Arc Welding","맥거핀":"MacGuffin","갑자기 나타난 해결사":"Deus ex Machina","스스로 이루어지는 예언":"Self-Fulfilling Prophecy","잘못 읽은 예언":"Prophecy Twist","독자만 아는 비밀":"Dramatic Irony","숨겨진 혈통":"Secret Legacy","적이 가족이었다":"Luke, I Am Your Father","악당의 개심":"Heel–Face Turn","속죄의 희생":"Redemption Equals Death","비극적 결함":"Fatal Flaw","나의 다른 가능성인 적":"Evil Counterpart","마지막 상대는 나 자신":"Shadow Archetype","적에서 연인으로":"?Enemies to Lovers","원수 집안의 사랑":"Star-Crossed Lovers","신분을 넘는 사랑":"Cinderella Circumstances","스승을 넘어서는 제자":"?Student Becomes the Master","죽은 자의 뜻을 잇기":"?Dying Wish","같은 대사, 다른 의미":"Meaningful Echo","앞 장면을 다시 부르기":"Call-Back","복선 깔기":"Foreshadowing","인물을 정의하는 첫 행동":"Establishing Character Moment","호감을 사는 작은 선행":"Pet the Dog","악당의 잔인한 한 수":"Kick the Dog","이야기 속 이야기":"Story Within a Story","같은 사건 여러 시점":"Rashomon Style","돌아와 보니 바뀐 고향":"You Can't Go Home Again","세 번째에 성공":"Rule of Three","선택받은 자":"The Chosen One","불타는 고향":"Doomed Hometown","복수를 시작하게 한 사건":"Roaring Rampage of Revenge","복수의 연쇄":"Cycle of Revenge","대물림되는 상처":"?Generational Trauma","돌아온 정당한 왕":"?The Rightful King Returns","죽은 척하기":"Faking the Dead","동료를 하나씩 모으기":"?Assemble the Team","흩어진 팀의 재결성":"Putting the Band Back Together","가짜 주인공":"Decoy Protagonist","시간과의 경주":"Race Against the Clock","판을 뒤집는 회차":"Wham Episode","중반의 장르 전환":"Halfway Plot Switch","하나씩 사라지는 사람들":"And Then There Were None","배후의 배후":"The Man Behind the Man","적의 손을 잡을 기회":"?Join the Dark Side","누명을 쓴 주인공":"Wrongly Accused","잃어버린 기억이 열쇠":"Laser-Guided Amnesia","제목을 말하는 순간":"Title Drop","폭풍 전의 고요":"Calm Before the Storm","결전 전의 연설":"Rousing Speech","구원군 등장":"Big Damn Heroes","시간 도약":"Time Skip","미래 장면 먼저 보여 주기":"Flash Forward","다 아는 걸 설명하는 대화":"As You Know","독자 대신 묻는 신참":"Audience Surrogate","악당의 말에도 일리가 있음":"Villain Has a Point","처음에 던진 질문":"Central Theme","진짜 보물은 함께한 시간":"?The Real Treasure Was the Friends We Made Along the Way","성장의 대가":"Coming-of-Age Story","사라진 부모 찾기":"Disappeared Dad"}; for(var k in add) TVT[k]=add[k]; })();
@@ -2657,7 +2672,7 @@ var PAGES=[
  {g:'기초',id:'authors',t:'작가별 연출 문법',d:'나루토·죠죠·아키라·원피스·핑퐁 등 12가지 대표 연출.'},
  {g:'기초',id:'pagemap',t:'페이지 배분 설계',d:'도입·초반·중반·정점·마무리 다섯 구간의 지면 계산.'},
  {g:'도구',id:'shuffle',t:'랜덤 구성기',d:'소재·클리셰·엔딩을 한 번에. 연재 모드와 고정 지원.'},
- {g:'도구',id:'ideacomp',t:'아이디어 구성기',d:'적어 둔 아이디어로 소재·클리셰·엔딩·주인공을 골라 구성안을 만든다.'},
+ {g:'도구',id:'conti',t:'콘티 구성기',d:'구성기의 이야기와 클리셰 컷 배정으로 컷마다 구도 그림과 글을 짠다.'},
  {g:'도구',id:'arc',t:'아크 점검표',d:'장편용. 네 칸을 채워 점검하고 장르별 예시 48개.'},
  {g:'도구',id:'epidx',t:'에피소드 소재 색인',d:'220개. 한 화를 채우는 작은 사건. 로맨스·개그·일상.'},
  {g:'도구',id:'ai',t:'AI 연결',d:'OpenRouter 키를 넣고 비틀기·연관짓기·글쓰기를 쓴다.'},
@@ -2748,6 +2763,7 @@ function show(id){
   var _ps=document.getElementById('pagesel'); if(_ps) _ps.value=id;
   try{ if(id==='index') ensureIndex(); }catch(e){}
   if(id==='favs') renderFavs();
+  if(id==='conti' && window.__contiShow) window.__contiShow();
   try{ window.scrollTo(0,0); }catch(e){}
 }
 window.addEventListener('hashchange',function(){ show((location.hash||'#home').slice(1)); });
@@ -3365,7 +3381,7 @@ function aiDrawn(noIdea){
   var cut=document.getElementById('sf-cutn');
   if(cut) L.push('분량: '+cut.value);
   var out=L.join('\n');
-  // 아이디어 메모는 넣지 않는다 (아이디어로 쓰는 글은 아이디어 구성기에서)
+  if(!noIdea) out+=ideaBlock('sf');
   return out;
 }
 
@@ -3509,7 +3525,7 @@ function aiRefresh(){
   try{ AIKEY=localStorage.getItem('orKey')||''; AIMODEL=localStorage.getItem('orModel')||AIMODEL; localStorage.removeItem('aiOut'); }catch(e){}
   aiNoCreditMark(false);
   var k=document.getElementById('ai-key'); if(k) k.value=AIKEY;
-  try{ aiBar(); favAiBar(); aiSlots(); if(typeof ideaWriteBar==='function') ideaWriteBar(); if(typeof pbBar==='function') pbBar(); if(window.__reSlots) window.__reSlots(); }catch(e){}
+  try{ aiBar(); favAiBar(); aiSlots(); if(typeof pbBar==='function') pbBar(); if(window.__reSlots) window.__reSlots(); }catch(e){}
   if(!AIKEY){ set('키 없음','warn','AI 연결 페이지에서 OpenRouter 키를 넣는다.'); return Promise.resolve(); }
   set('…','busy','모델 목록을 새로 받고 연결을 확인하는 중');
   var p0=(typeof ormLoad==='function')?ormLoad(true):Promise.resolve();
@@ -3681,11 +3697,11 @@ var AISYS='당신은 한국 만화·웹툰 연출을 돕는 조력자다. 짧고
   var k=document.getElementById('ai-key'); if(!k) return;
   var m=document.getElementById('ai-model'), msg=document.getElementById('ai-msg');
   k.value=AIKEY;
-  function refreshAll(){ aiBar(); favAiBar(); aiSlots(); if(typeof ideaWriteBar==='function') ideaWriteBar(); if(typeof ideaWriteBar==='function') ideaWriteBar(); if(typeof pbBar==='function') pbBar(); if(typeof apply==='function') apply(); if(window.__reSlots) window.__reSlots(); if(typeof renderFavs==='function') renderFavs(); }
+  function refreshAll(){ aiBar(); favAiBar(); aiSlots(); if(typeof pbBar==='function') pbBar(); if(typeof apply==='function') apply(); if(window.__reSlots) window.__reSlots(); if(typeof renderFavs==='function') renderFavs(); }
   try{ ormLoad(false); }catch(e){}
   var ms=document.getElementById('ai-msearch');
   if(ms) ms.addEventListener('input',function(){ ormFill(ms.value); });
-  k.addEventListener('input',function(){ AIKEY=k.value.trim(); aiSave(); aiBar(); favAiBar(); aiSlots(); if(typeof ideaWriteBar==='function') ideaWriteBar(); if(typeof pbBar==='function') pbBar(); if(typeof apply==='function') apply(); if(window.__reSlots) window.__reSlots(); if(typeof renderFavs==='function') renderFavs(); });
+  k.addEventListener('input',function(){ AIKEY=k.value.trim(); aiSave(); aiBar(); favAiBar(); aiSlots(); if(typeof pbBar==='function') pbBar(); if(typeof apply==='function') apply(); if(window.__reSlots) window.__reSlots(); if(typeof renderFavs==='function') renderFavs(); });
   if(m) m.addEventListener('change',function(){
     AIMODEL=m.value; aiSave(); if(!/:free$/.test(AIMODEL)) aiNoCreditMark(false);
     try{ var o=JSON.parse(localStorage.getItem('aiOut')||'{}')||{}; if(o[PROV+'|'+AIMODEL]){ delete o[PROV+'|'+AIMODEL]; localStorage.setItem('aiOut',JSON.stringify(o)); } }catch(e){}
@@ -3693,7 +3709,7 @@ var AISYS='당신은 한국 만화·웹툰 연출을 돕는 조력자다. 짧고
     if(typeof ormFill==='function'){ var ms2=document.getElementById('ai-msearch'); ormFill(ms2?ms2.value:''); }
   });
   document.getElementById('ai-clear').addEventListener('click',function(){
-    AIKEY=''; k.value=''; aiSave(); aiBar(); favAiBar(); aiSlots(); if(typeof ideaWriteBar==='function') ideaWriteBar(); if(typeof pbBar==='function') pbBar(); if(typeof apply==='function') apply(); if(window.__reSlots) window.__reSlots(); if(typeof renderFavs==='function') renderFavs(); msg.textContent='지웠습니다.'; });
+    AIKEY=''; k.value=''; aiSave(); aiBar(); favAiBar(); aiSlots(); if(typeof pbBar==='function') pbBar(); if(typeof apply==='function') apply(); if(window.__reSlots) window.__reSlots(); if(typeof renderFavs==='function') renderFavs(); msg.textContent='지웠습니다.'; });
   var afc=document.getElementById('ai-autofree');
   if(afc){ afc.checked=aiAutoFree(); afc.addEventListener('change',function(){ try{ localStorage.setItem('orAutoFree',afc.checked?'1':'0'); }catch(e){} }); }
   aiCreditUI();
@@ -4177,51 +4193,6 @@ function ideaBlock(which){
   return s;
 }
 
-// ----- 연관어 검색: 소재·아이디어의 단어로 클리셰·엔딩·캐릭터를 점수 매겨 찾는다 -----
-function relWordsLocal(text){
-  var raw=String(text||'').replace(/[^\uAC00-\uD7A3A-Za-z0-9 ]/g,' ').split(/\s+/).filter(function(w){ return w.length>=2; }), out=[];
-  raw.forEach(function(w){ var st=ixStem(w);
-    if(st===w && /(고|은|는|다|한|된|던|며|서|게|지|요|니|면)$/.test(w)) return;   // 「열리고」「읽은」 같은 서술어 꼴은 검색어로 쓰지 않는다
-    if(REL_STOP[st]) return;
-    [st,w].forEach(function(x){ if(x && x.length>=2 && !IX_STOP[x] && !REL_STOP[x] && out.indexOf(x)<0) out.push(x); }); });
-  return out.slice(0,24);
-}
-var REL_STOP={'나는':1,'너는':1,'우리':1,'덕에':1,'때문':1,'때문에':1,'같은':1,'다른':1,'그리고':1,'하지만':1,'이야기':1,'만화':1,'주인공':1,'사람이':1};
-// 연관어가 가장 많이 걸리는 장르를 고른다 (사전에 태그가 없는 소재·아이디어용)
-function relGenreGuess(words, allowed){
-  var tot={};
-  ROWS.forEach(function(r){ if(allowed.indexOf(r[1])<0) return; var t=REL.c(r), sc=relScore(t[0],t[1],words); if(sc>=1.5) tot[r[1]]=(tot[r[1]]||0)+sc; });
-  var best=null; Object.keys(tot).forEach(function(g){ if(!best || tot[g]>tot[best]) best=g; });
-  return best;
-}
-function relScore(name, body, words){
-  var n=hsNorm(name), b=hsNorm(body), s=0;
-  (words||[]).forEach(function(w){ var x=hsNorm(w); if(x.length<2) return;
-    if(n.indexOf(x)>-1) s+=3; else if(b.indexOf(x)>-1) s+=1.5;
-    else if(x.length>=3){ var pf=x.slice(0,2); if(n.indexOf(pf)>-1) s+=0.8; else if(b.indexOf(pf)>-1) s+=0.4; } });
-  return s;
-}
-var REL={
-  c:function(r){ return [r[0], r[8]+' '+r[9]+' '+r[2]]; },
-  e:function(r){ return [r[1], r[2]+' '+r[5]+' '+r[0]]; },
-  m:function(r){ var t=MTAG[r[0]]; return [r[0], (t?t[1].join(' '):'')+' '+r[1]+' '+(r[3]||'')]; },
-  ch:function(r){ return [r[2], r[3]+' '+(r[4]||'')+' '+r[0]+' '+r[1]]; }
-};
-function relRank(list, kind, words, genre, min){
-  var f=REL[kind];
-  return list.map(function(r){ var t=f(r), sc=relScore(t[0], t[1], words);
-      if(kind==='c' && sc>0){ if(genre && r[1]===genre) sc+=1.5; else if(String(r[1]).indexOf('장르 공통')>-1) sc*=0.8; }   // 같은 점수면 그 장르 고유 클리셰가 앞으로
-      return {r:r, s:Math.round(sc*10)/10}; })
-    .filter(function(o){ return o.s>=(min||1.5); }).sort(function(a,b){ return b.s-a.s; });
-}
-function motifSeedInfo(texts){
-  // 소재 글에서 장르 후보와 연관어를 모은다 (AI 없이)
-  var gs=[], ws=[];
-  texts.forEach(function(t){ var tg=MTAG[t]; if(tg){ tg[0].forEach(function(g){ if(gs.indexOf(g)<0) gs.push(g); }); tg[1].forEach(function(w){ if(ws.indexOf(w)<0) ws.push(w); }); }
-    relWordsLocal(t).forEach(function(w){ if(ws.indexOf(w)<0) ws.push(w); }); });
-  return {genres:gs, words:ws};
-}
-
 // ----- 아이디어 메모로 추천받기 -----
 function ideaRecFind(list, name, col){
   name=String(name||'').replace(/[“”"「」《》]/g,'').trim(); if(!name) return null;
@@ -4235,149 +4206,85 @@ function ideaRec(box){
   if(!t){ box.innerHTML='<p class="small">아이디어 칸에 그리고 싶은 만화를 먼저 적는다. 한두 줄이면 된다.</p>'; return; }
   if(!aiReady()){ box.innerHTML='<p class="small"><a href="#ai">AI 연결</a>에서 키를 먼저 넣는다.</p>'; return; }
   var esc=pbEsc, tok=(ideaRec.tok=(ideaRec.tok||0)+1);
-  var GL=PB_ENUM.g.filter(function(g){ return g.indexOf('장르 공통')<0; });
+  function grouped(list, gcol, ncol){ var by={}; list.forEach(function(r){ (by[r[gcol]]=by[r[gcol]]||[]).push(r[ncol]); }); return Object.keys(by).map(function(g){ return g+': '+by[g].join(' / '); }).join('\n'); }
   function posHas(r, ps){ return String(r[3]).split('|').some(function(x){ return ps.indexOf(x)>-1; }); }
+  var live=ROWS.filter(function(r){ return r[4]!=='dead'; });
   var kc=function(r){ return 'c|'+r[0]; }, km=function(r){ return 'm|'+r[0]; }, ke=function(r){ return 'e|'+r[1]; }, kch=function(r){ return 'ch|'+r[2]; };
   var cm=function(r){ return r[1]+' · '+r[2]; };
   var SEC=[
-    {id:'m', title:'소재', n:3, col:0, key:km, kind:'m', meta:function(r){ return r[1]; }, base:function(){ return MOTIFDATA; }},
-    {id:'early', title:'클리셰 — 초반', n:2, col:0, key:kc, kind:'c', meta:cm, pos:['도입','초·중반']},
-    {id:'mid', title:'클리셰 — 중반', n:2, col:0, key:kc, kind:'c', meta:cm, pos:['중반']},
-    {id:'late', title:'클리셰 — 후반', n:2, col:0, key:kc, kind:'c', meta:cm, pos:['정점','마무리']},
-    {id:'e', title:'엔딩', n:2, col:1, key:ke, kind:'e', meta:function(r){ return r[0]+' · '+r[2]; }, base:function(){ return ENDINGS; }},
-    {id:'ch', title:'캐릭터 모티브', n:3, col:2, key:kch, kind:'ch', meta:function(r){ return r[0]+' · '+r[1]+' — '+r[3]; }, base:function(){ return CHARS; }}
+    {id:'m', title:'소재', n:3, list:MOTIFDATA, col:0, key:km, meta:function(r){ return r[1]; }, text:function(){ return MOTIFDATA.map(function(r){ return r[0]+' ('+r[1]+')'; }).join(' / '); }, ask:'이 아이디어의 바탕이 될 소재(세계 규칙·인물 처지 같은 조건)', first:true},
+    {id:'early', title:'클리셰 — 초반', n:2, list:live.filter(function(r){ return posHas(r,['도입','초·중반']); }), col:0, key:kc, meta:cm, ask:'초반(도입부)에 쓸 클리셰'},
+    {id:'mid', title:'클리셰 — 중반', n:2, list:live.filter(function(r){ return posHas(r,['중반']); }), col:0, key:kc, meta:cm, ask:'중반(갈등이 커지는 구간)에 쓸 클리셰'},
+    {id:'late', title:'클리셰 — 후반', n:2, list:live.filter(function(r){ return posHas(r,['정점','마무리']); }), col:0, key:kc, meta:cm, ask:'후반(정점과 마무리)에 쓸 클리셰'},
+    {id:'e', title:'엔딩', n:2, list:ENDINGS, col:1, key:ke, meta:function(r){ return r[0]+' · '+r[2]; }, text:function(){ return grouped(ENDINGS,0,1); }, ask:'결말의 형태(엔딩)'},
+    {id:'ch', title:'캐릭터 모티브', n:3, list:CHARS, col:2, key:kch, meta:function(r){ return r[0]+' · '+r[1]+' — '+r[3]; }, text:function(){ return grouped(CHARS,0,2); }, ask:'주인공에게 맞는 캐릭터 모티브(외모·성격·결핍에서 하나씩)'}
   ];
-  var R={}, SL={}, OFF={}, summary='', genre='', words=[];
-  box.innerHTML='<div class="aires"><p id="idr-sum" class="small">1/2 아이디어에서 장르와 연관어를 뽑는 중…</p><div id="idr-plan"></div>'+SEC.map(function(sc){ return '<div class="pbsec" id="idr-'+sc.id+'"><h4>'+sc.title+'</h4><p class="small">기다리는 중…</p></div>'; }).join('')+
-    '<div id="idr-extra"></div><div class="filterbar" id="idr-bar" hidden><button class="chip" id="id-apply"><b>랜덤 구성기로 보내기</b> (구성안을 칸에 넣고 고정)</button><button class="chip" id="id-favall">전부 ☆ 담기</button><button class="chip" id="id-copy">구성안 복사</button></div></div>';
+  SEC.forEach(function(sc){ if(!sc.text) sc.text=function(){ return grouped(sc.list,1,0); }; });
+  var R={}, summary='', extra=[];
+  box.innerHTML='<div class="aires"><p id="idr-sum" class="small">아이디어를 읽는 중…</p>'+SEC.map(function(sc){ return '<div class="pbsec" id="idr-'+sc.id+'"><h4>'+sc.title+'</h4><p class="small">차례를 기다리는 중…</p></div>'; }).join('')+
+    '<div id="idr-extra"></div><div class="filterbar" id="idr-bar" hidden><button class="chip" id="id-apply">구성기에 채우기 (첫 번째 추천으로, 고정)</button><button class="chip" id="id-favall">전부 ☆ 담기</button><button class="chip" id="id-copy">복사</button></div></div>';
   function el(id){ return document.getElementById(id); }
-  function planText(){
-    var L=[], nm=function(id,col){ var o=(R[id]||[])[0]; return o?o.r[col]:''; };
-    if(summary) L.push('핵심: '+summary);
-    if(genre) L.push('장르: '+genre);
-    if(nm('m',0)) L.push('소재: '+nm('m',0));
-    [['early','초반'],['mid','중반'],['late','후반']].forEach(function(x){ if(nm(x[0],0)) L.push(x[1]+': '+nm(x[0],0)); });
-    if(nm('e',1)) L.push('엔딩: '+nm('e',1));
-    var ch=(R.ch||[]).map(function(o){ return o.r[0]+' '+o.r[2]; }); if(ch.length) L.push('주인공: '+ch.join(' / '));
+  function chosenText(){
+    var L=[]; if(summary) L.push('핵심: '+summary);
+    SEC.forEach(function(sc){ if(R[sc.id]&&R[sc.id].length) L.push(sc.title+': '+R[sc.id].map(function(o){ return o.r[sc.col]; }).join(' / ')); });
     return L.join('\n');
   }
-  ideaRec.plan=function(){ return (tok===ideaRec.tok)?planText():''; };
-  function renderPlan(){
-    var d=el('idr-plan'); if(!d) return;
-    var rows=[['m','소재',0],['early','초반',0],['mid','중반',0],['late','후반',0],['e','엔딩',1]].map(function(x){ var o=(R[x[0]]||[])[0]; return o?'<li><b>'+x[1]+'</b> '+esc(o.r[x[2]])+' <span class="small">— '+esc(o.why)+'</span></li>':''; }).join('');
-    var ch=(R.ch||[]).map(function(o){ return esc(o.r[0]+' · '+o.r[2]); });
-    if(ch.length) rows+='<li><b>주인공</b> '+ch.join(' / ')+'</li>';
-    d.innerHTML=rows?'<div class="plan"><h4>구성안</h4><ol>'+rows+'</ol></div>':'';
-  }
-  function paintSec(sc){
+  function paintSec(sc, state, msg){
     var d=el('idr-'+sc.id); if(!d) return;
-    if(!R[sc.id] || !R[sc.id].length){ d.innerHTML='<h4>'+sc.title+'</h4><p class="small">연관어에 맞는 항목을 찾지 못했다.</p>'; return; }
-    d.innerHTML='<h4>'+sc.title+((SL[sc.id]||[]).length>sc.n?' <button class="chip" data-idr="'+sc.id+'" title="검색 결과의 다음 항목으로">↻</button>':'')+'</h4>'+R[sc.id].map(function(o,i2){ var k=sc.key(o.r), on=!!FAV[k];
-      return '<div class="pbrow"><button class="fav" data-k="'+esc(k).replace(/"/g,'&quot;')+'" data-meta="아이디어 추천" aria-pressed="'+(on?'true':'false')+'">'+(on?'★':'☆')+'</button><div class="b"><b>'+esc(o.r[sc.col])+'</b> <span class="small">'+esc(sc.meta(o.r))+'</span><span class="w">'+esc(o.why)+'</span></div>'+
-        (sc.id!=='ch'?(i2===0?'<span class="small inplan">구성안</span>':'<button class="chip" data-pick="'+sc.id+':'+i2+'">구성안에</button>'):'')+'</div>'; }).join('');
-    renderPlan();
+    if(state==='busy'){ d.innerHTML='<h4>'+sc.title+'</h4><p class="small">고르는 중…</p>'; return; }
+    if(state==='fail'){ d.innerHTML='<h4>'+sc.title+'</h4><p class="small">못 골랐다'+(msg?' — '+esc(msg):'')+' <button class="chip" data-idr="'+sc.id+'">다시</button></p>';
+      d.querySelector('button[data-idr]').addEventListener('click',function(){ runOne(sc).then(finish); }); return; }
+    d.innerHTML='<h4>'+sc.title+' <button class="chip" data-idr="'+sc.id+'" title="이 갈래만 다시 고르기">↻</button></h4>'+R[sc.id].map(function(o){ var k=sc.key(o.r), on=!!FAV[k];
+      return '<div class="pbrow"><button class="fav" data-k="'+esc(k).replace(/"/g,'&quot;')+'" data-meta="아이디어 추천" aria-pressed="'+(on?'true':'false')+'">'+(on?'★':'☆')+'</button><div class="b"><b>'+esc(o.r[sc.col])+'</b> <span class="small">'+esc(sc.meta(o.r))+'</span><span class="w">'+esc(o.why)+'</span></div></div>'; }).join('');
+    d.querySelector('button[data-idr]').addEventListener('click',function(){ runOne(sc).then(finish); });
   }
-  function shortlist(sc){
-    var list;
-    if(sc.kind==='c'){
-      var gOK=GL.indexOf(genre)>-1;
-      list=ROWS.filter(function(r){ return r[4]!=='dead' && posHas(r, sc.pos) && (!gOK || r[1]===genre || r[1].indexOf('장르 공통')>-1); });
-    } else list=sc.base();
-    var ranked=relRank(list, sc.kind, words, GL.indexOf(genre)>-1?genre:null, 1.5);
-    if(ranked.length<sc.n){ var seen={}; ranked.forEach(function(o){ seen[o.r[sc.col]]=1; });
-      for(var i=0;i<60 && ranked.length<sc.n+3;i++){ var r=list[Math.floor(Math.random()*list.length)]; if(r && !seen[r[sc.col]]){ seen[r[sc.col]]=1; ranked.push({r:r, s:0}); } } }
-    return ranked.slice(0,8);
+  function runOne(sc){
+    paintSec(sc,'busy');
+    var ctx=chosenText();
+    var prompt='[작가가 그리고 싶은 만화 — 이것만 근거로 고른다]\n'+t+(ctx?'\n\n[지금까지 고른 것 — 이것과 이어지게]\n'+ctx:'')+
+      '\n\n[후보 목록]\n'+sc.text()+
+      '\n\n위 목록에서 '+sc.ask+'을(를) '+sc.n+'개 고른다. 이름은 목록에 적힌 그대로 쓴다. 아이디어에 없는 설정을 지어 붙이지 않는다. 이유는 짧게 한 문장.\n'+
+      (sc.first?'처음이니 이 아이디어의 핵심을 한 문장으로 summary에 적고, 사전에 없지만 꼭 필요해 보이는 장치가 있으면 extra에 2개까지(없으면 빈 배열).\nJSON만 출력한다: {"summary":"","picks":[{"name":"","why":""}],"extra":[{"name":"","why":""}]}'
+               :'JSON만 출력한다: {"picks":[{"name":"","why":""}]}');
+    return aiAsk('당신은 만화 기획 편집자다. 반드시 유효한 JSON만 짧게 출력한다.', prompt, 600).then(function(r){
+      if(tok!==ideaRec.tok) return;
+      var j=null; try{ j=JSON.parse(String(r).replace(/```json|```/g,'').trim().replace(/^[^{]*/,'').replace(/[^}]*$/,'')); }catch(e){}
+      if(!j){ R[sc.id]=[]; paintSec(sc,'fail', aiIsErr(r)?String(r).slice(0,80):'응답을 못 읽음'); return; }
+      var out=[], seen={};
+      (j.picks||[]).forEach(function(x){ if(out.length>=sc.n+1||!x) return; var row=ideaRecFind(sc.list, x.name, sc.col); if(row && !seen[row[sc.col]]){ seen[row[sc.col]]=1; out.push({r:row, why:String(x.why||'')}); } });
+      if(sc.first){ summary=String(j.summary||''); extra=(j.extra||[]).filter(function(x){ return x&&x.name; }).slice(0,2);
+        var sm=el('idr-sum'); if(sm) sm.innerHTML=summary?'<b>핵심</b> — '+esc(summary):'';
+        var ex=el('idr-extra'); if(ex) ex.innerHTML=extra.length?'<div class="pbsec"><h4>사전에 없는 제안</h4>'+extra.map(function(x){ return '<p class="small"><b>'+esc(x.name)+'</b> — '+esc(x.why||'')+'</p>'; }).join('')+'<p class="small">넣고 싶으면 채팅창에 「이거 사전에 넣어줘」라고 말한다.</p></div>':''; }
+      R[sc.id]=out;
+      if(out.length) paintSec(sc,'ok'); else paintSec(sc,'fail','사전에서 맞는 이름을 못 찾음');
+    });
   }
   function finish(){
     if(tok!==ideaRec.tok) return;
-    SEC.forEach(paintSec); renderPlan();
-    var bar=el('idr-bar'); if(bar) bar.hidden=!SEC.some(function(sc){ return R[sc.id]&&R[sc.id].length; });
+    var any=SEC.some(function(sc){ return R[sc.id]&&R[sc.id].length; });
+    var bar=el('idr-bar'); if(bar) bar.hidden=!any;
   }
-  // 1) 아이디어 → 장르·연관어
-  aiAsk('당신은 만화 기획 편집자다. 반드시 유효한 JSON만 짧게 출력한다.',
-    '[작가가 그리고 싶은 만화]\n'+t+'\n\n① 이 아이디어의 핵심을 한 문장으로. ② 가장 잘 맞는 장르를 하나 고른다: '+GL.join(', ')+
-    '. ③ 이 이야기를 만들 때 떠오르는 연관어 12개(감정·관계·사건·장소·물건 위주, 한두 단어씩, 아이디어에 없는 말도 좋다). ④ 사전에 없을 것 같지만 꼭 필요한 장치가 있으면 extra에 2개까지(없으면 빈 배열).\n'+
-    'JSON만: {"summary":"","genre":"","words":[""],"extra":[{"name":"","why":""}]}', 500)
-  .then(function(r1){
-    if(tok!==ideaRec.tok) return;
-    var j=null; try{ j=JSON.parse(String(r1).replace(/```json|```/g,'').trim().replace(/^[^{]*/,'').replace(/[^}]*$/,'')); }catch(e){}
-    var loc=motifSeedInfo([t]);
-    summary=j&&j.summary?String(j.summary):''; genre=j&&j.genre?String(j.genre).trim():'';
-    words=((j&&j.words)||[]).map(function(w){ return String(w).trim(); }).filter(Boolean);
-    loc.words.forEach(function(w){ if(words.indexOf(w)<0) words.push(w); });
-    if(GL.indexOf(genre)<0) genre='';
-    var extra=((j&&j.extra)||[]).filter(function(x){ return x&&x.name; }).slice(0,2);
-    var sm=el('idr-sum'); if(sm) sm.innerHTML=(summary?'<b>핵심</b> — '+esc(summary)+'<br>':'')+'<span class="small">'+(j?'':'(분석 응답을 못 읽어 아이디어 글의 단어로 찾았다) ')+'장르 '+esc(genre||'정하지 않음')+' · 연관어 '+esc(words.slice(0,10).join(', '))+'</span><br><span class="small">2/2 사전에서 찾은 후보 중 고르는 중…</span>';
-    var ex=el('idr-extra'); if(ex) ex.innerHTML=extra.length?'<div class="pbsec"><h4>사전에 없는 제안</h4>'+extra.map(function(x){ return '<p class="small"><b>'+esc(x.name)+'</b> — '+esc(x.why||'')+'</p>'; }).join('')+'<p class="small">넣고 싶으면 채팅창에 「이거 사전에 넣어줘」라고 말한다.</p></div>':'';
-    // 2) 연관어로 사전 검색 → 짧은 후보 목록
-    SEC.forEach(function(sc){ SL[sc.id]=shortlist(sc); OFF[sc.id]=0; });
-    var txt=SEC.map(function(sc){ return '['+sc.id+' — '+sc.title+' 후보, '+sc.n+'개 고름]\n'+SL[sc.id].map(function(o,k){ var r=o.r; return (k+1)+'. '+r[sc.col]+' — '+String(sc.kind==='c'?r[8]:(sc.kind==='e'?r[2]:(sc.kind==='ch'?r[3]:r[1]))).slice(0,60); }).join('\n'); }).join('\n\n');
-    return aiAsk('당신은 만화 기획 편집자다. 반드시 유효한 JSON만 출력한다.',
-      '[작가가 그리고 싶은 만화]\n'+t+(summary?'\n[핵심] '+summary:'')+'\n\n'+txt+
-      '\n\n묶음마다 적힌 개수만큼 고른다. 아이디어에 가장 맞고, 초반→중반→후반→엔딩이 이어지는 것을 고른다. 같은 항목을 두 묶음에 고르지 않는다. 이유는 짧게 한 문장.\n'+
-      'JSON만: {"m":[{"pick":번호,"why":""}],"early":[...],"mid":[...],"late":[...],"e":[...],"ch":[...]}', 900)
-    .then(function(r2){
-      if(tok!==ideaRec.tok) return;
-      var j2=null; try{ j2=JSON.parse(String(r2).replace(/```json|```/g,'').trim().replace(/^[^{]*/,'').replace(/[^}]*$/,'')); }catch(e){}
-      var usedC={};   // 초반·중반·후반에 같은 클리셰가 겹치지 않게
-      SEC.forEach(function(sc){
-        var sl=SL[sc.id], out=[], seen=(sc.kind==='c')?usedC:{};
-        ((j2&&j2[sc.id])||[]).forEach(function(x){ var n=parseInt(x&&x.pick,10); if(isNaN(n)) return; var o=sl[n<=0?0:n-1]; if(o && !seen[o.r[sc.col]] && out.length<sc.n){ seen[o.r[sc.col]]=1; out.push({r:o.r, why:String(x.why||'')}); } });
-        sl.forEach(function(o){ if(out.length<sc.n && !seen[o.r[sc.col]]){ seen[o.r[sc.col]]=1; out.push({r:o.r, why:(j2?'':'(AI 선택을 못 받아) ')+'연관어 점수 '+o.s}); } });
-        R[sc.id]=out;
-      });
-      var sm2=el('idr-sum'); if(sm2) sm2.innerHTML=sm2.innerHTML.replace(/<br><span class="small">2\/2[^<]*<\/span>/,'')+(j2?'':'<br><span class="small warn">고르는 응답을 못 읽어 연관어 점수 순으로 채웠다'+(aiIsErr(r2)?' — '+esc(String(r2).slice(0,60)):'')+'</span>');
-      finish();
-    });
-  });
+  // 하나씩 차례로 (무료 모델의 분당 한도와 답 길이 한도를 피한다)
+  SEC.reduce(function(pr, sc){ return pr.then(function(){ if(tok!==ideaRec.tok) return; return runOne(sc); }); }, Promise.resolve()).then(finish);
   var g=function(id){ return (R[id]||[])[0]; };
   box.onclick=function(ev){
     var bt=ev.target.closest?ev.target.closest('button'):null; if(!bt) return;
-    var pk=bt.getAttribute('data-pick');
-    if(pk){ var pp=pk.split(':'), arr=R[pp[0]]||[], it2=arr.splice(+pp[1],1)[0]; if(it2) arr.unshift(it2); paintSec(SEC.filter(function(x){ return x.id===pp[0]; })[0]); return; }
-    var sid=bt.getAttribute('data-idr');
-    if(sid){ var sc=SEC.filter(function(x){ return x.id===sid; })[0], sl=SL[sid]||[]; OFF[sid]=(OFF[sid]+sc.n)%Math.max(1,sl.length);
-      var o=[]; for(var k=0;k<sc.n && k<sl.length;k++){ var it=sl[(OFF[sid]+k)%sl.length]; if(!o.some(function(x){ return x.r===it.r; })) o.push({r:it.r, why:'검색 결과 다음 후보 (연관어 점수 '+it.s+')'}); }
-      R[sid]=o; paintSec(sc); return; }
     if(bt.id==='id-apply'){
       var n=0;
       if(window.__sfApply) n+=window.__sfApply({early:g('early')&&g('early').r, mid:g('mid')&&g('mid').r, late:g('late')&&g('late').r, end:g('e')&&g('e').r});
-      if((R.m||[]).length && window.__czSet){ var cn=document.getElementById('cz-n'), k2=Math.min(R.m.length, cn?(parseInt(cn.value,10)||1):1); window.__czSet(R.m.slice(0,k2)); n+=k2; }
-      bt.textContent='보냈다 — '+n+'칸 고정'; setTimeout(function(){ location.hash='#shuffle'; },400);
+      if((R.m||[]).length && window.__czSet){ var cn=document.getElementById('cz-n'), k=Math.min(R.m.length, cn?(parseInt(cn.value,10)||1):1); window.__czSet(R.m.slice(0,k)); n+=k; }
+      bt.textContent='채웠다 — '+n+'칸 고정'; var so=document.getElementById('cz-out'); if(so&&so.scrollIntoView) so.scrollIntoView({block:'start'});
     } else if(bt.id==='id-favall'){
       var c=0; SEC.forEach(function(sc){ (R[sc.id]||[]).forEach(function(o){ var k=sc.key(o.r); if(!FAV[k]){ favToggle(k,'아이디어 추천'); c++; } }); });
       [].slice.call(box.querySelectorAll('.fav')).forEach(function(b2){ var on=!!FAV[b2.getAttribute('data-k')]; b2.setAttribute('aria-pressed',on?'true':'false'); b2.textContent=on?'★':'☆'; });
       bt.textContent='「'+CURFOLDER+'」에 '+c+'개 담음';
     } else if(bt.id==='id-copy'){
-      var txt='[구성안]\n'+planText()+'\n\n[아이디어]\n'+t;
+      var txt=box.querySelector('.aires').innerText.replace(/[☆★↻]/g,'').replace(/\n(구성기에 채우기|전부 ☆ 담기|복사)[^\n]*/g,'');
       try{ navigator.clipboard.writeText(txt); bt.textContent='복사됨'; }catch(e){ window.prompt('복사',txt); }
     }
   };
 }
 (function(){ var b=document.getElementById('id-rec'), o=document.getElementById('id-recout'); if(b&&o) b.addEventListener('click',function(){ ideaRec(o); }); })();
-// 아이디어 구성기 글쓰기 (줄거리 / 컷별 / 웹소설)
-function ideaWriteBar(){
-  var bar=document.getElementById('idw-bar'); if(!bar) return;
-  if(!aiReady()){ bar.innerHTML='<span class="count">AI 연결에서 키를 넣으면 쓸 수 있다. <a href="#ai">AI 연결</a></span>'; return; }
-  var c0=window.__cutTotal?window.__cutTotal():70;
-  bar.innerHTML=wfmtHTML('wfi')+'<label class="wcut">분량 <select id="idw-cut"><option value="20">20컷</option><option value="40">40컷</option><option value="70">70컷</option><option value="100">100컷</option></select></label>'+
-    '<button class="chip" id="idw-go">글쓰기</button>'+WCHAIN_BTN.replace('data-chain','id="idw-chain" data-chain')+'<span class="count" id="idw-src"></span>';
-  wfmtBind(bar,'wfi');
-  var sel=document.getElementById('idw-cut'); sel.value=String(c0<=20?20:(c0<=40?40:(c0<=70?70:100)));
-  wsRestore(document.getElementById('idw-out'),'idwChain');
-  document.getElementById('idw-go').addEventListener('click',function(){ run(false); });
-  document.getElementById('idw-chain').addEventListener('click',function(){ run(true); });
-  function run(chain){
-    var out=document.getElementById('idw-out'), ta=document.getElementById('id-text'), idea=(ta&&ta.value||'').trim();
-    var plan=(ideaRec.plan&&ideaRec.plan())||'';
-    if(!idea && !plan){ out.innerHTML='<p class="small">아이디어를 먼저 적는다.</p>'; return; }
-    var src=(plan?'[구성안]\n'+plan+'\n\n':'')+(idea?'[작가 아이디어 — 최우선으로 반영한다]\n'+idea:'');
-    var cut=parseInt(sel.value,10)||70, fmt=chain?'plot':wfmtVal('wfi');
-    var w=writePrompt(src, fmt, cut);
-    var lab=document.getElementById('idw-src'); if(lab) lab.textContent=plan?'구성안 + 아이디어로':'아이디어만으로';
-    wsStart(out, w.title+(plan?' — 구성안':' — 아이디어'), w, {fmt:fmt, cut:cut, ref:src, save:'idwChain', chain:chain});
-  }
-}
 
 // ----- 작품 분석 -----
 var PB_ENUM={
@@ -4608,6 +4515,7 @@ function foldList(){
 function aiResult(box, title, text){
   box.innerHTML='<div class="aires"><div class="gen-h">'+(title||'')+' <button class="chip">복사</button><button class="chip memo">메모에 넣기</button></div><div class="gen-b"></div></div>';
   box.querySelector('.gen-b').textContent=text;
+  if(/^(줄거리|컷별 콘티|웹소설)$/.test(title||'') && !aiIsErr(text)){ try{ localStorage.setItem('contiSrc', JSON.stringify({title:title, text:String(text), at:Date.now()})); }catch(e){} }
   var mb=box.querySelector('button.memo');
   mb.addEventListener('click',function(){ var f=fmAppend(title||'대화',text); mb.textContent='「'+f+'」에 넣음'; setTimeout(function(){ mb.textContent='메모에 넣기'; },1600); });
   var b=box.querySelector('button');
@@ -4684,126 +4592,26 @@ function wfmtBind(root,name){
   });
 }
 function wfmtVal(name){ var r=document.querySelector('input[name="'+name+'"]:checked'); return r?r.value:wfmtGet(); }
-function cutsRule(cut, tag){
-  var n=cut<=40?16:24;
-  var how= cut<=20 ? '20컷을 1번부터 20번까지 빠짐없이 적는다.' : '핵심 컷 '+n+'개를 골라 적는다. 번호는 전체 '+cut+'컷 안에서의 번호로 적는다.';
-  return {text:'컷별 콘티로 쓴다. '+how+' 각 컷은 「번호. 화면 묘사 — 대사」 한 줄이다. 대사가 없으면 「—」 뒤를 비운다. 대사는 한 컷에 한 문장까지. 대사로 설명할 것을 화면으로 바꿀 수 있으면 화면으로 처리한다. 첫 컷은 설명 없이 상황 한가운데에서 시작하고, 마지막 컷은 다음이 궁금하게 끝낸다.'+
-    (tag?' 클리셰가 쓰인 컷에는 줄 끝에 「클리셰 이름」을 붙인다.':''), maxTok: cut<=20?1700:2600};
-}
-function novelRule(cut){
-  var len= cut<=20?'600~900자':(cut<=40?'1200~1600자':'2000~2600자');
-  return {text:'웹소설 문체로 한 화 본문을 쓴다. 분량은 '+len+'. 3인칭 시점, 짧은 문단, 대사는 큰따옴표. 감정은 설명하지 않고 행동과 대사로 보여 준다. 첫 문장은 상황 한가운데에서 시작한다. 마지막 문단은 다음 화가 궁금하게 끊는다. 소제목·요약·작가 후기 없이 본문만 쓴다.',
-    maxTok: cut<=20?1800:(cut<=40?2800:4200)};
-}
 function writePrompt(src, fmt, cut){
   if(fmt==='plot') return {prompt:plotPrompt(src,cut), maxTok:1200, title:'줄거리'};
   var head=src+'\n\n[분량] '+cut+'컷\n\n';
   var common='재료의 초반·중반·후반 클리셰를 순서대로 모두 쓰고, 앞 사건이 원인이 되어 다음 사건이 일어나게 잇는다. 우연으로 넘어가지 않는다. 재료에 엔딩이 있으면 그 엔딩으로 닫는다. 재료에 없는 설정을 새로 만들지 않는다. 작가 아이디어가 있으면 최우선으로 따른다. ';
-  if(fmt==='cuts'){ var c=cutsRule(cut,true); return {prompt:head+common+'\n\n'+c.text, maxTok:c.maxTok, title:'컷별 콘티'}; }
-  var r=novelRule(cut);
-  return {prompt:head+common+'\n\n'+r.text, maxTok:r.maxTok, title:'웹소설'};
-}
-// ----- 써진 글 고치기 · 다른 형식으로 바꾸기 (줄거리 → 웹소설 → 컷별) -----
-var WNAME={plot:'줄거리', novel:'웹소설', cuts:'컷별 콘티'};
-var WOBJ={plot:'줄거리를', novel:'웹소설을', cuts:'컷별 콘티를'};
-var WNEXT={plot:['novel','cuts'], novel:['cuts','plot'], cuts:['novel','plot']};
-function wsEsc(t){ return String(t==null?'':t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
-function convPrompt(text, from, to, cut, ref){
-  var head='[원본 — '+WNAME[from]+']\n'+text.trim()+'\n\n'+
-    (ref?'[처음 재료 — 참고만 한다. 원본과 다르면 원본을 따른다]\n'+String(ref).slice(0,1500)+'\n\n':'')+'[분량] '+cut+'컷\n\n';
-  var keep='원본의 사건 순서·인물·관계·결말을 그대로 따른다. 원본은 작가가 직접 고친 글일 수 있으니 고친 내용을 그대로 존중한다. 원본에 없는 사건·인물·설정을 새로 만들지 않는다. ';
-  if(to==='plot'){
-    return {prompt:head+keep+'이 글을 줄거리로 줄인다. '+(cut<=20?'5줄':(cut<=40?'8줄':'12줄'))+'. 각 줄 앞에 [초반] [중반] [후반] [엔딩] 중 하나를 붙인다.', maxTok:1200, title:'줄거리'};
+  if(fmt==='cuts'){
+    var n=cut<=40?16:24;
+    var how= cut<=20 ? '20컷을 1번부터 20번까지 빠짐없이 적는다.' : '핵심 컷 '+n+'개를 골라 적는다. 번호는 전체 '+cut+'컷 안에서의 번호로 적는다.';
+    return {prompt:head+common+'\n\n컷별 콘티로 쓴다. '+how+' 각 컷은 「번호. 화면 묘사 — 대사」 한 줄이다. 대사가 없으면 「—」 뒤를 비운다. 대사는 한 컷에 한 문장까지. 대사로 설명할 것을 화면으로 바꿀 수 있으면 화면으로 처리한다. 첫 컷은 설명 없이 상황 한가운데에서 시작하고, 마지막 컷은 다음이 궁금하게 끝낸다. 클리셰가 쓰인 컷에는 줄 끝에 「클리셰 이름」을 붙인다.',
+            maxTok: cut<=20?1700:2600, title:'컷별 콘티'};
   }
-  if(to==='novel'){
-    var r=novelRule(cut);
-    return {prompt:head+keep+(from==='plot'?'줄거리의 각 줄을 순서대로 장면으로 풀어 쓴다. 줄과 줄 사이는 이어 주는 행동과 대사만 채운다. 「쓴 장치」 줄은 본문에 쓰지 않는다. ':'콘티의 컷 순서대로 장면을 풀어 쓰고, 콘티의 대사를 살린다. 화면 묘사는 문장으로 바꾼다. ')+r.text,
-      maxTok:r.maxTok, title:'웹소설'};
-  }
-  var c=cutsRule(cut, !!ref || /「[^」]+」/.test(text));
-  return {prompt:head+keep+(from==='novel'?'본문의 장면을 순서대로 컷으로 나눈다. 본문의 대사를 살리되 한 컷 한 문장으로 줄인다. 내면 서술과 설명은 표정·행동·배경·소품 같은 화면으로 바꾼다. ':'줄거리의 각 줄을 장면으로 나눠 순서대로 컷에 옮긴다. ')+c.text,
-    maxTok:c.maxTok, title:'컷별 콘티'};
+  var len= cut<=20?'600~900자':(cut<=40?'1200~1600자':'2000~2600자');
+  return {prompt:head+common+'\n\n웹소설 문체로 한 화 본문을 쓴다. 분량은 '+len+'. 3인칭 시점, 짧은 문단, 대사는 큰따옴표. 감정은 설명하지 않고 행동과 대사로 보여 준다. 첫 문장은 상황 한가운데에서 시작한다. 마지막 문단은 다음 화가 궁금하게 끊는다. 소제목·요약·작가 후기 없이 본문만 쓴다.',
+          maxTok: cut<=20?1800:(cut<=40?2800:4200), title:'웹소설'};
 }
-function wsSave(box){
-  var S=box._ws; if(!S||!S.opt.save) return;
-  try{ localStorage.setItem(S.opt.save, JSON.stringify({cut:S.opt.cut, ref:String(S.opt.ref||'').slice(0,1500),
-    stages:S.stages.filter(function(x){ return !x.busy; }).map(function(x){ return {fmt:x.fmt,title:x.title,text:x.text||'',err:x.err||''}; })})); }catch(e){}
-}
-function wsRestore(box, key){
-  if(!box || box.innerHTML.trim()) return false;
-  var d=null; try{ d=JSON.parse(localStorage.getItem(key)||'null'); }catch(e){}
-  if(!d || !d.stages || !d.stages.length) return false;
-  box._ws={opt:{cut:d.cut||70, ref:d.ref||'', save:key}, stages:d.stages};
-  wsRender(box); return true;
-}
-function wsRows(t){ var lines=String(t||'').split('\n'); var n=0; lines.forEach(function(l){ n+=1+Math.floor(l.length/48); }); return Math.max(6, Math.min(40, n+1)); }
-function wsFit(ta){ if(!ta) return; ta.style.height='auto'; if(ta.scrollHeight) ta.style.height=(ta.scrollHeight+4)+'px'; }
-function wsRender(box){
-  var S=box._ws; if(!S) return;
-  box.innerHTML=S.stages.map(function(st,i){
-    var conv='';
-    if(!st.busy && !st.err){
-      conv='<span class="wconv">바꾸기 '+WNEXT[st.fmt].map(function(f,j){
-        return '<button class="chip'+(j===0&&st.fmt!=='cuts'?' next':'')+'" data-to="'+f+'">'+WNAME[f]+'로</button>'; }).join('')+'</span>';
-    }
-    var tools=(!st.busy && !st.err)?'<button class="chip" data-a="copy">복사</button><button class="chip" data-a="memo">메모에 넣기</button>':'';
-    var body= st.busy ? '<div class="gen-b busy">'+(i?WOBJ[S.stages[i-1].fmt]+' '+wsEsc(WNAME[st.fmt])+'로 바꾸는 중…':'만드는 중…')+'</div>'
-      : st.err ? '<div class="gen-b">'+wsEsc(st.err)+'</div>'+(i?'<button class="chip" data-a="retry">다시</button>':'')
-      : '<textarea class="wedit" rows="'+wsRows(st.text)+'" spellcheck="false"></textarea>'+(i===S.stages.length-1?'<div class="whint">글을 직접 고친 뒤 바꾸기를 누르면 고친 글로 바꾼다.</div>':'');
-    return '<div class="aires wstage" data-i="'+i+'"><div class="gen-h">'+wsEsc(st.title)+' '+tools+conv+'</div>'+body+'</div>';
-  }).join('');
-  [].slice.call(box.querySelectorAll('.wstage')).forEach(function(el){
-    var i=+el.getAttribute('data-i'), st=S.stages[i], ta=el.querySelector('textarea.wedit');
-    if(ta){ ta.value=st.text||''; setTimeout(function(){ wsFit(ta); },0);
-      ta.addEventListener('input',function(){ st.text=ta.value; wsFit(ta); clearTimeout(S.tm); S.tm=setTimeout(function(){ wsSave(box); },500); });
-      ta.addEventListener('focus',function(){ wsFit(ta); }); }
-    [].slice.call(el.querySelectorAll('button')).forEach(function(b){
-      b.addEventListener('click',function(){
-        var a=b.getAttribute('data-a'), to=b.getAttribute('data-to'), txt=ta?ta.value:(st.text||'');
-        if(to){ wsConv(box,i,to,false); return; }
-        if(a==='retry'){ wsConv(box,i-1,st.fmt,false); return; }
-        if(a==='memo'){ var f=fmAppend(st.title,txt); b.textContent='「'+f+'」에 넣음'; setTimeout(function(){ b.textContent='메모에 넣기'; },1600); return; }
-        if(a==='copy'){
-          try{ if(navigator.clipboard&&navigator.clipboard.writeText){ navigator.clipboard.writeText(txt).catch(function(){window.prompt('복사',txt);});
-            b.textContent='복사됨'; setTimeout(function(){b.textContent='복사';},1200); } else window.prompt('복사',txt);
-          }catch(e){ window.prompt('복사',txt); }
-        }
-      });
-    });
-  });
-}
-function wsConv(box, i, to, auto){
-  var S=box._ws; if(!S) return; var src=S.stages[i]; if(!src || src.busy || src.err) return;
-  if(!String(src.text||'').trim()){ return; }
-  var w=convPrompt(src.text, src.fmt, to, S.opt.cut||70, S.opt.ref);
-  var st={fmt:to, title:WNAME[to]+' ← '+WNAME[src.fmt], busy:true};
-  S.stages=S.stages.slice(0,i+1); S.stages.push(st); wsRender(box);
-  var last=box.querySelector('.wstage:last-child'); if(last && last.scrollIntoView && !auto) try{ last.scrollIntoView({block:'nearest'}); }catch(e){}
-  aiAsk(WSYS, w.prompt, w.maxTok).then(function(t){
-    if(S.stages.indexOf(st)<0 || box._ws!==S) return;
-    st.busy=false; if(aiIsErr(t)) st.err=t; else st.text=t;
-    wsRender(box); wsSave(box);
-    if(auto && !st.err && to==='novel') wsConv(box, S.stages.indexOf(st), 'cuts', false);
-  });
-}
-// 처음 쓰기. opt={fmt, cut, ref, save, chain}
-function wsStart(box, title, w, opt){
-  var S={opt:opt, stages:[{fmt:opt.chain?'plot':opt.fmt, title:title, busy:true}]}; box._ws=S; wsRender(box);
-  var st=S.stages[0];
-  aiAsk(WSYS, w.prompt, w.maxTok).then(function(t){
-    if(box._ws!==S) return;
-    st.busy=false; if(aiIsErr(t)) st.err=t; else st.text=t;
-    wsRender(box); wsSave(box);
-    if(opt.chain && !st.err) wsConv(box, 0, 'novel', true);
-  });
-}
-var WCHAIN_BTN='<button class="chip" data-chain="1" title="줄거리를 쓰고 이어서 웹소설, 컷별 콘티로 바꾼다">차례로 쓰기 (줄거리→웹소설→컷별)</button>';
 function aiBar(){
   var bar=document.getElementById('ai-bar'); if(!bar) return;
   if(!aiReady()){ bar.innerHTML='<span class="count">AI 기능은 <a href="#ai">AI 연결</a>에서 키를 넣으면 쓸 수 있다.</span>'; return; }
   bar.innerHTML='<button class="chip" id="ai-link">AI로 잇기</button>'+
     '<button class="chip" id="ai-rel">연관짓기</button>'+
-    '<span class="wsep"></span>'+wfmtHTML('wfg')+'<button class="chip" id="ai-write">글쓰기</button>'+WCHAIN_BTN.replace('data-chain','id="ai-chain" data-chain');
+    '<span class="wsep"></span>'+wfmtHTML('wfg')+'<button class="chip" id="ai-write">글쓰기</button>';
   wfmtBind(bar,'wfg');
   var out=document.getElementById('ai-out');
   document.getElementById('ai-link').addEventListener('click',function(){
@@ -4817,15 +4625,12 @@ function aiBar(){
       '\n\n뽑힌 칸들을 초반→중반→후반→엔딩 순서의 원인과 결과 사슬로 잇는다. 각 연결을 「A → B — 이유 한 문장」 형식으로 쓴다. 이어지기 어려운 연결이 있으면 그 사이에 들어갈 사건을 한 줄 제안한다. 마지막에 이 조합 전체를 한 문장으로 요약한다. 새 클리셰나 설정을 만들지 않는다.')
     .then(function(t){ aiResult(out,'연관짓기',t); });
   });
-  function sfWrite(chain){
+  document.getElementById('ai-write').addEventListener('click',function(){
     if(window.unmaskAllNow) window.unmaskAllNow();
-    var src='[지금 구성]\n'+aiDrawn(), cut=window.__cutTotal?window.__cutTotal():70, fmt=chain?'plot':wfmtVal('wfg');
-    var w=writePrompt(src, fmt, cut);
-    wsStart(out, w.title, w, {fmt:fmt, cut:cut, ref:src, save:'sfChain', chain:chain});
-  }
-  document.getElementById('ai-write').addEventListener('click',function(){ sfWrite(false); });
-  document.getElementById('ai-chain').addEventListener('click',function(){ sfWrite(true); });
-  wsRestore(out,'sfChain');
+    var w=writePrompt('[지금 구성]\n'+aiDrawn(), wfmtVal('wfg'), window.__cutTotal?window.__cutTotal():70);
+    aiBusy(out,w.title);
+    aiAsk(WSYS, w.prompt, w.maxTok).then(function(t){ aiResult(out,w.title,t); });
+  });
 }
 function favAiBar(){
   var bar=document.getElementById('fav-ai-bar'); if(!bar) return;
@@ -4833,7 +4638,7 @@ function favAiBar(){
   var c0=window.__cutTotal?window.__cutTotal():70;
   bar.innerHTML='<button class="chip" id="fav-ai-rel">연관짓기</button><span class="wsep"></span>'+wfmtHTML('wff')+
     '<label class="wcut">분량 <select id="fav-cut"><option value="20">20컷</option><option value="40">40컷</option><option value="70">70컷</option></select></label>'+
-    '<button class="chip" id="fav-ai-write">글쓰기</button>'+WCHAIN_BTN.replace('data-chain','id="fav-ai-chain" data-chain')+
+    '<button class="chip" id="fav-ai-write">글쓰기</button>'+
     '<span class="count">보고 있는 폴더의 항목으로</span>';
   wfmtBind(bar,'wff');
   var sel=document.getElementById('fav-cut'); sel.value=String(c0<=20?20:(c0<=40?40:70));
@@ -4853,17 +4658,14 @@ function favAiBar(){
       '\n\n이 항목들 사이의 연관을 찾는다. 어떤 항목이 어떤 항목의 원인·결과·대비가 될 수 있는지를 「A → B — 이유 한 문장」 형식으로 세 줄에서 여섯 줄. 서로 이어지기 어려운 항목은 이어지지 않는다고 쓰고 이유를 한 줄. 목록에 없는 항목이나 설정을 만들지 않는다.')
     .then(function(t){ aiResult(box,'연관짓기',t); });
   });
-  document.getElementById('fav-ai-write').addEventListener('click',function(){ favWrite(false); });
-  document.getElementById('fav-ai-chain').addEventListener('click',function(){ favWrite(true); });
-  wsRestore(box,'favChain');
-  function favWrite(chain){
+  document.getElementById('fav-ai-write').addEventListener('click',function(){
     var s=favSrc();
     if(!s.keys.length && !ideaBlock('fav')){ box.innerHTML='<p class="small">이 폴더에 담긴 항목도, 아이디어도 없다.</p>'; return; }
     var memo=(typeof fmGet==='function')?fmGet(s.vw==='*'?(CURFOLDER||'기본'):s.vw):'';
-    var src='[즐겨찾기 재료]\n'+s.text+(memo?'\n\n[폴더 메모]\n'+memo.slice(0,2500):''), cut=parseInt(sel.value,10)||70, fmt=chain?'plot':wfmtVal('wff');
-    var w=writePrompt(src, fmt, cut);
-    wsStart(box, '「'+(s.vw==='*'?'전체':s.vw)+'」 '+w.title, w, {fmt:fmt, cut:cut, ref:src, save:'favChain', chain:chain});
-  }
+    var w=writePrompt('[즐겨찾기 재료]\n'+s.text+(memo?'\n\n[폴더 메모]\n'+memo.slice(0,2500):''), wfmtVal('wff'), parseInt(sel.value,10));
+    aiBusy(box,w.title);
+    aiAsk(WSYS, w.prompt, w.maxTok).then(function(t){ aiResult(box,'「'+(s.vw==='*'?'전체':s.vw)+'」 '+w.title,t); });
+  });
 }
 
 // 색인 AI 창
@@ -5501,6 +5303,25 @@ function trBlock(kind){
     if(b>seg[1]){ b=seg[1]; a=Math.max(1,b-n+1); }
     return a+'–'+b+'번 컷 · 약 '+n+'컷';
   }
+  // 콘티 구성기가 읽는 지금 구성 (칸·컷 배정·컷 배분)
+  window.__sfState=function(){
+    var total=cutTotal(), band=[];
+    if(instaOn()){
+      INSTA.forEach(function(r){ var m=String(r[0]).split('–'); var a=parseInt(m[0],10), b=parseInt(m[1]||m[0],10); band.push({name:r[1], n:b-a+1, note:r[2]}); });
+    } else {
+      var spec = curRole ? curRole.cut : (SLOTS.length<=2 ? '12 / 40 / 14 / 26 / 8' : '10 / 34 / 14 / 32 / 10');
+      var parts=spec.split(' / ').map(function(x){return parseInt(x,10);}), sum=parts.reduce(function(a,b){return a+b;},0), acc=0;
+      ['도입','전개','전환','절정','마지막 훅'].forEach(function(nm,i){
+        var n=(i===parts.length-1)?(total-acc):Math.max(1,Math.round(total*parts[i]/sum)); acc+=n; band.push({name:nm, n:n});
+      });
+    }
+    var slots=[];
+    SLOTS.forEach(function(s,i){ var r=picks[i]; if(!r) return;
+      var m=/(\d+)–(\d+)/.exec(placeHint(s[0],r)||'');
+      slots.push({label:s[0], row:r, a:m?+m[1]:0, b:m?+m[2]:0});
+    });
+    return {total:total, band:band, slots:slots};
+  };
   function renderTop(){
     var rec=document.getElementById('sf-rec');
     var gl=(gsel.value==='rec')?curGenre:(gsel.value==='all'?'전체 섞기':gsel.value);
@@ -5542,7 +5363,6 @@ function trBlock(kind){
     });
     [].slice.call(out.querySelectorAll('button[data-i]')).forEach(function(b){
       b.addEventListener('click',function(){ if(trBlock('one')) return; var i=+b.getAttribute('data-i');
-        if(seedOn() && lastSeed){ var pre=buildCands([i], false, lastSeed, true); if(aiOn()) aiReview([i], false, false, pre); else fastPick([i], false, pre); return; }
         if(aiOn()){ aiReview([i], false, false); return; }
         picks[i]=draw(i); aiNote[i]=''; smask[i]=false; render(); }); });
     [].slice.call(out.querySelectorAll('.lockbtn')).forEach(function(b){
@@ -5554,27 +5374,26 @@ function trBlock(kind){
     if(serialOn() && !roleLock) drawRole();
     SLOTS=slotSet();
     renderTop(); renderRole(); renderCutBand();
-    if(gBooted && seedOn()){
+    if(gBooted && aiOn()){
       var openI=[]; SLOTS.forEach(function(_,i){ if(!(slock[i]&&picks[i])) openI.push(i); });
-      seedFlow(openI, !elock && elvl()>=0);
+      var czAi=!!(window.__czIsAi && window.__czIsAi());
+      if(!czAi && window.__czDraw) window.__czDraw();
+      if(!openI.length && elock && !czAi){ aiStat('<span class="small">모든 칸과 엔딩이 📌 고정돼 있어 다시 뽑을 칸이 없다. 바꿀 칸의 📌를 푼다.</span>'); return; }
+      aiReview(openI, !elock && elvl()>=0, czAi);
       return;
     }
     if(!elock){ drawEnd(); eNote=''; emask=maskOn(); } renderEnd();
     SLOTS.forEach(function(_,i){ if(slock[i]&&picks[i]) return; picks[i]=draw(i); aiNote[i]=''; smask[i]=maskOn(); }); render();
     if(gBooted){ var allLocked=SLOTS.every(function(_,i){ return slock[i]&&picks[i]; });
-      aiStat(sfModeV()==='ai'&&!aiReady()?'<span class="small">「AI가 고름」이지만 AI 키가 없어 무작위로 뽑았다. 「바로 (AI 없음)」을 고르거나 <a href="#ai">AI 연결</a>에서 키를 넣는다.</span>':(allLocked?'<span class="small">모든 칸이 📌 고정돼 있어 다시 뽑지 않았다. 바꿀 칸의 📌를 푼다.</span>':'')); }
+      aiStat(sfAi&&sfAi.checked&&!aiReady()?'<span class="small">「AI가 후보 4개 중 고름」이 켜져 있지만 AI 키가 없어 무작위로 뽑았다. <a href="#ai">AI 연결</a>에서 키를 넣는다.</span>':(allLocked?'<span class="small">모든 칸이 📌 고정돼 있어 다시 뽑지 않았다. 바꿀 칸의 📌를 푼다.</span>':'')); }
     if(window.__czDraw) window.__czDraw();
   }
   // ----- AI 검토 뽑기: 칸마다 후보 4개를 무작위로 뽑고 AI가 하나를 고른다 -----
   var aiNote=[], eNote='', AIK=4, aiTokG=0, gBooted=false;
-  var sfMode=document.getElementById('sf-mode');
-  try{ if(sfMode){ var sfv=localStorage.getItem('sfMode'); if(sfv===null && localStorage.getItem('sfAi')==='0') sfv='rand';
-      if(sfv && [].some.call(sfMode.options,function(o){ return o.value===sfv; })) sfMode.value=sfv;
-    sfMode.addEventListener('change',function(){ try{ localStorage.setItem('sfMode',sfMode.value); }catch(e){} }); } }catch(e){}
-  function sfModeV(){ return sfMode?sfMode.value:'rand'; }
-  function aiOn(){ return sfModeV()==='ai' && aiReady(); }
-  function seedOn(){ var m=sfModeV(); return m==='fast' || (m==='ai' && aiReady()); }
-  var lastSeed=null;   // {text, genre, words}
+  var sfAi=document.getElementById('sf-ai');
+  try{ if(sfAi){ var sfv=localStorage.getItem('sfAi'); if(sfv!==null) sfAi.checked=(sfv==='1');
+    sfAi.addEventListener('change',function(){ try{ localStorage.setItem('sfAi',sfAi.checked?'1':'0'); }catch(e){} }); } }catch(e){}
+  function aiOn(){ return !!(sfAi && sfAi.checked && aiReady()); }
   function hEsc(t){ return String(t||'').replace(/</g,'&lt;'); }
   function candsFor(i){
     // 장르를 정했으면 후보 4개 중 최소 2개는 그 장르 고유 클리셰로 (공통 항목만 나오지 않게)
@@ -5593,11 +5412,11 @@ function trBlock(kind){
     curEnd=save; return out;
   }
   function plainEnd(e){ return String(e.name||'').replace(/<[^>]+>/g,''); }
-  function aiReview(slotIdx, doEnd, withMotif, pre){
+  function aiReview(slotIdx, doEnd, withMotif){
     var tok=++aiTokG, C={}, EC=null, MC=null;
-    slotIdx.forEach(function(i){ C[i]=(pre&&pre.C[i])?pre.C[i]:candsFor(i); if(C[i][0]) picks[i]=C[i][0]; smask[i]=false;
+    slotIdx.forEach(function(i){ C[i]=candsFor(i); if(C[i][0]) picks[i]=C[i][0]; smask[i]=false;
       aiNote[i]='AI가 후보 '+C[i].length+'개를 검토하는 중…'; });
-    if(doEnd){ EC=(pre&&pre.EC)?pre.EC:endCands(); if(EC.length){ curEnd=EC[0]; emask=false; eNote='AI가 후보 '+EC.length+'개를 검토하는 중…'; } else EC=null; }
+    if(doEnd){ EC=endCands(); if(EC.length){ curEnd=EC[0]; emask=false; eNote='AI가 후보 '+EC.length+'개를 검토하는 중…'; } else EC=null; }
     if(withMotif && window.__czCands) MC=window.__czCands();
     render(); renderEnd();
     var fixed=[];
@@ -5610,14 +5429,14 @@ function trBlock(kind){
     slotIdx.forEach(function(i){ if(!C[i].length) return;
       txt.push('[slot '+i+' — '+SLOTS[i][0]+' 후보]\n'+C[i].map(function(r,k){ return (k+1)+'. '+r[0]+' ('+r[1]+' · '+r[2]+') — '+r[8]; }).join('\n')); });
     if(EC) txt.push('['+(serialOn()?'마지막 컷':'엔딩')+' 후보]\n'+EC.map(function(e,k){ return (k+1)+'. '+plainEnd(e)+' ('+String(e.sub).replace(/<[^>]+>/g,'')+') — '+String(e.note).replace(/<[^>]+>/g,''); }).join('\n'));
-    if(MC) MC.idxs.forEach(function(k,n){ txt.push('[소재 '+k+' 후보]\n'+MC.cands[n].map(function(x,q){ return (q+1)+'. '+(x.text||x.plain)+' ('+String(x.sub).replace(/<[^>]+>/g,'')+')'; }).join('\n')); });
+    if(MC) MC.idxs.forEach(function(k,n){ txt.push('[소재 '+k+' 후보]\n'+MC.cands[n].map(function(x,q){ return (q+1)+'. '+x.plain+' ('+String(x.sub).replace(/<[^>]+>/g,'')+')'; }).join('\n')); });
     if(!txt.length){ slotIdx.forEach(function(i){ aiNote[i]=''; }); eNote=''; render(); renderEnd(); return; }
     var nC=slotIdx.reduce(function(a,i){ return a+C[i].length; },0), parts=[];
     if(slotIdx.length) parts.push('클리셰 '+slotIdx.length+'칸 × 후보 '+AIK+'개');
     if(EC) parts.push('엔딩 후보 '+EC.length+'개'); if(MC&&MC.idxs.length) parts.push('소재 '+MC.idxs.length+'칸 × 후보 4개');
-    aiStat('<b>AI 검토 중</b> — '+(pre&&pre.seed?seedLine(pre.seed)+' → ':'')+parts.join(' · ')+(pre?'를 연관어로 찾아':'를 무작위로 뽑아')+' 하나씩 고르는 중…');
-    var g=nowGenre(), idea='';   // 랜덤 구성기는 아이디어와 상관없이 고른다
-    var prompt=(idea?idea.replace(/^\n\n/,'')+'\n\n':'')+(g?'[장르] '+g+'\n':'')+(pre&&pre.seed?'[출발점 소재] '+pre.seed.text+' — 연관어: '+pre.seed.words.slice(0,10).join(', ')+'\n(후보는 이 연관어로 사전에서 찾은 것이다)\n':'')+'[분량] '+cutTotal()+'컷\n\n[이미 정해진 것]\n'+(fixed.length?fixed.join('\n'):'(없음)')+
+    aiStat('<b>AI 검토 중</b> — '+parts.join(' · ')+'를 무작위로 뽑아 하나씩 고르는 중…');
+    var g=nowGenre(), idea=ideaBlock('sf');
+    var prompt=(idea?idea.replace(/^\n\n/,'')+'\n\n':'')+(g?'[장르] '+g+'\n':'')+'[분량] '+cutTotal()+'컷\n\n[이미 정해진 것]\n'+(fixed.length?fixed.join('\n'):'(없음)')+
       '\n\n'+txt.join('\n\n')+
       '\n\n각 후보 묶음에서 하나씩 고른다. 묶음마다 따로 고르지 말고, 고른 것들을 이어 붙였을 때 하나의 이야기가 되는 조합을 찾는다.\n'+
       '기준: ① 작가 아이디어가 있으면 그것에 가장 맞는 것 ② 이미 정해진 것과 어울리는 것 ③ 초반의 결과가 중반의 원인이 되고, 중반의 결과가 후반·엔딩으로 이어지는 것 ④ 클리셰끼리 톤·장르·규모가 부딪히지 않는 것(일부러 부딪혀 힘이 생기면 괜찮다) ⑤ 같은 기능의 장치를 두 칸에 겹치지 않는 것.\n'+
@@ -5644,121 +5463,9 @@ function trBlock(kind){
       }
       render(); renderEnd();
       if(MC && window.__czPut) window.__czPut(MC, (j&&j.motifs)||[], bad?(err||'응답을 못 읽음'):'');
-      if(bad) aiStat('<b class="warn">AI 검토 실패</b> — '+hEsc(err||'응답을 읽지 못했다')+'. 칸마다 '+(pre?'연관어 점수 1등':'첫 후보')+'을 그대로 두었다. <button class="chip" id="sf-aire">다시 검토</button> <span class="small">(무료 모델이면 자주 실패한다. AI 연결에서 다른 모델을 고르거나 「바로 (AI 없음)」을 쓴다)</span>', function(){ var b=document.getElementById('sf-aire'); if(b) b.addEventListener('click',function(){ aiReview(slotIdx, !!EC, !!MC, pre); }); });
-      else aiStat('<b>AI 검토 완료</b> — '+(pre&&pre.seed?seedLine(pre.seed)+' → ':'')+parts.join(' · ')+' 중에서 골랐다.'+(j.flow?'<br>흐름: '+hEsc(j.flow):'')+(j.check?'<br><span class="warn">⚠ '+hEsc(j.check)+'</span>':'')+'<br><span class="small">칸 아래 「후보였던 것」에 비교 대상이 있다. 마음에 안 드는 칸은 ↻로 그 칸만 다시 검토한다.</span>');
+      if(bad) aiStat('<b class="warn">AI 검토 실패</b> — '+hEsc(err||'응답을 읽지 못했다')+'. 칸마다 첫 후보를 그대로 두었다. <button class="chip" id="sf-aire">다시 검토</button> <span class="small">(무료 모델이면 자주 실패한다. AI 연결에서 다른 모델을 고르면 낫다)</span>', function(){ var b=document.getElementById('sf-aire'); if(b) b.addEventListener('click',function(){ aiReview(slotIdx, !!EC, !!MC); }); });
+      else aiStat('<b>AI 검토 완료</b> — '+parts.join(' · ')+' 중에서 골랐다.'+(j.flow?'<br>흐름: '+hEsc(j.flow):'')+(j.check?'<br><span class="warn">⚠ '+hEsc(j.check)+'</span>':'')+'<br><span class="small">칸 아래 「후보였던 것」에 비교 대상이 있다. 마음에 안 드는 칸은 ↻로 그 칸만 다시 검토한다.</span>');
     });
-  }
-  // ===== 소재 먼저: 소재 → 장르·연관어 → 사전 검색으로 후보 → AI(또는 점수 1등) =====
-  function seedLine(sd){ return '소재 「'+hEsc(sd.text.slice(0,40))+'」 → 장르 '+hEsc(sd.genre||'전체')+' · 연관어 '+hEsc(sd.words.slice(0,6).join(', ')); }
-  function endObj(r){ return {name:r[1], sub:r[0]+(r[3]?' · '+r[3]+(r[4]?' ('+r[4]+')':''):''), note:r[2]+' — '+r[5], html:r[1]}; }
-  var CSC={};   // 후보의 연관어 점수 (표시용)
-  function buildCands(openI, doEnd, sd, reroll){
-    var C={}, EC=null, words=sd.words;
-    openI.forEach(function(i){
-      var other={}; picks.forEach(function(x,k){ if(k!==i && x) other[x[0]]=1; });
-      if(reroll && picks[i]) other[picks[i][0]]=1;
-      var P=pool(SLOTS[i][1], SLOTS[i][0]).filter(function(r){ return !other[r[0]] && !banned(r[0],i); });
-      var ranked=relRank(P, 'c', words, sd.genre, 1.5);
-      // 장르를 정했으면 후보 4개 중 2개는 그 장르 고유 클리셰 (연관어 점수 순, 없으면 그 장르에서 무작위)
-      var own=[];
-      if(sd.genre && sd.genre.indexOf('장르 공통')<0){
-        own=ranked.filter(function(o){ return o.r[1]===sd.genre; }).slice(0,2);
-        var gp=P.filter(function(r){ return r[1]===sd.genre && !own.some(function(o){ return o.r===r; }); });
-        while(own.length<2 && gp.length){ var gi=Math.floor(Math.random()*gp.length); own.push({r:gp[gi], s:0}); gp.splice(gi,1); }
-        ranked=ranked.filter(function(o){ return !own.some(function(x){ return x.r===o.r; }); });
-      }
-      var top=ranked.slice(0,10), out=own.concat(top.slice(0,Math.max(0,2-own.length+1))), rest=top.slice(Math.max(0,2-own.length+1));
-      out=out.slice(0,AIK);
-      for(var k=rest.length-1;k>0;k--){ var j=Math.floor(Math.random()*(k+1)); var t=rest[k]; rest[k]=rest[j]; rest[j]=t; }
-      rest.forEach(function(o){ if(out.length<AIK) out.push(o); });
-      out.sort(function(a,b){ return b.s-a.s; });
-      var rows=out.map(function(o){ CSC[o.r[0]]=o.s; return o.r; });
-      for(var t2=0;t2<30 && rows.length<AIK;t2++){ var c=draw(i); if(c && !other[c[0]] && !rows.some(function(x){ return x[0]===c[0]; })){ CSC[c[0]]=0; rows.push(c); } }
-      C[i]=rows;
-    });
-    if(doEnd){
-      if(elvl()===0 && !serialOn()){
-        var cur=curEnd?curEnd.name:'';
-        var er=relRank(ENDINGS.filter(function(r){ return !(reroll && r[1]===cur); }), 'e', words, null, 1.5).slice(0,8);
-        var eo=er.slice(0,2), erest=er.slice(2); for(var k2=erest.length-1;k2>0;k2--){ var j2=Math.floor(Math.random()*(k2+1)); var t3=erest[k2]; erest[k2]=erest[j2]; erest[j2]=t3; }
-        erest.forEach(function(o){ if(eo.length<AIK) eo.push(o); }); eo.sort(function(a,b){ return b.s-a.s; });
-        EC=eo.map(function(o){ CSC['e|'+o.r[1]]=o.s; return endObj(o.r); });
-        if(EC.length<AIK){ endCands().forEach(function(e){ if(EC.length<AIK && !EC.some(function(x){ return x.name===e.name; })) EC.push(e); }); }
-      } else EC=endCands();
-    }
-    return {C:C, EC:EC, seed:sd};
-  }
-  function fastPick(openI, doEnd, pre){
-    var used={}; SLOTS.forEach(function(s,i){ if(openI.indexOf(i)<0 && picks[i]) used[picks[i][0]]=1; });
-    openI.forEach(function(i){ var cs=pre.C[i]||[]; var r=cs.filter(function(x){ return !used[x[0]]; })[0]||cs[0]; if(!r) return;
-      picks[i]=r; used[r[0]]=1; smask[i]=false;
-      var others=cs.filter(function(x){ return x!==r; }).map(function(x){ return x[0]; });
-      aiNote[i]=(CSC[r[0]]?'연관어로 찾음 (점수 '+CSC[r[0]]+')':'연관어에 맞는 게 적어 무작위')+(others.length?' <span class="cand">· 다른 후보: '+hEsc(others.join(' / '))+'</span>':''); });
-    if(doEnd && pre.EC && pre.EC.length){ var e=pre.EC[0]; curEnd=e; emask=false;
-      var oe=pre.EC.slice(1).map(plainEnd); eNote=(CSC['e|'+e.name]?'연관어로 찾음 (점수 '+CSC['e|'+e.name]+')':'무작위')+(oe.length?' <span class="cand">· 다른 후보: '+hEsc(oe.join(' / '))+'</span>':''); }
-    render(); renderEnd();
-    aiStat('<b>빠른 모드</b> — '+seedLine(pre.seed)+' → 사전에서 연관어 점수가 가장 높은 것을 넣었다. <span class="small">↻는 다음 후보로. AI에게 고르게 하려면 「소재 먼저 → AI가 고름」.</span>');
-  }
-  function ideaText(){ var ta=document.getElementById('id-text'), cb=document.getElementById('id-use'); return (ta&&cb&&cb.checked)?String(ta.value||'').trim():''; }
-  function seedFlow(openI, doEnd){
-    var tok=++aiTokG, mode=sfModeV();
-    var fixedG=(gsel.value!=='rec' && gsel.value!=='all')?gsel.value:null;
-    var ci=window.__czInfo?window.__czInfo():{on:false};
-    var idea='';   // 아이디어로 짜는 건 아이디어 구성기에서
-    function proceed(sd){
-      if(tok!==aiTokG) return;
-      if(!sd.genre || gs.indexOf(sd.genre)<0 && sd.genre!=='서사 구조 (장르 공통)'){
-        var tg=(sd.genres||[]).filter(function(g){ return gs.indexOf(g)>-1; });
-        sd.genre=fixedG || (gsel.value==='all'?null:(tg.length?tg[Math.floor(Math.random()*tg.length)]:(relGenreGuess(sd.words, gs)||curGenre)));
-      }
-      if(fixedG) sd.genre=fixedG;
-      if(gsel.value==='rec' && sd.genre){ curGenre=sd.genre; renderTop(); }
-      lastSeed=sd;
-      if(!openI.length && !doEnd){ aiStat('<b>소재를 정했다</b> — '+seedLine(sd)+'. 클리셰 칸과 엔딩은 모두 📌 고정돼 있다.'); return; }
-      var pre=buildCands(openI, doEnd, sd, false);
-      if(mode==='ai' && aiReady()) aiReview(openI, doEnd, false, pre); else fastPick(openI, doEnd, pre);
-    }
-    // 1) 소재 정하기
-    if(mode==='ai' && aiReady() && ci.on && ci.ai){
-      var MC=window.__czCands(), allTexts=MC.fixed.slice();
-      aiStat('<b>소재 고르는 중</b> — 소재 후보 '+MC.idxs.length*4+'개 중에서 고르고 장르·연관어를 뽑는 중…');
-      if(!MC.idxs.length){ askWords(allTexts.join(' / ')); return; }
-      var txt=MC.idxs.map(function(k,n){ return '[소재 '+k+' 후보]\n'+MC.cands[n].map(function(x,q){ return (q+1)+'. '+(x.text||x.plain); }).join('\n'); }).join('\n\n');
-      aiAsk('당신은 만화 기획 편집자다. 반드시 유효한 JSON만 짧게 출력한다.',
-        (idea?'[작가 아이디어 — 최우선]\n'+idea+'\n\n':'')+(fixedG?'[장르] '+fixedG+'\n\n':'')+(MC.fixed.length?'[이미 정한 소재] '+MC.fixed.join(' / ')+'\n\n':'')+txt+
-        '\n\n① 묶음마다 이야기의 출발점으로 가장 좋은 소재를 하나씩 고른다(아이디어가 있으면 그것에 맞게). ② 고른 소재에 가장 잘 맞는 장르를 아래에서 하나 고른다: '+gs.join(', ')+
-        '. ③ 그 소재로 이야기를 만들 때 떠오르는 연관어를 10개 적는다(소재 글에 없는 말도 좋다. 감정·관계·사건·장소 위주, 한두 단어씩).\n'+
-        'JSON만: {"motifs":[{"m":번호,"pick":후보번호,"why":"한 문장"}],"genre":"장르","words":["단어"]}', 500)
-      .then(function(t){
-        if(tok!==aiTokG) return;
-        var j=null; try{ j=JSON.parse(String(t).replace(/```json|```/g,'').trim().replace(/^[^{]*/,'').replace(/[^}]*$/,'')); }catch(e){}
-        window.__czPut(MC, (j&&j.motifs)||[], j?'':(aiIsErr(t)?t:'응답을 못 읽음'));
-        var texts=MC.fixed.concat(window.__czItems().filter(function(x,k){ return MC.idxs.indexOf(k)>-1; }).map(function(x){ return x.plain; }));
-        var loc=motifSeedInfo(texts.concat(idea?[idea]:[]));
-        var words=((j&&j.words)||[]).map(function(w){ return String(w).trim(); }).filter(function(w){ return w.length>=1; });
-        loc.words.forEach(function(w){ if(words.indexOf(w)<0) words.push(w); });
-        proceed({text:texts.join(' / '), genre:j&&j.genre?String(j.genre).trim():'', genres:loc.genres, words:words});
-      });
-      return;
-    }
-    if(ci.on){ if(ci.ai){ if(window.__czFast) window.__czFast(); } else if(window.__czDraw) window.__czDraw(); }   // AI 없이 소재 정하기
-    var texts=ci.on && window.__czItems ? window.__czItems().map(function(x){ return x.plain; }).filter(Boolean) : [];
-    if(!texts.length && idea) texts=[idea];
-    if(!texts.length){ var o=sfMode.value; sfMode.value='rand'; all_(); sfMode.value=o; aiStat('<span class="small">소재가 꺼져 있어 무작위로 뽑았다. 아이디어로 짜려면 <a href="#ideacomp">아이디어 구성기</a>.</span>'); return; }
-    if(mode==='ai' && aiReady()) askWords(texts.join(' / ')); else { var loc2=motifSeedInfo(texts.concat(idea&&texts[0]!==idea?[idea]:[])); proceed({text:texts.join(' / '), genre:'', genres:loc2.genres, words:loc2.words}); }
-    function askWords(seedText){
-      aiStat('<b>연관어 뽑는 중</b> — 소재 「'+hEsc(seedText.slice(0,40))+'」에서 장르와 연관어를 고르는 중…');
-      aiAsk('당신은 만화 기획 편집자다. 반드시 유효한 JSON만 짧게 출력한다.',
-        (idea?'[작가 아이디어 — 최우선]\n'+idea+'\n\n':'')+'[소재] '+seedText+'\n\n이 소재에 가장 잘 맞는 장르를 하나 고르고('+gs.join(', ')+'), 이 소재로 이야기를 만들 때 떠오르는 연관어 10개를 적는다(감정·관계·사건·장소 위주, 한두 단어씩).\nJSON만: {"genre":"","words":[""]}', 300)
-      .then(function(t){
-        if(tok!==aiTokG) return;
-        var j=null; try{ j=JSON.parse(String(t).replace(/```json|```/g,'').trim().replace(/^[^{]*/,'').replace(/[^}]*$/,'')); }catch(e){}
-        var loc=motifSeedInfo(seedText.split(' / ').concat(idea?[idea]:[]));
-        var words=((j&&j.words)||[]).map(function(w){ return String(w).trim(); }).filter(Boolean);
-        loc.words.forEach(function(w){ if(words.indexOf(w)<0) words.push(w); });
-        proceed({text:seedText, genre:j&&j.genre?String(j.genre).trim():'', genres:loc.genres, words:words});
-      });
-    }
   }
   function pIdx(v){ var n=parseInt(v,10); if(isNaN(n)) return -1; return n<=0?0:n-1; }
   function aiStat(html, after){ var b=document.getElementById('sf-aistat'); if(!b) return; if(!html){ b.hidden=true; b.innerHTML=''; return; } b.hidden=false; b.innerHTML=html; if(after) after(); }
@@ -5771,7 +5478,7 @@ function trBlock(kind){
     if(curEnd && elvl()>=0) L.push('엔딩: '+plainEnd(curEnd)+' — '+String(curEnd.note).replace(/<[^>]+>/g,''));
     [].slice.call(document.querySelectorAll('#cz-out .czreal')).forEach(function(x){ var t=x.childNodes[0]?x.textContent.split(' · AI')[0].trim():''; if(t) L.push('소재: '+t); });
     if(!L.length){ aiStat('먼저 「전체 다시 뽑기」로 칸을 채운다.'); return; }
-    var idea='', g=nowGenre();
+    var idea=ideaBlock('sf'), g=nowGenre();
     aiStat('<b>궁합 점검 중</b> — 지금 칸들이 서로 이어지는지 보는 중…');
     aiAsk('당신은 만화 구성 편집자다. 반드시 유효한 JSON만 출력한다.',
       (idea?idea.replace(/^\n\n/,'')+'\n\n':'')+(g?'[장르] '+g+'\n':'')+'[지금 구성]\n'+L.join('\n')+
@@ -5872,7 +5579,6 @@ function trBlock(kind){
     });
     var b=document.getElementById('sf-endre');
     if(b) b.addEventListener('click',function(){ if(trBlock('one')) return;
-      if(seedOn() && lastSeed){ var pre=buildCands([], true, lastSeed, true); if(aiOn()) aiReview([], true, false, pre); else fastPick([], true, pre); return; }
       if(aiOn()){ aiReview([], true, false); return; }
       drawEnd(); eNote=''; emask=false; renderEnd(); });
     var lk=document.getElementById('sf-endlock');
@@ -5903,7 +5609,7 @@ function trBlock(kind){
       endC=endC.slice(0,40);
       txt.push('[엔딩 후보]\n'+endC.map(function(e,k){ return k+'. '+e[1]+' ('+e[0]+') '+e[2]; }).join('\n'));
     }
-    var prompt='[고정된 칸]\n'+(anchor.length?anchor.join('\n'):'(없음 — 자유롭게 흐름을 만든다)')+
+    var prompt=(ideaBlock('sf')?ideaBlock('sf').replace(/^\n\n/,'')+'\n\n':'')+'[고정된 칸]\n'+(anchor.length?anchor.join('\n'):'(없음 — 자유롭게 흐름을 만든다)')+
       '\n\n'+txt.join('\n\n')+
       '\n\n고정된 칸을 기준으로, 초반→중반→후반→엔딩이 원인과 결과로 이어지도록 비어 있는 칸마다 후보 하나를 고른다. '+
       '앞 칸의 결과가 다음 칸의 원인이 되어야 한다. 무난한 조합보다 한 번 긴장이 꺾이는 흐름을 택한다.\n'+
@@ -6188,7 +5894,7 @@ var runChar=makeIndex({
   function buildOptions(){
     tsel.innerHTML='';
     var raw=lvRaw();
-    if(raw===-1 || raw===7){ var ox=document.createElement('option'); ox.value='-1'; ox.textContent=(raw===7?'지금 구성 보고':'—'); tsel.appendChild(ox); return; }
+    if(raw===-1 || raw===7){ var ox=document.createElement('option'); ox.value='-1'; ox.textContent=(raw===7?'아이디어·구성 보고':'—'); tsel.appendChild(ox); return; }
     if(raw===6){ ['무작위','로맨스','개그','일상','포스트 아포칼립스'].forEach(function(g,i){ var o=document.createElement('option'); o.value=(i===0?-1:i-1); o.textContent=g; tsel.appendChild(o); }); return; }
     var L=raw, o0=document.createElement('option'); o0.value='-1';
     o0.textContent = L===0 ? '갈래 무작위' : '틀 무작위'; tsel.appendChild(o0);
@@ -6275,10 +5981,8 @@ var runChar=makeIndex({
       if(k2<CRAZY.length){ deco=fill(CRAZY[k2], POOL); sub='세계의 규칙'; }
       else { deco=fill(TITLE[k2-CRAZY.length], TPOOL); sub='제목형'; }
     }
-    return {deco:deco, sub:sub, plain:deco.replace(/<[^>]+>/g,''), text:czText(deco)};
+    return {deco:deco, sub:sub, plain:deco.replace(/<[^>]+>/g,'')};
   }
-  // 사람이 읽는 소재 글 (라벨·태그를 빼고 띄어 쓴 것). 별표 키는 예전대로 plain을 쓴다
-  function czText(deco){ return String(deco||'').replace(/<b>[^<]*<\/b>/g,' ').replace(/<[^>]+>/g,' ').replace(/[\u201C\u201D]/g,'').replace(/\s+/g,' ').trim(); }
   var items=[], imask=[], ilock=[];
   function paint(){
     out.innerHTML=items.map(function(x,idx){
@@ -6291,7 +5995,7 @@ var runChar=makeIndex({
         '<button class="czre" data-i="'+idx+'" title="이것만 다시">\u21bb</button></span></div>';
     }).join('');
     out.style.display='block';
-    if(!items.length && lvRaw()===7) out.innerHTML='<p class="small czhint">AI 추천 — 「소재만 뽑기」나 「전체 다시 뽑기」를 누르면 무작위 후보 4개 중에서 지금 구성에 맞는 것을 AI가 골라 준다.</p>';
+    if(!items.length && lvRaw()===7) out.innerHTML='<p class="small czhint">AI 추천 — 「소재만 뽑기」나 「전체 다시 뽑기」를 누르면 아래 아이디어 칸과 지금 뽑힌 구성을 보고 사전에서 골라 준다.</p>';
     [].slice.call(out.querySelectorAll('.czrow')).forEach(function(row,idx){
       row.addEventListener('click',function(e){
         if(e.target.closest && (e.target.closest('.fav')||e.target.closest('.czre'))) return;
@@ -6335,7 +6039,7 @@ var runChar=makeIndex({
       var mj=(arr||[]).filter(function(x){ return +x.m===k; })[0], pn=mj?parseInt(mj.pick,10):NaN, q=isNaN(pn)?-1:(pn<=0?0:pn-1), x=cs[q], ok=!!x;
       if(!x) x=cs[0];
       var others=cs.filter(function(y){ return y!==x; }).map(function(y){ return y.plain; });
-      items[k]={deco:x.deco, text:x.text||x.plain, sub:x.sub+'<span class="czwhy"> · '+(ok?'AI: '+mEsc(mj.why||''):(err?'AI 오류로 첫 후보: '+mEsc(String(err).slice(0,80)):'AI가 고르지 않아 첫 후보'))+(others.length?' <span class="cand">· 후보였던 것: '+mEsc(others.join(' / '))+'</span>':'')+'</span>', plain:x.plain, ai:true};
+      items[k]={deco:x.deco, sub:x.sub+'<span class="czwhy"> · '+(ok?'AI: '+mEsc(mj.why||''):(err?'AI 오류로 첫 후보: '+mEsc(String(err).slice(0,80)):'AI가 고르지 않아 첫 후보'))+(others.length?' <span class="cand">· 후보였던 것: '+mEsc(others.join(' / '))+'</span>':'')+'</span>', plain:x.plain, ai:true};
       imask[k]=false;
     });
     paint();
@@ -6349,8 +6053,8 @@ var runChar=makeIndex({
     idxs.forEach(function(k,n){ items[k]=waitItem(cands[n].length); imask[k]=false; });
     paint();
     var keep=items.filter(function(x,k){ return idxs.indexOf(k)<0 && x && x.plain && !x.wait; }).map(function(x){ return x.plain; });
-    var g=window.__genreNow?window.__genreNow():null, idea='';
-    var txt=idxs.map(function(k,n){ return '[소재 '+k+' 후보]\n'+cands[n].map(function(x,q){ return (q+1)+'. '+(x.text||x.plain)+' ('+String(x.sub).replace(/<[^>]+>/g,'')+')'; }).join('\n'); }).join('\n\n');
+    var g=window.__genreNow?window.__genreNow():null, idea=ideaBlock('sf');
+    var txt=idxs.map(function(k,n){ return '[소재 '+k+' 후보]\n'+cands[n].map(function(x,q){ return (q+1)+'. '+x.plain+' ('+String(x.sub).replace(/<[^>]+>/g,'')+')'; }).join('\n'); }).join('\n\n');
     var prompt=(idea?idea.replace(/^\n\n/,'')+'\n\n':'')+(g?'[장르] '+g+'\n\n':'')+'[지금 랜덤 구성기에 뽑힌 것]\n'+(drawnCtx()||'(아직 없음)')+
       (keep.length?'\n\n[이미 고른 소재]\n'+keep.join(' / '):'')+'\n\n'+txt+
       '\n\n각 후보 묶음에서 이 이야기에 가장 잘 맞는 소재를 하나씩 고른다. 작가 아이디어가 있으면 그것을 가장 먼저 따르고, 없으면 장르와 뽑힌 클리셰를 본다.\n'+
@@ -6368,26 +6072,13 @@ var runChar=makeIndex({
     var n=parseInt(document.getElementById('cz-n').value,10)||1, oI=items, oM=imask, oL=ilock, idxs=[], cands=[], fixed=[];
     items=[]; imask=[]; ilock=[];
     for(var a=0;a<n;a++){
-      if(oL[a] && oI[a] && !oI[a].wait){ items.push(oI[a]); imask.push(oM[a]); ilock.push(true); fixed.push(oI[a].text||oI[a].plain); }
+      if(oL[a] && oI[a] && !oI[a].wait){ items.push(oI[a]); imask.push(oM[a]); ilock.push(true); fixed.push(oI[a].plain); }
       else { var c=czCands(); items.push(waitItem(c.length)); imask.push(false); ilock.push(false); idxs.push(a); cands.push(c); }
     }
     aiTok++; paint();
     return {idxs:idxs, cands:cands, fixed:fixed};
   };
   window.__czPut=function(MC, arr, err){ putPicks(MC.idxs, MC.cands, arr, err); };
-  window.__czInfo=function(){ return {on:!(onbox && !onbox.checked), ai:lvRaw()===7}; };
-  // 빠른 모드: AI 없이 고정 안 된 소재 칸을 무작위 후보 1번으로 채운다
-  window.__czFast=function(){
-    if(onbox && !onbox.checked) return;
-    var n=parseInt(document.getElementById('cz-n').value,10)||1, oI=items, oM=imask, oL=ilock;
-    items=[]; imask=[]; ilock=[]; aiTok++;
-    for(var a=0;a<n;a++){
-      if(oL[a] && oI[a] && !oI[a].wait){ items.push(oI[a]); imask.push(oM[a]); ilock.push(true); }
-      else { var c=czCands(), x=c[0]||one(0,-1); items.push({deco:x.deco, text:x.text, sub:x.sub+'<span class="czwhy"> · 빠른 모드: 무작위</span>', plain:x.plain}); imask.push(false); ilock.push(false); }
-    }
-    paint();
-  };
-  window.__czItems=function(){ return items.map(function(x){ return {plain:(x&&!x.wait&&(x.text||x.plain))||''}; }); };
   window.__czSet=function(list){
     if(onbox && !onbox.checked){ onbox.checked=true; sync(); }
     aiTok++;
@@ -6648,7 +6339,580 @@ var runChar=makeIndex({
     if(typeof renderFavs==='function') renderFavs(); }); }
   updateFavCount();
 })();
-aiBar(); favAiBar(); aiSlots(); if(typeof ideaWriteBar==='function') ideaWriteBar();
+// ===== 콘티 구성기 (2026-10) =====
+(function(){
+var root=document.getElementById('conti'); if(!root) return;
+var SEED = 1;
+function CC(n){ return getComputedStyle(document.documentElement).getPropertyValue(n).trim(); }
+function clamp(v,a,b){ return Math.max(a,Math.min(b,v)); }
+
+/* ---------- 그리기 바탕 ---------- */
+function mk(cv){
+  var r = cv.getBoundingClientRect(), dpr = Math.min(window.devicePixelRatio||1, 2);
+  var w = r.width, h = r.height; if(!w || !h) return null;
+  cv.width = Math.round(w*dpr); cv.height = Math.round(h*dpr);
+  var ctx = cv.getContext('2d'); ctx.setTransform(dpr,0,0,dpr,0,0); ctx.clearRect(0,0,w,h);
+  var c = {ink:CC('--ink'), ink2:CC('--ink-2'), ink3:CC('--ink-3'), paper:CC('--paper'), note:CC('--note'), mark:CC('--mark')};
+  var k = 0, base = (+(cv.dataset.seed||0))*37 + SEED*997;
+  var sw = clamp(Math.min(w,h)/150, 1, 1.9);
+  function pen(p){ return function(e){ return Object.assign({seed: base + (++k)}, p, e||{}); }; }
+  return { ctx:ctx, w:w, h:h, c:c, rc:rough.canvas(cv), opt:cv.dataset, sw:sw,
+    ink: pen({stroke:c.ink, strokeWidth:1.3*sw, roughness:1, bowing:.8}),
+    guide: pen({stroke:c.note, strokeWidth:.9, roughness:.35, bowing:.3}),
+    mk: pen({stroke:c.mark, strokeWidth:1.2, roughness:.5}) };
+}
+function label(D,x,y,t,col,al){
+  var ctx = D.ctx; ctx.save();
+  ctx.font = '600 '+Math.round(clamp(D.h/14,10,13))+'px "IBM Plex Sans KR", sans-serif';
+  ctx.fillStyle = col; ctx.textAlign = al||'left'; ctx.fillText(t,x,y); ctx.restore();
+}
+function horizon(D,y,lab){
+  D.rc.line(-D.w*.3, y, D.w*1.3, y, D.guide({strokeLineDash:[6,5]}));
+  if(lab) label(D, D.w-12, y-6, lab, D.c.note, 'right');
+}
+function floor(D,vx,vy,n){
+  for(var i=0;i<n;i++){
+    var bx = -D.w*.6 + i*(D.w*2.2/(n-1));
+    D.rc.line(vx, vy, bx, D.h+10, D.guide({strokeWidth:.7}));
+  }
+}
+function tilt(D,a){ var x=D.ctx; x.translate(D.w/2,D.h/2); x.rotate(a||-.22); x.scale(1.2,1.2); x.translate(-D.w/2,-D.h/2); }
+
+/* ---------- 사람 ---------- */
+function geo(H,hs,ls){ hs=hs||1; ls=ls||1; var T=.13*hs+.03+.32+.5*ls, u=H/T, d=.13*hs*u; return {u:u, d:d, eye:.55*d}; }
+function figure(D,x,top,H,o){
+  o = o||{}; var hs=o.hs||1, ls=o.ls||1, f=o.face||0;
+  var g = geo(H,hs,ls), u=g.u, d=g.d, cy=top+d/2;
+  var shY = top+d+.04*u, hipY = shY+.31*u, footY = top+H, kneeY = hipY+(footY-hipY)*.5;
+  var sw = (f?.13:.25)*u, hw = (f?.1:.17)*u;
+  var body = o.sil ? {fill:D.c.ink, fillStyle:'solid'} : {fill:D.c.paper, fillStyle:'solid'};
+  [-1,1].forEach(function(s){
+    var hx=x+s*hw*.28, kx=x+s*hw*.32, fx=x+s*hw*.42;
+    D.rc.linearPath([[hx,hipY],[kx,kneeY],[fx,footY]], D.ink());
+    D.rc.line(fx, footY, fx+(f||s)*.06*u, footY, D.ink());
+  });
+  D.rc.polygon([[x-sw/2,shY],[x+sw/2,shY],[x+hw/2,hipY],[x-hw/2,hipY]], D.ink(body));
+  [-1,1].forEach(function(s){
+    var sx = x+s*(f? sw*.3 : sw/2), ex = sx+s*.035*u+f*.03*u, hx = sx+s*.02*u+f*.05*u;
+    D.rc.linearPath([[sx,shY],[ex,shY+.16*u],[hx,shY+.31*u]], D.ink());
+  });
+  D.rc.line(x, top+d*.95, x, shY, D.ink());
+  D.rc.circle(x, cy, d, D.ink(body));
+  var r = d/2;
+  if(o.back){
+    D.rc.circle(x, cy, d, D.ink({fill:D.c.ink3, fillStyle:'hachure', hachureGap:Math.max(2.5,d/11), fillWeight:1}));
+    return;
+  }
+  if(o.sil || d < 9) return;
+  D.rc.path('M '+(x-r*.97)+' '+(cy-r*.24)+' A '+r+' '+r+' 0 0 1 '+(x+r*.97)+' '+(cy-r*.24)+' Q '+x+' '+(cy-r*.62)+' '+(x-r*.97)+' '+(cy-r*.24)+' Z',
+    D.ink({fill:D.c.ink3, fillStyle:'hachure', hachureGap:Math.max(2.2,d/12), hachureAngle:-40, strokeWidth:.9*D.sw}));
+  var ey = cy+.05*d, dot = function(px){ D.rc.circle(px, ey, Math.max(2,d*.07), D.ink({fill:D.c.ink, fillStyle:'solid', roughness:.3})); };
+  if(!f){
+    [-1,1].forEach(function(s){
+      var ex = x+s*.19*d;
+      if(d < 40) dot(ex);
+      else {
+        D.rc.ellipse(ex, ey, .17*d, .085*d, D.ink({strokeWidth:1.1*D.sw}));
+        D.rc.circle(ex, ey, o.shock ? .025*d : .055*d, D.ink({fill:D.c.ink, fillStyle:'solid', roughness:.3}));
+        var by = o.shock ? ey-.17*d : ey-.12*d;
+        D.rc.line(ex-.09*d, by+(o.shock?-.01*d*s:0), ex+.09*d, by-(o.shock?.03*d*s:.01*d), D.ink({strokeWidth:1.6*D.sw}));
+      }
+    });
+    if(d >= 22){
+      if(o.shock) D.rc.ellipse(x, cy+.3*d, .1*d, .12*d, D.ink());
+      else D.rc.line(x-.08*d, cy+.29*d, x+.08*d, cy+.29*d, D.ink());
+    }
+    if(o.shock && d >= 40){
+      D.rc.line(x+.42*d, cy-.12*d, x+.4*d, cy+.04*d, D.ink({stroke:D.c.note}));
+    }
+  } else {
+    var exs = x+f*.24*d;
+    if(d < 40) dot(exs); else { D.rc.ellipse(exs, ey, .09*d, .08*d, D.ink()); D.rc.circle(exs+f*.015*d, ey, .045*d, D.ink({fill:D.c.ink, fillStyle:'solid'})); }
+    if(d >= 22){
+      D.rc.linearPath([[x+f*.46*d, cy-.02*d],[x+f*.56*d, cy+.13*d],[x+f*.47*d, cy+.16*d]], D.ink());
+      D.rc.line(x+f*.28*d, cy+.29*d, x+f*.4*d, cy+.28*d, D.ink());
+    }
+  }
+}
+
+/* ---------- 구도 ---------- */
+function crop(frac,topR){ return function(D){
+  var x = D.w*(+D.opt.x||.5), top = D.h*topR, H = D.h*(1-topR-.02)/frac, g = geo(H);
+  horizon(D, top+g.eye);
+  figure(D, x, top, H, {shock: !!D.opt.shock, sil: !!D.opt.sil, hs: +D.opt.hs||1});
+  if(D.opt.ang==='high') label(D, 10, D.h-10, '부감', D.c.mark);
+  if(D.opt.ang==='low') label(D, 10, D.h-10, '앙각', D.c.mark);
+}; }
+var K = {
+  els:{n:'익스트림 롱숏', e:'ELS', u:'장소와 분위기를 먼저 깔 때. 인물은 점처럼 작게.', draw:function(D){
+    var w=D.w, h=D.h, hy=h*.6; horizon(D,hy);
+    D.rc.linearPath([[-5,hy],[w*.12,hy-h*.16],[w*.24,hy-h*.05],[w*.38,hy-h*.27],[w*.52,hy-h*.08],[w*.7,hy-h*.21],[w*.86,hy-h*.04],[w+5,hy-h*.13]], D.ink({strokeWidth:1.1*D.sw}));
+    var H=h*.12, fx=w*.66; figure(D, fx, h*.84-H, H);
+    label(D, fx+10, h*.84-H-2, '인물', D.c.mark);
+  }},
+  ls:{n:'롱숏', e:'LS', u:'인물과 주변을 함께. 상황 설명용.', draw:function(D){
+    var H=D.h*.46, foot=D.h*.88, top=foot-H, ey=top+geo(H).eye;
+    floor(D, D.w*.5, ey, 9); horizon(D, ey, '눈높이'); figure(D, D.w*(+D.opt.x||.5), top, H);
+  }},
+  fs:{n:'풀숏', e:'FS', u:'머리부터 발끝까지. 옷차림과 자세를 보여 준다.', draw:function(D){
+    var H=D.h*.84, top=D.h*.08, ey=top+geo(H).eye;
+    floor(D, D.w*.5, ey, 9); horizon(D, ey, '눈높이'); figure(D, D.w*.5, top, H);
+  }},
+  ms:{n:'미디엄숏', e:'MS', u:'허리 위. 대화와 손짓이 같이 읽힌다.', draw:crop(.55,.1)},
+  bs:{n:'바스트숏', e:'BS', u:'가슴 위. 표정 중심의 대화 컷.', draw:crop(.37,.1)},
+  cu:{n:'클로즈업', e:'CU', u:'얼굴만. 감정이 터지는 순간.', draw:crop(.205,.06)},
+  ecu:{n:'익스트림 클로즈업', e:'ECU', u:'눈이나 입 하나. 긴장을 최고로 끌어올린다.', draw:function(D){
+    var w=D.w, h=D.h, ey=h*.55, ew=Math.min(w*.3, h*.72), gap=Math.min(w*.1, h*.24);
+    [-1,1].forEach(function(s){
+      var cx = w/2+s*(gap/2+ew/2);
+      D.rc.path('M '+(cx-ew/2)+' '+ey+' Q '+cx+' '+(ey-ew*.44)+' '+(cx+ew/2)+' '+ey+' Q '+cx+' '+(ey+ew*.36)+' '+(cx-ew/2)+' '+ey+' Z', D.ink({fill:D.c.paper, fillStyle:'solid', strokeWidth:1.7*D.sw}));
+      D.rc.circle(cx, ey-ew*.01, ew*.33, D.ink({fill:D.c.ink3, fillStyle:'hachure', hachureGap:3}));
+      D.rc.circle(cx, ey-ew*.01, ew*.13, D.ink({fill:D.c.ink, fillStyle:'solid'}));
+      D.rc.circle(cx+ew*.05, ey-ew*.07, ew*.05, {fill:D.c.paper, fillStyle:'solid', stroke:'none', seed:3});
+      D.rc.path('M '+(cx-ew*.55)+' '+(ey-ew*.4)+' Q '+cx+' '+(ey-ew*.62)+' '+(cx+ew*.5)+' '+(ey-ew*.38), D.ink({strokeWidth:2.6*D.sw}));
+    });
+    horizon(D, ey);
+  }},
+  eye:{n:'아이 레벨', e:'Eye level', u:'관객과 같은 높이. 가장 중립적인 시선.', draw:function(D){
+    var H=D.h*.62, foot=D.h*.9, top=foot-H, ey=top+geo(H).eye;
+    floor(D, D.w*.5, ey, 9); horizon(D, ey, '지평선 = 눈높이'); figure(D, D.w*.5, top, H);
+  }},
+  high:{n:'하이 앵글 (부감)', e:'High angle', u:'위에서 내려다본다. 인물이 작고 약해 보인다.', draw:function(D){
+    var w=D.w, h=D.h, vx=w*.5, vy=-h*.6;
+    floor(D, vx, vy, 11);
+    [.3,.47,.67,.92].forEach(function(t){ D.rc.line(-5, h*t, w+5, h*t, D.guide({strokeWidth:.6})); });
+    var H=h*.58, top=h*.26;
+    D.rc.ellipse(w*.5, top+H, h*.26, h*.06, D.ink({stroke:D.c.ink3, strokeWidth:1}));
+    figure(D, w*.5, top, H, {hs:1.35, ls:.6});
+    label(D, 12, h*.14, '카메라가 위', D.c.mark);
+  }},
+  low:{n:'로우 앵글 (앙각)', e:'Low angle', u:'아래에서 올려다본다. 크고 위압적으로.', draw:function(D){
+    var w=D.w, h=D.h, vx=w*.5, vy=-h*2.2, hy=h*.86;
+    function up(bx){ return bx+(vx-bx)*(h/(h-vy)); }
+    [[.02,.2],[.8,.98]].forEach(function(b){
+      var x1=w*b[0], x2=w*b[1];
+      D.rc.polygon([[x1,h+2],[x2,h+2],[up(x2),0],[up(x1),0]], D.ink({stroke:D.c.ink2, strokeWidth:1}));
+      for(var i=1;i<5;i++){ var y=h*(1-i*.2), t=(h-y)/(h-vy); D.rc.line(x1+(vx-x1)*t, y, x2+(vx-x2)*t, y, D.guide({strokeWidth:.6})); }
+    });
+    horizon(D, hy, '지평선');
+    figure(D, w*.5, h*.06, h*.9, {hs:.7, ls:1.45});
+    label(D, 12, h*.96, '카메라가 아래', D.c.mark);
+  }},
+  bird:{n:'버즈아이 뷰', e:"Bird's-eye", u:'바로 위에서. 지도처럼 상황 전체를 정리할 때.', draw:function(D){
+    var w=D.w, h=D.h, s=h/5;
+    for(var i=-6;i<12;i++){ D.rc.line(w/2+i*s-3*s, 0, w/2+i*s-3*s, h, D.guide({strokeWidth:.5})); }
+    for(var j=1;j<5;j++){ D.rc.line(0, j*s, w, j*s, D.guide({strokeWidth:.5})); }
+    var cx=w/2, cy=h/2;
+    D.rc.ellipse(cx+h*.08, cy+h*.08, h*.36, h*.16, D.ink({stroke:'none', fill:D.c.ink3, fillStyle:'hachure', hachureGap:3}));
+    [-1,1].forEach(function(t){ D.rc.ellipse(cx+t*h*.05, cy+h*.13, h*.05, h*.08, D.ink({fill:D.c.paper, fillStyle:'solid'})); });
+    [-1,1].forEach(function(t){ D.rc.line(cx+t*h*.13, cy, cx+t*h*.16, cy+h*.13, D.ink()); });
+    D.rc.ellipse(cx, cy, h*.28, h*.12, D.ink({fill:D.c.paper, fillStyle:'solid'}));
+    D.rc.circle(cx, cy-h*.005, h*.13, D.ink({fill:D.c.ink3, fillStyle:'hachure', hachureGap:2.5}));
+    label(D, 12, h*.14, '정수리가 보인다', D.c.mark);
+  }},
+  dutch:{n:'더치 앵글', e:'Dutch angle', u:'화면을 기울인다. 불안, 혼란, 광기.', draw:function(D){
+    var w=D.w, h=D.h; tilt(D, -.24);
+    [[.04,.22],[.78,.96]].forEach(function(b){ D.rc.rectangle(w*b[0], -h*.2, w*(b[1]-b[0]), h*1.4, D.ink({stroke:D.c.ink2, strokeWidth:1})); });
+    var H=h*.7, top=h*.16, ey=top+geo(H).eye;
+    horizon(D, ey); figure(D, w*.5, top, H, {face:1});
+  }},
+  two:{n:'투숏', e:'Two-shot', u:'두 사람을 한 칸에. 관계와 거리감.', draw:function(D){
+    var H=D.h*.86/.42, top=D.h*.14, ey=top+geo(H).eye;
+    horizon(D, ey);
+    figure(D, D.w*.26, top, H, {face:1}); figure(D, D.w*.74, top+D.h*.03, H, {face:-1});
+  }},
+  ots:{n:'어깨 너머 숏', e:'OTS', u:'듣는 사람 등 뒤에서. 대화에 끼어든 느낌.', draw:function(D){
+    var w=D.w, h=D.h, H=h*.86/.37, top=h*.12;
+    horizon(D, top+geo(H).eye);
+    figure(D, w*.68, top, H, {face:-1});
+    D.rc.polygon([[-w*.18,h+8],[-w*.02,h*.82],[w*.4,h*.8],[w*.56,h+8]], D.ink({fill:D.c.paper, fillStyle:'solid'}));
+    D.rc.circle(w*.2, h*.5, h*.58, D.ink({fill:D.c.paper, fillStyle:'solid'}));
+    D.rc.circle(w*.2, h*.5, h*.58, D.ink({fill:D.c.ink3, fillStyle:'hachure', hachureGap:4}));
+    label(D, w*.2, h*.15, '전경: 듣는 쪽', D.c.mark, 'center');
+  }},
+  stand:{n:'대치', e:'Standoff', u:'좌우로 마주 선다. 180도 선을 넘지 않는다.', draw:function(D){
+    var w=D.w, h=D.h, H=h*.56, foot=h*.88, top=foot-H, ey=top+geo(H).eye;
+    horizon(D, ey);
+    figure(D, w*.2, top, H, {face:1}); figure(D, w*.8, top, H, {face:-1});
+    D.rc.line(w*.2+h*.07, ey, w*.8-h*.07, ey, D.mk({strokeLineDash:[7,5]}));
+    label(D, w*.5, ey-8, '180도 선', D.c.mark, 'center');
+  }},
+  frame:{n:'프레임 속 프레임', e:'Frame in frame', u:'문틀·창틀로 가둔다. 고립, 엿보기, 등장.', draw:function(D){
+    var w=D.w, h=D.h;
+    [[0,.22],[.78,1]].forEach(function(b){ D.rc.rectangle(w*b[0]-4, -4, w*(b[1]-b[0])+8, h+8, D.ink({fill:D.c.ink3, fillStyle:'hachure', hachureGap:4, stroke:D.c.ink2})); });
+    D.rc.rectangle(w*.34, h*.12, w*.32, h*.8, D.ink());
+    D.rc.line(w*.22, h*.92, w*.78, h*.92, D.ink({stroke:D.c.ink2}));
+    var H=h*.5; figure(D, w*.5, h*.9-H, H, {sil: !!D.opt.sil});
+    label(D, w*.5, h*.09, '문틀이 액자', D.c.mark, 'center');
+  }}
+};
+
+
+function cesc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+var SHOTS=[['els','ELS','익스트림 롱숏'],['ls','LS','롱숏'],['fs','FS','풀숏'],['ms','MS','미디엄숏'],['bs','BS','바스트숏'],['cu','CU','클로즈업'],['ecu','ECU','익스트림 클로즈업'],
+  ['two','TWO','투숏'],['ots','OTS','어깨 너머'],['stand','STAND','대치'],['frame','FRAME','프레임 속 프레임'],['bird','BIRD','버즈아이']];
+var ANGS=[['','','앵글 보통'],['high','부감','부감'],['low','앙각','앙각'],['dutch','더치','더치']];
+function shotName(k){ for(var i=0;i<SHOTS.length;i++) if(SHOTS[i][0]===k) return SHOTS[i][2]; return k; }
+function shotCode(k){ for(var i=0;i<SHOTS.length;i++) if(SHOTS[i][0]===k) return SHOTS[i][1]; return 'MS'; }
+function angName(a){ return a==='high'?'부감':a==='low'?'앙각':a==='dutch'?'더치':''; }
+function compText(c){ return shotCode(c.k)+(c.ang?'+'+angName(c.ang):''); }
+function parseComp(s){
+  var u=String(s||'').toUpperCase(), k='ms', ang='';
+  var T=[['els',/ELS|익스트림 *롱/],['ecu',/ECU|익스트림 *클로즈/],['ots',/OTS|어깨/],['two',/TWO|투 *숏/],['stand',/STAND|대치/],['frame',/FRAME|프레임/],['bird',/BIRD|버즈/],
+         ['ls',/\bLS\b|롱 *숏/],['fs',/\bFS\b|풀 *숏|전신/],['ms',/\bMS\b|미디엄/],['bs',/\bBS\b|바스트/],['cu',/\bCU\b|클로즈/]];
+  for(var i=0;i<T.length;i++) if(T[i][1].test(u)){ k=T[i][0]; break; }
+  if(/부감|HIGH/.test(u)) ang='high'; else if(/앙각|LOW/.test(u)) ang='low'; else if(/더치|DUTCH/.test(u)) ang='dutch';
+  return {k:k, ang:ang};
+}
+
+/* ---------- 저장 ---------- */
+var B=null;
+function load(){ try{ B=JSON.parse(localStorage.getItem('contiBoard')||'null'); }catch(e){ B=null; } }
+function save(){ try{ if(B){ B.at=Date.now(); localStorage.setItem('contiBoard', JSON.stringify(B)); } }catch(e){} }
+function srcGet(){ try{ return JSON.parse(localStorage.getItem('contiSrc')||'null'); }catch(e){ return null; } }
+
+/* ---------- 클리셰의 연출 도구 → 구도 순서 ---------- */
+function toolSeq(tools, n, cost){
+  var t=String(tools||''), has=function(x){ return t.indexOf(x)>=0; }, s=[];
+  if(has('원경·생략')) s.push({k:'els'});
+  if(has('글자·말풍선')) s.push({k:'ms'});
+  if(has('같은 구도 반복')) s.push({k:'bs'},{k:'bs',rep:1});
+  if(has('컷 리듬·톤')) s.push({k:'ms'},{k:'cu'});
+  if(has('반응 컷')) s.push({k:'ots'},{k:'bs',react:1});
+  if(has('클로즈업')) s.push({k:'cu'},{k:'ecu'});
+  if(has('무음·여백')) s.push({k:'ls',silent:1});
+  if(!s.length) s=[{k:'ms'},{k:'cu'}];
+  if(cost==='2쪽+' && !has('원경·생략')) s.unshift({k:'ls'});
+  var out=[], FILL=['ms','bs','two','ots'];
+  if(n<=s.length){
+    for(var i=0;i<n;i++) out.push(Object.assign({}, s[n===1?s.length-1:Math.round(i*(s.length-1)/(n-1))]));
+  } else {
+    var last=-1, f=0;
+    for(var j=0;j<n;j++){
+      var idx=Math.floor(j*s.length/n);
+      if(idx===last && j!==n-1) out.push({k:FILL[f++%FILL.length]}); else out.push(Object.assign({}, s[idx]));
+      last=idx;
+    }
+    out[n-1]=Object.assign({}, s[s.length-1]);
+  }
+  if(has('넘김·전환') && out.length) out[out.length-1].hook=1;
+  return out;
+}
+var SECPAT={'도입':['els','ls','ms','bs','ms','cu'],'전개':['ms','ots','bs','two','ms','cu','ls','bs'],'전환':['ls','ms','cu','ots','bs'],
+  '절정':['ms','cu','fs','ecu','ls','cu'],'마지막 훅':['bs','ms','cu','ls']};
+function secDefault(name, i, len){
+  var p=SECPAT[name] || (/훅|다음/.test(name)?SECPAT['마지막 훅']:/정점|절정/.test(name)?SECPAT['절정']:/상황|첫/.test(name)?SECPAT['도입']:SECPAT['전개']);
+  var c={k:p[i%p.length]};
+  if(name==='절정' && i===Math.floor(len/2)) c.ang='low';
+  if((name==='마지막 훅'||/훅|다음/.test(name)) && i===len-1) c.hook=1;
+  return c;
+}
+
+/* ---------- 재료 가져오기 ---------- */
+function pull(){
+  var st=window.__sfState?window.__sfState():null;
+  if(!st || !st.slots.length){ stat('랜덤 구성기에 뽑힌 칸이 없다. 먼저 구성기에서 뽑아 오자.'); return false; }
+  var total=+document.getElementById('ct-total').value||st.total;
+  if(total!==st.total) st=rescale(st,total);
+  var acc=0, band=st.band.map(function(b){ var o={name:b.name, a:acc+1, b:acc+b.n}; acc+=b.n; return o; });
+  var cl=st.slots.map(function(s){ var r=s.row; return {label:s.label, name:r[0], genre:r[1], cost:r[6], tools:r[7], def:r[8], point:r[9], a:s.a, b:s.b}; });
+  var story=document.getElementById('ct-story').value;
+  var src=srcGet();
+  if(src && src.text && (!story.trim() || (B && src.at>(B.srcAt||0)))){ story=src.text; }
+  B={total:total, band:band, cl:cl, drawn:(typeof aiDrawn==='function'?aiDrawn(true):''), story:story, srcAt:src?src.at:0, cuts:skeleton(total, band, cl)};
+  document.getElementById('ct-story').value=story;
+  save(); renderAll(); stat('구성기에서 가져왔다. 클리셰 '+cl.length+'개, '+total+'컷.');
+  return true;
+}
+function rescale(st,total){
+  var f=total/st.total, acc=0;
+  st.band=st.band.map(function(b,i){ var n=(i===st.band.length-1)?Math.max(1,total-acc):Math.max(1,Math.round(b.n*f)); acc+=n; return {name:b.name, n:n}; });
+  st.slots=st.slots.map(function(s){ var a=Math.max(1,Math.round(s.a*f)), b=Math.min(total,Math.max(a,Math.round(s.b*f))); return {label:s.label,row:s.row,a:a,b:b}; });
+  st.total=total; return st;
+}
+function bandOf(n){ for(var i=0;i<B.band.length;i++) if(n>=B.band[i].a && n<=B.band[i].b) return B.band[i]; return B.band[B.band.length-1]; }
+function clOf(n, cl){ cl=cl||B.cl; for(var i=0;i<cl.length;i++) if(n>=cl[i].a && n<=cl[i].b) return cl[i]; return null; }
+function skeleton(total, band, cl){
+  var cuts=[], seqs={};
+  cl.forEach(function(c,i){ seqs[i]=toolSeq(c.tools, c.b-c.a+1, c.cost); });
+  for(var n=1;n<=total;n++){
+    var bd=band[band.length-1]; for(var j=0;j<band.length;j++) if(n>=band[j].a && n<=band[j].b){ bd=band[j]; break; }
+    var ci=-1; for(var q=0;q<cl.length;q++) if(n>=cl[q].a && n<=cl[q].b){ ci=q; break; }
+    var c = ci>=0 ? Object.assign({}, seqs[ci][n-cl[ci].a]) : secDefault(bd.name, n-bd.a, bd.b-bd.a+1);
+    c.n=n; if(ci>=0) c.cl=cl[ci].name;
+    c.scr=''; c.line=''; cuts.push(c);
+  }
+  return cuts;
+}
+
+/* ---------- 그리기 ---------- */
+var roughState=0, roughWait=[];
+function needRough(cb){
+  if(window.rough){ cb(); return; }
+  roughWait.push(cb); if(roughState) return; roughState=1;
+  var s=document.createElement('script'); s.src='https://cdn.jsdelivr.net/npm/roughjs@4.6.6/bundled/rough.js';
+  s.onload=function(){ roughState=2; var w=roughWait; roughWait=[]; w.forEach(function(f){ try{ f(); }catch(e){} }); };
+  s.onerror=function(){ roughState=0; roughWait=[]; stat('선 그림 라이브러리를 불러오지 못했다. 인터넷 연결을 확인하고 다시 열어 보자.'); };
+  document.head.appendChild(s);
+}
+function drawCv(cv){
+  if(!window.rough) return;
+  var D=mk(cv); if(!D) return;
+  var ctx=D.ctx, w=D.w, h=D.h, o=D.opt, k=o.k;
+  ctx.fillStyle=D.c.paper; ctx.fillRect(0,0,w,h);
+  ctx.save(); ctx.beginPath(); ctx.rect(3,3,w-6,h-6); ctx.clip();
+  if(o.ang==='dutch' && k!=='dutch') tilt(D,-.2);
+  var kind=k;
+  if(o.ang==='high' && /^(fs|ls|els)$/.test(k)) kind='high';
+  if(o.ang==='low' && /^(fs|ls|els)$/.test(k)) kind='low';
+  try{ (K[kind]||K.ms).draw(D); }catch(e){}
+  ctx.restore();
+  if(o.silent) label(D, w-10, 18, '무음', D.c.note, 'right');
+  D.rc.rectangle(3,3,w-6,h-6, D.ink({strokeWidth:(o.hook?3:2)*D.sw, roughness:.5, bowing:.3, stroke:o.hook?D.c.mark:D.c.ink}));
+}
+var pend=new Set(), raf=0;
+function queue(cv){ pend.add(cv); if(!raf) raf=requestAnimationFrame(function(){ raf=0; var p=pend; pend=new Set(); needRough(function(){ p.forEach(function(cv){ if(cv.isConnected) drawCv(cv); }); }); }); }
+var ro=('ResizeObserver' in window)?new ResizeObserver(function(es){ es.forEach(function(e){ queue(e.target); }); }):null;
+function cvFor(c){
+  var cv=document.createElement('canvas');
+  cv.dataset.k=c.k; cv.dataset.seed=c.n; cv.dataset.x=(c.k==='cu'||c.k==='ms'||c.k==='bs')?(c.n%2?'.42':'.58'):'.5';
+  if(c.ang) cv.dataset.ang=c.ang;
+  if(c.ang==='high' && /^(ms|bs|cu)$/.test(c.k)) cv.dataset.hs='1.25';
+  if(c.ang==='low' && /^(ms|bs|cu)$/.test(c.k)) cv.dataset.hs='.82';
+  if(/놀라|충격|경악|얼어붙|굳어|소스라/.test(c.scr)) cv.dataset.shock='1';
+  if(/실루엣|그림자만|역광/.test(c.scr)) cv.dataset.sil='1';
+  if(c.silent) cv.dataset.silent='1';
+  if(c.hook) cv.dataset.hook='1';
+  cv.setAttribute('role','img'); cv.setAttribute('aria-label', c.n+'번 컷 '+shotName(c.k)+' 구도');
+  if(ro) ro.observe(cv); else setTimeout(function(){ queue(cv); },0);
+  return cv;
+}
+
+/* ---------- 화면 ---------- */
+function stat(t){ var s=document.getElementById('ct-stat'); if(s) s.textContent=t||''; }
+function renderPlan(){
+  var box=document.getElementById('ct-plan'); if(!box) return;
+  if(!B){ box.innerHTML='<p class="small">아직 가져온 구성이 없다. 랜덤 구성기에서 뽑은 뒤 「구성기에서 가져오기」를 누른다. 아이디어로 추천받기를 「구성기에 채우기」로 넣었다면 그대로 가져온다.</p>'; return; }
+  var h='<div class="ct-band">';
+  B.band.forEach(function(b){ h+='<div style="flex:'+(b.b-b.a+1)+'"><b>'+cesc(b.name)+'</b><span>'+b.a+'–'+b.b+'</span></div>'; });
+  h+='</div><ul class="ct-cl">';
+  B.cl.forEach(function(c){ h+='<li><span class="ct-rng">'+c.a+'–'+c.b+'번 컷</span><b>'+cesc(c.name)+'</b> <span class="small">'+cesc(c.cost)+' · '+cesc(String(c.tools||'').replace(/\|/g,', '))+'</span><span class="small ct-pt">'+cesc(c.point)+'</span></li>'; });
+  h+='</ul>'; box.innerHTML=h;
+}
+function cardHTML(c){
+  return '<figcaption><div class="ct-h"><b>'+c.n+'</b><span>'+cesc(shotName(c.k))+(c.ang?' · '+angName(c.ang):'')+'</span>'+
+    (c.hook?'<i class="ct-hook">넘김</i>':'')+(c.cl?'<em>'+cesc(c.cl)+'</em>':'')+'</div>'+
+    (c.scr?'<p class="ct-scr">'+cesc(c.scr)+'</p>':'<p class="ct-scr ct-empty">화면 미정</p>')+
+    (c.line?'<p class="ct-line">'+cesc(c.line)+'</p>':'')+'</figcaption>';
+}
+function renderBoard(){
+  var box=document.getElementById('ct-board'); if(!box) return;
+  if(ro) ro.disconnect();
+  box.innerHTML='';
+  if(!B || !B.cuts || !B.cuts.length){ box.innerHTML='<p class="small">콘티 칸이 여기에 깔린다.</p>'; return; }
+  B.band.forEach(function(b){
+    var sec=document.createElement('div'); sec.className='ct-sec';
+    sec.innerHTML='<h4>'+cesc(b.name)+' <span>'+b.a+'–'+b.b+'번 컷</span></h4>';
+    var g=document.createElement('div'); g.className='ct-grid';
+    B.cuts.forEach(function(c){ if(c.n<b.a || c.n>b.b) return;
+      var f=document.createElement('figure'); f.className='ct-cut'+(c.cl?' has-cl':''); f.dataset.n=c.n; f.tabIndex=0;
+      f.appendChild(cvFor(c)); f.insertAdjacentHTML('beforeend', cardHTML(c)); g.appendChild(f);
+    });
+    sec.appendChild(g); box.appendChild(sec);
+  });
+  var done=B.cuts.filter(function(c){ return c.scr; }).length;
+  if(!document.getElementById('ct-stat').textContent) stat(done?done+'/'+B.cuts.length+'컷 작성됨':'');
+}
+function refreshCut(n){
+  var f=root.querySelector('.ct-cut[data-n="'+n+'"]'), c=B.cuts[n-1]; if(!f||!c) return;
+  var old=f.querySelector('canvas'); if(ro&&old) ro.unobserve(old);
+  f.innerHTML=''; f.className='ct-cut'+(c.cl?' has-cl':''); f.appendChild(cvFor(c)); f.insertAdjacentHTML('beforeend', cardHTML(c));
+}
+function renderAll(){ renderPlan(); renderBoard(); }
+
+/* ---------- 컷 고치기 ---------- */
+function openEdit(f){
+  var n=+f.dataset.n, c=B.cuts[n-1]; if(!c || f.querySelector('.ct-ed')) return;
+  var ed=document.createElement('div'); ed.className='ct-ed';
+  ed.innerHTML='<label>구도 <select class="ct-k">'+SHOTS.map(function(s){ return '<option value="'+s[0]+'"'+(s[0]===c.k?' selected':'')+'>'+s[2]+'</option>'; }).join('')+'</select></label>'+
+    '<label>앵글 <select class="ct-a">'+ANGS.map(function(a){ return '<option value="'+a[0]+'"'+(a[0]===(c.ang||'')?' selected':'')+'>'+a[2]+'</option>'; }).join('')+'</select></label>'+
+    '<label>화면 <textarea class="ct-s" rows="2"></textarea></label><label>대사 <input class="ct-l" type="text"></label>'+
+    '<div class="filterbar"><button class="chip ct-ok" type="button">저장</button><button class="chip ct-x" type="button">닫기</button>'+
+    '<button class="chip ct-add" type="button">뒤에 컷 추가</button><button class="chip ct-del" type="button">이 컷 지우기</button></div>';
+  ed.querySelector('.ct-s').value=c.scr||''; ed.querySelector('.ct-l').value=c.line||'';
+  f.appendChild(ed);
+  ed.addEventListener('click',function(e){ e.stopPropagation(); });
+  ed.querySelector('.ct-x').addEventListener('click',function(){ ed.remove(); });
+  ed.querySelector('.ct-ok').addEventListener('click',function(){
+    c.k=ed.querySelector('.ct-k').value; c.ang=ed.querySelector('.ct-a').value||'';
+    c.scr=ed.querySelector('.ct-s').value.trim(); c.line=ed.querySelector('.ct-l').value.trim();
+    save(); refreshCut(n);
+  });
+  ed.querySelector('.ct-add').addEventListener('click',function(){ insertCut(n); });
+  var del=ed.querySelector('.ct-del');
+  del.addEventListener('click',function(){ if(del.dataset.arm){ removeCut(n); } else { del.dataset.arm='1'; del.textContent='한 번 더 누르면 지움'; } });
+}
+function renumber(){
+  B.cuts.forEach(function(c,i){ c.n=i+1; });
+  B.total=B.cuts.length;
+  var last=B.band[B.band.length-1]; last.b=Math.max(last.a,B.total);
+}
+function shiftAfter(n,d){
+  B.band.forEach(function(b,i){ if(b.a>n) b.a+=d; if(b.b>=n) b.b+=d; if(i===0) b.a=1; });
+  B.cl.forEach(function(c){ if(c.a>n) c.a+=d; if(c.b>=n) c.b+=d; });
+}
+function insertCut(n){
+  var src=B.cuts[n-1];
+  B.cuts.splice(n,0,{k:'ms', ang:'', scr:'', line:'', cl:src&&src.cl&&clOf(n)&&clOf(n).b>n?src.cl:undefined});
+  shiftAfter(n,1); renumber(); save(); renderAll(); document.getElementById('ct-total').value=String(B.total);
+}
+function removeCut(n){
+  if(B.cuts.length<=1) return;
+  B.cuts.splice(n-1,1); shiftAfter(n,-1);
+  B.band=B.band.filter(function(b){ return b.b>=b.a; });
+  B.cl.forEach(function(c){ if(c.b<c.a) c.b=c.a; });
+  renumber(); save(); renderAll(); document.getElementById('ct-total').value=String(B.total);
+}
+
+/* ---------- AI 콘티 쓰기 ---------- */
+var CSYS='당신은 한국 웹툰 콘티 작가다. 정해진 형식의 줄만 쓴다. 서론·설명·요약·마크다운 기호를 쓰지 않는다.';
+function chunks(){
+  var out=[];
+  B.band.forEach(function(b){
+    var len=b.b-b.a+1, k=Math.max(1,Math.ceil(len/14)), step=Math.ceil(len/k);
+    for(var a=b.a;a<=b.b;a+=step) out.push({a:a, b:Math.min(b.b,a+step-1), name:b.name});
+  });
+  return out;
+}
+function cutPrompt(ch){
+  var L=[];
+  L.push('[이야기]\n'+(B.story&&B.story.trim()?B.story.trim().slice(0,5000):'(따로 없음. 구성만 보고 짓는다)'));
+  if(B.drawn) L.push('[구성]\n'+B.drawn);
+  L.push('[전체 분량] '+B.total+'컷. 이번에는 '+ch.a+'~'+ch.b+'번 컷('+ch.name+' 구간)만 쓴다.');
+  L.push('[구간] '+B.band.map(function(b){ return b.name+' '+b.a+'–'+b.b; }).join(' · '));
+  var used={}, rows=[];
+  for(var n=ch.a;n<=ch.b;n++){
+    var c=B.cuts[n-1]; if(!c) continue;
+    var cl=c.cl?clOf(n):null;
+    rows.push(n+' · 추천 '+compText(c)+(c.silent?' · 무음':'')+(c.hook?' · 넘김 훅':'')+(cl?' · 「'+cl.name+'」':''));
+    if(cl && !used[cl.name]){ used[cl.name]=1; }
+  }
+  L.push('[컷 배정표]\n'+rows.join('\n'));
+  var cls=B.cl.filter(function(c){ return used[c.name]; });
+  if(cls.length) L.push('[이번 구간의 클리셰]\n'+cls.map(function(c){ return '「'+c.name+'」 '+c.a+'–'+c.b+'번 컷 · 지면 '+c.cost+' · '+c.def+' 연출: '+c.point; }).join('\n'));
+  var prev=[]; for(var p=Math.max(1,ch.a-3);p<ch.a;p++){ var q=B.cuts[p-1]; if(q&&q.scr) prev.push(p+'|'+compText(q)+'|'+q.scr+'|'+(q.line||'')); }
+  if(prev.length) L.push('[바로 앞 컷]\n'+prev.join('\n'));
+  L.push('규칙\n'+
+    '- 한 줄에 한 컷. 형식: 번호|구도|화면|대사\n'+
+    '- 구도는 샷 하나에 필요하면 앵글 하나를 +로 붙인다. 샷: ELS LS FS MS BS CU ECU TWO OTS STAND FRAME BIRD. 앵글: 부감 앙각 더치. 예: BS+부감\n'+
+    '- 추천 구도를 기본으로 따르고, 이야기에 더 맞으면 바꾼다.\n'+
+    '- 클리셰가 배정된 컷에서는 그 클리셰의 연출을 실제 화면으로 보여 준다.\n'+
+    '- 화면은 누가 어디서 무엇을 하는지 40자 안쪽. 대사는 한 문장까지. 대사가 없으면 비운다. 무음 컷은 대사를 비운다.\n'+
+    '- 이야기에 없는 설정을 새로 만들지 않는다. 앞 컷과 이어지게 쓴다.\n'+
+    '- '+ch.a+'번부터 '+ch.b+'번까지 빠짐없이 쓰고, 그 밖의 번호는 쓰지 않는다.');
+  return L.join('\n\n');
+}
+function applyLines(t, ch){
+  var got=0;
+  String(t).split(/\n/).forEach(function(line){
+    var m=/^\s*(\d+)\s*[.)]?\s*[|｜]\s*([^|｜]*)[|｜]([^|｜]*)(?:[|｜](.*))?$/.exec(line.replace(/[*#]/g,''));
+    if(!m) return; var n=+m[1]; if(n<ch.a || n>ch.b) return;
+    var c=B.cuts[n-1]; if(!c) return;
+    var p=parseComp(m[2]); c.k=p.k; c.ang=p.ang;
+    c.scr=m[3].trim(); c.line=(m[4]||'').trim().replace(/^[「“"']|[」”"']$/g,'');
+    if(/^[-—–(없음)]*$/.test(c.line)) c.line='';
+    got++;
+  });
+  return got;
+}
+var running=false;
+function writeAll(fromN){
+  if(running) return;
+  if(!aiReady()){ stat('AI 연결에서 키를 넣어야 쓸 수 있다.'); return; }
+  if(!B) { if(!pull()) return; }
+  B.story=document.getElementById('ct-story').value; save();
+  var list=chunks().filter(function(ch){ return ch.b>=(fromN||1); });
+  if(!fromN) B.cuts.forEach(function(c){ c.scr=''; c.line=''; });
+  renderBoard();
+  running=true; setBusy(true);
+  var i=0;
+  function next(){
+    if(i>=list.length){ running=false; setBusy(false); stat('다 썼다. '+B.cuts.filter(function(c){return c.scr;}).length+'/'+B.cuts.length+'컷.'); save(); return; }
+    var ch=list[i];
+    stat((i+1)+'/'+list.length+' · '+ch.a+'–'+ch.b+'번 컷('+ch.name+') 쓰는 중…');
+    aiAsk(CSYS, cutPrompt(ch), Math.min(2600, 200+(ch.b-ch.a+1)*120)).then(function(t){
+      if(aiIsErr(t)){ fail(ch, String(t)); return; }
+      var got=applyLines(aiClean?aiClean(t):t, ch);
+      if(!got){ fail(ch, '답을 콘티 형식으로 읽지 못했다.'); return; }
+      save(); for(var n=ch.a;n<=ch.b;n++) refreshCut(n);
+      i++; next();
+    });
+  }
+  function fail(ch, why){
+    running=false; setBusy(false); save();
+    stat(ch.a+'번 컷에서 멈췄다. '+why.slice(0,80));
+    var bar=document.getElementById('ct-resume'); bar.hidden=false; bar.dataset.n=ch.a;
+  }
+  document.getElementById('ct-resume').hidden=true;
+  next();
+}
+function setBusy(on){ ['ct-write','ct-pull','ct-skel','ct-plot'].forEach(function(id){ var b=document.getElementById(id); if(b) b.disabled=on; }); }
+
+/* ---------- 연결 ---------- */
+var tsel=document.getElementById('ct-total');
+[20,30,40,50,60,70,80,100].forEach(function(n){ var o=document.createElement('option'); o.value=String(n); o.textContent=n+'컷'; tsel.appendChild(o); });
+document.getElementById('ct-pull').addEventListener('click', pull);
+document.getElementById('ct-skel').addEventListener('click', function(){
+  if(!B){ pull(); return; }
+  var t=+tsel.value||B.total;
+  if(t!==B.total){ pull(); return; }
+  B.cuts=skeleton(B.total, B.band, B.cl); save(); renderBoard(); stat('뼈대를 다시 깔았다. 쓴 글은 지웠다.');
+});
+document.getElementById('ct-write').addEventListener('click', function(){ writeAll(0); });
+document.getElementById('ct-resume').addEventListener('click', function(){ writeAll(+this.dataset.n||1); });
+document.getElementById('ct-redraw').addEventListener('click', function(){ SEED++; root.querySelectorAll('.ct-cut canvas').forEach(queue); });
+document.getElementById('ct-copy').addEventListener('click', function(){
+  if(!B) return;
+  var txt=B.cuts.map(function(c){ return c.n+'|'+compText(c)+'|'+(c.scr||'')+'|'+(c.line||''); }).join('\n'), b=this;
+  try{ navigator.clipboard.writeText(txt).then(function(){ b.textContent='복사됨'; setTimeout(function(){ b.textContent='글로 복사'; },1200); }, function(){ window.prompt('복사',txt); }); }catch(e){ window.prompt('복사',txt); }
+});
+document.getElementById('ct-plot').addEventListener('click', function(){
+  if(!aiReady()){ stat('AI 연결에서 키를 넣어야 쓸 수 있다.'); return; }
+  if(!B && !pull()) return;
+  var w=writePrompt('[지금 구성]\n'+B.drawn, 'plot', B.total), ta=document.getElementById('ct-story');
+  setBusy(true); stat('줄거리 짜는 중…');
+  aiAsk(WSYS, w.prompt, w.maxTok).then(function(t){
+    setBusy(false);
+    if(aiIsErr(t)){ stat(String(t).slice(0,90)); return; }
+    ta.value=t; B.story=t; save(); stat('줄거리를 넣었다. 고친 뒤 「AI로 콘티 쓰기」를 누른다.');
+  });
+});
+document.getElementById('ct-story').addEventListener('input', function(){ if(B){ B.story=this.value; save(); } });
+document.getElementById('ct-board').addEventListener('click', function(e){
+  var f=e.target.closest('.ct-cut'); if(f && B) openEdit(f);
+});
+document.getElementById('ct-board').addEventListener('keydown', function(e){
+  if(e.key==='Enter' && e.target.classList.contains('ct-cut') && B) openEdit(e.target);
+});
+try{ matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function(){ root.querySelectorAll('.ct-cut canvas').forEach(queue); }); }catch(e){}
+new MutationObserver(function(){ root.querySelectorAll('.ct-cut canvas').forEach(queue); }).observe(document.documentElement,{attributes:true, attributeFilter:['data-theme']});
+
+var shown=false;
+window.__contiShow=function(){
+  if(!shown){
+    shown=true; load();
+    if(B){ document.getElementById('ct-story').value=B.story||''; tsel.value=String(B.total); }
+    else { tsel.value=String(window.__cutTotal?window.__cutTotal():70); if(!tsel.value) tsel.value='70'; }
+    var src=srcGet(), note=document.getElementById('ct-srcinfo');
+    if(src && note) note.textContent='최근 글쓰기 결과: '+src.title;
+    if(B && src && src.at>(B.srcAt||0) && note) note.textContent='새 글쓰기 결과('+src.title+')가 있다. 「구성기에서 가져오기」로 넣는다.';
+    renderAll();
+  }
+  needRough(function(){ root.querySelectorAll('.ct-cut canvas').forEach(queue); });
+};
+})();
+
+aiBar(); favAiBar(); aiSlots();
 if(window.__reSlots) window.__reSlots(); if(typeof renderFavs==='function') renderFavs();
 dataMigrate();
 hsLoad();
