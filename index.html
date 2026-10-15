@@ -671,6 +671,14 @@ textarea.cast-in{resize:vertical; min-height:2.6em; overflow:hidden}
   .cast-body{padding:0 .6rem .6rem}
   #cast-q{width:100%; order:5}
 }
+.cast-h{align-items:center}
+.cast-h canvas.cast-pic{width:42px; height:50px; flex:0 0 42px; border:1px solid var(--rule); background:var(--paper); border-radius:2px}
+.cast-figbox{display:flex; gap:.8rem; align-items:flex-start; margin:.35rem 0 .3rem}
+.cast-figbox canvas.cast-pic{width:104px; height:124px; flex:0 0 104px; border:1px solid var(--rule); background:var(--paper)}
+.cast-figc{display:flex; flex-wrap:wrap; gap:.3rem .7rem; align-items:center; font-size:.84rem}
+.cast-figc label{display:inline-flex; gap:.25rem; align-items:center}
+.cast-figc .cast-fign{flex-basis:100%; color:var(--ink-3); font-size:.76rem}
+.cast-fillmsg{font-size:.78rem; color:var(--ink-3)}
 /* [[/CSS:cast]] */
 /* [[CSS:texts]] */
 #texts-root .lede{margin-bottom:1.2rem}
@@ -1943,7 +1951,7 @@ body.dk-drag, body.dk-drag *{user-select:none!important; -webkit-user-select:non
   <div class="filterbar"><button class="chip" id="ct-plot" type="button">AI로 줄거리 짜기</button></div>
   <h3>2. 등장인물</h3>
   <p class="small">인물을 적어 두면 콘티 그림에 <b>이름표</b>와 <b>생김새</b>(머리·안경·모자·흉터·체격)가 붙는다. 이야기에 적힌 특징만 넣고, 적혀 있지 않은 건 미정으로 둔다.</p>
-  <div class="filterbar"><button class="chip" id="ct-findch" type="button">이야기에서 인물 찾기</button><button class="chip" id="ct-addch" type="button">인물 추가</button></div>
+  <div class="filterbar"><button class="chip" id="ct-fromcast" type="button">등장인물에서 가져오기</button><button class="chip" id="ct-findch" type="button">이야기에서 인물 찾기</button><button class="chip" id="ct-addch" type="button">인물 추가</button></div>
   <div id="ct-chars"></div>
   <h3>3. 콘티</h3>
   <div class="filterbar"><button class="chip" id="ct-skel" type="button">뼈대만 깔기</button><button class="chip" id="ct-write" type="button">AI로 콘티 쓰기</button><button class="chip" id="ct-resume" type="button" hidden>이어서 쓰기</button><button class="chip" id="ct-redraw" type="button">선 다시 긋기</button><button class="chip" id="ct-copy" type="button">글로 복사</button></div>
@@ -7181,6 +7189,7 @@ function castNew(o, folder, src){
   var m={name:String(o.name||'').trim(), alias:Array.isArray(o.alias)?o.alias.slice():[], folder:castFolderMake(folder||'기본')||'기본',
     role:String(o.role||'').trim(), desc:String(o.desc||'').trim(), motifs:Array.isArray(o.motifs)?o.motifs.slice():[], src:src||'manual', made:Date.now()};
   CAST_TXT.forEach(function(f){ m[f[0]]=String(o[f[0]]||'').trim(); });
+  if(o.fig && castFigSet(o.fig)) m.fig=o.fig;
   return recPut(CAST_KEY, m);
 }
 // ----- 글쓰기에 붙이는 인물 설정 -----
@@ -7328,12 +7337,67 @@ WS_DONE.push(function(st, box){
   });
 });
 // ----- 입력 칸 -----
+// ----- 인물 그림 (콘티 구성기의 그림을 빌려 쓴다) -----
+var CAST_HAIRS=['짧은','긴','묶은','삐죽','민머리'], CAST_BUILDS=['작음','보통','큼'];
+function castFigGuess(t){
+  t=String(t||''); var f={hair:'', build:'', dark:false, glasses:false, hat:false, scar:false};
+  if(/민머리|대머리|삭발|빡빡/.test(t)) f.hair='민머리';
+  else if(/묶|포니테일|땋|올림머리|똥머리|양갈래/.test(t)) f.hair='묶은';
+  else if(/삐죽|부스스|곱슬|헝클|뻗친|까치집/.test(t)) f.hair='삐죽';
+  else if(/긴 *머리|장발|허리까지|어깨를 넘|긴 *생머리/.test(t)) f.hair='긴';
+  else if(/짧은 *머리|단발|숏컷|짧게 *깎|스포츠 *머리|커트/.test(t)) f.hair='짧은';
+  if(/(검은|까만|새까만|어두운|흑갈색)[^,.。]{0,5}머리|흑발|머리[^,.。]{0,3}(검|까맣)/.test(t)) f.dark=true;
+  if(/안경|고글/.test(t)) f.glasses=true;
+  if(/모자|후드|캡|베레|두건|투구|헬멧/.test(t)) f.hat=true;
+  if(/흉터|상처 *자국|칼자국|화상 *자국/.test(t)) f.scar=true;
+  if(/거구|덩치|장신|키가 *크|큰 *키|건장|우람|떡대/.test(t)) f.build='큼';
+  else if(/작은 *키|키가 *작|왜소|아담|조그만|꼬마/.test(t)) f.build='작음';
+  return f;
+}
+function castFigSet(f){ return !!f && !!(f.hair||f.build||f.dark||f.glasses||f.hat||f.scar); }
+function castFigOf(m){ m=m||{}; return castFigSet(m.fig)?m.fig:castFigGuess([m.look,m.memo,m.desc].join(' ')); }
+function castSeed(t){ t=String(t||''); var h=0; for(var i=0;i<t.length;i++) h=(h*31+t.charCodeAt(i))%9973; return 500+h; }
+function castPicAttr(m){ return ' data-k="bs" data-x=".5" data-nolabel="1" data-seed="'+castSeed(m.id||m.name)+'" data-who="'+wsEsc(JSON.stringify([{name:m.name||'', look:castFigOf(m)}]))+'"'; }
+function castPics(root, n){
+  if(!root) return; var cvs=[].slice.call(root.querySelectorAll('canvas.cast-pic')); if(!cvs.length) return;
+  if(!window.__ctPortrait){ if((n||0)<12) setTimeout(function(){ castPics(root,(n||0)+1); },250); return; }
+  cvs.forEach(function(cv){ try{ window.__ctPortrait(cv); }catch(e){} });
+}
+function castFigHTML(m){
+  m=m||{}; var f=castFigOf(m), set=castFigSet(m.fig);
+  function sel(g,list,lab){ return '<label>'+lab+' <select class="cast-fg" data-g="'+g+'"><option value="">미정</option>'+list.map(function(x){ return '<option'+(f[g]===x?' selected':'')+'>'+x+'</option>'; }).join('')+'</select></label>'; }
+  function chk(g,lab){ return '<label><input type="checkbox" class="cast-fg" data-g="'+g+'"'+(f[g]?' checked':'')+'>'+lab+'</label>'; }
+  return '<div class="cast-figbox"'+(set?' data-touched="1"':'')+'><canvas class="cast-pic" role="img" aria-label="생김새 그림"'+castPicAttr(m)+'></canvas>'+
+    '<div class="cast-figc">'+sel('hair',CAST_HAIRS,'머리')+sel('build',CAST_BUILDS,'체격')+chk('dark','어두운 머리')+chk('glasses','안경')+chk('hat','모자')+chk('scar','흉터')+
+    '<span class="cast-fign">'+(set?'고른 생김새로 그린다. 콘티 구성기 그림도 이것을 쓴다.':'외모 칸의 글에서 짐작해 그렸다. 고르면 그대로 저장한다.')+'</span></div></div>';
+}
+function castFigRead(box){
+  var f={}; [].slice.call(box.querySelectorAll('.cast-fg')).forEach(function(el){ var g=el.getAttribute('data-g'); f[g]=el.type==='checkbox'?!!el.checked:el.value; });
+  return f;
+}
+function castFigWrite(box, f){
+  [].slice.call(box.querySelectorAll('.cast-fg')).forEach(function(el){ var g=el.getAttribute('data-g'); if(el.type==='checkbox') el.checked=!!f[g]; else el.value=f[g]||''; });
+}
+// 그림 칸을 묶는다: 고르면 다시 그리고, 외모 글을 고치면(직접 고르기 전까지) 짐작을 새로 한다
+function castFigBind(root, onPick){
+  var fb=root.querySelector('.cast-figbox'); if(!fb) return;
+  var cv=fb.querySelector('canvas.cast-pic'), note=fb.querySelector('.cast-fign');
+  function nameOf(){ var n=root.querySelector('.cast-in[data-f="name"]'); return n?n.value.trim():''; }
+  function redraw(f){ cv.setAttribute('data-who', JSON.stringify([{name:nameOf(), look:f}])); castPics(fb); }
+  [].slice.call(fb.querySelectorAll('.cast-fg')).forEach(function(el){
+    el.addEventListener('change',function(){ fb.setAttribute('data-touched','1'); if(note) note.textContent='고른 생김새로 그린다. 콘티 구성기 그림도 이것을 쓴다.';
+      redraw(castFigRead(fb)); if(onPick) onPick(); }); });
+  [].slice.call(root.querySelectorAll('.cast-in[data-f="look"],.cast-in[data-f="memo"],.cast-in[data-f="desc"]')).forEach(function(el){
+    el.addEventListener('input',function(){ if(fb.getAttribute('data-touched')==='1') return;
+      var o=castRead(root), g=castFigGuess([o.look,o.memo,o.desc].join(' ')); castFigWrite(fb,g); redraw(g); }); });
+  fb._redraw=function(){ redraw(castFigRead(fb)); };
+}
 function castFieldsHTML(m){
   m=m||{};
   function val(f){ return f==='alias'?(m.alias||[]).join(', '):(m[f]||''); }
   function inp(f,lab,ph,cls,list){ return '<label class="cast-l'+(cls?' '+cls:'')+'"><span>'+lab+'</span><input class="cast-in" data-f="'+f+'" value="'+wsEsc(val(f))+'" placeholder="'+ph+'"'+(list?' list="cast-roles"':'')+' autocomplete="off"></label>'; }
   function ta(f,lab,ph){ return '<label class="cast-l"><span>'+lab+'</span><textarea class="cast-in" data-f="'+f+'" rows="2" placeholder="'+ph+'">'+wsEsc(val(f))+'</textarea></label>'; }
-  return '<div class="cast-f">'+inp('name','이름','글에 나올 이름','cast-s')+inp('alias','별명','쉼표로 여러 개','cast-s')+inp('role','역할','주인공·조연·악역…','cast-s',1)+
+  return castFigHTML(m)+'<div class="cast-f">'+inp('name','이름','글에 나올 이름','cast-s')+inp('alias','별명','쉼표로 여러 개','cast-s')+inp('role','역할','주인공·조연·악역…','cast-s',1)+
     inp('desc','한 줄 설명','어떤 사람인지 한 줄','cast-w')+ta('look','외모','')+ta('persona','성격','')+ta('lack','결핍','')+
     ta('memo','특징','직업·나이·능력·버릇')+ta('speech','말투','반말·존댓말·입버릇')+ta('rel','관계','다른 인물과의 관계')+'</div>';
 }
@@ -7341,7 +7405,49 @@ function castRead(root){
   var o={};
   [].slice.call(root.querySelectorAll('.cast-in[data-f]')).forEach(function(el){ var f=el.getAttribute('data-f'), v=String(el.value||'');
     if(f==='alias') o.alias=v.split(/[,，、]/).map(function(s){ return s.trim(); }).filter(Boolean); else o[f]=v.trim(); });
+  var fb=root.querySelector('.cast-figbox'); if(fb && fb.getAttribute('data-touched')==='1') o.fig=castFigRead(fb);
   return o;
+}
+var CAST_FILLSYS='당신은 만화 인물 설정을 돕는 편집자다. 작가가 적은 칸은 절대 바꾸지 않고, 빈 칸만 적힌 내용과 어긋나지 않게 채운다. 과장하지 않고 짧게 쓴다. JSON만 출력한다.';
+function castFill(root, folder, selfId, say){
+  if(!aiReady()){ say('<a href="#ai">AI 연결</a>에서 키를 넣으면 쓸 수 있다.'); return; }
+  var o=castRead(root), fb=root.querySelector('.cast-figbox'), figSet=fb && fb.getAttribute('data-touched')==='1';
+  var F=[['name','이름'],['alias','별명'],['role','역할'],['desc','한 줄 설명']].concat(CAST_TXT);
+  var known=[], empty=[];
+  F.forEach(function(p){ var v=p[0]==='alias'?(o.alias||[]).join(', '):(o[p[0]]||''); if(String(v).trim()) known.push(p[1]+': '+v); else if(p[0]!=='alias') empty.push(p[0]); });
+  if(!figSet) empty.push('fig');
+  if(!empty.length){ say('빈 칸이 없다. 바꾸고 싶은 칸을 비우고 다시 누른다.'); return; }
+  var others=castAll().filter(function(m){ return m.id!==selfId && (m.folder||'기본')===(folder||'기본'); }).slice(0,12)
+    .map(function(m){ return m.name+(m.role?'('+m.role+')':'')+(m.desc?': '+m.desc:''); });
+  var ask='[작품(폴더)] '+(folder||'기본')+'\n[이미 적힌 칸 — 바꾸지 않는다]\n'+(known.join('\n')||'(없음)')+
+    (others.length?'\n\n[같은 작품의 다른 인물 — 이름이 겹치지 않게, 관계는 이 인물들 안에서만]\n'+others.join('\n'):'')+
+    '\n\n채울 칸: '+empty.join(', ')+
+    '\n\n규칙:\n적힌 칸에서 자연스럽게 이어지는 것만 쓴다. 적힌 칸을 고치거나 되풀이하지 않는다.\n이름(name)은 작품 분위기에 맞는 이름 하나. 다른 인물과 겹치지 않게.\n'+
+    '외모·성격·결핍·특징·말투·관계는 각각 한두 문장. 관계는 다른 인물이 없으면 빈 문자열.\n'+
+    'fig는 그림용 생김새다. 외모 칸(적힌 것 또는 새로 쓴 것)과 맞춘다: {"hair":"짧은|긴|묶은|삐죽|민머리","build":"작음|보통|큼","dark":true/false,"glasses":true/false,"hat":true/false,"scar":true/false}\n'+
+    '채울 칸만 담은 JSON 객체 하나만 출력한다. 예: {"name":"","role":"","desc":"","look":"","persona":"","lack":"","memo":"","speech":"","rel":"","fig":{}}';
+  say('채우는 중…');
+  aiAsk(CAST_FILLSYS, ask, 900).then(function(t){
+    if(!root.isConnected){ return; }
+    if(aiIsErr(t)){ say(wsEsc(String(t).slice(0,90))); return; }
+    var j=null; try{ var mm=String(t).replace(/```(json)?/g,'').match(/\{[\s\S]*\}/); j=JSON.parse(mm?mm[0]:t); }catch(e){}
+    if(!j || typeof j!=='object'){ say('답을 읽지 못했다. 다시 누른다.'); return; }
+    var filled=[], cur=castRead(root);
+    F.forEach(function(p){ var k=p[0]; if(k==='alias') return; var el=root.querySelector('.cast-in[data-f="'+k+'"]'); if(!el) return;
+      var v=j[k]; if(v==null) return; v=String(Array.isArray(v)?v.join(', '):v).trim(); if(!v || String(cur[k]||'').trim()) return;
+      if(k==='name' && castFind(v) && (!selfId || castFind(v).id!==selfId)) return;
+      el.value=k==='name'?v.slice(0,20):(k==='role'||k==='desc'?v.slice(0,80):v.slice(0,400)); castFit(el); filled.push(p[1]);
+      try{ el.dispatchEvent(new Event('input',{bubbles:true})); }catch(e){} });
+    if(fb && !figSet && j.fig && typeof j.fig==='object'){
+      var g=castFigGuess(''), x=j.fig;
+      if(CAST_HAIRS.indexOf(x.hair)>-1) g.hair=x.hair; if(CAST_BUILDS.indexOf(x.build)>-1) g.build=x.build;
+      ['dark','glasses','hat','scar'].forEach(function(k){ g[k]=x[k]===true; });
+      castFigWrite(fb,g); fb.setAttribute('data-touched','1'); var nt=fb.querySelector('.cast-fign'); if(nt) nt.textContent='AI가 고른 생김새다. 바꾸면 그대로 저장한다.';
+      var one=fb.querySelector('.cast-fg'); if(one) try{ one.dispatchEvent(new Event('change',{bubbles:true})); }catch(e){}
+      filled.push('그림');
+    }
+    say(filled.length?'채웠다: '+filled.join(', ')+'. 마음에 안 드는 칸은 비우고 다시 누른다.':'채울 만한 답이 없었다.');
+  });
 }
 function castFit(ta){ if(!ta || ta.tagName!=='TEXTAREA') return; ta.style.height='auto'; if(ta.scrollHeight) ta.style.height=(ta.scrollHeight+2)+'px'; }
 (function(){ if(document.getElementById('cast-roles')) return; var dl=document.createElement('datalist'); dl.id='cast-roles';
@@ -7358,6 +7464,8 @@ function castBuildSync(){
     CB.extra.forEach(function(n){ var r=CHARS.filter(function(x){ return x[2]===n; })[0]; if(r && r[0]===p[0] && names.indexOf(n)<0) names.push(n); });
     var el=box.querySelector('.cast-in[data-f="'+p[1]+'"]'); if(el && !CB.dirty[p[1]]){ el.value=names.join(', '); castFit(el); }
   });
+  var fb=box.querySelector('.cast-figbox');
+  if(fb && fb.getAttribute('data-touched')!=='1'){ var o=castRead(box); castFigWrite(fb, castFigGuess([o.look,o.memo,o.desc].join(' '))); if(fb._redraw) fb._redraw(); }
 }
 window.__charRendered=function(){ try{ castBuildSync(); }catch(e){} };
 function castBuildMount(){
@@ -7365,12 +7473,14 @@ function castBuildMount(){
   var keep=box.firstChild?castRead(box):null, kf=box.firstChild?castFoldGet(box):'';
   box.innerHTML='<div class="cast-build"><h4>등장인물로 넣기</h4><p class="small">뽑은 모티브가 외모·성격·결핍 칸에 들어간다. 고쳐 써도 된다. 아래 색인의 ＋로 모티브를 더한다. 이름을 적고 넣으면 <a href="#cast">등장인물</a> 폴더에 저장된다.</p>'+
     castFieldsHTML(keep||{})+'<div class="cast-acts"><span class="small">작품(폴더)</span>'+castFoldUI(kf&&castFolders().indexOf(kf)>-1?kf:castDef())+
-    '<button class="chip" id="chb-save"><b>등장인물에 넣기</b></button><button class="chip" id="chb-clear" title="적은 칸을 비우고 모티브를 다시 넣는다">비우기</button><span class="small" id="chb-msg"></span></div></div>';
+    '<button class="chip" id="chb-save"><b>등장인물에 넣기</b></button><button class="chip" id="chb-fill" title="적은 칸은 두고 빈 칸(이름·특징 등)을 AI가 채운다">빈 칸 채우기</button><button class="chip" id="chb-clear" title="적은 칸을 비우고 모티브를 다시 넣는다">비우기</button><span class="small" id="chb-msg"></span></div></div>';
   castFoldBind(box);
   [].slice.call(box.querySelectorAll('.cast-in')).forEach(function(el){
     el.addEventListener('input',function(){ var f=el.getAttribute('data-f'); if(f==='look'||f==='persona'||f==='lack') CB.dirty[f]=1; castFit(el); }); });
   var msg=document.getElementById('chb-msg'), sv=document.getElementById('chb-save');
   function say(h){ msg.innerHTML=h; }
+  castFigBind(box);
+  document.getElementById('chb-fill').addEventListener('click',function(){ castFill(box, castFoldGet(box)||castDef(), null, say); });
   sv.addEventListener('click',function(){
     var o=castRead(box);
     if(!o.name){ say('이름을 적는다.'); var n=box.querySelector('[data-f="name"]'); if(n) try{ n.focus(); }catch(e){} return; }
@@ -7383,12 +7493,14 @@ function castBuildMount(){
     say('「'+wsEsc(m.name)+'」을(를) 「'+wsEsc(f)+'」에 넣었다. <a href="#cast">등장인물 보기</a>');
     CB.dirty={}; CB.extra=[];
     [].slice.call(box.querySelectorAll('.cast-in')).forEach(function(el){ el.value=''; castFit(el); });
-    castBuildSync(); castBuildFolders(f); castRefresh();
+    castBuildFigReset(box); castBuildSync(); castBuildFolders(f); castRefresh();
   });
   document.getElementById('chb-clear').addEventListener('click',function(){
-    CB.dirty={}; CB.extra=[]; [].slice.call(box.querySelectorAll('.cast-in')).forEach(function(el){ el.value=''; castFit(el); }); castBuildSync(); say(''); });
-  castBuildSync();
+    CB.dirty={}; CB.extra=[]; [].slice.call(box.querySelectorAll('.cast-in')).forEach(function(el){ el.value=''; castFit(el); }); castBuildFigReset(box); castBuildSync(); say(''); });
+  castBuildSync(); castPics(box);
 }
+function castBuildFigReset(box){ var fb=box.querySelector('.cast-figbox'); if(!fb) return; fb.removeAttribute('data-touched'); castFigWrite(fb, castFigGuess(''));
+  var nt=fb.querySelector('.cast-fign'); if(nt) nt.textContent='외모 칸의 글에서 짐작해 그렸다. 고르면 그대로 저장한다.'; if(fb._redraw) fb._redraw(); }
 function castBuildFolders(sel){
   var box=document.getElementById('ch-cast'); if(!box) return; var w=box.querySelector('.cast-fold'); if(!w) return;
   var cur=sel||castFoldGet(box); var t=document.createElement('span'); t.innerHTML=castFoldUI(castFolders().indexOf(cur)>-1?cur:castDef());
@@ -7479,12 +7591,13 @@ function castRender(){
     list.innerHTML='<p class="small cast-empty">'+(q?'검색에 맞는 인물이 없다.':(all.length?'이 폴더에 인물이 없다. 「＋ 새 인물」을 누른다.':'아직 인물이 없다. 「＋ 새 인물」을 누르거나 <a href="#chars">캐릭터 모티브 색인</a>에서 뽑아 넣는다. 글쓰기 결과의 「인물 뽑아 넣기」로 글에 나온 인물을 넣을 수도 있다.'))+'</p>';
     return;
   }
+  setTimeout(function(){ castPics(list); },0);
   list.innerHTML=groups.map(function(g){ return '<div class="cast-grp"><h4 class="cast-gh">'+wsEsc(g[0])+' <span class="small">'+g[1].length+'명</span></h4>'+g[1].map(castCardHTML).join('')+'</div>'; }).join('');
   [].slice.call(list.querySelectorAll('.cast-card')).forEach(castCardBind);
 }
-var CAST_SRC={chars:'모티브', auto:'글에서', manual:''};
+var CAST_SRC={chars:'모티브', auto:'글에서', conti:'콘티', manual:''};
 function castHeadHTML(m){
-  return '<b>'+(m.name?wsEsc(m.name):'<span class="small">(이름 없음)</span>')+'</b>'+(m.role?'<span class="cast-role">'+wsEsc(m.role)+'</span>':'')+
+  return '<canvas class="cast-pic" aria-hidden="true"'+castPicAttr(m)+'></canvas><b>'+(m.name?wsEsc(m.name):'<span class="small">(이름 없음)</span>')+'</b>'+(m.role?'<span class="cast-role">'+wsEsc(m.role)+'</span>':'')+
     ((m.alias||[]).length?'<span class="small">'+wsEsc(m.alias.join(', '))+'</span>':'')+(CAST_SRC[m.src]?'<span class="cast-src">'+CAST_SRC[m.src]+'</span>':'')+
     '<span class="cast-d">'+(m.desc?wsEsc(m.desc):'')+'</span>';
 }
@@ -7493,21 +7606,22 @@ function castCardHTML(m){
   return '<div class="cast-card'+(op?' open':'')+'" data-id="'+wsEsc(m.id)+'"><button class="cast-h" aria-expanded="'+(op?'true':'false')+'">'+castHeadHTML(m)+'</button>'+
     '<div class="cast-body"'+(op?'':' hidden')+'>'+castFieldsHTML(m)+
     ((m.motifs||[]).length?'<p class="small cast-mt">모티브 — '+m.motifs.map(wsEsc).join(' · ')+'</p>':'')+
-    '<div class="cast-acts"><span class="small">작품(폴더)</span>'+castFoldUI(m.folder||'기본')+'<button class="chip" data-del="1">삭제</button><span class="small cast-saved"></span></div></div></div>';
+    '<div class="cast-acts"><span class="small">작품(폴더)</span>'+castFoldUI(m.folder||'기본')+'<button class="chip" data-fill="1" title="적은 칸은 두고 빈 칸만 AI가 채운다">빈 칸 채우기</button><button class="chip" data-del="1">삭제</button><span class="small cast-saved"></span></div><div class="cast-fillmsg"></div></div></div>';
 }
 function castCardBind(card){
   var id=card.getAttribute('data-id'), h=card.querySelector('.cast-h'), body=card.querySelector('.cast-body'), saved=card.querySelector('.cast-saved');
   function get(){ var o=recLoad(CAST_KEY).items[id]; return o || (CP.draft&&CP.draft.id===id?CP.draft:null); }
   h.addEventListener('click',function(){ var op=body.hidden; body.hidden=!op; card.classList.toggle('open',op); h.setAttribute('aria-expanded',op?'true':'false');
-    if(op){ CP.open[id]=1; [].slice.call(body.querySelectorAll('textarea')).forEach(castFit); } else delete CP.open[id]; });
-  if(!body.hidden) setTimeout(function(){ [].slice.call(body.querySelectorAll('textarea')).forEach(castFit); },0);
+    if(op){ CP.open[id]=1; [].slice.call(body.querySelectorAll('textarea')).forEach(castFit); castPics(body); } else delete CP.open[id]; });
+  if(!body.hidden) setTimeout(function(){ [].slice.call(body.querySelectorAll('textarea')).forEach(castFit); castPics(body); },0);
+  castPics(h);
   function save(){
     var m=get(); if(!m) return; var o=castRead(body);
     var empty=!o.name && !(o.alias||[]).length && !o.role && !o.desc && CAST_TXT.every(function(f){ return !o[f[0]]; });
     if(empty && CP.draft && CP.draft.id===id) return;
     Object.keys(o).forEach(function(k){ m[k]=o[k]; });
     recPut(CAST_KEY, m); if(CP.draft && CP.draft.id===id) CP.draft=null;
-    h.innerHTML=castHeadHTML(m); if(saved){ saved.textContent='저장됨'; setTimeout(function(){ saved.textContent=''; },1200); }
+    h.innerHTML=castHeadHTML(m); castPics(h); if(saved){ saved.textContent='저장됨'; setTimeout(function(){ saved.textContent=''; },1200); }
   }
   [].slice.call(body.querySelectorAll('.cast-in')).forEach(function(el){
     el.addEventListener('input',function(){ castFit(el); clearTimeout(CP.tm[id]); CP.tm[id]=setTimeout(save,400); });
@@ -7517,6 +7631,9 @@ function castCardBind(card){
     clearTimeout(CP.tm[id]); save(); var m=get(); if(!m) return; m.folder=f;
     if(CP.draft && CP.draft.id===id){ CP.draft.folder=f; } else recPut(CAST_KEY,m);
     var vv=castView(); if(vv && vv!==f) castLs('castView',f); castRender(); castBuildFolders(); });
+  castFigBind(body, function(){ clearTimeout(CP.tm[id]); CP.tm[id]=setTimeout(save,300); });
+  var fillB=card.querySelector('[data-fill]'), fillM=card.querySelector('.cast-fillmsg');
+  if(fillB) fillB.addEventListener('click',function(){ var m=get(); castFill(body, castFoldGet(card.querySelector('.cast-acts'))||(m&&m.folder)||'기본', id, function(h){ if(fillM) fillM.innerHTML=h; }); });
   var del=card.querySelector('[data-del]');
   del.addEventListener('click',function(){
     if(del.getAttribute('data-arm')!=='1'){ del.setAttribute('data-arm','1'); del.textContent='한 번 더 누르면 삭제';
@@ -7529,6 +7646,17 @@ function castCardBind(card){
   var pk=PAGE_ON.cast; PAGE_ON.cast=function(){ if(pk) try{ pk(); }catch(e){} castMount(); };
   castBuildMount(); castMount();
 })();
+// 콘티 구성기와 잇는 창구
+window.__castFind=function(n){ var m=castFind(n); return m?{id:m.id, name:m.name, alias:(m.alias||[]).slice(), role:m.role||'', desc:m.desc||'', look:castFigOf(m), folder:m.folder||'기본'}:null; };
+window.__castList=function(folder){ return castAll().filter(function(m){ return !folder || (m.folder||'기본')===folder; })
+  .map(function(m){ return {id:m.id, name:m.name, alias:(m.alias||[]).slice(), role:m.role||'', desc:m.desc||'', look:castFigOf(m), folder:m.folder||'기본'}; }); };
+window.__castView=function(){ return castView(); };
+window.__castUpsert=function(o){
+  var nm=String(o&&o.name||'').trim(); if(!nm) return '';
+  var m=castFind(nm), fig=o.fig&&castFigSet(o.fig)?{hair:o.fig.hair||'', build:o.fig.build||'', dark:!!o.fig.dark, glasses:!!o.fig.glasses, hat:!!o.fig.hat, scar:!!o.fig.scar}:null;
+  if(m){ if(fig) m.fig=fig; if(!m.role && o.role) m.role=String(o.role).trim(); if(!m.desc && o.desc) m.desc=String(o.desc).trim(); recPut(CAST_KEY,m); castRefresh(); return 'upd'; }
+  m=castNew({name:nm, role:o.role||'', desc:o.desc||''}, castDef(), 'conti'); if(fig){ m.fig=fig; recPut(CAST_KEY,m); } castRefresh(); return 'new';
+};
 // [[/MOD:cast]]
 // [[MOD:texts]] 글 보관함
 // 기록: mangaTexts {items:{id:{id,fmt,title,text,from,cut,ref,parent,created,at}}, gone}. textsAuto(기기별, '0'=끔), textsTab(기기별)
@@ -8515,10 +8643,13 @@ function chars(){ return (B&&B.chars)||[]; }
 function charOf(name){ var n=String(name||'').trim(); if(!n) return null; var cs=chars();
   for(var i=0;i<cs.length;i++) if(cs[i].name===n) return cs[i];
   for(var j=0;j<cs.length;j++) if(cs[j].name && (n.indexOf(cs[j].name)===0 || cs[j].name.indexOf(n)===0)) return cs[j];
-  return null; }
+  var cm=window.__castFind?window.__castFind(n):null;   // 콘티에 없으면 등장인물 페이지에서
+  return cm?{name:cm.name, role:cm.role, look:cm.look, note:cm.desc}:null; }
+function allChars(){ var cs=chars().slice(), have={}; cs.forEach(function(c){ have[c.name]=1; });
+  (window.__castList?window.__castList():[]).forEach(function(m){ if(m.name && !have[m.name]){ have[m.name]=1; cs.push({name:m.name, look:m.look}); } }); return cs; }
 function whoOf(c){
   var names=(c.who&&c.who.length)?c.who:[];
-  if(!names.length && c.scr){ var hit=[]; chars().forEach(function(ch){ var i=c.scr.indexOf(ch.name); if(ch.name && i>=0) hit.push([i,ch.name]); });
+  if(!names.length && c.scr){ var hit=[]; allChars().forEach(function(ch){ var i=c.scr.indexOf(ch.name); if(ch.name && i>=0) hit.push([i,ch.name]); });
     hit.sort(function(a,b){ return a[0]-b[0]; }); names=hit.slice(0,2).map(function(x){ return x[1]; }); }
   return names.map(function(n){ var ch=charOf(n); return {name:n, look:ch?ch.look:{}}; });
 }
@@ -8543,7 +8674,9 @@ function renderChars(){
     f.appendChild(cv);
     f.insertAdjacentHTML('beforeend','<b>'+cesc(ch.name)+'</b>'+(ch.role?'<span class="small">'+cesc(ch.role)+'</span>':'')+
       '<div class="ct-tags">'+lookTags(ch.look)+'</div>'+(ch.note?'<span class="small">'+cesc(ch.note)+'</span>':'')+
-      '<div class="filterbar"><button class="chip" type="button" data-ce="'+i+'">고치기</button><button class="chip" type="button" data-cd="'+i+'">지우기</button></div>');
+      '<div class="filterbar"><button class="chip" type="button" data-ce="'+i+'">고치기</button>'+
+      (window.__castUpsert?'<button class="chip" type="button" data-cs="'+i+'">'+(window.__castFind&&window.__castFind(ch.name)?'등장인물에 반영':'등장인물에 넣기')+'</button>':'')+
+      '<button class="chip" type="button" data-cd="'+i+'">지우기</button></div>');
     box.appendChild(f);
   });
 }
@@ -8567,6 +8700,7 @@ function editChar(i){
     ch.look={hair:ed.querySelector('.ch').value, build:ed.querySelector('.cb').value, dark:ed.querySelector('.cdk').checked,
       glasses:ed.querySelector('.cg').checked, hat:ed.querySelector('.cht').checked, scar:ed.querySelector('.cs').checked};
     if(old!==nn) B.cuts.forEach(function(c){ if(c.who) c.who=c.who.map(function(w){ return w===old?nn:w; }); });
+    if(window.__castFind && window.__castFind(nn) && window.__castUpsert) window.__castUpsert({name:nn, fig:ch.look});   // 등장인물 페이지에 있는 인물이면 생김새를 같이 고친다
     save(); renderChars(); renderBoard();
   });
 }
@@ -8909,17 +9043,34 @@ function writeAll(fromN){
   document.getElementById('ct-resume').hidden=true;
   next();
 }
-function setBusy(on){ ['ct-write','ct-pull','ct-skel','ct-plot','ct-findch'].forEach(function(id){ var b=document.getElementById(id); if(b) b.disabled=on; }); }
+function setBusy(on){ ['ct-write','ct-pull','ct-skel','ct-plot','ct-findch','ct-fromcast'].forEach(function(id){ var b=document.getElementById(id); if(b) b.disabled=on; }); }
 
 /* ---------- 연결 ---------- */
 var tsel=document.getElementById('ct-total');
 [20,30,40,50,60,70,80,100].forEach(function(n){ var o=document.createElement('option'); o.value=String(n); o.textContent=n+'컷'; tsel.appendChild(o); });
 document.getElementById('ct-pull').addEventListener('click', pull);
 document.getElementById('ct-findch').addEventListener('click', findChars);
+function fromCast(){
+  var all=window.__castList?window.__castList():[];
+  if(!all.length){ stat('등장인물 페이지에 인물이 없다. 등장인물 페이지에서 먼저 만든다.'); return; }
+  ensureB(); var story=(document.getElementById('ct-story').value||'')+'\n'+((B.cl||[]).map(function(c){ return c.name; }).join(' '));
+  var hit=all.filter(function(m){ return [m.name].concat(m.alias||[]).some(function(n){ return n && n.length>=2 && story.indexOf(n)>-1; }); }), why='이야기에 나오는';
+  if(!hit.length){ var v=window.__castView?window.__castView():''; hit=all.filter(function(m){ return !v || m.folder===v; }).slice(0,8); why=v?'「'+v+'」 폴더의':'등장인물 페이지의'; }
+  var add=0, upd=0;
+  hit.forEach(function(m){ var ex=null; B.chars.forEach(function(c){ if(c.name===m.name) ex=c; });
+    if(ex){ ex.look=m.look; if(!ex.role) ex.role=m.role; if(!ex.note) ex.note=m.desc; upd++; }
+    else { B.chars.push({name:m.name, role:m.role, look:m.look, note:String(m.desc||'').slice(0,80)}); add++; } });
+  save(); renderChars(); renderBoard();
+  stat(why+' 인물 '+add+'명을 가져왔다.'+(upd?' 이미 있던 '+upd+'명은 생김새를 맞췄다.':''));
+}
+document.getElementById('ct-fromcast').addEventListener('click', fromCast);
+window.__ctPortrait=function(cv){ needRough(function(){ try{ if(cv.isConnected) drawCv(cv); }catch(e){} }); };
 document.getElementById('ct-addch').addEventListener('click', function(){ ensureB(); B.chars.push({name:'인물 '+(B.chars.length+1), role:'', look:{}, note:''}); save(); renderChars(); editChar(B.chars.length-1); });
 document.getElementById('ct-chars').addEventListener('click', function(e){
   var t=e.target.closest('button'); if(!t||!B) return;
   if(t.dataset.ce!=null) editChar(+t.dataset.ce);
+  if(t.dataset.cs!=null && window.__castUpsert){ var cc=chars()[+t.dataset.cs]; if(cc){ var r=window.__castUpsert({name:cc.name, role:cc.role, desc:cc.note, fig:cc.look});
+    stat(r==='new'?'「'+cc.name+'」을(를) 등장인물 페이지에 넣었다.':'등장인물 페이지의 「'+cc.name+'」 생김새를 맞췄다.'); renderChars(); } }
   if(t.dataset.cd!=null){ if(t.dataset.arm){ B.chars.splice(+t.dataset.cd,1); save(); renderChars(); renderBoard(); } else { t.dataset.arm='1'; t.textContent='한 번 더'; } }
 });
 document.getElementById('ct-skel').addEventListener('click', function(){
