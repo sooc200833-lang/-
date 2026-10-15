@@ -23,7 +23,7 @@ oneshot, length, redflag, grammar, authors, pagemap, shuffle, arc, epidx, pino, 
 - **피노 전용**(`pino`, `pcre`, `pmemo`)은 즐겨찾기 폴더 이름이 **피노설정집**일 때만 홈·목차에 나타난다 (`pinoInsert`, `PINOPAGES`)
 
 ## 데이터 규모 (코드 안 배열)
-- ROWS(클리셰) 744(기본 611 + TVNEW 133) · MOTIFDATA(소재) 138 · CHARS(캐릭터) 221 · ENDINGS(엔딩) 264
+- ROWS(클리셰) 813(기본 611 + TVNEW 202: 트로프 대응 133 + 서사 구조 69) · MOTIFDATA(소재) 138 · CHARS(캐릭터) 221 · ENDINGS(엔딩) 334(기본 264 + ENDNEW 70)
 - EPM(에피소드 소재, 갈래별) · CREA(피노 크리쳐 생물·사물) · ARCEX(아크 예시)
 - ROWS 한 행: `[이름, 장르, 기능, 배치(|로 여러 값), 상태코드, 상태, 지면, 도구, 정의, 연출포인트, ...]`
 
@@ -96,3 +96,4 @@ arcForm, deviceId, folderMemo, gdBase, gdLast, gdLinked, ideaText, mangaDataVer,
 - 상단 「🔄 AI」(`aiRefresh`): 저장소에서 키·모델 다시 읽기, `aiOut`·`orNoCredit` 지우기, 모델 목록 새로 받기, 짧은 연결 확인. 결과는 버튼 글자(✓/무료/안 됨/키 없음)와 툴팁
 - 한글 검색(`hsHit`): 초성(ㅎㄱ→회귀, 자체 코드로도 됨) · 영타(ghlrnl→회귀) · 이름 오타(3글자 이상, 자모 단위 Fuse threshold 0.3) · 띄어쓰기·문장부호 무시. es-hangul 2.4.0(MIT)·Fuse.js 7.5.0(Apache-2.0)을 jsDelivr에서 `hsLoad`가 동적 import, 실패하면 초성·글자 검색만. 목록마다 `list.__hs`에 Fuse 색인을 캐시(길이가 바뀌면 다시 만듦). 클리셰 색인 `match`와 `makeIndex`(소재·엔딩·에피소드·캐릭터)에 적용. AI 채팅 사전 검색 `ixSearch`에는 아직 안 넣음
 - **TV Tropes 연결 (2026-10)**: `TVT`(한국어 이름 → 트로프 제목, 404개)와 `TVNEW`(트로프 이름 목록과 비교해 빠진 장치를 **한국어로 새로 쓴** 133개, ROWS 뒤에 붙음). TV Tropes 본문은 옮기지 않는다(CC BY-NC-SA라 상업 이용 불가). `?`로 시작하는 대응은 느슨해서 구글 `site:tvtropes.org` 검색 링크, 나머지는 `Main/WikiWord` 직접 링크(`tvtInfo`). 색인 이름 옆 링크(`tvtLink`), 「새 항목」 칩(`newOnly`), 영어 제목으로도 검색(`match`·`ixBuild`, `ixTerms`는 소문자화). 원본 데이터는 작업 폴더 `tvt/`의 파이썬 파일에서 만들었다
+- **장르 「서사 구조 (장르 공통)」** (15번째 장르): 이야기 짜임 클리셰 69개(TVNEW 뒤쪽). 랜덤 구성기에서는 「연출 문법」처럼 어느 장르로 잠가도 섞여 나온다(`NARRG`). 엔딩 70개는 `ENDNEW`로 ENDINGS 뒤에 붙는다(대표작 칸은 비움)
