@@ -747,6 +747,19 @@ textarea.cast-in{resize:vertical; min-height:2.6em; overflow:hidden}
   .tx-conv{margin-left:0}
 }
 /* [[/CSS:texts]] */
+/* [[CSS:pair]] */
+/* [[/CSS:pair]] */
+/* [[CSS:mcut]] */
+/* [[/CSS:mcut]] */
+/* [[CSS:stat]] */
+/* [[/CSS:stat]] */
+/* [[CSS:poseref]] */
+/* [[/CSS:poseref]] */
+/* [[CSS:bestcut]] */
+/* [[/CSS:bestcut]] */
+.chx{font:inherit; font-size:.72rem; border:0; background:none; color:var(--ink-3); cursor:pointer; padding:0 .2rem; margin-left:.15rem}
+.chx-row td{background:var(--paper-2)}
+.chx-in{display:grid; gap:.5rem; padding:.3rem 0}
 /* [[CSS:desk]] */
 #desk-root{margin-top:.4rem}
 body:not(.sub) main{padding-top:1rem}
@@ -2452,6 +2465,16 @@ body.dk-drag, body.dk-drag *{user-select:none!important; -webkit-user-select:non
   <p class="small">대표 사례는 그 모티브가 <b>또렷하게 드러나는</b> 인물만 적었다. 사례를 그대로 가져오면 복제가 되니, <b>같은 모티브에 다른 결핍</b>을 붙이는 쪽으로 쓴다.</p>
 </section>
 
+<section class="blk" id="cutlib">
+  <h2 class="big">베스트컷</h2>
+  <div id="cutlib-root"></div>
+</section>
+
+<section class="blk" id="poses">
+  <h2 class="big">만화 자세·구도</h2>
+  <div id="poses-root"></div>
+</section>
+
 <section class="blk" id="cast">
   <h2 class="big">등장인물</h2>
   <div id="cast-root"></div>
@@ -2965,6 +2988,14 @@ var CHAR_FIG={
 "붕대를 오래 감고 있음":{bandage:true},"오래된 문신":{tattoo:true},"화상 자국":{burn:true},"목덜미의 흉터":{neckscar:true},"목에 남은 자국":{neckscar:true},
 "한쪽 소매가 비어 있음":{emptysleeve:true},"한쪽만 짧은 소매":{shortsleeve:true}
 };
+// [[DATA:pair]] 궁합 (결핍 → 어울리는 성격·외모)
+// [[/DATA:pair]]
+// [[DATA:mcut]] 모티브 첫 등장 컷
+// [[/DATA:mcut]]
+// [[DATA:stat]] 흔함 정도
+// [[/DATA:stat]]
+// [[DATA:poseref]] 만화에서 유명한 자세·구도
+// [[/DATA:poseref]]
 var WEIRD=[["모든 게 꿈이었다","사건 전체가 한 인물의 꿈으로 처리된다","가장 미움받는 결말. 쓰려면 꿈에서 깬 뒤 남은 상처 하나를 반드시 남긴다","위험"],["모든 게 연극이었다","작중 사건이 누군가 꾸민 무대였다","무대 뒤를 보여 주는 컷을 마지막 한 장만","위험"],["전부 창작물 속 이야기였다","작중 인물이 쓰던 글이나 그림이었다","1화부터 그 창작물을 배경에 깔아 둔다","주의"],["독자가 등장인물이었다","읽는 사람이 이야기 안에 있었다","시선 방향을 독자 쪽으로 두는 컷을 미리 심는다","위험"],["작가가 개입해 끝낸다","작화자가 화면에 나타나 마무리","작품당 한 번. 개그 톤이 아니면 위험하다","위험"],["아무 설명 없이 끝난다","해결도 정리도 하지 않는다","마지막 3컷을 일상으로. 설명 대사를 전부 지운다","주의"],["마지막 컷이 백지","그림이 없는 페이지로 닫는다","앞 쪽을 밀도 높게 그려야 공백이 읽힌다","주의"],["첫 화로 되돌아간다","마지막 컷이 1화 1컷과 동일","완전히 같은 그림. 한 요소만 다르게","주의"],["같은 컷이 반복되며 끝","동일한 컷이 여러 번 이어진다","3회 이상 반복해야 의도로 읽힌다","주의"],["시간이 거꾸로 흐른다","결말에서 시작으로 역주행","각 컷에 시간 표식을 심어 둔다","위험"],["다른 작품으로 이어진다","이 이야기가 남의 이야기의 일부였다","연결 고리를 소품 하나로만","위험"],["등장인물이 이야기를 그만둔다","인물이 진행을 거부한다","말풍선을 컷 밖으로 빼낸다","위험"],["결말이 두 개 제시된다","어느 쪽이 진짜인지 밝히지 않는다","두 컷의 구도를 완전히 동일하게","주의"],["독자에게 선택을 넘긴다","마지막에 질문만 남긴다","질문을 대사가 아니라 그림으로","주의"],["주인공이 사라진 채 끝","존재가 화면에서 지워진다","앞 컷들에서 조금씩 작게 그려 온다","주의"],["모두가 주인공을 모른다","아무도 그를 기억하지 못한다","군중 컷에서 시선이 스쳐 지나가게","주의"],["세계가 이야기임을 안다","인물이 자기가 그림임을 인지","선화나 톤을 노출시킨다","위험"],["페이지 바깥으로 걸어 나간다","프레임을 벗어나며 끝","컷 테두리를 무너뜨린다","위험"],["죽은 사람의 시점이었다","화자가 처음부터 없었다","타인과의 접촉 컷을 피해 왔어야 한다","주의"],["같은 사람이 여럿이었다","여러 인물이 한 사람이었다","둘을 한 컷에 넣은 적이 없어야 한다","주의"],["기억이 전부 조작이었다","회상 자체가 가짜","같은 회상을 미세하게 다르게 두 번","주의"],["아무도 죽지 않았고 아무 일도 없었다","사건 자체가 성립하지 않는다","사건 컷을 뒤에서 다시, 다르게","위험"],["결말이 검열된 것처럼 가려진다","마지막이 지워진 형태","가림 처리를 앞에서 한 번 예고한다","위험"],["문장이 중간에 끊긴다","마지막 대사가 미완","말풍선 꼬리를 화면 밖으로","주의"],["독자만 답을 모른다","인물들은 알고 있으나 보여 주지 않는다","인물의 표정만 반복해서 보여 준다","주의"],["모두 같은 표정이 된다","개별성이 사라진다","얼굴 형태를 점점 단순화해 온다","위험"],["이야기가 처음부터 다시 시작된다","완결 대신 재시작","마지막 쪽을 1쪽과 동일하게 배치","주의"],["세계가 접힌다","공간 자체가 사라진다","배경을 컷 단위로 지워 나간다","위험"],["마지막에 장르가 바뀐다","전혀 다른 이야기로 전환","톤과 그림체를 통째로 교체","위험"],["등장인물이 독자를 걱정한다","화면 밖을 향한 말","작품당 한 번. 마지막에만","위험"],["모든 인물이 같은 말을 한다","합창처럼 반복되는 대사","말풍선을 겹쳐 배치","주의"],["사건의 원인이 끝까지 안 밝혀진다","설명을 거부한다","단서를 세 개 심되 답을 주지 않는다","주의"],["시점이 사물로 옮겨간다","마지막을 물건이 본다","시선 높이를 바닥으로 내린다","주의"],["이야기가 기록으로만 남는다","인물은 사라지고 문서만","마지막 쪽을 글자만으로","주의"],["결말이 앞부분에 이미 있었다","1화가 사실 마지막 장면","같은 컷을 앞뒤로 배치","주의"],["주인공이 관객석에 앉아 있다","보는 쪽으로 자리를 옮긴다","무대와 객석을 같은 구도로","위험"],["모든 대사가 사라진다","마지막 회차에 말이 없다","앞 회차를 대사로 채워 왔어야 한다","주의"],["같은 결말이 인물 수만큼 반복된다","각자의 마지막이 나열된다","구도를 통일하고 표정만 바꾼다","주의"],["독자가 읽는 행위가 사건이 된다","읽는 것 자체가 이야기의 일부","책이나 화면을 컷 안에 그린다","위험"],["아무도 이야기를 기억하지 못한다","작중 세계에서 사건이 지워진다","기록 컷을 백지로","주의"],["끝났다는 표시가 없다","완결 표기 없이 멈춘다","마지막 컷을 진행형 동작으로","위험"],["설명이 다음 작품으로 미뤄진다","이 작품 안에서 답하지 않는다","예고 없이. 암시만 남긴다","위험"]];
 var EPOOL={"주체":["주인공","적","동료","스승","남겨진 사람","떠난 사람","아무도","다음 세대","독자만","목격자","배신한 사람","구해 준 사람","한때 적이었던 사람","이름을 모르는 누군가","끝까지 남은 사람","가장 먼저 떠난 사람","살아남은 한 사람","기록을 남긴 사람","아이","후계자","모두","둘 다","그 자리에 있던 사람","아무 상관 없던 사람"],"동작":["떠났다","남았다","돌아왔다","돌아오지 못했다","잊었다","기억했다","돌려주지 못했다","알아채지 못했다","끝내 말하지 못했다","다시 시작했다","대신 치렀다","물려주었다","버렸다","되찾았다","용서했다","용서받지 못했다","약속을 지켰다","약속을 어겼다","처음으로 인정했다","끝까지 부정했다","같은 자리에 앉았다","그대로 두었다","불태웠다","묻었다","들고 갔다","남기고 갔다","반복했다","멈추었다"],"대상":["약속","이름","자리","빚","습관","상처","규칙","첫 장면의 그 물건","남겨진 편지","물려받은 도구","같은 실수","서로의 얼굴","해야 했던 말","버린 것","지키려던 것","되찾은 것","자기 몫의 벌","잃어버린 시간","처음의 이유","남의 기억","끝나지 않은 싸움","아직 못 준 대답","같은 길","빈자리"],"선행":["이겼는데","졌는데","모든 것을 되찾았는데","아무것도 못 지켰는데","진실을 밝혔는데","끝까지 숨겼는데","약속을 지켰는데","배신했는데","살아남았는데","먼저 손을 내밀었는데","복수를 끝냈는데","용서했는데","세계를 구했는데","다 알고 있었는데","아무도 다치지 않았는데","처음으로 이겼는데","자리를 물려줬는데","돌아왔는데"]};
 var EMID=["{주체}[이] {대상}[을] {동작}","{주체}만 {대상}[을] {동작}","{주체}[이] {대상} 앞에서 {동작}","{대상}[을] 두고 {주체}[이] {동작}","{주체}[이] {대상}[과] 함께 {동작}","{주체}[이] {대상}[을] 남기고 {동작}","결국 {주체}[이] {대상}[을] {동작}","{대상}[은] 그대로였고 {주체}[이] {동작}"];
@@ -3079,6 +3110,7 @@ var PAGES=[
  {g:'기초',id:'redflag',t:'편집자가 거르는 도입 3가지',d:'아침 루틴, 회고형, 비극 남용. 왜 걸러지고 무엇으로 바꾸나.'},
  {g:'기초',id:'grammar',t:'만화 연출 문법',d:'컷 크기·페이지 넘김·무음 컷 등 8가지 도구.'},
  {g:'기초',id:'authors',t:'작가별 연출 문법',d:'나루토·죠죠·아키라·원피스·핑퐁 등 12가지 대표 연출.'},
+ {g:'기초',id:'poses',t:'만화 자세·구도',d:'만화에서 자주 쓰이는 유명한 자세와 구도. 언제 쓰고 무엇을 전하나.'},
  {g:'기초',id:'pagemap',t:'페이지 배분 설계',d:'도입·초반·중반·정점·마무리 다섯 구간의 지면 계산.'},
  {g:'도구',id:'shuffle',t:'랜덤 구성기',d:'소재·클리셰·엔딩을 한 번에. 연재 모드와 고정 지원.'},
  {g:'도구',id:'ideacomp',t:'아이디어 구성기',d:'적어 둔 아이디어로 소재·클리셰·엔딩·주인공을 골라 구성안을 만든다.'},
@@ -3091,6 +3123,7 @@ var PAGES=[
  {g:'도구',id:'index',t:'클리셰 색인',d:'813개. 기능·연출 도구·배치·상태·지면으로 검색.'},
  {g:'도구',id:'motifidx',t:'소재 색인',d:'138개. 세계 규칙·사회 조건·인물 처지. 원작 표시 포함.'},
  {g:'도구',id:'chars',t:'캐릭터 모티브 색인',d:'291개(판타지 70). 외모·성격·결핍 세 축의 재료.'},
+ {g:'도구',id:'cutlib',t:'베스트컷',d:'등장인물에 자세·구도를 정해 컷을 만들고 폴더에 모아 둔다. 콘티에서 꺼내 쓴다.'},
  {g:'도구',id:'cast',t:'등장인물',d:'내 작품의 인물. 구성기가 글을 쓸 때 이름이 나오면 여기 적힌 특징을 따른다.'},
  {g:'도구',id:'endidx',t:'엔딩 색인',d:'334개. 구조·승패·인물·관계·세계·정서·반전·연재.'},
  {g:'도구',id:'favs',t:'즐겨찾기',d:'별표한 클리셰·소재·캐릭터를 한 화면에 모아 본다.'},
@@ -4218,7 +4251,7 @@ function saveFile(name, text, type){
   }catch(e){ return false; }
 }
 function stampName(){ var d=new Date(); return d.getFullYear()+('0'+(d.getMonth()+1)).slice(-2)+('0'+d.getDate()).slice(-2); }
-var BK_KEYS=['mangaFav','mangaFolders','folderMemo','pinoMemo','pinoTodo','arcForm','ideaText','userAdds','mangaCast','mangaTexts','deskLayout','favPick','orModel','mangaDataVer'];
+var BK_KEYS=['mangaFav','mangaFolders','folderMemo','pinoMemo','pinoTodo','arcForm','ideaText','userAdds','mangaCast','mangaTexts','deskLayout','favPick','mangaCuts','orModel','mangaDataVer'];
 function bkDump(){
   var o={app:'manga-cliche-dictionary', v:1, dataVer:DATA_VER, at:new Date().toISOString(), data:{}};
   BK_KEYS.forEach(function(k){ try{ var v=localStorage.getItem(k); if(v!==null) o.data[k]=v; }catch(e){} });
@@ -4267,9 +4300,9 @@ function bkRestore(text){
 // ----- 구글 드라이브 동기화 -----
 var GD={cid:'349312731183-t2bc2v3cbr90jci7aa4f8gumre6fdcd2.apps.googleusercontent.com', scope:'https://www.googleapis.com/auth/drive.appdata', file:'manga-sync.json',
   token:null, exp:0, client:null, fileId:null, busy:false, timer:null, applying:false, pending:false};
-var GD_KEYS=['mangaFav','mangaFolders','folderMemo','pinoMemo','pinoTodo','arcForm','ideaText','userAdds','mangaCast','mangaTexts','deskLayout','favPick'];
+var GD_KEYS=['mangaFav','mangaFolders','folderMemo','pinoMemo','pinoTodo','arcForm','ideaText','userAdds','mangaCast','mangaTexts','deskLayout','favPick','mangaCuts'];
 // 기록 묶음 형식 {items:{id:{…, at:ms}}, gone:{id:ms}} — 등장인물(mangaCast)·글 보관함(mangaTexts)
-var REC_KEYS=['mangaCast','mangaTexts'];
+var REC_KEYS=['mangaCast','mangaTexts','mangaCuts'];
 function recLoad(key){ var o=null; try{ o=JSON.parse(localStorage.getItem(key)||'null'); }catch(e){}
   if(!o||typeof o!=='object') o={}; if(!o.items||typeof o.items!=='object') o.items={}; if(!o.gone||typeof o.gone!=='object') o.gone={}; return o; }
 function recSave(key,o){ if(window.__stale) return; try{ localStorage.setItem(key, JSON.stringify(o)); }catch(e){} }
@@ -6545,6 +6578,11 @@ var runEp=makeIndex({
   text:function(r){ return r[0]+r[1]+r[2]; },
   row:function(r){ return '<tr><td>'+star('ep|'+r[0])+'<b>'+r[0]+'</b></td><td><span class="small">'+r[1]+'</span></td><td>'+r[2]+'</td></tr>'; }
 });
+// 캐릭터 모티브 확장 훅 — CHAR_BADGE: fn(r)→이름 칸 뒤에 붙일 HTML / CHAR_DETAIL: {html:fn(r)→HTML, bind:fn(el,r)} 「▸」로 펼치는 줄
+// CHAR_OUT: {html:fn(cur,lk)→HTML, bind:fn(out,cur,lk)} 캐릭터 뽑기 결과 아래 / CHAR_PICK: fn(축, 후보, 이미 뽑은 것, cur)→행 또는 null (뽑기를 바꾼다)
+var CHAR_BADGE=[], CHAR_DETAIL=[], CHAR_OUT=[], CHAR_PICK=null;
+function charBadges(r){ return CHAR_BADGE.map(function(f){ try{ return f(r)||''; }catch(e){ return ''; } }).join(''); }
+function charRowBy(nm){ for(var i=0;i<CHARS.length;i++) if(CHARS[i][2]===nm) return CHARS[i]; return null; }
 var runChar=makeIndex({
   table:'#ctbl', scope:'#chars', q:'cq', count:'ccount', fav:'cfav', reset:'creset', mine:'cfan',
   isMine:function(r){ return !!CHAR_FAN[r[2]]; },
@@ -6552,10 +6590,24 @@ var runChar=makeIndex({
   val:function(r,k){ return k==='ca'?r[0]:r[0]+' · '+r[1]; },
   key:function(r){ return 'ch|'+r[2]; },
   text:function(r){ return r[0]+r[1]+r[2]+r[3]+r[4]; },
-  row:function(r){ return '<tr><td>'+star('ch|'+r[2])+'<b>'+r[2]+'</b><button class="chadd" data-cm="'+String(r[2]).replace(/"/g,'&quot;')+'" title="만드는 인물에 넣기">＋</button>'+(CHAR_FAN[r[2]]?'<span class="fantag">판타지</span>':'')+'</td><td><span class="small">'+r[0]+' · '+r[1]+'</span></td><td>'+r[3]+'</td><td>'+
+  row:function(r){ var q=String(r[2]).replace(/"/g,'&quot;'); return '<tr data-cn="'+q+'"><td>'+star('ch|'+r[2])+'<b>'+r[2]+'</b><button class="chadd" data-cm="'+q+'" title="만드는 인물에 넣기">＋</button>'+(CHAR_FAN[r[2]]?'<span class="fantag">판타지</span>':'')+charBadges(r)+(CHAR_DETAIL.length?'<button class="chx" data-cx="'+q+'" aria-expanded="false" title="자세히">▸</button>':'')+'</td><td><span class="small">'+r[0]+' · '+r[1]+'</span></td><td>'+r[3]+'</td><td>'+
     (r[4]?r[4]:'<span class="small">—</span>')+'</td></tr>'; }
 });
 
+// 「▸」 펼침 줄
+(function(){
+  var tb=document.querySelector('#ctbl tbody'); if(!tb) return;
+  tb.addEventListener('click',function(e){
+    var b=e.target.closest && e.target.closest('.chx'); if(!b) return;
+    var tr=b.closest('tr'), nx=tr.nextElementSibling;
+    if(nx && nx.classList.contains('chx-row')){ nx.remove(); b.setAttribute('aria-expanded','false'); b.textContent='▸'; return; }
+    var r=charRowBy(b.getAttribute('data-cx')); if(!r) return;
+    var row=document.createElement('tr'); row.className='chx-row';
+    row.innerHTML='<td colspan="4"><div class="chx-in">'+CHAR_DETAIL.map(function(d,i){ var h=''; try{ h=d.html(r)||''; }catch(er){} return h?'<div class="chx-part" data-i="'+i+'">'+h+'</div>':''; }).join('')+'</div></td>';
+    tr.parentNode.insertBefore(row, tr.nextSibling); b.setAttribute('aria-expanded','true'); b.textContent='▾';
+    [].slice.call(row.querySelectorAll('.chx-part')).forEach(function(el){ var d=CHAR_DETAIL[+el.getAttribute('data-i')]; if(d && d.bind) try{ d.bind(el,r); }catch(er){} });
+  });
+})();
 // ----- 캐릭터 구성기 -----
 (function(){
   var out=document.getElementById('ch-out'); if(!out) return;
@@ -6575,6 +6627,7 @@ var runChar=makeIndex({
       if(have.every(function(y){return y[2]!==x[2];})) return x; }
     return arr[0];
   }
+  function charPick(k, have){ if(typeof CHAR_PICK==='function'){ try{ var x=CHAR_PICK(k, SRC[k], have, cur); if(x) return x; }catch(e){} } return drawFrom(SRC[k], have); }
   function counts(){ return {외모:+document.getElementById('ch-a').value,성격:+document.getElementById('ch-b').value,결핍:+document.getElementById('ch-c').value}; }
   function fill(force){
     var n=counts();
@@ -6584,7 +6637,7 @@ var runChar=makeIndex({
         if(!force && lk[k][i] && cur[k][i]){ keep.push(cur[k][i]); keepL.push(true); }
         else { keep.push(null); keepL.push(false); }
       }
-      for(var j=0;j<keep.length;j++) if(!keep[j]) keep[j]=drawFrom(SRC[k], keep.filter(Boolean));
+      for(var j=0;j<keep.length;j++) if(!keep[j]) keep[j]=charPick(k, keep.filter(Boolean));
       cur[k]=keep; lk[k]=keepL;
     });
   }
@@ -6602,11 +6655,12 @@ var runChar=makeIndex({
       });
       html+='</div>';
     });
-    out.innerHTML=html;
+    out.innerHTML=html+CHAR_OUT.map(function(o,i){ var h=''; try{ h=o.html(cur,lk)||''; }catch(e){} return h?'<div class="chout" data-i="'+i+'">'+h+'</div>':''; }).join('');
+    [].slice.call(out.querySelectorAll('.chout')).forEach(function(el){ var o=CHAR_OUT[+el.getAttribute('data-i')]; if(o && o.bind) try{ o.bind(el,cur,lk); }catch(e){} });
     [].slice.call(out.querySelectorAll('button[data-i]')).forEach(function(b){
       b.addEventListener('click',function(){
         var k=b.getAttribute('data-k'), i=+b.getAttribute('data-i'); if(lk[k][i]) return;
-        cur[k][i]=drawFrom(SRC[k],cur[k].filter(function(_,j){return j!==i;})); render(); });
+        cur[k][i]=charPick(k,cur[k].filter(function(_,j){return j!==i;})); render(); });
     });
     [].slice.call(out.querySelectorAll('button[data-cl]')).forEach(function(b){
       b.addEventListener('click',function(e){ e.stopPropagation();
@@ -8199,6 +8253,14 @@ function txConv(id, to){
 window.PAGE_ON.texts=txRender;
 window.addEventListener('storage',function(e){ if(e.key===TXK && txOn()) txList(); });
 // [[/MOD:texts]]
+// [[MOD:pair]] 궁합
+// [[/MOD:pair]]
+// [[MOD:mcut]] 모티브 첫 등장 컷
+// [[/MOD:mcut]]
+// [[MOD:stat]] 흔함 정도
+// [[/MOD:stat]]
+// [[MOD:poseref]] 만화 자세·구도 페이지
+// [[/MOD:poseref]]
 // [[MOD:desk]] 홈 바탕화면
 // 아이콘 자리는 localStorage.deskLayout {v:1, at, pos:{"f:폴더"|"s:favs"|"s:cast"|"s:texts"|"s:trash": [열, 줄]}}
 var DK={open:null, sel:null, drag:null, dirty:false, trash:[], ask:null, newOn:false, ren:false, delArm:false, g:null, disp:{}, occ:{}, w:0, t:0, lastType:'mouse', noClick:0};
@@ -10102,11 +10164,14 @@ window.__contiShow=function(){
 };
 })();
 
+// [[MOD:bestcut]] 베스트컷 (콘티 모듈 뒤)
+// [[/MOD:bestcut]]
 aiBar(); favAiBar(); aiSlots(); if(typeof ideaWriteBar==='function') ideaWriteBar();
 if(window.__reSlots) window.__reSlots(); if(typeof renderFavs==='function') renderFavs();
 dataMigrate();
 hsLoad();
 if(typeof mineCount==='function') mineCount();
+if(typeof runChar==='function') try{ runChar(); }catch(e){}   // 모듈이 붙인 뱃지·▸까지 다시 그린다
 show((location.hash||'#home').slice(1));
 })();
 </script>
