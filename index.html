@@ -1993,6 +1993,7 @@ body.dk-drag, body.dk-drag *{user-select:none!important; -webkit-user-select:non
   <div class="filterbar"><button class="chip" id="ct-plot" type="button">AI로 줄거리 짜기</button></div>
   <h3>2. 등장인물</h3>
   <p class="small">인물을 적어 두면 콘티 그림에 <b>이름표</b>와 <b>생김새</b>(머리·안경·모자·흉터·체격)가 붙는다. 이야기에 적힌 특징만 넣고, 적혀 있지 않은 건 미정으로 둔다.</p>
+  <p class="small"><a href="#cast">등장인물</a> 페이지의 인물은 대강 이야기나 컷에 <b>이름이 나오면 저절로</b> 여기 들어오고, 생김새도 그 페이지에서 고른 대로 그린다. 컷마다 누가 나오는지는 AI가 쓴 글의 이름을 보고 정한다. 직접 바꾸려면 컷을 눌러 「인물」 칸에 이름을 적는다.</p>
   <div class="filterbar"><button class="chip" id="ct-fromcast" type="button">등장인물에서 가져오기</button><button class="chip" id="ct-findch" type="button">이야기에서 인물 찾기</button><button class="chip" id="ct-addch" type="button">인물 추가</button></div>
   <div id="ct-chars"></div>
   <h3>3. 콘티</h3>
@@ -8874,6 +8875,19 @@ function charOf(name){ var n=String(name||'').trim(); if(!n) return null; var cs
   for(var j=0;j<cs.length;j++) if(cs[j].name && (n.indexOf(cs[j].name)===0 || cs[j].name.indexOf(n)===0)) return cs[j];
   var cm=window.__castFind?window.__castFind(n):null;   // 콘티에 없으면 등장인물 페이지에서
   return cm?{name:cm.name, role:cm.role, look:cm.look, note:cm.desc}:null; }
+function syncCast(){
+  if(!B || !window.__castList) return 0;
+  var all=window.__castList(); if(!all.length) return 0; if(!B.chars) B.chars=[];
+  var st=document.getElementById('ct-story'), text=(st?st.value:'')+' '+(B.story||'')+' '+(B.cuts||[]).map(function(c){ return (c.scr||'')+' '+(c.line||'')+' '+(c.who||[]).join(' '); }).join(' ');
+  var add=0;
+  all.forEach(function(m){
+    var ex=null; B.chars.forEach(function(c){ if(c.name===m.name) ex=c; });
+    if(ex){ ex.look=m.look; if(!ex.role) ex.role=m.role; if(!ex.note && m.desc) ex.note=String(m.desc).slice(0,80); return; }   // 생김새는 등장인물 페이지가 기준
+    if([m.name].concat(m.alias||[]).some(function(n){ return n && n.length>=2 && text.indexOf(n)>-1; })){
+      B.chars.push({name:m.name, role:m.role, look:m.look, note:String(m.desc||'').slice(0,80)}); add++; }
+  });
+  return add;
+}
 function allChars(){ var cs=chars().slice(), have={}; cs.forEach(function(c){ have[c.name]=1; });
   (window.__castList?window.__castList():[]).forEach(function(m){ if(m.name && !have[m.name]){ have[m.name]=1; cs.push({name:m.name, look:m.look}); } }); return cs; }
 function whoOf(c){
@@ -9021,7 +9035,7 @@ function pull(){
   var keepCh=(B&&B.chars)||[];
   B={chars:keepCh, total:total, band:band, cl:cl, drawn:(typeof aiDrawn==='function'?aiDrawn(true):''), story:story, srcAt:src?src.at:0, cuts:skeleton(total, band, cl)};
   document.getElementById('ct-story').value=story;
-  save(); renderAll(); stat('구성기에서 가져왔다. 클리셰 '+cl.length+'개, '+total+'컷.');
+  var nc=syncCast(); save(); renderAll(); stat('구성기에서 가져왔다. 클리셰 '+cl.length+'개, '+total+'컷.'+(nc?' 이야기에 나오는 등장인물 '+nc+'명도 가져왔다.':''));
   return true;
 }
 function rescale(st,total){
@@ -9246,7 +9260,7 @@ function writeAll(fromN){
   if(running) return;
   if(!aiReady()){ stat('AI 연결에서 키를 넣어야 쓸 수 있다.'); return; }
   if(!B) { if(!pull()) return; }
-  B.story=document.getElementById('ct-story').value; save();
+  B.story=document.getElementById('ct-story').value; var na=syncCast(); if(na) renderChars(); save();
   var list=chunks().filter(function(ch){ return ch.b>=(fromN||1); });
   if(!fromN) B.cuts.forEach(function(c){ c.scr=''; c.line=''; });
   renderBoard();
@@ -9346,7 +9360,12 @@ window.__contiShow=function(){
     var src=srcGet(), note=document.getElementById('ct-srcinfo');
     if(src && note) note.textContent='최근 글쓰기 결과: '+src.title;
     if(B && src && src.at>(B.srcAt||0) && note) note.textContent='새 글쓰기 결과('+src.title+')가 있다. 「구성기에서 가져오기」로 넣는다.';
+    var na0=B?syncCast():0; if(B) save();
     renderAll();
+    if(na0) stat('이야기에 나오는 등장인물 '+na0+'명을 가져왔다. 생김새는 등장인물 페이지를 따른다.');
+  } else if(B){   // 다른 페이지에서 생김새를 고쳤을 수 있다 → 맞추고 다시 그린다
+    var na=syncCast(); save(); renderChars(); renderBoard();
+    if(na) stat('이야기에 나오는 등장인물 '+na+'명을 가져왔다. 생김새는 등장인물 페이지를 따른다.');
   }
   needRough(function(){ root.querySelectorAll('.ct-cut canvas').forEach(queue); });
 };
