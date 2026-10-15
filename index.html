@@ -437,6 +437,10 @@ textarea#pb-text{width:100%; font:inherit; font-size:.92rem; padding:.6rem .7rem
 #ix-box.mini .ix-src{display:none}
 .ix-newbtn{border:1px solid var(--rule-hard); background:var(--paper-2); color:var(--ink-2); cursor:pointer; font:inherit; font-size:.76rem; padding:.15rem .5rem}
 #ix-box.mini .ix-foot{display:none}
+#ix-box .ix-tabs{display:flex; gap:.3rem; align-items:center; padding:.35rem .6rem; border-bottom:1px solid var(--rule)}
+#ix-box .ix-tabs select, #ix-box .ix-tabs input{flex:1; min-width:0; font-size:.8rem}
+#ix-box .ix-tabs .ix-newbtn{white-space:nowrap}
+#ix-box.mini .ix-tabs{display:none}
 #ix-big{right:4.2rem}
 #ix-box.big{width:min(720px,calc(100vw - 28px)); height:min(80vh,760px)}
 #ix-box .ix-log .q{white-space:pre-wrap; background:var(--paper-2); padding:.35rem .55rem; margin:.7rem 0 .2rem auto; max-width:85%; width:fit-content; color:var(--ink-2); border:1px solid var(--rule)}
@@ -2473,9 +2477,10 @@ details.gdet[open] summary{margin-bottom:.5rem}
 </footer>
 <button id="ix-open" title="색인에게 묻기">🔎</button>
 <div id="ix-box" hidden><div class="ix-head">AI와 이야기 <span class="small">— 눌러서 접기</span><button id="ix-big" aria-label="크게">⤢</button><button id="ix-min" aria-label="접기">─</button><button id="ix-close" aria-label="닫기">✕</button></div>
+<div class="ix-tabs"><select id="ix-th" aria-label="대화 고르기"></select><button id="ix-new" class="ix-newbtn">＋ 새 대화</button><button id="ix-ren" class="ix-newbtn">이름</button><button id="ix-del" class="ix-newbtn">삭제</button></div>
 <div class="ix-log" id="ix-log"><p class="small ix-hello">편하게 이야기한다. 앞에서 한 말을 기억하고 이어 간다. 관련된 사전 항목은 알아서 찾아 「」로 짚어 준다.<br>예) 복수극인데 중반이 늘어져, 뭘 넣지? / 방금 그거 좀 더 어둡게 / 《피노》 주인공 첫 등장 어떻게 할까<br>아래 <b>참고</b>에서 답의 근거를 고른다 — 자동 / 내 말만 / 랜덤 구성기만 / 폴더만. 「1화 폴더 것만으로」, 「내가 말한 것만으로」처럼 말해도 된다.<br><b>사전에 직접 써넣는다.</b> 「방금 그거 사전에 넣어줘」, 「복수극 클리셰 세 개 만들어서 등록해줘」처럼 말하면 AI가 바로 등록한다. 답마다 붙는 <b>사전에 등록</b> 버튼을 눌러도 그 답에 나온 장치가 들어간다. 「○○ 빼줘」로 뺀다. 「이거 1화 폴더에 담아줘」, 「복수극 클리셰 다섯 개 골라서 복수 폴더에 넣어줘」처럼 말하면 <b>즐겨찾기 폴더에 담는다</b>(없는 폴더는 새로 만듦).<br>본 작품을 분석하려면 제목을 《》로 감싸고 「분석」을 붙인다. 예) 《기생충》 분석해줘 → 쓰인 장치를 찾고 새 장치는 색인에 <b>알아서 추가</b>.</p></div>
 <div class="ix-in"><textarea id="ix-q" rows="1" placeholder="편하게 말한다 (Shift+Enter 줄바꿈)"></textarea><button id="ix-send">보내기</button></div>
-<div class="ix-foot"><button id="ix-new" class="ix-newbtn">새 대화</button><label class="ix-src">참고 <select id="ix-src"><option value="auto">자동</option></select></label><label class="ix-web"><input type="checkbox" id="ix-web"> 🌐 웹 검색 <span class="small">(한 번에 약 10~30원)</span></label></div></div>
+<div class="ix-foot"><label class="ix-src">참고 <select id="ix-src"><option value="auto">자동</option></select></label><label class="ix-web"><input type="checkbox" id="ix-web"> 🌐 웹 검색 <span class="small">(한 번에 약 10~30원)</span></label></div></div>
 <div id="tr-float" hidden><div class="face" id="tr-face">🙂</div><div class="time" id="tr-time">00:00</div><div class="msg" id="tr-msg"></div><button id="tr-min" title="접기">─</button><button id="tr-stop" title="멈추기">✕</button></div>
 
 </div>
@@ -4392,14 +4397,48 @@ function favAiBar(){
       box.classList.remove('mini'); log.scrollTop=log.scrollHeight;
     });
   }
-  var HIST=[];
-  try{ HIST=JSON.parse(localStorage.getItem('ixChat')||'[]')||[]; }catch(e){ HIST=[]; }
-  function histSave(){ try{ localStorage.setItem('ixChat',JSON.stringify(HIST.slice(-40))); }catch(e){} }
+  // --- 대화 여러 개 (localStorage ixChats: {cur, list:[{id,title,at,hist}]}) ---
+  var TH={cur:'', list:[]};
+  try{ TH=JSON.parse(localStorage.getItem('ixChats')||'null')||null; }catch(e){ TH=null; }
+  if(!TH || !Array.isArray(TH.list)){
+    var old=[]; try{ old=JSON.parse(localStorage.getItem('ixChat')||'[]')||[]; }catch(e){}
+    TH={cur:'', list:[]};
+    if(old.length) TH.list.push({id:'c'+Date.now().toString(36), title:'', at:Date.now(), hist:old});
+  }
+  function thNew(){ var t={id:'c'+Date.now().toString(36)+Math.random().toString(36).slice(2,5), title:'', at:Date.now(), hist:[]}; TH.list.unshift(t); TH.cur=t.id; return t; }
+  function thFind(id){ for(var i=0;i<TH.list.length;i++) if(TH.list[i].id===id) return TH.list[i]; return null; }
+  var CUR=thFind(TH.cur)||TH.list[0]||thNew(); TH.cur=CUR.id;
+  var HIST=CUR.hist;
+  function thTitle(t){ if(t.title) return t.title; var u=(t.hist||[]).filter(function(m){ return m.role==='user'; })[0]; return u?String(u.content).replace(/\s+/g,' ').slice(0,20):'새 대화'; }
+  function histSave(){
+    TH.list.forEach(function(t){ if(t.hist.length>40) t.hist.splice(0,t.hist.length-40); });
+    TH.list.sort(function(a,b){ return (b.at||0)-(a.at||0); });
+    if(TH.list.length>20) TH.list=TH.list.filter(function(t,i){ return i<20 || t.id===TH.cur; });
+    for(var n=0;n<5;n++){
+      try{ localStorage.setItem('ixChats',JSON.stringify(TH)); try{ localStorage.removeItem('ixChat'); }catch(e){} break; }
+      catch(e){ var vic=TH.list.filter(function(t){ return t.id!==TH.cur; }).pop(); if(!vic) break; TH.list=TH.list.filter(function(t){ return t!==vic; }); }
+    }
+    thFill();
+  }
+  var thSel=document.getElementById('ix-th');
+  function thFill(){
+    if(!thSel) return;
+    thSel.innerHTML=TH.list.map(function(t){ var n=t.hist.filter(function(m){ return m.role==='user'; }).length;
+      return '<option value="'+t.id+'">'+thTitle(t).replace(/</g,'&lt;')+(n?' ('+n+')':'')+'</option>'; }).join('');
+    thSel.value=TH.cur;
+  }
+  function thShow(){
+    [].slice.call(log.children).forEach(function(c){ if(!c.classList.contains('ix-hello')) c.remove(); });
+    var hello=log.querySelector('.ix-hello'); if(hello) hello.style.display=HIST.length?'none':'';
+    var lastQ=''; HIST.forEach(function(m){ if(m.role==='user'){ addQ(m.content); lastQ=m.content; } else addA(m.content, lastQ); });
+    log.scrollTop=log.scrollHeight; thFill();
+  }
+  function thSwitch(id){ var t=thFind(id); if(!t) return; CUR=t; TH.cur=t.id; HIST=t.hist; try{ localStorage.setItem('ixChats',JSON.stringify(TH)); }catch(e){} thShow(); }
+  if(thSel) thSel.addEventListener('change',function(){ thSwitch(thSel.value); });
   function addQ(t){ var qd=document.createElement('div'); qd.className='q'; qd.textContent=t; log.appendChild(qd); }
   function addA(t, qt){ var s=document.createElement('div'); log.appendChild(s); aiResult(s,'',t); regButton(s, qt||'', t); return s; }
   // 지난 대화 보여 주기
-  if(HIST.length){ var hello=log.querySelector('.ix-hello'); if(hello) hello.style.display='none';
-    var lastQ=''; HIST.forEach(function(m){ if(m.role==='user'){ addQ(m.content); lastQ=m.content; } else addA(m.content, lastQ); }); }
+  thShow();
   var SYS='당신은 만화·웹툰 작가의 동료이자 편집자다. 편하게 대화한다. 아이디어를 같이 내고, 좋고 나쁨을 솔직하게 말하고, 필요하면 짧게 되묻는다. 앞에서 한 이야기를 기억하고 이어 간다. '+
     '아래에 붙는 [사전에서 찾은 관련 항목]은 참고 자료다. 도움이 될 때만 쓰고, 쓸 때는 항목 이름을 「이름」으로 표시한다. 사전에 없는 것을 사전 항목처럼 말하지 않는다. 자기 생각과 새 아이디어는 자유롭게 말해도 된다. '+
     '[참고 범위]를 반드시 지킨다. 범위 밖의 자료를 가져오거나, 붙지 않은 자료가 있는 것처럼 말하지 않는다. '+
@@ -4634,26 +4673,28 @@ function favAiBar(){
   }
   function isAddReq(t){ return /(색인|사전|데이터베이스|DB|db)\S*\s*(에|으로|로)?\s*(넣|추가|등록|저장)/.test(t) || /^(넣어|추가해)\s*줘/.test(t.trim()); }
   function addFromChat(t, slot){
+    var TT=CUR, H=TT.hist;
     var convo=HIST.slice(-10).map(function(m){ return (m.role==='user'?'작가: ':'AI: ')+m.content; }).join('\n').slice(-6000)+'\n작가: '+t;
     pickAndAdd(convo, '작가가 마지막에 사전에 넣어 달라고 했다. 대화에서 이야기한 클리셰·연출 장치·소재 중 작가가 넣어 달라는 것을 고른다. 특정 항목을 지목했으면 그것만, 아니면 대화에서 뚜렷하게 다룬 것 전부(많아도 8개).', slot)
     .then(function(added){
-      HIST.push({role:'user',content:t}); HIST.push({role:'assistant',content:'(사전에 '+added.length+'개 넣음: '+added.map(function(n){ return n.row[0]; }).join(', ')+')'}); histSave();
+      H.push({role:'user',content:t}); H.push({role:'assistant',content:'(사전에 '+added.length+'개 넣음: '+added.map(function(n){ return n.row[0]; }).join(', ')+')'}); TT.at=Date.now(); histSave();
       box.classList.remove('mini'); log.scrollTop=log.scrollHeight;
     });
   }
   function send(){
     var t=q.value.trim(); if(!t) return;
+    var TT=CUR, H=TT.hist;
     q.value=''; q.style.height='';
     var hello=log.querySelector('.ix-hello'); if(hello) hello.style.display='none';
     addQ(t);
     var slot=document.createElement('div'); log.appendChild(slot);
     if(!aiReady()){ slot.innerHTML='<p class="small"><a href="#ai">AI 연결</a>에서 키를 먼저 넣는다.</p>'; return; }
     if(isAddReq(t)){ addFromChat(t, slot); log.scrollTop=log.scrollHeight; return; }
-    if(isWork(t)){ workReply(t.replace(/^\/분석\s*/,''), slot); HIST.push({role:'user',content:t}); HIST.push({role:'assistant',content:'(작품 분석을 했다)'}); histSave(); log.scrollTop=log.scrollHeight; return; }
+    if(isWork(t)){ workReply(t.replace(/^\/분석\s*/,''), slot); H.push({role:'user',content:t}); H.push({role:'assistant',content:'(작품 분석을 했다)'}); TT.at=Date.now(); histSave(); log.scrollTop=log.scrollHeight; return; }
     aiBusy(slot,'');
     log.scrollTop=log.scrollHeight;
     var ctx=ctxFor(t), sources=[];
-    var history=HIST.slice(-12);
+    var history=H.slice(-12);
     aiAsk(SYS, (ctx?ctx+'\n\n[이번 말]\n':'')+t, 2000, {history:history, web:!!(webOn()&&document.getElementById('ix-web')&&document.getElementById('ix-web').checked), onSources:function(s){ sources=s; }})
     .then(function(r){
       box.classList.remove('mini');
@@ -4666,14 +4707,30 @@ function favAiBar(){
       else if(ops.broken){ var rb=document.createElement('p'); rb.className='small'; rb.textContent='등록 내용이 중간에 끊겨 넣지 못했다. 위의 「사전에 등록」을 누르면 다시 정리해 넣는다.'; slot.appendChild(rb); }
       if(sources.length){ var sd=document.createElement('div'); sd.innerHTML=webSrcHTML(sources); slot.appendChild(sd); }
       var note=did?('\n(사전에 '+did.added.length+'개 넣음'+(did.added.length?': '+did.added.map(function(n){ return n.row[0]; }).join(', '):'')+(did.removed.length?' / 뺌: '+did.removed.join(', '):'')+')'+did.put.map(function(pr){ return '\n(「'+pr.folder+'」 폴더에 '+(pr.added.length+pr.moved.length)+'개 담음'+(pr.missing.length?', 사전에 없어 못 담음: '+pr.missing.join(', '):'')+')'; }).join('')):'';
-      HIST.push({role:'user',content:t}); HIST.push({role:'assistant',content:r+note}); histSave();
+      H.push({role:'user',content:t}); H.push({role:'assistant',content:r+note}); TT.at=Date.now(); histSave();
       log.scrollTop=log.scrollHeight;
     });
   }
   document.getElementById('ix-new').addEventListener('click',function(){
-    HIST=[]; histSave();
-    [].slice.call(log.children).forEach(function(c){ if(!c.classList.contains('ix-hello')) c.remove(); });
-    var hello=log.querySelector('.ix-hello'); if(hello) hello.style.display='';
+    if(!CUR.hist.length){ q.focus(); return; }
+    CUR=thNew(); HIST=CUR.hist; histSave(); thShow(); q.focus();
+  });
+  var delB=document.getElementById('ix-del');
+  delB.addEventListener('click',function(){
+    if(delB.getAttribute('data-arm')!=='1'){ delB.setAttribute('data-arm','1'); delB.textContent='정말 삭제';
+      setTimeout(function(){ delB.setAttribute('data-arm',''); delB.textContent='삭제'; },3500); return; }
+    delB.setAttribute('data-arm',''); delB.textContent='삭제';
+    var id=CUR.id; TH.list=TH.list.filter(function(t){ return t.id!==id; });
+    CUR=TH.list[0]||thNew(); TH.cur=CUR.id; HIST=CUR.hist; histSave(); thShow();
+  });
+  var renB=document.getElementById('ix-ren');
+  renB.addEventListener('click',function(){
+    if(!thSel || document.getElementById('ix-thname')) return;
+    var inp=document.createElement('input'); inp.id='ix-thname'; inp.value=thTitle(CUR)==='새 대화'?'':thTitle(CUR); inp.placeholder='대화 이름'; inp.maxLength=30;
+    thSel.style.display='none'; thSel.parentNode.insertBefore(inp,thSel); inp.focus();
+    function done(save){ if(save){ CUR.title=inp.value.trim(); histSave(); } inp.remove(); thSel.style.display=''; thFill(); }
+    inp.addEventListener('keydown',function(e){ if(e.key==='Enter' && !e.isComposing){ e.preventDefault(); done(true); } else if(e.key==='Escape'){ e.stopPropagation(); done(false); } });
+    inp.addEventListener('blur',function(){ if(document.getElementById('ix-thname')) done(true); });
   });
   document.getElementById('ix-big').addEventListener('click',function(e){ e.stopPropagation(); box.classList.toggle('big'); });
   q.addEventListener('input',function(){ q.style.height='auto'; q.style.height=Math.min(q.scrollHeight,120)+'px'; });
