@@ -414,6 +414,8 @@ li.twres{list-style:none; display:block}
 
 .addtag{color:var(--note)}
 .czwhy{color:var(--note)}
+.aiwhy{display:block; color:var(--note); font-size:.8rem; margin-top:.2rem}
+.aiwhy .cand, .czwhy .cand{color:var(--ink-3)}
 .czhint{margin:.3rem 0}
 #id-recout .pbsec{margin-top:.6rem}
 #id-recout .pbrow .w{display:block}
@@ -1597,6 +1599,7 @@ details.gdet[open] summary{margin-bottom:.5rem}
     <span class="shuflabel">구성</span>
     <label>장르 <select id="sf-g"><option value="rec">무작위 추천</option><option value="all">전체 섞기</option></select></label>
     <label id="sf-elvwrap">엔딩 <select id="sf-elv"><option value="-1">없음</option><option value="0" selected>단일</option><option value="1">난해한 엔딩</option><option value="2">두 개 조합</option></select></label>
+    <label title="뽑을 때마다 칸마다 후보 4개를 무작위로 뽑고, AI가 아이디어·장르·앞뒤 흐름을 보고 하나를 고른다"><input type="checkbox" id="sf-ai" checked> AI가 후보 4개 중 고름</label>
     <label><input type="checkbox" id="sf-serial"> 연재 모드</label>
     <label id="sf-cutwrap">분량 <select id="sf-cutn"><option>20컷</option><option>30컷</option><option>40컷</option><option>50컷</option><option>60컷</option><option selected>70컷</option><option>80컷</option><option>90컷</option><option>100컷</option></select></label>
     <label><input type="checkbox" id="sf-link" checked> 장르 연동</label>
@@ -5244,7 +5247,7 @@ function trBlock(kind){
         '<span class="czmask">? ? ?</span><span class="czreal">'+r[0]+'</span></b>'+
         '<span class="czreal"><span class="m">'+r[1]+' · '+r[2]+' · '+r[6]+'</span>'+
         (where?'<span class="where">'+where+'</span>':'')+
-        '<span class="t">'+r[8]+' '+r[9]+'</span></span></div>'+
+        '<span class="t">'+r[8]+' '+r[9]+'</span>'+(aiNote[i]?'<span class="aiwhy">'+aiNote[i]+'</span>':'')+'</span></div>'+
         '<span class="btns"><button class="lockbtn" data-l="'+i+'" aria-pressed="'+(slock[i]?'true':'false')+'" title="고정">\ud83d\udccc</button>'+
         (aiReady()?'<button class="twbtn" data-twn="'+i+'">비틀기</button>':'')+'<button data-i="'+i+'" title="이 칸만 다시">\u21bb</button></span></div>';
     });
@@ -5268,7 +5271,9 @@ function trBlock(kind){
       });
     });
     [].slice.call(out.querySelectorAll('button[data-i]')).forEach(function(b){
-      b.addEventListener('click',function(){ if(trBlock('one')) return; var i=+b.getAttribute('data-i'); picks[i]=draw(i); smask[i]=false; render(); }); });
+      b.addEventListener('click',function(){ if(trBlock('one')) return; var i=+b.getAttribute('data-i');
+        if(aiOn()){ aiReview([i], false, false); return; }
+        picks[i]=draw(i); aiNote[i]=''; smask[i]=false; render(); }); });
     [].slice.call(out.querySelectorAll('.lockbtn')).forEach(function(b){
       b.addEventListener('click',function(e){ e.stopPropagation(); var i=+b.getAttribute('data-l'); slock[i]=!slock[i]; render(); }); });
   }
@@ -5278,9 +5283,81 @@ function trBlock(kind){
     if(serialOn() && !roleLock) drawRole();
     SLOTS=slotSet();
     renderTop(); renderRole(); renderCutBand();
-    if(!elock){ drawEnd(); emask=maskOn(); } renderEnd();
-    SLOTS.forEach(function(_,i){ if(slock[i]&&picks[i]) return; picks[i]=draw(i); smask[i]=maskOn(); }); render();
+    if(gBooted && aiOn()){
+      var openI=[]; SLOTS.forEach(function(_,i){ if(!(slock[i]&&picks[i])) openI.push(i); });
+      var czAi=!!(window.__czIsAi && window.__czIsAi());
+      if(!czAi && window.__czDraw) window.__czDraw();
+      aiReview(openI, !elock && elvl()>=0, czAi);
+      return;
+    }
+    if(!elock){ drawEnd(); eNote=''; emask=maskOn(); } renderEnd();
+    SLOTS.forEach(function(_,i){ if(slock[i]&&picks[i]) return; picks[i]=draw(i); aiNote[i]=''; smask[i]=maskOn(); }); render();
     if(window.__czDraw) window.__czDraw();
+  }
+  // ----- AI 검토 뽑기: 칸마다 후보 4개를 무작위로 뽑고 AI가 하나를 고른다 -----
+  var aiNote=[], eNote='', AIK=4, aiTokG=0, gBooted=false;
+  var sfAi=document.getElementById('sf-ai');
+  try{ if(sfAi){ var sfv=localStorage.getItem('sfAi'); if(sfv!==null) sfAi.checked=(sfv==='1');
+    sfAi.addEventListener('change',function(){ try{ localStorage.setItem('sfAi',sfAi.checked?'1':'0'); }catch(e){} }); } }catch(e){}
+  function aiOn(){ return !!(sfAi && sfAi.checked && aiReady()); }
+  function hEsc(t){ return String(t||'').replace(/</g,'&lt;'); }
+  function candsFor(i){
+    var out=[], save=picks[i];
+    for(var t=0;t<40 && out.length<AIK;t++){ var c=draw(i); if(c && !out.some(function(x){ return x[0]===c[0]; })) out.push(c); }
+    picks[i]=save; return out;
+  }
+  function endCands(){
+    var out=[], save=curEnd;
+    for(var t=0;t<30 && out.length<AIK;t++){ drawEnd(); if(curEnd && !out.some(function(x){ return x.name===curEnd.name; })) out.push(curEnd); }
+    curEnd=save; return out;
+  }
+  function plainEnd(e){ return String(e.name||'').replace(/<[^>]+>/g,''); }
+  function aiReview(slotIdx, doEnd, withMotif){
+    var tok=++aiTokG, C={}, EC=null, MC=null;
+    slotIdx.forEach(function(i){ C[i]=candsFor(i); if(C[i][0]) picks[i]=C[i][0]; smask[i]=false;
+      aiNote[i]='AI가 후보 '+C[i].length+'개를 검토하는 중…'; });
+    if(doEnd){ EC=endCands(); if(EC.length){ curEnd=EC[0]; emask=false; eNote='AI가 후보 '+EC.length+'개를 검토하는 중…'; } else EC=null; }
+    if(withMotif && window.__czCands) MC=window.__czCands();
+    render(); renderEnd();
+    var fixed=[];
+    SLOTS.forEach(function(s,i){ if(slotIdx.indexOf(i)<0 && picks[i]) fixed.push(s[0]+': '+picks[i][0]+' — '+picks[i][8]); });
+    if(!EC && curEnd && elvl()>=0) fixed.push('엔딩: '+plainEnd(curEnd)+' — '+curEnd.note);
+    if(MC){ if(MC.fixed.length) fixed.push('소재: '+MC.fixed.join(' / ')); }
+    else { [].slice.call(document.querySelectorAll('#cz-out .czreal')).forEach(function(x){ var t=x.textContent.trim(); if(t && !/고르는 중|검토하는 중/.test(t)) fixed.push('소재: '+t); }); }
+    var role=document.querySelector('#sf-role b'); if(role) fixed.unshift('회차 역할: '+role.textContent.replace(/^[★☆]/,''));
+    var txt=[];
+    slotIdx.forEach(function(i){ if(!C[i].length) return;
+      txt.push('[slot '+i+' — '+SLOTS[i][0]+' 후보]\n'+C[i].map(function(r,k){ return (k+1)+'. '+r[0]+' ('+r[1]+' · '+r[2]+') — '+r[8]; }).join('\n')); });
+    if(EC) txt.push('['+(serialOn()?'마지막 컷':'엔딩')+' 후보]\n'+EC.map(function(e,k){ return (k+1)+'. '+plainEnd(e)+' ('+String(e.sub).replace(/<[^>]+>/g,'')+') — '+String(e.note).replace(/<[^>]+>/g,''); }).join('\n'));
+    if(MC) MC.idxs.forEach(function(k,n){ txt.push('[소재 '+k+' 후보]\n'+MC.cands[n].map(function(x,q){ return (q+1)+'. '+x.plain+' ('+String(x.sub).replace(/<[^>]+>/g,'')+')'; }).join('\n')); });
+    if(!txt.length){ slotIdx.forEach(function(i){ aiNote[i]=''; }); eNote=''; render(); renderEnd(); return; }
+    var g=nowGenre(), idea=ideaBlock('sf');
+    var prompt=(idea?idea.replace(/^\n\n/,'')+'\n\n':'')+(g?'[장르] '+g+'\n':'')+'[분량] '+cutTotal()+'컷\n\n[이미 정해진 것]\n'+(fixed.length?fixed.join('\n'):'(없음)')+
+      '\n\n'+txt.join('\n\n')+
+      '\n\n각 후보 묶음에서 하나씩 고른다. 기준: 작가 아이디어가 있으면 그것에 가장 맞는 것, 그다음 이미 정해진 것과 앞뒤 칸이 원인과 결과로 이어지는 것. 무난한 것보다 이야기에 힘을 주는 것을 고른다. 같은 장치를 두 칸에 고르지 않는다.\n'+
+      'JSON만 출력한다: {"slots":[{"slot":번호,"pick":후보번호,"why":"한 문장"}],"end":{"pick":후보번호,"why":"한 문장"},"motifs":[{"m":번호,"pick":후보번호,"why":"한 문장"}]}  없는 묶음은 빼도 된다.';
+    aiAsk('당신은 만화 구성 편집자다. 반드시 유효한 JSON만 출력한다.', prompt, 900).then(function(t){
+      if(tok!==aiTokG) return;
+      var j=null; try{ j=JSON.parse(String(t).replace(/```json|```/g,'').trim().replace(/^[^{]*/,'').replace(/[^}]*$/,'')); }catch(e){}
+      var bad=!j, err=aiIsErr(t)?String(t).slice(0,90):'';
+      var used={};
+      SLOTS.forEach(function(s,i){ if(slotIdx.indexOf(i)<0 && picks[i]) used[picks[i][0]]=1; });
+      slotIdx.forEach(function(i){
+        var cs=C[i]; if(!cs.length){ aiNote[i]=''; return; }
+        var sj=j&&j.slots?j.slots.filter(function(x){ return +x.slot===i; })[0]:null, k=sj?(+sj.pick-1):-1, r=cs[k];
+        if(!r || used[r[0]]) r=cs.filter(function(x){ return !used[x[0]]; })[0]||cs[0];
+        picks[i]=r; used[r[0]]=1;
+        var others=cs.filter(function(x){ return x!==r; }).map(function(x){ return x[0]; });
+        aiNote[i]=(sj&&cs[k]===r?'AI: '+hEsc(sj.why||''):(bad?'AI 응답을 못 읽어 첫 후보 그대로'+(err?' ('+hEsc(err)+')':''):'AI 선택이 겹쳐 다른 후보로'))+(others.length?' <span class="cand">· 후보였던 것: '+hEsc(others.join(' / '))+'</span>':'');
+      });
+      if(EC){
+        var k2=j&&j.end?(+j.end.pick-1):-1, e=EC[k2]||EC[0];
+        curEnd=e; var oe=EC.filter(function(x){ return x!==e; }).map(plainEnd);
+        eNote=(EC[k2]?'AI: '+hEsc(j.end.why||''):'AI 응답을 못 읽어 첫 후보 그대로')+(oe.length?' <span class="cand">· 후보였던 것: '+hEsc(oe.join(' / '))+'</span>':'');
+      }
+      render(); renderEnd();
+      if(MC && window.__czPut) window.__czPut(MC, (j&&j.motifs)||[], bad?(err||'응답을 못 읽음'):'');
+    });
   }
   var curEnd=null;
   var EPAIR={'으로':['으로','로'],'로':['으로','로'],'이':['이','가'],'가':['이','가'],'은':['은','는'],'는':['은','는'],
@@ -5347,7 +5424,7 @@ function trBlock(kind){
       '<span class="czmask">? ? ?</span><span class="czreal">'+curEnd.html+'</span></b>'+
       '<span class="czreal"><span class="m">'+curEnd.sub+'</span>'+
       '<span class="where">'+(cutTotal()-1)+'–'+cutTotal()+'번 컷 · 마지막 두 컷</span>'+
-      '<span class="t">'+curEnd.note+'</span></span></div>'+
+      '<span class="t">'+curEnd.note+'</span>'+(eNote?'<span class="aiwhy">'+eNote+'</span>':'')+'</span></div>'+
       '<span class="btns"><button class="lockbtn" id="sf-endlock" aria-pressed="'+(elock?'true':'false')+'" title="고정">\ud83d\udccc</button>'+
       '<button id="sf-endre" title="다시 뽑기">\u21bb</button></span></div></div>';
     var slot=box.querySelector('.slot');
@@ -5356,7 +5433,9 @@ function trBlock(kind){
       emask=false; slot.classList.remove('masked');
     });
     var b=document.getElementById('sf-endre');
-    if(b) b.addEventListener('click',function(){ if(trBlock('one')) return; drawEnd(); emask=false; renderEnd(); });
+    if(b) b.addEventListener('click',function(){ if(trBlock('one')) return;
+      if(aiOn()){ aiReview([], true, false); return; }
+      drawEnd(); eNote=''; emask=false; renderEnd(); });
     var lk=document.getElementById('sf-endlock');
     if(lk) lk.addEventListener('click',function(e){ e.stopPropagation(); elock=!elock; renderEnd(); });
   }
@@ -5462,6 +5541,7 @@ function trBlock(kind){
   });
   all_();
   drawEnd(); emask=maskOn(); renderEnd();
+  gBooted=true;   // 페이지를 열 때는 AI를 부르지 않는다
 })();
 
 
@@ -5789,54 +5869,71 @@ var runChar=makeIndex({
       b.addEventListener('click',function(e){ e.stopPropagation(); var i=+b.getAttribute('data-l'); ilock[i]=!ilock[i]; paint(); });
     });
   }
-  // --- AI 추천: 사전의 소재 목록에서 아이디어·장르·지금 구성에 맞는 것을 고른다 ---
+  // --- AI 추천: 칸마다 후보 4개를 무작위로 뽑고 AI가 아이디어·장르·지금 구성을 보고 하나를 고른다 ---
   var aiTok=0, booted=false;
   function mEsc(t){ return String(t||'').replace(/</g,'&lt;').replace(/"/g,'&quot;'); }
-  function motifRow(name){
-    name=String(name||'').replace(/[“”"「」]/g,'').trim(); if(!name) return null;
-    var nn=hsNorm(name), hit=null;
-    MOTIFDATA.forEach(function(r){ if(!hit && (r[0]===name || hsNorm(r[0])===nn)) hit=r; });
-    if(!hit) MOTIFDATA.forEach(function(r){ if(!hit && nn.length>=4 && hsNorm(r[0]).indexOf(nn)>-1) hit=r; });
-    return hit;
-  }
   function rowItem(r, why){
-    return {deco:'<em>\u201C'+mEsc(r[0])+'\u201D</em>', sub:mEsc(r[1]+(r[3]?' · '+r[3]+(r[2]?' ('+r[2]+')':''):''))+(why?'<span class="czwhy"> · AI: '+mEsc(why)+'</span>':''), plain:r[0], ai:true};
+    return {deco:'<em>“'+mEsc(r[0])+'”</em>', sub:mEsc(r[1]+(r[3]?' · '+r[3]+(r[2]?' ('+r[2]+')':''):''))+(why?'<span class="czwhy"> · AI: '+mEsc(why)+'</span>':''), plain:r[0], ai:true};
   }
   function drawnCtx(){
     if(typeof aiDrawn!=='function') return '';
     return aiDrawn(true).split('\n').filter(function(l){ return !/^소재:/.test(l); }).join('\n');
   }
-  function aiFill(idxs){
-    var tok=++aiTok;
-    idxs.forEach(function(k){ items[k]={deco:'<em>AI가 고르는 중…</em>', sub:'', plain:'', wait:true}; imask[k]=false; });
+  function czCands(){
+    var out=[];
+    for(var t=0;t<24 && out.length<4;t++){
+      var L=LEVELS[Math.floor(Math.random()*LEVELS.length)], x=one(L,-1);
+      if(x && x.plain && x.plain!=='(없음)' && !out.some(function(y){ return y.plain===x.plain; })) out.push(x);
+    }
+    return out;
+  }
+  function waitItem(n){ return {deco:'<em>AI가 후보 '+n+'개를 검토하는 중…</em>', sub:'', plain:'', wait:true}; }
+  function putPicks(idxs, cands, arr, err){
+    idxs.forEach(function(k,n){
+      var cs=cands[n]; if(!cs||!cs.length){ return; }
+      var mj=(arr||[]).filter(function(x){ return +x.m===k; })[0], q=mj?(+mj.pick-1):-1, x=cs[q], ok=!!x;
+      if(!x) x=cs[0];
+      var others=cs.filter(function(y){ return y!==x; }).map(function(y){ return y.plain; });
+      items[k]={deco:x.deco, sub:x.sub+'<span class="czwhy"> · '+(ok?'AI: '+mEsc(mj.why||''):(err?'AI 오류로 첫 후보: '+mEsc(String(err).slice(0,80)):'AI가 고르지 않아 첫 후보'))+(others.length?' <span class="cand">· 후보였던 것: '+mEsc(others.join(' / '))+'</span>':'')+'</span>', plain:x.plain, ai:true};
+      imask[k]=false;
+    });
     paint();
+  }
+  function aiFill(idxs){
+    var tok=++aiTok, cands=idxs.map(function(){ return czCands(); });
     if(!aiReady()){
-      idxs.forEach(function(k){ var x=one(0,-1); x.sub+=' · AI 키가 없어 무작위로 뽑음 (AI 연결에서 키를 넣는다)'; items[k]=x; });
+      idxs.forEach(function(k,n){ var x=cands[n][0]||one(0,-1); items[k]={deco:x.deco, sub:x.sub+'<span class="czwhy"> · AI 키가 없어 무작위 (AI 연결에서 키를 넣는다)</span>', plain:x.plain}; imask[k]=false; });
       paint(); return;
     }
-    var keepNames=items.filter(function(x,k){ return idxs.indexOf(k)<0 && x && x.plain; }).map(function(x){ return x.plain; });
+    idxs.forEach(function(k,n){ items[k]=waitItem(cands[n].length); imask[k]=false; });
+    paint();
+    var keep=items.filter(function(x,k){ return idxs.indexOf(k)<0 && x && x.plain && !x.wait; }).map(function(x){ return x.plain; });
     var g=window.__genreNow?window.__genreNow():null, idea=ideaBlock('sf');
-    var list=MOTIFDATA.filter(function(r){ return keepNames.indexOf(r[0])<0; }).map(function(r){ return r[0]+' ('+r[1]+')'; }).join(' / ');
+    var txt=idxs.map(function(k,n){ return '[소재 '+k+' 후보]\n'+cands[n].map(function(x,q){ return (q+1)+'. '+x.plain+' ('+String(x.sub).replace(/<[^>]+>/g,'')+')'; }).join('\n'); }).join('\n\n');
     var prompt=(idea?idea.replace(/^\n\n/,'')+'\n\n':'')+(g?'[장르] '+g+'\n\n':'')+'[지금 랜덤 구성기에 뽑힌 것]\n'+(drawnCtx()||'(아직 없음)')+
-      (keepNames.length?'\n\n[이미 고른 소재 — 겹치지 않게]\n'+keepNames.join(' / '):'')+
-      '\n\n[사전의 소재 목록]\n'+list+
-      '\n\n위 목록에서 이 이야기에 가장 잘 맞는 소재를 '+idxs.length+'개 고른다. 작가 아이디어가 있으면 그것을 가장 먼저 따른다. 없으면 장르와 뽑힌 클리셰를 보고 고른다. '+
-      (idxs.length>1?'서로 겹치지 않게, 하나는 조금 의외인 것으로. ':'')+'이름은 목록에 적힌 그대로 쓴다.\n'+
-      'JSON만 출력한다: {"picks":[{"name":"소재 이름","why":"이 이야기에 맞는 이유 한 문장"}]}';
-    aiAsk('당신은 만화 기획 편집자다. 반드시 유효한 JSON만 출력한다.', prompt, 700).then(function(t){
+      (keep.length?'\n\n[이미 고른 소재]\n'+keep.join(' / '):'')+'\n\n'+txt+
+      '\n\n각 후보 묶음에서 이 이야기에 가장 잘 맞는 소재를 하나씩 고른다. 작가 아이디어가 있으면 그것을 가장 먼저 따르고, 없으면 장르와 뽑힌 클리셰를 본다.\n'+
+      'JSON만 출력한다: {"motifs":[{"m":번호,"pick":후보번호,"why":"한 문장"}]}';
+    aiAsk('당신은 만화 기획 편집자다. 반드시 유효한 JSON만 출력한다.', prompt, 600).then(function(t){
       if(tok!==aiTok) return;
       var j=null; try{ j=JSON.parse(String(t).replace(/```json|```/g,'').trim().replace(/^[^{]*/,'').replace(/[^}]*$/,'')); }catch(e){}
-      var picks=(j&&j.picks)||[], used=keepNames.slice(), q=0;
-      idxs.forEach(function(k){
-        var r=null, why='';
-        while(q<picks.length && !r){ var c=motifRow(picks[q].name); why=picks[q].why||''; q++; if(c && used.indexOf(c[0])<0) r=c; }
-        if(r){ used.push(r[0]); items[k]=rowItem(r, why); }
-        else { var x=one(0,-1); x.sub+=(aiIsErr(t)?' · AI 오류로 무작위: '+mEsc(String(t).slice(0,80)):' · AI가 고르지 못해 무작위'); items[k]=x; }
-        imask[k]=false;
-      });
-      paint();
+      putPicks(idxs, cands, (j&&j.motifs)||[], j?'':(aiIsErr(t)?t:'응답을 못 읽음'));
     });
   }
+  // 구성기의 한 번 묻기에 소재도 함께 넣는다
+  window.__czIsAi=function(){ return !(onbox && !onbox.checked) && lvRaw()===7; };
+  window.__czCands=function(){
+    if(!window.__czIsAi()) return null;
+    var n=parseInt(document.getElementById('cz-n').value,10)||1, oI=items, oM=imask, oL=ilock, idxs=[], cands=[], fixed=[];
+    items=[]; imask=[]; ilock=[];
+    for(var a=0;a<n;a++){
+      if(oL[a] && oI[a] && !oI[a].wait){ items.push(oI[a]); imask.push(oM[a]); ilock.push(true); fixed.push(oI[a].plain); }
+      else { var c=czCands(); items.push(waitItem(c.length)); imask.push(false); ilock.push(false); idxs.push(a); cands.push(c); }
+    }
+    aiTok++; paint();
+    return {idxs:idxs, cands:cands, fixed:fixed};
+  };
+  window.__czPut=function(MC, arr, err){ putPicks(MC.idxs, MC.cands, arr, err); };
   window.__czSet=function(list){
     if(onbox && !onbox.checked){ onbox.checked=true; sync(); }
     aiTok++;
