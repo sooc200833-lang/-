@@ -413,6 +413,10 @@ li.twres{list-style:none; display:block}
 @media (max-width:640px){ #ix-box{left:8px; right:8px; width:auto; height:min(60vh,400px)} #ix-box.mini{height:auto} }
 
 .addtag{color:var(--note)}
+.czwhy{color:var(--note)}
+.czhint{margin:.3rem 0}
+#id-recout .pbsec{margin-top:.6rem}
+#id-recout .pbrow .w{display:block}
 .newtag{color:var(--green)}
 a.tvt{color:var(--ink-3); text-decoration:none; border-bottom:1px dotted var(--rule-hard); white-space:nowrap}
 a.tvt:hover{color:var(--mark)}
@@ -1612,7 +1616,7 @@ details.gdet[open] summary{margin-bottom:.5rem}
   <div class="shuf">
     <span class="shuflabel">소재</span>
     <label><input type="checkbox" id="cz-on" checked> 사용</label>
-    <label><select id="cz-lv"><option value="-1" selected>전부 무작위</option><option value="0">세계 조건 (색인)</option><option value="1">관계와 사건</option><option value="2">엉뚱한 세계 · 제목</option><option value="5">4슬롯 소재</option><option value="6">에피소드 소재</option></select></label>
+    <label><select id="cz-lv"><option value="7" selected>AI 추천</option><option value="-1">전부 무작위</option><option value="0">세계 조건 (색인)</option><option value="1">관계와 사건</option><option value="2">엉뚱한 세계 · 제목</option><option value="5">4슬롯 소재</option><option value="6">에피소드 소재</option></select></label>
     <label><select id="cz-t"><option value="-1">무작위 틀</option></select></label>
     <label><select id="cz-n"><option selected>1개</option><option>2개</option><option>3개</option></select></label>
     <label id="cz-gagwrap"><input type="checkbox" id="cz-gag"> 개그</label>
@@ -1631,7 +1635,9 @@ details.gdet[open] summary{margin-bottom:.5rem}
   <details class="aidet idbox" open><summary>아이디어</summary>
     <p class="small">떠오른 것을 대충 적는다. 체크해 두면 이 구성기의 AI 결과에 함께 반영되고, 색인에서 어울리는 항목도 찾아 붙인다. 두 곳의 아이디어 칸은 같은 내용이다.</p>
     <textarea class="id-text" id="id-text" rows="5" placeholder="예) 기억을 파는 가게 / 주인공은 동생 병원비 때문에 자기 기억을 판다 / 끝은 씁쓸하게"></textarea>
-    <div class="filterbar"><label style="font-size:.84rem"><input type="checkbox" class="id-use" id="id-use" checked> AI에 반영</label><span class="count id-count"></span></div>
+    <div class="filterbar"><label style="font-size:.84rem"><input type="checkbox" class="id-use" id="id-use" checked> AI에 반영</label><span class="count id-count"></span><button class="chip" id="id-rec">아이디어로 추천받기</button></div>
+    <p class="small">「아이디어로 추천받기」 — 적어 둔 내용만 보고 사전 전체에서 <b>소재·클리셰(초반·중반·후반)·엔딩·캐릭터 모티브</b>를 골라 준다. 마음에 들면 ☆로 담거나 구성기에 바로 채운다.</p>
+    <div id="id-recout"></div>
   </details>
   <div class="filterbar" id="ai-bar"></div>
   <div id="ai-out"></div>
@@ -4131,6 +4137,82 @@ function ideaBlock(which){
   return s;
 }
 
+// ----- 아이디어 메모로 추천받기 -----
+function ideaRecFind(list, name, col){
+  name=String(name||'').replace(/[“”"「」《》]/g,'').trim(); if(!name) return null;
+  var nn=hsNorm(name), hit=null;
+  list.forEach(function(r){ if(!hit && (r[col]===name || hsNorm(r[col])===nn)) hit=r; });
+  if(!hit && nn.length>=4) list.forEach(function(r){ if(!hit && (hsNorm(r[col]).indexOf(nn)>-1 || nn.indexOf(hsNorm(r[col]))>-1 && hsNorm(r[col]).length>=4)) hit=r; });
+  return hit;
+}
+function ideaRec(box){
+  var ta=document.getElementById('id-text'), t=(ta&&ta.value||'').trim();
+  if(!t){ box.innerHTML='<p class="small">아이디어 칸에 그리고 싶은 만화를 먼저 적는다. 한두 줄이면 된다.</p>'; return; }
+  if(!aiReady()){ box.innerHTML='<p class="small"><a href="#ai">AI 연결</a>에서 키를 먼저 넣는다.</p>'; return; }
+  var byG={}; ROWS.forEach(function(r){ if(r[4]==='dead') return; (byG[r[1]]=byG[r[1]]||[]).push(r[0]); });
+  var cl=Object.keys(byG).map(function(g){ return g+': '+byG[g].join(' / '); }).join('\n');
+  var byE={}; ENDINGS.forEach(function(r){ (byE[r[0]]=byE[r[0]]||[]).push(r[1]); });
+  var en=Object.keys(byE).map(function(g){ return g+': '+byE[g].join(' / '); }).join('\n');
+  var byC={}; CHARS.forEach(function(r){ (byC[r[0]]=byC[r[0]]||[]).push(r[2]); });
+  var ch=Object.keys(byC).map(function(g){ return g+': '+byC[g].join(' / '); }).join('\n');
+  var mo=MOTIFDATA.map(function(r){ return r[0]; }).join(' / ');
+  aiBusy(box,'아이디어를 읽고 사전에서 고르는 중');
+  var prompt='[작가가 그리고 싶은 만화 — 이것만 근거로 고른다]\n'+t+
+    '\n\n[사전 — 클리셰 (장르: 이름들)]\n'+cl+'\n\n[사전 — 소재]\n'+mo+'\n\n[사전 — 엔딩 (갈래: 이름들)]\n'+en+'\n\n[사전 — 캐릭터 모티브 (축: 이름들)]\n'+ch+
+    '\n\n작가의 아이디어에 맞는 항목을 사전에서 고른다. 이름은 사전에 적힌 그대로 쓴다. 아이디어에 없는 설정을 지어 붙이지 않는다. 장르가 정해져 있지 않으면 아이디어에서 가장 그럴듯한 것을 짐작한다.\n'+
+    '고를 개수: 소재 3, 클리셰는 초반 2·중반 2·후반 2, 엔딩 2, 캐릭터 모티브 3(주인공에게 맞는 외모·성격·결핍). 각각 이 아이디어에 맞는 이유를 한 문장으로.\n'+
+    '사전에 없지만 꼭 필요해 보이는 장치가 있으면 extra에 2개까지 짧게 적는다(없으면 빈 배열).\n'+
+    'JSON만 출력한다: {"summary":"이 아이디어의 핵심 한 문장","motifs":[{"name":"","why":""}],"early":[{"name":"","why":""}],"mid":[{"name":"","why":""}],"late":[{"name":"","why":""}],"endings":[{"name":"","why":""}],"chars":[{"name":"","why":""}],"extra":[{"name":"","why":""}]}';
+  aiAsk('당신은 만화 기획 편집자다. 반드시 유효한 JSON만 출력한다.', prompt, 1800).then(function(r){
+    var j=null; try{ j=JSON.parse(String(r).replace(/```json|```/g,'').trim().replace(/^[^{]*/,'').replace(/[^}]*$/,'')); }catch(e){}
+    if(!j){ aiResult(box,'',aiIsErr(r)?r:'추천을 해석하지 못했다. 다시 누른다.'); return; }
+    function pick(arr, list, col, max){ var out=[], seen={}; (arr||[]).forEach(function(x){ if(out.length>=max||!x) return; var row=ideaRecFind(list, x.name, col); if(row && !seen[row[col]]){ seen[row[col]]=1; out.push({r:row, why:String(x.why||'')}); } }); return out; }
+    var R={m:pick(j.motifs,MOTIFDATA,0,4), early:pick(j.early,ROWS,0,3), mid:pick(j.mid,ROWS,0,3), late:pick(j.late,ROWS,0,3), e:pick(j.endings,ENDINGS,1,3), ch:pick(j.chars,CHARS,2,4)};
+    var esc=pbEsc;
+    function sec(title, arr, key, meta){
+      if(!arr.length) return '';
+      return '<div class="pbsec"><h4>'+title+'</h4>'+arr.map(function(o){ var k=key(o.r), on=!!FAV[k];
+        return '<div class="pbrow"><button class="fav" data-k="'+esc(k).replace(/"/g,'&quot;')+'" data-meta="아이디어 추천" aria-pressed="'+(on?'true':'false')+'">'+(on?'\u2605':'\u2606')+'</button><div class="b"><b>'+esc(o.r[key===kc?0:(key===ke?1:(key===kch?2:0))])+'</b> <span class="small">'+esc(meta(o.r))+'</span><span class="w">'+esc(o.why)+'</span></div></div>'; }).join('')+'</div>';
+    }
+    var kc=function(r){ return 'c|'+r[0]; }, km=function(r){ return 'm|'+r[0]; }, ke=function(r){ return 'e|'+r[1]; }, kch=function(r){ return 'ch|'+r[2]; };
+    var html=(j.summary?'<p><b>핵심</b> — '+esc(j.summary)+'</p>':'')+
+      sec('소재',R.m,km,function(r){ return r[1]; })+
+      sec('클리셰 — 초반',R.early,kc,function(r){ return r[1]+' · '+r[2]; })+
+      sec('클리셰 — 중반',R.mid,kc,function(r){ return r[1]+' · '+r[2]; })+
+      sec('클리셰 — 후반',R.late,kc,function(r){ return r[1]+' · '+r[2]; })+
+      sec('엔딩',R.e,ke,function(r){ return r[0]+' · '+r[2]; })+
+      sec('캐릭터 모티브',R.ch,kch,function(r){ return r[0]+' · '+r[1]+' — '+r[3]; });
+    var ex=(j.extra||[]).filter(function(x){ return x&&x.name; }).slice(0,2);
+    if(ex.length) html+='<div class="pbsec"><h4>사전에 없는 제안</h4>'+ex.map(function(x){ return '<p class="small"><b>'+esc(x.name)+'</b> — '+esc(x.why||'')+'</p>'; }).join('')+'<p class="small">넣고 싶으면 채팅창에 「이거 사전에 넣어줘」라고 말한다.</p></div>';
+    var total=R.m.length+R.early.length+R.mid.length+R.late.length+R.e.length+R.ch.length;
+    if(!total){ box.innerHTML='<p class="small">사전에서 맞는 이름을 찾지 못했다. 다시 누르거나 다른 모델을 고른다.</p>'; return; }
+    html+='<div class="filterbar"><button class="chip" id="id-apply">구성기에 채우기 (첫 번째 추천으로, 고정)</button><button class="chip" id="id-favall">전부 ☆ 담기</button><button class="chip" id="id-copy">복사</button></div>';
+    box.innerHTML='<div class="aires">'+html+'</div>';
+    var ap=document.getElementById('id-apply');
+    if(ap) ap.addEventListener('click',function(){
+      var n=0;
+      if(window.__sfApply) n+=window.__sfApply({early:R.early[0]&&R.early[0].r, mid:R.mid[0]&&R.mid[0].r, late:R.late[0]&&R.late[0].r, end:R.e[0]&&R.e[0].r});
+      if(R.m.length && window.__czSet){
+        var cn=document.getElementById('cz-n'), k=Math.min(R.m.length, cn?(parseInt(cn.value,10)||1):1);
+        window.__czSet(R.m.slice(0,k)); n+=k; }
+      ap.textContent='채웠다 — '+n+'칸 고정'; var so=document.getElementById('cz-out'); if(so&&so.scrollIntoView) so.scrollIntoView({block:'start'});
+    });
+    var fa=document.getElementById('id-favall');
+    if(fa) fa.addEventListener('click',function(){
+      var c=0;
+      [['m',R.m,km],['c',R.early,kc],['c',R.mid,kc],['c',R.late,kc],['e',R.e,ke],['ch',R.ch,kch]].forEach(function(g){ g[1].forEach(function(o){ var k=g[2](o.r); if(!FAV[k]){ favToggle(k,'아이디어 추천'); c++; } }); });
+      [].slice.call(box.querySelectorAll('.fav')).forEach(function(b){ var on=!!FAV[b.getAttribute('data-k')]; b.setAttribute('aria-pressed',on?'true':'false'); b.textContent=on?'\u2605':'\u2606'; });
+      fa.textContent='「'+CURFOLDER+'」에 '+c+'개 담음';
+    });
+    var cp=document.getElementById('id-copy');
+    if(cp) cp.addEventListener('click',function(){
+      var txt=box.querySelector('.aires').innerText.replace(/[☆★]/g,'').replace(/\n(구성기에 채우기|전부 ☆ 담기|복사)[^\n]*/g,'');
+      try{ navigator.clipboard.writeText(txt); cp.textContent='복사됨'; }catch(e){ window.prompt('복사',txt); }
+    });
+  });
+}
+(function(){ var b=document.getElementById('id-rec'), o=document.getElementById('id-recout'); if(b&&o) b.addEventListener('click',function(){ ideaRec(o); }); })();
+
 // ----- 작품 분석 -----
 var PB_ENUM={
   g:['연출 문법 (장르 공통)','소년만화·배틀','스포츠·승부','판타지·이세계','현대판타지·헌터','회귀·전생','무협·사극·전쟁','로맨스','학원·청춘','미스터리·스릴러','호러·오컬트','SF·메카','직업·일상 드라마','포스트 아포칼립스','서사 구조 (장르 공통)'],
@@ -5326,6 +5408,22 @@ function trBlock(kind){
     });
   };
 
+  // 아이디어 추천을 구성기 칸에 넣고 고정한다
+  window.__sfApply=function(o){
+    var cnt=0;
+    SLOTS.forEach(function(s,i){
+      var lab=s[0], r=null;
+      if(lab==='초반') r=o.early||o.mid; else if(lab==='중반') r=o.mid||o.early||o.late; else if(lab==='후반') r=o.late||o.mid;
+      else if(lab==='전반') r=o.early||o.mid; else if(lab==='사건') r=o.mid||o.early||o.late;
+      if(r){ picks[i]=r; slock[i]=true; smask[i]=false; cnt++; }
+    });
+    render();
+    if(o.end && !serialOn()){
+      var es=document.getElementById('sf-elv'); if(es && elvl()!==0){ es.value='0'; }
+      var e=o.end; curEnd={name:e[1], sub:e[0]+(e[3]?' · '+e[3]:''), note:e[2]+' — '+e[5], html:e[1]}; elock=true; emask=false; renderEnd(); cnt++;
+    }
+    return cnt;
+  };
   window.__fullReset=function(){
     slock=[]; if(typeof elock!=='undefined') elock=false;
     if(window.__czReset) window.__czReset();
@@ -5550,6 +5648,8 @@ var runChar=makeIndex({
     if(p==='으로') return (j===0||j===8)?'로':'으로'; return j===0?pr[1]:pr[0]; }
   function label(t){ return t.replace(/\{([^}|]+)(?:\|([^}]+))?\}/g,function(_,k,p){return '○○'+(p?(LABEL[p]||p):'');}).replace(/\[([^\]]+)\]/g,function(_,p){return LABEL[p]||p;}); }
   var LEVELS=[0,1,2,5,6];
+  // 고른 방식 기억 (기본은 AI 추천)
+  try{ var savedLv=localStorage.getItem('czLv'); if(lv && savedLv!==null && [].some.call(lv.options,function(o){ return o.value===savedLv; })) lv.value=savedLv; }catch(e){}
   function lvl(){
     var v=lv?parseInt(lv.value,10):1;
     if(v===-1) return LEVELS[Math.floor(Math.random()*LEVELS.length)];
@@ -5569,7 +5669,7 @@ var runChar=makeIndex({
   function buildOptions(){
     tsel.innerHTML='';
     var raw=lvRaw();
-    if(raw===-1){ var ox=document.createElement('option'); ox.value='-1'; ox.textContent='—'; tsel.appendChild(ox); return; }
+    if(raw===-1 || raw===7){ var ox=document.createElement('option'); ox.value='-1'; ox.textContent=(raw===7?'아이디어·구성 보고':'—'); tsel.appendChild(ox); return; }
     if(raw===6){ ['무작위','로맨스','개그','일상','포스트 아포칼립스'].forEach(function(g,i){ var o=document.createElement('option'); o.value=(i===0?-1:i-1); o.textContent=g; tsel.appendChild(o); }); return; }
     var L=raw, o0=document.createElement('option'); o0.value='-1';
     o0.textContent = L===0 ? '갈래 무작위' : '틀 무작위'; tsel.appendChild(o0);
@@ -5661,14 +5761,16 @@ var runChar=makeIndex({
   var items=[], imask=[], ilock=[];
   function paint(){
     out.innerHTML=items.map(function(x,idx){
+      if(!x) x={deco:'',sub:'',plain:''};
       var key='cz|'+x.plain, on=!!FAV[key];
-      return '<div class="czrow'+(imask[idx]?' masked':'')+'" data-r="'+idx+'"><button class="fav" data-k="'+key+'" data-meta="'+x.sub+'" aria-pressed="'+(on?'true':'false')+'">'+(on?'\u2605':'\u2606')+'</button>'+
+      return '<div class="czrow'+(imask[idx]?' masked':'')+'" data-r="'+idx+'"><button class="fav" data-k="'+String(key).replace(/"/g,'&quot;')+'" data-meta="'+String(x.sub||'').replace(/<[^>]+>/g,'').replace(/"/g,'&quot;')+'" aria-pressed="'+(on?'true':'false')+'">'+(on?'\u2605':'\u2606')+'</button>'+
         '<span class="czline"><span class="czmask">? ? ?</span>'+
         '<span class="czreal">'+x.deco+'<span class="czsub">'+x.sub+'</span></span></span>'+
         '<span class="btns"><button class="lockbtn" data-l="'+idx+'" aria-pressed="'+(ilock[idx]?'true':'false')+'" title="고정">\ud83d\udccc</button>'+
         '<button class="czre" data-i="'+idx+'" title="이것만 다시">\u21bb</button></span></div>';
     }).join('');
     out.style.display='block';
+    if(!items.length && lvRaw()===7) out.innerHTML='<p class="small czhint">AI 추천 — 「소재만 뽑기」나 「전체 다시 뽑기」를 누르면 아래 아이디어 칸과 지금 뽑힌 구성을 보고 사전에서 골라 준다.</p>';
     [].slice.call(out.querySelectorAll('.czrow')).forEach(function(row,idx){
       row.addEventListener('click',function(e){
         if(e.target.closest && (e.target.closest('.fav')||e.target.closest('.czre'))) return;
@@ -5678,16 +5780,84 @@ var runChar=makeIndex({
     [].slice.call(out.querySelectorAll('.czre')).forEach(function(b){
       b.addEventListener('click',function(){
         var idx=+b.getAttribute('data-i');
-        if(trBlock('one')) return; items[idx]=one(lvl(), parseInt(tsel.value,10)); imask[idx]=false; paint();
+        if(trBlock('one')) return;
+        if(lvRaw()===7){ aiFill([idx]); return; }
+        items[idx]=one(lvl(), parseInt(tsel.value,10)); imask[idx]=false; paint();
       });
     });
     [].slice.call(out.querySelectorAll('.lockbtn')).forEach(function(b){
       b.addEventListener('click',function(e){ e.stopPropagation(); var i=+b.getAttribute('data-l'); ilock[i]=!ilock[i]; paint(); });
     });
   }
+  // --- AI 추천: 사전의 소재 목록에서 아이디어·장르·지금 구성에 맞는 것을 고른다 ---
+  var aiTok=0, booted=false;
+  function mEsc(t){ return String(t||'').replace(/</g,'&lt;').replace(/"/g,'&quot;'); }
+  function motifRow(name){
+    name=String(name||'').replace(/[“”"「」]/g,'').trim(); if(!name) return null;
+    var nn=hsNorm(name), hit=null;
+    MOTIFDATA.forEach(function(r){ if(!hit && (r[0]===name || hsNorm(r[0])===nn)) hit=r; });
+    if(!hit) MOTIFDATA.forEach(function(r){ if(!hit && nn.length>=4 && hsNorm(r[0]).indexOf(nn)>-1) hit=r; });
+    return hit;
+  }
+  function rowItem(r, why){
+    return {deco:'<em>\u201C'+mEsc(r[0])+'\u201D</em>', sub:mEsc(r[1]+(r[3]?' · '+r[3]+(r[2]?' ('+r[2]+')':''):''))+(why?'<span class="czwhy"> · AI: '+mEsc(why)+'</span>':''), plain:r[0], ai:true};
+  }
+  function drawnCtx(){
+    if(typeof aiDrawn!=='function') return '';
+    return aiDrawn(true).split('\n').filter(function(l){ return !/^소재:/.test(l); }).join('\n');
+  }
+  function aiFill(idxs){
+    var tok=++aiTok;
+    idxs.forEach(function(k){ items[k]={deco:'<em>AI가 고르는 중…</em>', sub:'', plain:'', wait:true}; imask[k]=false; });
+    paint();
+    if(!aiReady()){
+      idxs.forEach(function(k){ var x=one(0,-1); x.sub+=' · AI 키가 없어 무작위로 뽑음 (AI 연결에서 키를 넣는다)'; items[k]=x; });
+      paint(); return;
+    }
+    var keepNames=items.filter(function(x,k){ return idxs.indexOf(k)<0 && x && x.plain; }).map(function(x){ return x.plain; });
+    var g=window.__genreNow?window.__genreNow():null, idea=ideaBlock('sf');
+    var list=MOTIFDATA.filter(function(r){ return keepNames.indexOf(r[0])<0; }).map(function(r){ return r[0]+' ('+r[1]+')'; }).join(' / ');
+    var prompt=(idea?idea.replace(/^\n\n/,'')+'\n\n':'')+(g?'[장르] '+g+'\n\n':'')+'[지금 랜덤 구성기에 뽑힌 것]\n'+(drawnCtx()||'(아직 없음)')+
+      (keepNames.length?'\n\n[이미 고른 소재 — 겹치지 않게]\n'+keepNames.join(' / '):'')+
+      '\n\n[사전의 소재 목록]\n'+list+
+      '\n\n위 목록에서 이 이야기에 가장 잘 맞는 소재를 '+idxs.length+'개 고른다. 작가 아이디어가 있으면 그것을 가장 먼저 따른다. 없으면 장르와 뽑힌 클리셰를 보고 고른다. '+
+      (idxs.length>1?'서로 겹치지 않게, 하나는 조금 의외인 것으로. ':'')+'이름은 목록에 적힌 그대로 쓴다.\n'+
+      'JSON만 출력한다: {"picks":[{"name":"소재 이름","why":"이 이야기에 맞는 이유 한 문장"}]}';
+    aiAsk('당신은 만화 기획 편집자다. 반드시 유효한 JSON만 출력한다.', prompt, 700).then(function(t){
+      if(tok!==aiTok) return;
+      var j=null; try{ j=JSON.parse(String(t).replace(/```json|```/g,'').trim().replace(/^[^{]*/,'').replace(/[^}]*$/,'')); }catch(e){}
+      var picks=(j&&j.picks)||[], used=keepNames.slice(), q=0;
+      idxs.forEach(function(k){
+        var r=null, why='';
+        while(q<picks.length && !r){ var c=motifRow(picks[q].name); why=picks[q].why||''; q++; if(c && used.indexOf(c[0])<0) r=c; }
+        if(r){ used.push(r[0]); items[k]=rowItem(r, why); }
+        else { var x=one(0,-1); x.sub+=(aiIsErr(t)?' · AI 오류로 무작위: '+mEsc(String(t).slice(0,80)):' · AI가 고르지 못해 무작위'); items[k]=x; }
+        imask[k]=false;
+      });
+      paint();
+    });
+  }
+  window.__czSet=function(list){
+    if(onbox && !onbox.checked){ onbox.checked=true; sync(); }
+    aiTok++;
+    items=[]; imask=[]; ilock=[];
+    list.forEach(function(o){ items.push(rowItem(o.r, o.why)); imask.push(false); ilock.push(true); });
+    paint();
+  };
   function gen(){
     if(trBlock('all')) return;
     var n=parseInt(document.getElementById('cz-n').value,10)||1, i=parseInt(tsel.value,10);
+    if(lvRaw()===7){
+      if(!booted){ items=[]; imask=[]; ilock=[]; paint(); return; }   // 페이지를 열 때는 부르지 않는다
+      var oI=items, oM=imask, oL=ilock, need=[];
+      items=[]; imask=[]; ilock=[];
+      for(var a=0;a<n;a++){
+        if(oL[a] && oI[a] && !oI[a].wait){ items.push(oI[a]); imask.push(oM[a]); ilock.push(true); }
+        else { items.push(null); imask.push(false); ilock.push(false); need.push(a); }
+      }
+      if(need.length) aiFill(need); else paint();
+      return;
+    }
     var oldItems=items, oldMask=imask, oldLock=ilock;
     items=[]; imask=[]; ilock=[];
     for(var k=0;k<n;k++){
@@ -5706,13 +5876,13 @@ var runChar=makeIndex({
     var gw=document.getElementById('cz-gagwrap');
     if(gw) gw.style.display=(on && (lvRaw()===2||lvRaw()===-1))?'':'none';
     var nsel=document.getElementById('cz-n'); if(nsel) nsel.parentNode.style.display=on?'':'none';
-    var showMy = on && lvRaw()!==0;
+    var showMy = on && lvRaw()!==0 && lvRaw()!==7;
     if(my1) my1.style.display=showMy?'':'none';
     if(my2) my2.style.display=showMy?'':'none';
     if(!on){ out.style.display='none'; out.innerHTML=''; }
   }
   buildOptions(); out.style.display='none';
-  if(lv) lv.addEventListener('change',function(){ buildOptions(); sync(); });
+  if(lv) lv.addEventListener('change',function(){ try{ localStorage.setItem('czLv',lv.value); }catch(e){} buildOptions(); sync(); });
 
 
 
@@ -5731,7 +5901,7 @@ var runChar=makeIndex({
     paint();
   };
   window.__czDraw=function(){ if(onbox && !onbox.checked) return; gen(); };
-  gen();
+  gen(); booted=true;
 })();
 
 
