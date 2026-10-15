@@ -18,7 +18,7 @@
 - 큰 파일이라 `<script>` 태그가 여러 개 잡히면 플랫폼이 주입한 스크립트다. 가장 긴 것이 본 코드다
 
 ## 페이지 (섹션 id)
-oneshot, length, redflag, grammar, authors, pagemap, shuffle, arc, epidx, pino, pcre, pmemo, ai, index, motifidx, chars, favs, endidx, combo, refs, advice, final
+oneshot, length, redflag, grammar, authors, pagemap, shuffle, ideacomp, arc, epidx, pino, pcre, pmemo, ai, index, motifidx, chars, favs, endidx, combo, refs, advice, final
 - `m1`~`m10`은 본편 해설
 - **피노 전용**(`pino`, `pcre`, `pmemo`)은 즐겨찾기 폴더 이름이 **피노설정집**일 때만 홈·목차에 나타난다 (`pinoInsert`, `PINOPAGES`)
 
@@ -102,6 +102,13 @@ arcForm, deviceId, folderMemo, gdBase, gdLast, gdLinked, ideaText, mangaDataVer,
 - AI 검토 보강: 결과 위 상태 줄(`sf-aistat`, `aiStat`)에 무엇을 몇 개 검토했는지·흐름(flow)·어색한 곳(check)·실패 이유를 보인다. 프롬프트는 묶음마다 따로가 아니라 **이어 붙였을 때 하나의 이야기가 되는 조합**을 고르게 한다. 「궁합 점검」(`sf-fit`, `fitCheck`)은 칸을 바꾸지 않고 1~5점·흐름·약한 칸 최대 2개를 알려 주고, 약한 칸은 버튼으로 그 칸만 후보 4개 재검토. `candsFor`는 장르를 정했으면 후보 4개 중 2개 이상을 그 장르 고유 클리셰로 채운다. 「무작위 추천」 장르에서 서사 구조는 뺐다(선택칸에는 「서사 구조만」으로 남김). pick 번호가 0으로 와도 첫 후보로 받는다
 - **버그 수정**: `#ix-box{display:flex}`가 `hidden`을 덮어써서 채팅창이 페이지를 열 때마다 떠 있었다 → `#ix-box[hidden]{display:none!important}`
 - 실제 브라우저 시험: 작업 폴더 `pw2.js`(Playwright, `executablePath:/opt/pw-browsers/chromium`, OpenRouter를 route로 흉내)
+- **소재 먼저 뽑기 (2026-10, 기본)**: 구성기 「뽑는 방식」(`sf-mode`, localStorage `sfMode`): `ai` 소재 먼저 → AI가 고름 / `fast` 소재 먼저 → 바로(AI 없음) / `rand` 무작위. 흐름 `seedFlow`: ① 소재 정하기(소재가 「AI 추천」이면 후보 4개 중 AI가 고르면서 장르·연관어 10개도 한 번에 받음, 아니면 지금 방식으로 뽑고 `askWords`로 연관어만) ② 장르: 고정 장르 > AI 답 > `MTAG`(소재 138개에 붙인 장르·연관어) > `relGenreGuess` ③ `buildCands`가 연관어로 칸별 후보 4개(그 장르 고유 2개 보장)와 엔딩 후보 4개를 `relRank`로 찾음 ④ `ai`면 `aiReview(…, pre)`로 고르고, `fast`면 `fastPick`이 점수 1등. ↻는 `lastSeed`로 그 칸만. 소재가 꺼져 있으면 아이디어 칸 글을 출발점으로
+- 연관어 검색 도구: `relWordsLocal`(서술어 꼴·`REL_STOP` 제외), `relScore`(이름 3·본문 1.5·앞 두 글자 0.8/0.4), `relRank`, `motifSeedInfo`. 소재 글은 `czText`로 띄어 쓴 형태(`text`)를 넘긴다. 별표 키는 예전 `plain` 그대로
+- **아이디어로 추천받기**도 같은 길: AI 1번(핵심·장르·연관어 12개·사전 밖 제안) → 연관어로 갈래별 후보 8개 → AI 1번(전부 한꺼번에 고름). 고르는 응답을 못 읽으면 점수 순. 갈래 ↻는 검색 결과 다음 후보(AI 안 부름)
+- **아이디어 구성기 페이지(`ideacomp`, 2026-10)**: 아이디어 칸(`id-text`, `id-use`)과 「구성안 만들기」(`id-rec` → `ideaRec`)를 랜덤 구성기에서 떼어 냈다. 맨 위 「구성안」(갈래별 첫 추천을 이은 것, `renderPlan`), 항목마다 「구성안에」(`data-pick`)로 바꾸기, 「랜덤 구성기로 보내기」(칸에 넣고 고정 후 `#shuffle`로 이동), 「구성안 복사」. 초반·중반·후반은 같은 클리셰가 겹치지 않게(`usedC`)
+- **랜덤 구성기는 아이디어를 쓰지 않는다**: AI 검토·소재 먼저·궁합 점검·AI로 잇기·소재 AI 추천에서 아이디어 글을 뺐다. 줄거리 쓰기(`aiDrawn` 기본값)만 아이디어를 읽는다(「다른 AI 글쓰기에도 반영」 체크 시). 소재가 꺼져 있으면 무작위
+- 아이디어 구성기 **글쓰기**(`ideaWriteBar`, `idw-bar`): 줄거리/컷별/웹소설(`wfi`)·분량. 구성안이 있으면 `ideaRec.plan()` + 아이디어, 없으면 아이디어만. 랜덤 구성기의 글쓰기·연관짓기(`aiDrawn`)는 이제 아이디어 메모를 넣지 않는다. 주의: `ideaWriteBar`는 `WFMT`보다 먼저 부르면 시작이 멈춘다 → 스크립트 끝의 초기화 줄에서만 부른다
+- **써진 글 고치기·바꾸기**(`wsStart`/`wsConv`/`wsRender`, `convPrompt`, `cutsRule`/`novelRule`): 글쓰기 결과는 편집 가능한 textarea(`.wstage`). 「바꾸기」로 줄거리→웹소설→컷별(아무 방향 가능), 고친 글을 원본으로 쓰고 처음 재료(`ref`)는 참고만. 앞 단계에서 다시 바꾸면 뒤 단계는 지워진다. 「차례로 쓰기」= 줄거리 쓰고 자동으로 웹소설→컷별. 랜덤 구성기·즐겨찾기·아이디어 구성기 세 곳. 마지막 결과는 localStorage `sfChain`/`favChain`/`idwChain`에 저장, 빈 칸일 때 복원(동기화 안 함)
 
 ## 콘티 구성기 (2026-10, 섹션 `conti`)
 - 「구성기에서 가져오기」(`pull`): `window.__sfState()`(랜덤 구성기 IIFE 안, `placeHint` 바로 뒤)가 컷 배분 다섯 구간(`band`, 인스타 모드면 INSTA 행)과 칸별 클리셰 행·배정 컷 범위(a–b)를 준다. 분량을 바꾸면 `rescale`로 비율 조정. 아이디어로 추천받기는 `__sfApply`로 구성기에 들어오므로 같은 길로 온다
