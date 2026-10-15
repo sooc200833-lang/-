@@ -2006,7 +2006,7 @@ details.gdet[open] summary{margin-bottom:.5rem}
     </div></details>
   </div>
   <div class="filterbar">
-    <input id="q" type="search" placeholder="이름·정의·연출 검색" aria-label="색인 검색">
+    <input id="q" type="search" placeholder="이름·정의·연출 검색 (초성 ㅎㄱ, 오타도 됨)" aria-label="색인 검색">
     <button class="chip" id="favonly" aria-pressed="false">★ 즐겨찾기만</button>
     <button class="chip" id="mineonly" aria-pressed="false">✎ 내가 추가</button>
     <button class="chip" id="reset">필터 초기화</button>
@@ -2038,7 +2038,7 @@ details.gdet[open] summary{margin-bottom:.5rem}
       <button class="chip" data-k="mm" data-v="장르 관습" aria-pressed="false">장르 관습</button>
     </div></div>
   </div>
-  <div class="filterbar"><input id="mq" type="search" placeholder="소재·작품 검색" aria-label="소재 검색"><button class="chip" id="mfav" aria-pressed="false">★ 즐겨찾기만</button><button class="chip" id="mmine" aria-pressed="false">✎ 내가 추가</button><button class="chip" id="mreset">초기화</button><span class="count" id="mcount"></span></div>
+  <div class="filterbar"><input id="mq" type="search" placeholder="소재·작품 검색 (초성도 됨)" aria-label="소재 검색"><button class="chip" id="mfav" aria-pressed="false">★ 즐겨찾기만</button><button class="chip" id="mmine" aria-pressed="false">✎ 내가 추가</button><button class="chip" id="mreset">초기화</button><span class="count" id="mcount"></span></div>
   <div class="tw"><table class="idx" id="mtbl"><thead><tr><th style="width:42%">소재</th><th style="width:14%">갈래</th><th>대표 사례</th></tr></thead><tbody></tbody></table></div>
 </section>
 
@@ -2519,6 +2519,60 @@ var ROWS=[["첫 컷 실전 등장","연출 문법 (장르 공통)","인물 소�
     (u.m||[]).forEach(function(r){ if(r&&r.length>=4&&!MOTIFDATA.some(function(x){return x[0]===r[0];})) MOTIFDATA.push(r); });
   }catch(e){}
 })();
+/* ----- 한글 검색: 초성(ㅎㄱ→회귀) · 영타(ghlrnl→회귀) · 오타(계약연에→계약연애) -----
+   오픈소스 es-hangul(MIT, 토스)과 Fuse.js(Apache-2.0)를 jsDelivr에서 불러 쓴다.
+   못 불러오면 초성 검색만 자체 코드로 하고, 나머지는 예전처럼 글자 그대로 찾는다. */
+var HS={h:null, Fuse:null, loading:false};
+var HS_CHO='ㄱㄲㄴㄷㄸㄹㅁㅂㅃㅅㅆㅇㅈㅉㅊㅋㅌㅍㅎ';
+function hsNorm(s){ return String(s||'').toLowerCase().replace(/[\s·・,.\-—–_'"`「」『』《》()\[\]{}!?~:;/|]/g,''); }
+function hsCho(s){
+  s=String(s||'');
+  if(HS.h){ try{ return HS.h.getChoseong(s); }catch(e){} }
+  var o=''; for(var i=0;i<s.length;i++){ var c=s.charCodeAt(i); o+=(c>=0xAC00&&c<=0xD7A3)?HS_CHO[Math.floor((c-0xAC00)/588)]:s[i]; } return o;
+}
+function hsOnlyCho(qn){ return /^[ㄱ-ㅎ]+$/.test(qn); }
+function hsQwerty(qn){
+  if(!HS.h || !/^[a-z]{2,}$/.test(qn)) return '';
+  try{ var k=HS.h.convertQwertyToHangul(qn); return /[가-힣]/.test(k)?hsNorm(k):''; }catch(e){ return ''; }
+}
+function hsJamo(s){ if(!HS.h) return s; try{ return HS.h.disassemble(s); }catch(e){ return s; } }
+// 이름 오타 찾기: 목록마다 Fuse 색인을 한 번 만들어 둔다
+function hsFuzzy(list, q, nameOf){
+  var qn=hsNorm(q);
+  if(!HS.Fuse || !HS.h || qn.length<3 || hsOnlyCho(qn) || /^[a-z0-9]+$/.test(qn)) return null;
+  var c=list.__hs;
+  if(!c || c.len!==list.length){
+    var items=list.map(function(r){ var n=nameOf(r); return {n:n, j:hsJamo(hsNorm(n))}; });
+    c=list.__hs={len:list.length, fuse:new HS.Fuse(items,{keys:['j'], threshold:0.3, ignoreLocation:true, minMatchCharLength:2, includeScore:true}), q:null, set:null};
+  }
+  if(c.q===qn) return c.set;
+  var set={}; c.fuse.search(hsJamo(qn)).forEach(function(r){ set[r.item.n]=1; });
+  c.q=qn; c.set=set; return set;
+}
+// 한 줄이 검색어에 걸리는가
+function hsHit(text, name, q, list, nameOf){
+  var qn=hsNorm(q); if(!qn) return true;
+  var tn=hsNorm(text);
+  if(tn.indexOf(qn)>-1) return true;
+  if(hsOnlyCho(qn)) return hsCho(hsNorm(name||text)).indexOf(qn)>-1 || hsCho(tn).indexOf(qn)>-1;
+  var kq=hsQwerty(qn); if(kq && tn.indexOf(kq)>-1) return true;   // 한/영 안 바꾸고 친 경우
+  var fz=list?hsFuzzy(list, kq||q, nameOf):null;
+  return !!(fz && fz[name]);
+}
+function hsLoad(){
+  if(HS.loading || HS.h) return; HS.loading=true;
+  try{
+    Promise.all([
+      import('https://cdn.jsdelivr.net/npm/es-hangul@2.4.0/+esm'),
+      import('https://cdn.jsdelivr.net/npm/fuse.js@7.5.0/dist/fuse.min.mjs')
+    ]).then(function(m){ hsUse(m[0], m[1]&&(m[1].default||m[1])); }).catch(function(){ HS.loading=false; });
+  }catch(e){ HS.loading=false; }
+}
+function hsUse(h, F){
+  HS.h=h||null; HS.Fuse=(typeof F==='function')?F:null; HS.loading=false;
+  try{ if(typeof apply==='function' && typeof built!=='undefined' && built) apply(); }catch(e){}
+  try{ if(typeof runMotif==='function') runMotif(); if(typeof runEnd==='function') runEnd(); if(typeof runEp==='function') runEp(); if(typeof runChar==='function') runChar(); }catch(e){}
+}
 
 var PAGES=[
  {g:'기초',id:'oneshot',t:'단편은 주인공을 판다',d:'설정에 지면을 쓰지 않는 법. 이 문서 전체의 전제.'},
@@ -3119,7 +3173,7 @@ function match(r){
     if(!sel[k].some(function(v){return vals.indexOf(v)>-1;})) return false;
   }
   var t=(q&&q.value||'').trim().toLowerCase();
-  if(t && (r[0]+r[1]+r[2]+r[8]+r[9]).toLowerCase().indexOf(t)<0) return false;
+  if(t && !hsHit(r[0]+' '+r[1]+' '+r[2]+' '+r[8]+' '+r[9], r[0], t, ROWS, function(x){ return x[0]; })) return false;
   if(favOnly && !FAV['c|'+r[0]]) return false;
   if(mineOnly && String(r[11]||'').indexOf('추가|')!==0) return false;
   return true;
@@ -5279,6 +5333,7 @@ function trBlock(kind){
 
 // ----- 소재/캐릭터 색인 필터 -----
 function makeIndex(cfg){
+  function nameOf(r){ var k=cfg.key(r); return k.slice(k.indexOf('|')+1); }
   var tb=document.querySelector(cfg.table+' tbody'); if(!tb) return function(){};
   var q=document.getElementById(cfg.q), cnt=document.getElementById(cfg.count),
       fv=document.getElementById(cfg.fav), rs=document.getElementById(cfg.reset),
@@ -5292,7 +5347,7 @@ function makeIndex(cfg){
     if(favOnly && !FAV[cfg.key(r)]) return false;
     if(mineOnly && !(cfg.isMine && cfg.isMine(r))) return false;
     var t=(q&&q.value||'').trim().toLowerCase();
-    if(t && cfg.text(r).toLowerCase().indexOf(t)<0) return false;
+    if(t && !hsHit(cfg.text(r), nameOf(r), t, cfg.data, nameOf)) return false;
     return true;
   }
   function run(){
@@ -5839,6 +5894,7 @@ var runChar=makeIndex({
 aiBar(); favAiBar(); aiSlots();
 if(window.__reSlots) window.__reSlots(); if(typeof renderFavs==='function') renderFavs();
 dataMigrate();
+hsLoad();
 if(typeof mineCount==='function') mineCount();
 show((location.hash||'#home').slice(1));
 })();
