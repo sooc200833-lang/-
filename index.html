@@ -1910,6 +1910,8 @@ details.gdet[open] summary{margin-bottom:.5rem}
     <button class="chip" id="ai-clear">키 지우기</button>
     <span class="count" id="ai-msg"></span>
   </div>
+  <label class="small" style="display:block; margin:.3rem 0"><input type="checkbox" id="ai-autofree"> <b>잔액이 없으면 무료 모델로 자동 전환</b> — OpenRouter 잔액이 바닥나면(402) 무료 모델로 바꿔 다시 부른다. 무료 모델은 하루 50번(한 번이라도 10달러 충전한 계정은 1,000번), 웹 검색은 안 된다.</label>
+  <p class="small" id="ai-credit"></p>
   <p class="small" id="ai-lasterr"></p>
   <details class="aidet"><summary>구글이 보낸 원문 보기 (문제 신고용)</summary><p class="small" id="ai-lastraw" style="word-break:break-all"></p></details>
   <h3>쓸 수 있는 것</h3>
@@ -3354,6 +3356,7 @@ function aiLastErr(t){ try{ localStorage.setItem('aiLastErr',new Date().toLocale
 function aiAlt(except, kind){
   // 붐빔·한도일 때 이번 호출만 대신 부를 모델. 무료로 쓰기 쉬운 가벼운 모델부터.
   var rec=(ORM&&ORM.rec)||[], ids=rec.map(function(r){ return r.m.id; }).filter(function(id){ return id!==except && !qIsOut(id); });
+  if(aiNoCredit() || /:free$/.test(except||'')){ var fl=aiFreeList([except]); if(fl.length) return fl[0]; }
   var cheap=ids.filter(function(id){ return !/:free$/.test(id) && !/sonnet|opus|pro\b/.test(id); });
   return cheap[0]||'openrouter/auto';
 }
@@ -3363,21 +3366,51 @@ function aiRetryAfter(tx){
     for(var i=0;i<d.length;i++){ if(d[i]&&d[i].retryDelay){ var s=parseFloat(String(d[i].retryDelay)); if(s>0) return s*1000; } } }catch(e){}
   return 0;
 }
+// ----- 잔액 없음 → 무료 모델 자동 전환 -----
+function aiAutoFree(){ try{ return localStorage.getItem('orAutoFree')!=='0'; }catch(e){ return true; } }
+function aiNoCredit(){ try{ var t=parseInt(localStorage.getItem('orNoCredit')||'0',10); return !!t && Date.now()<t; }catch(e){ return false; } }
+function aiNoCreditMark(on){ try{ if(on) localStorage.setItem('orNoCredit',String(Date.now()+6*3600*1000)); else localStorage.removeItem('orNoCredit'); }catch(e){} aiCreditUI(); }
+function aiCreditUI(){
+  var el=document.getElementById('ai-credit'); if(!el) return;
+  if(aiNoCredit()){ el.innerHTML='지금 상태: <b>잔액 없음 → 무료 모델로 부르는 중</b> (6시간 동안 유지). 충전했다면 <button class="chip" id="ai-credit-clear">충전했다 — 원래 모델로</button>';
+    var b=document.getElementById('ai-credit-clear'); if(b) b.addEventListener('click',function(){ aiNoCreditMark(false); });
+  } else el.textContent='';
+}
+function aiFreeList(except){
+  var tried=[].concat(except||[]);
+  var list=((typeof ORM!=='undefined'&&ORM.list)||[]).filter(function(m){ return /:free$/.test(m.id) && tried.indexOf(m.id)<0 && !qIsOut(m.id) && (m.context_length||0)>=16000 && !/image|vision|audio|embed|guard/i.test(m.id); });
+  var pref=[/^google\/gemini/, /^deepseek\//, /^qwen\//, /^meta-llama\//, /^mistralai\//, /^z-ai\/|^zhipu/, /^moonshot/, /^openai\//];
+  function rank(id){ for(var i=0;i<pref.length;i++) if(pref[i].test(id)) return i; return pref.length; }
+  list.sort(function(a,b){ return (rank(a.id)-rank(b.id)) || ((b.created||0)-(a.created||0)); });
+  return list.map(function(m){ return m.id; });
+}
 function aiCall(system, user, onText, maxTok, _retry, opts){
   opts=opts||{};
   if(!aiReady()){ onText('AI 연결 페이지에서 키를 먼저 넣어 주세요.'); return; }
+  // 잔액이 없다고 알려진 동안에는 처음부터 무료 모델로
+  if(!opts._freeWrap && !opts.model && aiAutoFree() && aiNoCredit() && !/:free$/.test(AIMODEL||'')){
+    var fr0=aiFreeList([]);
+    if(fr0.length){
+      var o0=Object.assign({},opts,{model:fr0[0], web:false, _freeWrap:true, _freeTried:[fr0[0]], _used:{m:fr0[0]}}), wasWeb=!!opts.web;
+      aiCall(system,user,function(t){ onText((t==='생각하는 중…'||aiIsErr(t))?t:t+'\n\n(잔액이 없어 무료 모델 「'+aiShort(o0._used.m)+'」로 불렀다'+(wasWeb?'. 웹 검색은 무료로 안 돼서 뺐다':'')+')'); },maxTok,_retry,o0);
+      return;
+    }
+  }
   onText('생각하는 중…');
   fetch('https://openrouter.ai/api/v1/chat/completions',{
     method:'POST',
     headers:{'Content-Type':'application/json','Authorization':'Bearer '+AIKEY,'HTTP-Referer':location.origin||'https://localhost','X-Title':'Manga Cliche Dictionary'},
-    body:JSON.stringify(Object.assign({model:(opts.model||AIMODEL||'openrouter/auto'), max_tokens:(maxTok||900)+1500, reasoning:{effort:'low', exclude:true},
+    body:JSON.stringify(Object.assign({model:(opts.model||AIMODEL||'openrouter/auto'), max_tokens:(opts._cap||((maxTok||900)+1500)), reasoning:{effort:'low', exclude:true},
       messages:[{role:'system',content:system}].concat(opts.history||[]).concat([{role:'user',content:user}])},
       opts.web ? (opts.legacyWeb ? {plugins:[{id:'web', max_results:5}]} : {tools:[{type:'openrouter:web_search'}]}) : {}))
   }).then(function(r){
      if(!r.ok){ return r.text().then(function(tx){
        var m=''; try{ var j=JSON.parse(tx); m=(j.error&&(j.error.message||j.error.code))||tx; }catch(e){ m=tx; }
        if(r.status===401) throw new Error('키가 올바르지 않습니다 (401). AI 연결에서 키를 다시 확인하세요.');
-       if(r.status===402) throw new Error('잔액이 부족합니다 (402). OpenRouter에서 크레딧을 충전하세요.');
+       if(r.status===402){
+         var af=String(m).match(/can only afford\s+(\d+)/i);
+         if(af && parseInt(af[1],10)>=600 && !opts._cap){ var ec=new Error('CAP'); ec.cap=parseInt(af[1],10)-50; throw ec; }
+         var en=new Error('NO_CREDIT'); en.detail=m; throw en; }
        if(r.status===429){
          var cur0=opts.model||AIMODEL;
          if(/free-models-per-day/i.test(m)){ qMark(cur0); var ed=new Error('OR_FREEDAY'); throw ed; }
@@ -3407,8 +3440,25 @@ function aiCall(system, user, onText, maxTok, _retry, opts){
    .catch(function(e){
      var m=e.message||String(e);
      if(m==='WEB_LEGACY'){ opts.legacyWeb=true; aiCall(system,user,onText,maxTok,_retry,opts); return; }
+     if(m==='CAP'){ opts._cap=e.cap; aiCall(system,user,onText,maxTok,_retry,opts); return; }
+     if(m==='NO_CREDIT'){
+       var curN=opts.model||AIMODEL, tried=(opts._freeTried||[]).concat([curN]);
+       if(!/:free$/.test(curN)) aiNoCreditMark(true);
+       aiLastErr('OpenRouter 잔액 없음 (402)');
+       var nx=(aiAutoFree() && tried.length<=4)?aiFreeList(tried)[0]:null;
+       if(nx){
+         if(opts._used) opts._used.m=nx;
+         var o3=Object.assign({},opts,{model:nx, web:false, _freeWrap:true, _freeTried:tried.concat([nx]), _n:0, _alt:true, _cap:0}), hadWeb=!!opts.web;
+         aiCall(system,user,function(t){ onText((t==='생각하는 중…'||aiIsErr(t)||opts._freeWrap)?t:t+'\n\n(잔액이 없어 무료 모델 「'+aiShort(nx)+'」로 불렀다'+(hadWeb?'. 웹 검색은 무료로 안 돼서 뺐다':'')+')'); },maxTok,_retry,o3);
+         return;
+       }
+       onText(aiAutoFree()
+         ? '잔액이 부족합니다 (402). 무료 모델로도 바꿔 봤지만 쓸 수 있는 게 없었다. openrouter.ai에서 충전하거나 잠시 뒤 다시 한다.'
+         : '잔액이 부족합니다 (402). OpenRouter에서 충전하거나, AI 연결에서 「잔액이 없으면 무료 모델로 자동 전환」을 켠다.');
+       return;
+     }
      if(m==='OR_FREEDAY'){
-       onText('OpenRouter 무료 모델의 하루 한도를 다 썼다 (429). 한 번도 충전하지 않은 계정은 무료 모델이 하루 50번이다. openrouter.ai에서 10달러를 한 번 충전하면 하루 1,000번으로 늘고, 충전금으로 유료 모델도 쓸 수 있다. 또는 AI 연결에서 제미나이로 바꾼다.');
+       onText('OpenRouter 무료 모델의 하루 한도를 다 썼다 (429). 한 번도 충전하지 않은 계정은 무료 모델이 하루 50번이다. openrouter.ai에서 10달러를 한 번 충전하면 하루 1,000번으로 늘고, 충전금으로 유료 모델도 쓸 수 있다.');
        return;
      }
      if(m==='RETRY'){
@@ -3416,8 +3466,8 @@ function aiCall(system, user, onText, maxTok, _retry, opts){
        if(n<2){ opts._n=n+1; setTimeout(function(){ aiCall(system,user,onText,maxTok,_retry,opts); }, (e.kind==='quota'?3000:1500)*(n+1)); return; }
        if(!opts._alt){
          var alt=aiAlt(cur, e.kind);
-         if(alt && alt!==cur){ var o2=Object.assign({},opts,{model:alt,_alt:true,_n:0});
-           aiCall(system,user,function(t){ onText((t==='생각하는 중…'||aiIsErr(t))?t:t+'\n\n(「'+aiShort(cur)+'」이 '+(e.kind==='quota'?'한도에 걸려':'붐벼서')+' 이번만 「'+aiShort(alt)+'」로 대신 불렀다)'); },maxTok,_retry,o2);
+         if(alt && alt!==cur){ var o2=Object.assign({},opts,{model:alt,_alt:true,_n:0}); if(opts._used) opts._used.m=alt;
+           aiCall(system,user,function(t){ onText((t==='생각하는 중…'||aiIsErr(t)||opts._freeWrap)?t:t+'\n\n(「'+aiShort(cur)+'」이 '+(e.kind==='quota'?'한도에 걸려':'붐벼서')+' 이번만 「'+aiShort(alt)+'」로 대신 불렀다)'); },maxTok,_retry,o2);
            return; }
        }
        onText(e.kind==='quota'
@@ -3476,14 +3526,18 @@ var AISYS='당신은 한국 만화·웹툰 연출을 돕는 조력자다. 짧고
   if(ms) ms.addEventListener('input',function(){ ormFill(ms.value); });
   k.addEventListener('input',function(){ AIKEY=k.value.trim(); aiSave(); aiBar(); favAiBar(); aiSlots(); if(typeof pbBar==='function') pbBar(); if(typeof apply==='function') apply(); if(window.__reSlots) window.__reSlots(); if(typeof renderFavs==='function') renderFavs(); });
   if(m) m.addEventListener('change',function(){
-    AIMODEL=m.value; aiSave();
+    AIMODEL=m.value; aiSave(); if(!/:free$/.test(AIMODEL)) aiNoCreditMark(false);
     try{ var o=JSON.parse(localStorage.getItem('aiOut')||'{}')||{}; if(o[PROV+'|'+AIMODEL]){ delete o[PROV+'|'+AIMODEL]; localStorage.setItem('aiOut',JSON.stringify(o)); } }catch(e){}
     msg.textContent='「'+aiShort(AIMODEL)+'」로 바꿨다. 연결 확인으로 되는지 본다.';
     if(typeof ormFill==='function'){ var ms2=document.getElementById('ai-msearch'); ormFill(ms2?ms2.value:''); }
   });
   document.getElementById('ai-clear').addEventListener('click',function(){
     AIKEY=''; k.value=''; aiSave(); aiBar(); favAiBar(); aiSlots(); if(typeof pbBar==='function') pbBar(); if(typeof apply==='function') apply(); if(window.__reSlots) window.__reSlots(); if(typeof renderFavs==='function') renderFavs(); msg.textContent='지웠습니다.'; });
+  var afc=document.getElementById('ai-autofree');
+  if(afc){ afc.checked=aiAutoFree(); afc.addEventListener('change',function(){ try{ localStorage.setItem('orAutoFree',afc.checked?'1':'0'); }catch(e){} }); }
+  aiCreditUI();
   document.getElementById('ai-test').addEventListener('click',function(){
+    aiNoCreditMark(false);   // 연결 확인은 고른 모델 그대로 시험한다
     msg.textContent='확인 중… ('+(AIMODEL||'자동')+')';
     aiCall('한 단어로만 답한다.','연결 확인. "정상"이라고만 답하라.',function(t){
       msg.textContent=(t==='생각하는 중…')?t:('「'+AIMODEL+'」 → '+String(t).slice(0,160)); });
@@ -3623,7 +3677,7 @@ function bkRestore(text){
 var GD={cid:'349312731183-t2bc2v3cbr90jci7aa4f8gumre6fdcd2.apps.googleusercontent.com', scope:'https://www.googleapis.com/auth/drive.appdata', file:'manga-sync.json',
   token:null, exp:0, client:null, fileId:null, busy:false, timer:null, applying:false, pending:false};
 var GD_KEYS=['mangaFav','mangaFolders','folderMemo','pinoMemo','pinoTodo','arcForm','ideaText','userAdds'];
-var GD_AIKEYS=['orKey','orModel','webOn'];
+var GD_AIKEYS=['orKey','orModel','webOn','orAutoFree'];
 function gdKeysOn(){ try{ return localStorage.getItem('gdKeys')!=='0'; }catch(e){ return true; } }
 function gdKeyList(){ return gdKeysOn()?GD_KEYS.concat(GD_AIKEYS):GD_KEYS; }
 function gdIntent(){ try{ localStorage.setItem('gdIntent',String(Date.now())); }catch(e){} }

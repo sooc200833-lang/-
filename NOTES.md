@@ -92,3 +92,4 @@ arcForm, deviceId, folderMemo, gdBase, gdLast, gdLinked, ideaText, mangaDataVer,
 - 색인의 「✎ 내가 추가 (n)」 칩: 클리셰 색인 `mineonly`(행 11번 칸이 `추가|`로 시작), 소재 색인 `mmine`(`motifMine`). 개수는 `mineCount`가 갱신한다
 - 채팅 AI의 폴더 담기: `<<담기>>{"folder":"이름","items":[{"type":"클리셰","name":"사전 이름"}]}<<끝>>` → `putApply`(없는 폴더는 `foldMake`, 이미 별표면 폴더만 옮김, 사전에 없는 이름은 missing). 「되돌리기」는 `putUndo`(새로 만든 빈 폴더는 지움). 폴더 이야기가 나오면 `ctxFor`가 [즐겨찾기 폴더] 목록을 붙인다
 - 채팅 「참고」 선택(`ix-src`, localStorage `ixSrc`): 자동 / 내 말만(`only`) / 랜덤 구성기만(`draw`) / 폴더만(`f:이름`). 말로 「○○만」이라고 해도 `srcMode`가 잡는다. 모든 질문 앞에 `[참고 범위]` 한 줄을 붙여 싼 모델이 범위를 넘지 않게 한다. 자동에서 랜덤 구성기는 「구성기·뽑힌」을 말할 때만 붙는다(예전엔 「지금·이거」에도 붙어 문제였다). 등록·담기용 정보(`opsCtx`)는 범위와 상관없이 붙는다
+- 잔액 없음(402) → 무료 모델 자동 전환(`orAutoFree`, 기본 켬, 동기화됨). `orNoCredit`에 6시간 기억하고 그동안은 처음부터 `aiFreeList` 첫 모델로 부른다(웹 검색은 뺌). 무료끼리 최대 4개까지 갈아탐. 402가 「can only afford N」이면 같은 모델로 `max_tokens`를 N-50으로 줄여 한 번 더(`_cap`). 「연결 확인」·직접 모델 고르기·「충전했다」 버튼이 기억을 지운다
