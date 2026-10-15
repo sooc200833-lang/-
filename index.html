@@ -605,6 +605,12 @@ details.gdet[open] summary{margin-bottom:.5rem}
 .two{display:grid; grid-template-columns:1fr 1fr; gap:0 1.6rem}
 @media (max-width:700px){.two{grid-template-columns:1fr}}
 /* [[CSS:favpick]] */
+.fptag{display:inline-block; margin-left:.35rem; font-size:.7rem; color:var(--mark); white-space:nowrap; font-family:"IBM Plex Sans KR",sans-serif; font-weight:400}
+select.fpsel{font:inherit; font-size:.78rem; width:2.4rem; min-width:2.4rem; padding:.1rem 0; line-height:1.4; border:1px solid var(--rule-hard); background:var(--paper); color:var(--mark); cursor:pointer; align-self:center; text-align:center}
+.pbsec h4 select.fpsel{margin-left:.35rem; vertical-align:middle; font-weight:400}
+.fp-row .fp-n{color:var(--ink-3)}
+.fp-row label[hidden]{display:none}
+@media (max-width:520px){ .slot .btns:has(> select.fpsel){flex-wrap:wrap; justify-content:flex-end; max-width:5.6rem; row-gap:.25rem} }
 /* [[/CSS:favpick]] */
 /* [[CSS:cast]] */
 /* [[/CSS:cast]] */
@@ -2156,7 +2162,7 @@ details.gdet[open] summary{margin-bottom:.5rem}
 
 <section class="blk" id="favs">
   <h2 class="big">즐겨찾기</h2>
-  <p class="lede">색인에서 별표한 항목이 여기 모인다. 지금 구상 중인 작품 하나의 재료를 한 화면에서 본다. 저장은 이 브라우저에만 남는다.</p>
+  <p class="lede">색인에서 별표한 소재·클리셰·엔딩·캐릭터가 여기 모인다. 지금 구상 중인 작품 하나의 재료를 한 화면에서 본다. <a href="#shuffle">랜덤 구성기</a>와 <a href="#ideacomp">아이디어 구성기</a>는 「즐겨찾기에서 먼저 뽑기」를 켜 두면 여기 담긴 것에서 먼저 고른다. 저장은 이 브라우저에만 남는다.</p>
   <div class="shuf">
     <span class="shuflabel">폴더</span>
     <label>담는 곳 <select id="fav-cur"></select></label>
@@ -4304,6 +4310,10 @@ function ideaRec(box){
     return L.join('\n');
   }
   ideaRec.plan=function(){ return (tok===ideaRec.tok)?planText():''; };
+  ideaRec.put=function(sid, r, why){   // 즐겨찾기에서 직접 고른 것을 그 갈래의 구성안 자리에
+    if(tok!==ideaRec.tok) return false; if(sid==='*'){ SEC.forEach(function(x){ if(R[x.id]) paintSec(x); }); return true; } if(!r) return false; var sc=SEC.filter(function(x){ return x.id===sid; })[0]; if(!sc) return false;
+    var arr=(R[sid]||[]).filter(function(o){ return o.r[sc.col]!==r[sc.col]; }); arr.unshift({r:r, why:why||''}); R[sid]=arr.slice(0,Math.max(sc.n,1));
+    paintSec(sc); var bar=el('idr-bar'); if(bar) bar.hidden=false; return true; };
   function renderPlan(){
     var d=el('idr-plan'); if(!d) return;
     var rows=[['m','소재',0],['early','초반',0],['mid','중반',0],['late','후반',0],['e','엔딩',1]].map(function(x){ var o=(R[x[0]]||[])[0]; return o?'<li><b>'+x[1]+'</b> '+esc(o.r[x[2]])+' <span class="small">— '+esc(o.why)+'</span></li>':''; }).join('');
@@ -4313,8 +4323,9 @@ function ideaRec(box){
   }
   function paintSec(sc){
     var d=el('idr-'+sc.id); if(!d) return;
-    if(!R[sc.id] || !R[sc.id].length){ d.innerHTML='<h4>'+sc.title+'</h4><p class="small">연관어에 맞는 항목을 찾지 못했다.</p>'; return; }
-    d.innerHTML='<h4>'+sc.title+((SL[sc.id]||[]).length>sc.n?' <button class="chip" data-idr="'+sc.id+'" title="검색 결과의 다음 항목으로">↻</button>':'')+'</h4>'+R[sc.id].map(function(o,i2){ var k=sc.key(o.r), on=!!FAV[k];
+    var fpS=(typeof fpIdSel==='function')?fpIdSel(sc, posHas):'';
+    if(!R[sc.id] || !R[sc.id].length){ d.innerHTML='<h4>'+sc.title+fpS+'</h4><p class="small">연관어에 맞는 항목을 찾지 못했다.</p>'; return; }
+    d.innerHTML='<h4>'+sc.title+((SL[sc.id]||[]).length>sc.n?' <button class="chip" data-idr="'+sc.id+'" title="검색 결과의 다음 항목으로">↻</button>':'')+fpS+'</h4>'+R[sc.id].map(function(o,i2){ var k=sc.key(o.r), on=!!FAV[k];
       return '<div class="pbrow"><button class="fav" data-k="'+esc(k).replace(/"/g,'&quot;')+'" data-meta="아이디어 추천" aria-pressed="'+(on?'true':'false')+'">'+(on?'★':'☆')+'</button><div class="b"><b>'+esc(o.r[sc.col])+'</b> <span class="small">'+esc(sc.meta(o.r))+'</span><span class="w">'+esc(o.why)+'</span></div>'+
         (sc.id!=='ch'?(i2===0?'<span class="small inplan">구성안</span>':'<button class="chip" data-pick="'+sc.id+':'+i2+'">구성안에</button>'):'')+'</div>'; }).join('');
     renderPlan();
@@ -4328,7 +4339,8 @@ function ideaRec(box){
     var ranked=relRank(list, sc.kind, words, GL.indexOf(genre)>-1?genre:null, 1.5);
     if(ranked.length<sc.n){ var seen={}; ranked.forEach(function(o){ seen[o.r[sc.col]]=1; });
       for(var i=0;i<60 && ranked.length<sc.n+3;i++){ var r=list[Math.floor(Math.random()*list.length)]; if(r && !seen[r[sc.col]]){ seen[r[sc.col]]=1; ranked.push({r:r, s:0}); } } }
-    return ranked.slice(0,8);
+    ranked=ranked.slice(0,8);
+    return (typeof fpShort==='function')?fpShort(sc, ranked, words, posHas):ranked;
   }
   function finish(){
     if(tok!==ideaRec.tok) return;
@@ -4353,9 +4365,10 @@ function ideaRec(box){
     var ex=el('idr-extra'); if(ex) ex.innerHTML=extra.length?'<div class="pbsec"><h4>사전에 없는 제안</h4>'+extra.map(function(x){ return '<p class="small"><b>'+esc(x.name)+'</b> — '+esc(x.why||'')+'</p>'; }).join('')+'<p class="small">넣고 싶으면 채팅창에 「이거 사전에 넣어줘」라고 말한다.</p></div>':'';
     // 2) 연관어로 사전 검색 → 짧은 후보 목록
     SEC.forEach(function(sc){ SL[sc.id]=shortlist(sc); OFF[sc.id]=0; });
-    var txt=SEC.map(function(sc){ return '['+sc.id+' — '+sc.title+' 후보, '+sc.n+'개 고름]\n'+SL[sc.id].map(function(o,k){ var r=o.r; return (k+1)+'. '+r[sc.col]+' — '+String(sc.kind==='c'?r[8]:(sc.kind==='e'?r[2]:(sc.kind==='ch'?r[3]:r[1]))).slice(0,60); }).join('\n'); }).join('\n\n');
+    var txt=SEC.map(function(sc){ return '['+sc.id+' — '+sc.title+' 후보, '+sc.n+'개 고름]\n'+SL[sc.id].map(function(o,k){ var r=o.r; return (k+1)+'. '+(o.fp?'★ ':'')+r[sc.col]+' — '+String(sc.kind==='c'?r[8]:(sc.kind==='e'?r[2]:(sc.kind==='ch'?r[3]:r[1]))).slice(0,60); }).join('\n'); }).join('\n\n');
     return aiAsk('당신은 만화 기획 편집자다. 반드시 유효한 JSON만 출력한다.',
       '[작가가 그리고 싶은 만화]\n'+t+(summary?'\n[핵심] '+summary:'')+'\n\n'+txt+
+      (SEC.some(function(sc){ return (SL[sc.id]||[]).some(function(o){ return o.fp; }); })?'\n\n★는 작가가 즐겨찾기에 담아 둔 항목이다. 아이디어에 어긋나지 않으면 ★를 먼저 고른다.':'')+
       '\n\n묶음마다 적힌 개수만큼 고른다. 아이디어에 가장 맞고, 초반→중반→후반→엔딩이 이어지는 것을 고른다. 같은 항목을 두 묶음에 고르지 않는다. 이유는 짧게 한 문장.\n'+
       'JSON만: {"m":[{"pick":번호,"why":""}],"early":[...],"mid":[...],"late":[...],"e":[...],"ch":[...]}', 900)
     .then(function(r2){
@@ -4879,14 +4892,8 @@ function aiBar(){
 }
 function favAiBar(){
   var bar=document.getElementById('fav-ai-bar'); if(!bar) return;
-  if(!aiReady()){ bar.innerHTML='<span class="count">키를 넣으면 담아 둔 항목으로 연관짓기와 글쓰기를 할 수 있다. <a href="#ai">AI 연결</a></span>'; return; }
-  var c0=window.__cutTotal?window.__cutTotal():70;
-  bar.innerHTML='<button class="chip" id="fav-ai-rel">연관짓기</button><span class="wsep"></span>'+wfmtHTML('wff')+
-    '<label class="wcut">분량 <select id="fav-cut"><option value="20">20컷</option><option value="40">40컷</option><option value="70">70컷</option></select></label>'+
-    '<button class="chip" id="fav-ai-write">글쓰기</button>'+WCHAIN_BTN.replace('data-chain','id="fav-ai-chain" data-chain')+
-    '<span class="count">보고 있는 폴더의 항목으로</span>';
-  wfmtBind(bar,'wff');
-  var sel=document.getElementById('fav-cut'); sel.value=String(c0<=20?20:(c0<=40?40:70));
+  if(!aiReady()){ bar.innerHTML='<span class="count">키를 넣으면 담아 둔 항목으로 연관짓기를 할 수 있다. <a href="#ai">AI 연결</a></span>'; return; }
+  bar.innerHTML='<button class="chip" id="fav-ai-rel">연관짓기</button><span class="count">보고 있는 폴더의 항목으로</span>';
   function favSrc(){
     var vs=document.getElementById('fav-view'), vw=vs?vs.value:'*';
     var keys=Object.keys(FAV).filter(function(k){ return vw==='*' || (FAVDIR[k]||'기본')===vw; });
@@ -4903,17 +4910,6 @@ function favAiBar(){
       '\n\n이 항목들 사이의 연관을 찾는다. 어떤 항목이 어떤 항목의 원인·결과·대비가 될 수 있는지를 「A → B — 이유 한 문장」 형식으로 세 줄에서 여섯 줄. 서로 이어지기 어려운 항목은 이어지지 않는다고 쓰고 이유를 한 줄. 목록에 없는 항목이나 설정을 만들지 않는다.')
     .then(function(t){ aiResult(box,'연관짓기',t); });
   });
-  document.getElementById('fav-ai-write').addEventListener('click',function(){ favWrite(false); });
-  document.getElementById('fav-ai-chain').addEventListener('click',function(){ favWrite(true); });
-  wsRestore(box,'favChain');
-  function favWrite(chain){
-    var s=favSrc();
-    if(!s.keys.length && !ideaBlock('fav')){ box.innerHTML='<p class="small">이 폴더에 담긴 항목도, 아이디어도 없다.</p>'; return; }
-    var memo=(typeof fmGet==='function')?fmGet(s.vw==='*'?(CURFOLDER||'기본'):s.vw):'';
-    var src='[즐겨찾기 재료]\n'+s.text+(memo?'\n\n[폴더 메모]\n'+memo.slice(0,2500):''), cut=parseInt(sel.value,10)||70, fmt=chain?'plot':wfmtVal('wff');
-    var w=writePrompt(src, fmt, cut);
-    wsStart(box, '「'+(s.vw==='*'?'전체':s.vw)+'」 '+w.title, w, {fmt:fmt, cut:cut, ref:src, save:'favChain', chain:chain, from:'favs'});
-  }
 }
 
 // 색인 AI 창
@@ -5435,11 +5431,11 @@ function trBlock(kind){
   }
   function linkOn(){ var c=document.getElementById('sf-link'); return !c || c.checked; }
   window.__genreNow=function(){ return linkOn()?nowGenre():null; };
-  function pool(poss, label){
+  function pool(poss, label, noRec){   // noRec: 「무작위 추천」 장르로는 거르지 않는다 (즐겨찾기용)
     var g=gsel.value, stsel=document.getElementById('sf-st'), mode=stsel?stsel.value:'base';
     var ALLOW={base:['live','sat','req'],req:['req'],live:['live'],sat:['sat'],
                todo:['live','sat','req','todo'],all:['live','sat','req','todo','dead']}[mode]||['live','sat','req'];
-    var lock=(g==='rec')?curGenre:(g==='all'?null:g);
+    var lock=(g==='rec')?(noRec?null:curGenre):(g==='all'?null:g);
     var near=lock?(AFFINE[lock]||[]):[];
     var base=ROWS.filter(function(r){
       if(!r[3].split('|').some(function(p){return poss.indexOf(p)>-1;})) return false;
@@ -5464,8 +5460,9 @@ function trBlock(kind){
         if((picks[i][0]===a&&name===b)||(picks[i][0]===b&&name===a)) return true; } }
     return false;
   }
-  function draw(idx){
+  function draw(idx, noFav, reroll){
     var p=pool(SLOTS[idx][1], SLOTS[idx][0]); if(!p.length) return null;
+    if(!noFav && typeof fpRow==='function'){ var fv=fpRow('c', pool(SLOTS[idx][1], SLOTS[idx][0], true), function(c){ return !(reroll && picks[idx] && picks[idx][0]===c[0]) && !picks.some(function(x,i){return i!==idx&&x&&x[0]===c[0];}) && !banned(c[0],idx); }); if(fv) return fv; }
     for(var t=0;t<60;t++){
       var c=p[Math.floor(Math.random()*p.length)];
       if(picks.some(function(x,i){return i!==idx&&x&&x[0]===c[0];})) continue;
@@ -5565,10 +5562,10 @@ function trBlock(kind){
       html+='<div class="slot'+(smask[i]?' masked':'')+'"><div class="body">'+
         '<b><button class="fav" data-k="c|'+r[0]+'" aria-pressed="'+(FAV['c|'+r[0]]?'true':'false')+'">'+(FAV['c|'+r[0]]?'\u2605':'\u2606')+'</button>'+
         '<span class="czmask">? ? ?</span><span class="czreal">'+r[0]+'</span></b>'+
-        '<span class="czreal"><span class="m">'+r[1]+' · '+r[2]+' · '+r[6]+'</span>'+
+        '<span class="czreal"><span class="m">'+r[1]+' · '+r[2]+' · '+r[6]+(typeof fpTag==='function'?fpTag('c',r):'')+'</span>'+
         (where?'<span class="where">'+where+'</span>':'')+
         '<span class="t">'+r[8]+' '+r[9]+'</span>'+(aiNote[i]?'<span class="aiwhy">'+aiNote[i]+'</span>':'')+'</span></div>'+
-        '<span class="btns"><button class="lockbtn" data-l="'+i+'" aria-pressed="'+(slock[i]?'true':'false')+'" title="고정">\ud83d\udccc</button>'+
+        '<span class="btns">'+(typeof fpSel==='function'?fpSel('c',i):'')+'<button class="lockbtn" data-l="'+i+'" aria-pressed="'+(slock[i]?'true':'false')+'" title="고정">\ud83d\udccc</button>'+
         (aiReady()?'<button class="twbtn" data-twn="'+i+'">비틀기</button>':'')+'<button data-i="'+i+'" title="이 칸만 다시">\u21bb</button></span></div>';
     });
     if(cur!==null)html+='</div>';
@@ -5594,7 +5591,7 @@ function trBlock(kind){
       b.addEventListener('click',function(){ if(trBlock('one')) return; var i=+b.getAttribute('data-i');
         if(seedOn() && lastSeed){ var pre=buildCands([i], false, lastSeed, true); if(aiOn()) aiReview([i], false, false, pre); else fastPick([i], false, pre); return; }
         if(aiOn()){ aiReview([i], false, false); return; }
-        picks[i]=draw(i); aiNote[i]=''; smask[i]=false; render(); }); });
+        picks[i]=draw(i,false,true); aiNote[i]=''; smask[i]=false; render(); }); });
     [].slice.call(out.querySelectorAll('.lockbtn')).forEach(function(b){
       b.addEventListener('click',function(e){ e.stopPropagation(); var i=+b.getAttribute('data-l'); slock[i]=!slock[i]; render(); }); });
   }
@@ -5629,8 +5626,9 @@ function trBlock(kind){
   function candsFor(i){
     // 장르를 정했으면 후보 4개 중 최소 2개는 그 장르 고유 클리셰로 (공통 항목만 나오지 않게)
     var bag=[], save=picks[i], g=nowGenre();
-    for(var t=0;t<60 && bag.length<14;t++){ var c=draw(i); if(c && !bag.some(function(x){ return x[0]===c[0]; })) bag.push(c); }
+    for(var t=0;t<60 && bag.length<14;t++){ var c=draw(i,true); if(c && !bag.some(function(x){ return x[0]===c[0]; })) bag.push(c); }
     picks[i]=save;
+    if(typeof fpMix==='function' && fpOn()){ var fm=fpMix('c', pool(SLOTS[i][1], SLOTS[i][0], true).filter(function(r){ return !picks.some(function(x,k){ return k!==i&&x&&x[0]===r[0]; }) && !banned(r[0],i); }), null, AIK); if(fm.length){ bag.forEach(function(r){ if(fm.length<AIK && !fm.some(function(x){ return x[0]===r[0]; })) fm.push(r); }); return fm; } }
     if(!g || g==='서사 구조 (장르 공통)') return bag.slice(0,AIK);
     var own=bag.filter(function(r){ return r[1]===g; }), rest=bag.filter(function(r){ return r[1]!==g; });
     var out=own.slice(0,2); rest.concat(own.slice(2)).forEach(function(r){ if(out.length<AIK) out.push(r); });
@@ -5639,8 +5637,8 @@ function trBlock(kind){
   }
   function endCands(){
     var out=[], save=curEnd;
-    for(var t=0;t<30 && out.length<AIK;t++){ drawEnd(); if(curEnd && !out.some(function(x){ return x.name===curEnd.name; })) out.push(curEnd); }
-    curEnd=save; return out;
+    for(var t=0;t<30 && out.length<AIK;t++){ drawEnd(true); if(curEnd && !out.some(function(x){ return x.name===curEnd.name; })) out.push(curEnd); }
+    curEnd=save; return (typeof fpEndMix==='function')?fpEndMix(out, null, ''):out;
   }
   function plainEnd(e){ return String(e.name||'').replace(/<[^>]+>/g,''); }
   function aiReview(slotIdx, doEnd, withMotif, pre){
@@ -5723,7 +5721,9 @@ function trBlock(kind){
       rest.forEach(function(o){ if(out.length<AIK) out.push(o); });
       out.sort(function(a,b){ return b.s-a.s; });
       var rows=out.map(function(o){ CSC[o.r[0]]=o.s; return o.r; });
-      for(var t2=0;t2<30 && rows.length<AIK;t2++){ var c=draw(i); if(c && !other[c[0]] && !rows.some(function(x){ return x[0]===c[0]; })){ CSC[c[0]]=0; rows.push(c); } }
+      for(var t2=0;t2<30 && rows.length<AIK;t2++){ var c=draw(i,true); if(c && !other[c[0]] && !rows.some(function(x){ return x[0]===c[0]; })){ CSC[c[0]]=0; rows.push(c); } }
+      if(typeof fpMix==='function' && fpOn()){ var fm=fpMix('c', pool(SLOTS[i][1], SLOTS[i][0], true).filter(function(r){ return !other[r[0]] && !banned(r[0],i); }), words, AIK);
+        if(fm.length){ fm.forEach(function(r){ if(CSC[r[0]]===undefined) CSC[r[0]]=relScore(REL.c(r)[0], REL.c(r)[1], words); }); rows.forEach(function(r){ if(fm.length<AIK && !fm.some(function(x){ return x[0]===r[0]; })) fm.push(r); }); rows=fm; } }
       C[i]=rows;
     });
     if(doEnd){
@@ -5735,6 +5735,7 @@ function trBlock(kind){
         EC=eo.map(function(o){ CSC['e|'+o.r[1]]=o.s; return endObj(o.r); });
         if(EC.length<AIK){ endCands().forEach(function(e){ if(EC.length<AIK && !EC.some(function(x){ return x.name===e.name; })) EC.push(e); }); }
       } else EC=endCands();
+      if(typeof fpEndMix==='function') EC=fpEndMix(EC, words, reroll&&curEnd?curEnd.name:'');
     }
     return {C:C, EC:EC, seed:sd};
   }
@@ -5743,9 +5744,9 @@ function trBlock(kind){
     openI.forEach(function(i){ var cs=pre.C[i]||[]; var r=cs.filter(function(x){ return !used[x[0]]; })[0]||cs[0]; if(!r) return;
       picks[i]=r; used[r[0]]=1; smask[i]=false;
       var others=cs.filter(function(x){ return x!==r; }).map(function(x){ return x[0]; });
-      aiNote[i]=(CSC[r[0]]?'연관어로 찾음 (점수 '+CSC[r[0]]+')':'연관어에 맞는 게 적어 무작위')+(others.length?' <span class="cand">· 다른 후보: '+hEsc(others.join(' / '))+'</span>':''); });
+      aiNote[i]=(typeof fpHas==='function'&&fpHas('c',r)?'즐겨찾기에서'+(CSC[r[0]]?' (연관어 점수 '+CSC[r[0]]+')':''):(CSC[r[0]]?'연관어로 찾음 (점수 '+CSC[r[0]]+')':'연관어에 맞는 게 적어 무작위'))+(others.length?' <span class="cand">· 다른 후보: '+hEsc(others.join(' / '))+'</span>':''); });
     if(doEnd && pre.EC && pre.EC.length){ var e=pre.EC[0]; curEnd=e; emask=false;
-      var oe=pre.EC.slice(1).map(plainEnd); eNote=(CSC['e|'+e.name]?'연관어로 찾음 (점수 '+CSC['e|'+e.name]+')':'무작위')+(oe.length?' <span class="cand">· 다른 후보: '+hEsc(oe.join(' / '))+'</span>':''); }
+      var oe=pre.EC.slice(1).map(plainEnd); eNote=(typeof fpHasE==='function'&&fpHasE(e.name)?'즐겨찾기에서':(CSC['e|'+e.name]?'연관어로 찾음 (점수 '+CSC['e|'+e.name]+')':'무작위'))+(oe.length?' <span class="cand">· 다른 후보: '+hEsc(oe.join(' / '))+'</span>':''); }
     render(); renderEnd();
     aiStat('<b>빠른 모드</b> — '+seedLine(pre.seed)+' → 사전에서 연관어 점수가 가장 높은 것을 넣었다. <span class="small">↻는 다음 후보로. AI에게 고르게 하려면 「소재 먼저 → AI가 고름」.</span>');
   }
@@ -5878,7 +5879,8 @@ function trBlock(kind){
   function pickFrom(groups){
     return weighted(ENDINGS.filter(function(r){ return groups.indexOf(r[0])>-1; }));
   }
-  function drawEnd(){
+  function drawEnd(noFav, reroll){
+    if(!noFav && typeof fpEndPick==='function'){ var fe=fpEndPick(reroll&&curEnd?curEnd.name:''); if(fe){ curEnd=fe; return; } }
     if(serialOn()){
       var e=EPEND[Math.floor(Math.random()*EPEND.length)];
       curEnd={name:e, sub:'마지막 컷', note:'다음 화를 열게 만드는 자리. 여기서 정리하지 않는다.', html:e};
@@ -5910,10 +5912,10 @@ function trBlock(kind){
     box.innerHTML='<div class="slotgrp gold"><h4>'+(serialOn()?'마지막 컷':'엔딩')+'</h4><div class="slot'+(emask?' masked':'')+'"><div class="body">'+
       '<b><button class="fav" data-k="'+key+'" data-meta="'+curEnd.sub+' — '+curEnd.note+'">'+(on?'\u2605':'\u2606')+'</button>'+
       '<span class="czmask">? ? ?</span><span class="czreal">'+curEnd.html+'</span></b>'+
-      '<span class="czreal"><span class="m">'+curEnd.sub+'</span>'+
+      '<span class="czreal"><span class="m">'+curEnd.sub+(typeof fpTag==='function'?fpTag('e',curEnd.name):'')+'</span>'+
       '<span class="where">'+(cutTotal()-1)+'–'+cutTotal()+'번 컷 · 마지막 두 컷</span>'+
       '<span class="t">'+curEnd.note+'</span>'+(eNote?'<span class="aiwhy">'+eNote+'</span>':'')+'</span></div>'+
-      '<span class="btns"><button class="lockbtn" id="sf-endlock" aria-pressed="'+(elock?'true':'false')+'" title="고정">\ud83d\udccc</button>'+
+      '<span class="btns">'+(typeof fpSel==='function'?fpSel('e',0):'')+'<button class="lockbtn" id="sf-endlock" aria-pressed="'+(elock?'true':'false')+'" title="고정">\ud83d\udccc</button>'+
       '<button id="sf-endre" title="다시 뽑기">\u21bb</button></span></div></div>';
     var slot=box.querySelector('.slot');
     if(slot) slot.addEventListener('click',function(e){
@@ -5924,7 +5926,7 @@ function trBlock(kind){
     if(b) b.addEventListener('click',function(){ if(trBlock('one')) return;
       if(seedOn() && lastSeed){ var pre=buildCands([], true, lastSeed, true); if(aiOn()) aiReview([], true, false, pre); else fastPick([], true, pre); return; }
       if(aiOn()){ aiReview([], true, false); return; }
-      drawEnd(); eNote=''; emask=false; renderEnd(); });
+      drawEnd(false,true); eNote=''; emask=false; renderEnd(); });
     var lk=document.getElementById('sf-endlock');
     if(lk) lk.addEventListener('click',function(e){ e.stopPropagation(); elock=!elock; renderEnd(); });
   }
@@ -5976,6 +5978,16 @@ function trBlock(kind){
     });
   };
 
+  // 즐겨찾기 우선 뽑기(favpick)가 쓰는 창구
+  window.__sfFav={
+    fit:function(i){ return SLOTS[i]?pool(SLOTS[i][1], SLOTS[i][0], true):[]; },
+    label:function(i){ return SLOTS[i]?SLOTS[i][0]:''; },
+    put:function(i,r){ if(!SLOTS[i]||!r) return; picks[i]=r; slock[i]=true; smask[i]=false; aiNote[i]='★ 즐겨찾기에서 직접 골랐다';
+      SLOTS.forEach(function(_,j){ if(j!==i && picks[j] && picks[j][0]===r[0] && !slock[j]){ picks[j]=draw(j,false,true); aiNote[j]=''; } });   // 같은 클리셰가 두 칸에 있지 않게
+      render(); },
+    endPut:function(e){ if(!e) return; curEnd=e; elock=true; emask=false; eNote='★ 즐겨찾기에서 직접 골랐다'; renderEnd(); },
+    paint:function(){ render(); renderEnd(); }
+  };
   // 아이디어 추천을 구성기 칸에 넣고 고정한다
   window.__sfApply=function(o){
     var cnt=0;
@@ -6336,8 +6348,8 @@ var runChar=makeIndex({
       var key='cz|'+x.plain, on=!!FAV[key];
       return '<div class="czrow'+(imask[idx]?' masked':'')+'" data-r="'+idx+'"><button class="fav" data-k="'+String(key).replace(/"/g,'&quot;')+'" data-meta="'+String(x.sub||'').replace(/<[^>]+>/g,'').replace(/"/g,'&quot;')+'" aria-pressed="'+(on?'true':'false')+'">'+(on?'\u2605':'\u2606')+'</button>'+
         '<span class="czline"><span class="czmask">? ? ?</span>'+
-        '<span class="czreal">'+x.deco+'<span class="czsub">'+x.sub+'</span></span></span>'+
-        '<span class="btns"><button class="lockbtn" data-l="'+idx+'" aria-pressed="'+(ilock[idx]?'true':'false')+'" title="고정">\ud83d\udccc</button>'+
+        '<span class="czreal">'+x.deco+'<span class="czsub">'+x.sub+(typeof fpTag==='function'?fpTag('cz',x.plain):'')+'</span></span></span>'+
+        '<span class="btns">'+(typeof fpSel==='function'?fpSel('cz',idx):'')+'<button class="lockbtn" data-l="'+idx+'" aria-pressed="'+(ilock[idx]?'true':'false')+'" title="고정">\ud83d\udccc</button>'+
         '<button class="czre" data-i="'+idx+'" title="이것만 다시">\u21bb</button></span></div>';
     }).join('');
     out.style.display='block';
@@ -6353,7 +6365,7 @@ var runChar=makeIndex({
         var idx=+b.getAttribute('data-i');
         if(trBlock('one')) return;
         if(lvRaw()===7){ aiFill([idx]); return; }
-        items[idx]=one(lvl(), parseInt(tsel.value,10)); imask[idx]=false; paint();
+        items[idx]=(typeof fpCzOne==='function'&&fpCzOne(items, lvRaw(), parseInt(tsel.value,10)))||one(lvl(), parseInt(tsel.value,10)); imask[idx]=false; paint();
       });
     });
     [].slice.call(out.querySelectorAll('.lockbtn')).forEach(function(b){
@@ -6376,7 +6388,7 @@ var runChar=makeIndex({
       var L=LEVELS[Math.floor(Math.random()*LEVELS.length)], x=one(L,-1);
       if(x && x.plain && x.plain!=='(없음)' && !out.some(function(y){ return y.plain===x.plain; })) out.push(x);
     }
-    return out;
+    return (typeof fpCzMix==='function')?fpCzMix(out, items):out;
   }
   function waitItem(n){ return {deco:'<em>AI가 후보 '+n+'개를 검토하는 중…</em>', sub:'', plain:'', wait:true}; }
   function putPicks(idxs, cands, arr, err){
@@ -6438,6 +6450,8 @@ var runChar=makeIndex({
     paint();
   };
   window.__czItems=function(){ return items.map(function(x){ return {plain:(x&&!x.wait&&(x.text||x.plain))||''}; }); };
+  window.__czFav={ put:function(idx,x){ if(!x) return; if(onbox && !onbox.checked){ onbox.checked=true; sync(); } aiTok++; while(items.length<=idx){ items.push(null); imask.push(false); ilock.push(false); }
+      items[idx]=x; imask[idx]=false; ilock[idx]=true; paint(); }, paint:function(){ if(out.style.display!=='none') paint(); } };
   window.__czSet=function(list){
     if(onbox && !onbox.checked){ onbox.checked=true; sync(); }
     aiTok++;
@@ -6463,7 +6477,7 @@ var runChar=makeIndex({
     items=[]; imask=[]; ilock=[];
     for(var k=0;k<n;k++){
       if(oldLock[k] && oldItems[k]){ items.push(oldItems[k]); imask.push(oldMask[k]); ilock.push(true); }
-      else { items.push(one(lvl(), (lvRaw()===-1?-1:i))); imask.push(maskOn()); ilock.push(false); }
+      else { items.push((typeof fpCzOne==='function'&&fpCzOne(items.concat(oldItems.filter(function(x,q){ return oldLock[q]; })), lvRaw(), i))||one(lvl(), (lvRaw()===-1?-1:i))); imask.push(maskOn()); ilock.push(false); }
     }
     paint();
   }
@@ -6700,6 +6714,191 @@ var runChar=makeIndex({
 })();
 // ===== 모듈 자리: 각 기능은 자기 표시 안에만 코드를 넣는다 =====
 // [[MOD:favpick]] 즐겨찾기 우선 뽑기
+// 설정 favPick {on, folder}: folder는 '*' 전체 · '.' 지금 폴더(담는 곳) · 폴더 이름. 기본은 켬·전체 (담긴 것이 없으면 아무것도 바뀌지 않는다)
+// 뽑는 쪽(랜덤 구성기 draw·candsFor·buildCands·drawEnd·endCands·czCands, 아이디어 구성기 shortlist)은 typeof로 이 함수들을 찾아 부른다
+// 시작할 때 구성기가 이 줄보다 먼저 부르므로 값은 함수 안에서 늦게 만든다
+var FPRAW=null, FPC=null, FPMAP=FPMAP||{}, FPCZR=FPCZR||{t:0, used:{}};
+function fpCfg(){
+  var raw=null; try{ raw=localStorage.getItem('favPick'); }catch(e){}
+  if(FPC && raw===FPRAW) return FPC;
+  var o=null; try{ o=JSON.parse(raw||'null'); }catch(e){}
+  if(!o || typeof o!=='object') o={};
+  FPRAW=raw; FPC={on:o.on!==false, folder:(typeof o.folder==='string' && o.folder)?o.folder:'*'};
+  return FPC;
+}
+function fpCfgSave(ch){ var c=fpCfg(), n={on:c.on, folder:c.folder}; for(var k in ch) n[k]=ch[k]; keepSave('favPick', n); FPC=null; }
+function fpOn(){ return fpCfg().on; }
+function fpFolder(){ var f=fpCfg().folder; if(f==='.') return CURFOLDER||'기본'; if(f==='*' || FOLDERS.indexOf(f)<0) return '*'; return f; }
+function fpIs(key){ if(!FAV[key]) return false; var f=fpFolder(); return f==='*' || (FAVDIR[key]||'기본')===f; }
+function fpKeyOf(kind, r){ return kind==='c'?'c|'+r[0]:(kind==='e'?'e|'+r[1]:(kind==='ch'?'ch|'+r[2]:'m|'+r[0])); }
+function fpHas(kind, r){ if(!r || !fpOn()) return false; if(kind==='m') return fpIs('m|'+r[0]) || fpIs('cz|'+r[0]); return fpIs(fpKeyOf(kind, r)); }
+function fpHasE(name){ return fpOn() && fpIs('e|'+name); }
+function fpMap(kind){   // 이름 → 사전 행 (사전이 늘면 다시 만든다)
+  if(!FPMAP) FPMAP={};
+  var src=kind==='c'?ROWS:(kind==='e'?ENDINGS:(kind==='ch'?CHARS:MOTIFDATA)), col=kind==='e'?1:(kind==='ch'?2:0), m=FPMAP[kind];
+  if(!m || m.len!==src.length){ m={len:src.length, map:{}}; src.forEach(function(r){ if(!m.map[r[col]]) m.map[r[col]]=r; }); FPMAP[kind]=m; }
+  return m.map;
+}
+function fpCzNice(k){ var p=k.slice(3), mt=String(FAVMETA[k]||''); return /^4슬롯 · /.test(mt)?mt.slice(5):p; }
+function fpRowsOf(kind){   // 폴더 안 즐겨찾기를 사전 행으로 (켜고 끄기와 상관없이)
+  var out=[], seen={};
+  if(kind==='m'){ var mm=fpMap('m');
+    Object.keys(FAV).forEach(function(k){ var t=k.split('|')[0]; if((t!=='m' && t!=='cz') || !fpIs(k)) return; var nm=k.slice(t.length+1); if(!nm || seen[nm]) return; seen[nm]=1;
+      out.push(mm[nm] || [nm, '즐겨찾기 소재', '', '', '', fpCzNice(k)]); });
+    return out; }
+  var map=fpMap(kind), pre=kind+'|';
+  Object.keys(FAV).forEach(function(k){ if(k.indexOf(pre)!==0 || !fpIs(k)) return; var r=map[k.slice(pre.length)]; if(r && !seen[k]){ seen[k]=1; out.push(r); } });
+  return out;
+}
+function fpShuf(a){ a=a.slice(); for(var i=a.length-1;i>0;i--){ var j=Math.floor(Math.random()*(i+1)), t=a[i]; a[i]=a[j]; a[j]=t; } return a; }
+// 칸 하나: 맞는 즐겨찾기 중 무작위 하나 (없으면 null → 원래 방식)
+function fpRow(kind, eligible, ok){
+  if(!fpOn()) return null;
+  var f=eligible.filter(function(r){ return fpHas(kind, r) && (!ok || ok(r)); });
+  return f.length?f[Math.floor(Math.random()*f.length)]:null;
+}
+// 후보 묶음: 맞는 즐겨찾기를 먼저 (연관어가 있으면 점수 순) — 최대 n개, 나머지는 부르는 쪽이 원래 후보로 채운다
+function fpMix(kind, eligible, words, n){
+  if(!fpOn()) return [];
+  var f=fpShuf(eligible.filter(function(r){ return fpHas(kind, r); }));
+  if(words && words.length && REL[kind]){ var sc=function(r){ var t=REL[kind](r); return relScore(t[0], t[1], words); };
+    f=f.map(function(r){ return {r:r, s:sc(r)}; }).sort(function(a,b){ return b.s-a.s; }).map(function(o){ return o.r; }); }
+  return f.slice(0, n||4);
+}
+// 엔딩: 지금 엔딩 방식에 맞는 즐겨찾기 (단일 → 엔딩 색인, 난해한 → 난해한 엔딩, 연재 → 마지막 컷)
+function fpEndList(forPick){
+  var es=document.getElementById('sf-elv'), L=es?parseInt(es.value,10):0, ser=window.__serialOn && window.__serialOn(), out=[];
+  if(ser){ EPEND.forEach(function(e){ if(fpIs('e|'+e)) out.push({name:e, sub:'마지막 컷', note:'다음 화를 열게 만드는 자리. 여기서 정리하지 않는다.', html:e}); }); return out; }
+  if(L<0) return out;
+  if(L===1){ WEIRD.forEach(function(w){ if(fpIs('e|'+w[0])) out.push({name:w[0], sub:'난해한 엔딩 · '+w[3], note:w[1]+' — '+w[2], html:w[0]}); }); return out; }
+  if(L===2 && !forPick) return out;   // 두 개 조합은 그대로 뽑는다 (직접 고르기만 된다)
+  return fpRowsOf('e').map(function(r){ return {name:r[1], sub:r[0]+(r[3]?' · '+r[3]+(r[4]?' ('+r[4]+')':''):''), note:r[2]+' — '+r[5], html:r[1], _r:r}; });
+}
+function fpEndPick(excl){
+  if(!fpOn()) return null;
+  var f=fpEndList(false).filter(function(e){ return e.name!==excl; });
+  return f.length?f[Math.floor(Math.random()*f.length)]:null;
+}
+function fpEndMix(list, words, excl){
+  list=list||[]; if(!fpOn()) return list;
+  var f=fpShuf(fpEndList(false).filter(function(e){ return e.name!==excl; }));
+  if(!f.length) return list;
+  if(words && words.length) f=f.map(function(e){ var t=e._r?REL.e(e._r):[e.name, e.note]; return {e:e, s:relScore(t[0], t[1], words)}; }).sort(function(a,b){ return b.s-a.s; }).map(function(o){ return o.e; });
+  var out=f.slice(0,4); list.forEach(function(e){ if(out.length<4 && !out.some(function(x){ return x.name===e.name; })) out.push(e); });
+  return out;
+}
+// 소재 칸: 소재 색인 별표(m|)와 구성기에서 별표한 소재(cz|)
+function fpCzList(){
+  return fpRowsOf('m').map(function(r){
+    if(r[1]==='즐겨찾기 소재' && r.length>5){ var meta=String(FAVMETA['cz|'+r[0]]||'').replace(/<[^>]+>/g,'');
+      return {deco:'<em>“'+wsEsc(r[5])+'”</em>', sub:wsEsc(meta||'즐겨찾기 소재'), plain:r[0], text:r[5]}; }
+    return {deco:'<em>“'+wsEsc(r[0])+'”</em>', sub:wsEsc(r[1]+(r[3]?' · '+r[3]+(r[2]?' ('+r[2]+')':''):'')), plain:r[0], text:r[0]};
+  });
+}
+function fpTaken(items){ var t={}; (items||[]).forEach(function(x){ if(x && !x.wait && x.plain) t[x.plain]=1; }); return t; }
+function fpCzMix(out, items){
+  if(!fpOn()) return out;
+  var tk=fpTaken(items), f=fpCzList().filter(function(x){ return !tk[x.plain]; });
+  if(!f.length) return out;
+  if(!FPCZR) FPCZR={t:0, used:{}};
+  var now=Date.now(); if(now-FPCZR.t>200) FPCZR.used={}; FPCZR.t=now;   // 같은 뽑기의 다른 소재 칸과 첫 후보가 겹치지 않게
+  f=fpShuf(f); f=f.filter(function(x){ return !FPCZR.used[x.plain]; }).concat(f.filter(function(x){ return FPCZR.used[x.plain]; }));
+  var res=f.slice(0,4); FPCZR.used[res[0].plain]=1;
+  out.forEach(function(x){ if(res.length<4 && !res.some(function(y){ return y.plain===x.plain; })) res.push(x); });
+  return res;
+}
+function fpCzOne(items, lv, tval){
+  if(!fpOn()) return null;
+  if(lv!==-1 && lv!==7 && !isNaN(tval) && tval>=0) return null;   // 틀·갈래를 직접 골랐으면 그대로 따른다
+  var tk=fpTaken(items), f=fpCzList().filter(function(x){ return !tk[x.plain]; });
+  if(!f.length) return null;
+  var x=f[Math.floor(Math.random()*f.length)];
+  return {deco:x.deco, sub:x.sub, plain:x.plain, text:x.text};
+}
+// 아이디어 구성기: 갈래 후보 목록 앞에 맞는 즐겨찾기 (최대 6개, AI에게는 ★로 알린다)
+function fpShort(sc, ranked, words, posHas){
+  if(!fpOn()) return ranked;
+  var f=fpRowsOf(sc.kind);
+  if(sc.kind==='c') f=f.filter(function(r){ return r[4]!=='dead' && posHas(r, sc.pos); });
+  if(!f.length) return ranked;
+  var fr=relRank(fpShuf(f), sc.kind, words, null, -1).slice(0,6).map(function(o){ return {r:o.r, s:o.s, fp:true}; });
+  ranked.forEach(function(o){ if(!fr.some(function(x){ return x.r[sc.col]===o.r[sc.col]; })) fr.push(o); });
+  return fr.slice(0,8);
+}
+// ----- 화면 -----
+function fpTag(kind, x){
+  if(!fpOn() || !x) return '';
+  var on = kind==='c'?fpHas('c',x):(kind==='e'?fpHasE(x):(fpIs('cz|'+x)||fpIs('m|'+x)));
+  return on?' <span class="fptag">★ 즐겨찾기</span>':'';
+}
+function fpOpts(list, fit, label){
+  var a=[], b=[];
+  list.forEach(function(o){ (fit(o)?a:b).push('<option value="'+wsEsc(o.v)+'">'+wsEsc(o.t)+'</option>'); });
+  if(!a.length && !b.length) return '';
+  return '<option value="">★</option>'+(a.length?'<optgroup label="'+label+'">'+a.join('')+'</optgroup>':'')+(b.length?'<optgroup label="다른 자리">'+b.join('')+'</optgroup>':'');
+}
+function fpSel(kind, i){
+  if(!fpOn()) return '';
+  var h='';
+  if(kind==='c'){
+    var fit={}; if(window.__sfFav) window.__sfFav.fit(i).forEach(function(r){ fit[r[0]]=1; });
+    h=fpOpts(fpRowsOf('c').map(function(r){ return {v:r[0], t:r[0]+(fit[r[0]]?'':' · '+String(r[3]).replace(/\|/g,'·')), f:fit[r[0]]}; }), function(o){ return o.f; }, '이 칸에 맞는 것');
+  } else if(kind==='e'){
+    h=fpOpts(fpEndList(true).map(function(e){ return {v:e.name, t:e.name}; }), function(){ return true; }, '엔딩');
+  } else if(kind==='cz'){
+    h=fpOpts(fpCzList().map(function(x){ return {v:x.plain, t:x.text}; }), function(){ return true; }, '소재');
+  }
+  return h?'<select class="fpsel" data-fk="'+kind+'" data-fi="'+i+'" title="즐겨찾기에서 직접 고른다 (고정된다)" aria-label="즐겨찾기에서 고르기">'+h+'</select>':'';
+}
+function fpIdSel(sc, posHas){
+  if(!fpOn()) return '';
+  var h=fpOpts(fpRowsOf(sc.kind).map(function(r){ var ok=sc.kind!=='c' || (r[4]!=='dead' && posHas(r, sc.pos));
+      return {v:r[sc.col], t:(sc.kind==='m'&&r.length>5?r[5]:r[sc.col])+(ok?'':' · '+String(r[3]).replace(/\|/g,'·')), f:ok}; }),
+    function(o){ return o.f; }, sc.kind==='c'?'이 자리에 맞는 것':'즐겨찾기');
+  return h?' <select class="fpsel" data-sid="'+sc.id+'" data-kind="'+sc.kind+'" title="즐겨찾기에서 골라 구성안에 넣는다" aria-label="즐겨찾기에서 구성안에">'+h+'</select>':'';
+}
+function fpCount(){ var n=0; Object.keys(FAV).forEach(function(k){ var t=k.split('|')[0]; if(/^(c|m|cz|e|ch)$/.test(t) && fpIs(k)) n++; }); return n; }
+function fpUI(){
+  var c=fpCfg(), f=fpFolder(), sel=(c.folder==='.')?'.':f;
+  var opts='<option value="*">전체 폴더</option><option value=".">지금 폴더 ('+wsEsc(CURFOLDER||'기본')+')</option>'+FOLDERS.map(function(x){ return '<option value="'+wsEsc(x)+'">'+wsEsc(x)+'</option>'; }).join('');
+  var n=fpCount(), msg=!c.on?'':(n?n+'개에서 먼저 뽑는다 · 칸의 ★로 직접 고른다':'이 폴더에 담긴 것이 없어 늘 하던 대로 뽑는다');
+  var inner='<label title="켜면 즐겨찾기에 담긴 소재·클리셰·엔딩·캐릭터에서 먼저 뽑고, 모자라면 나머지에서 채운다"><input type="checkbox" class="fp-on"'+(c.on?' checked':'')+'> 즐겨찾기에서 먼저 뽑기</label>'+
+    '<label'+(c.on?'':' hidden')+'>폴더 <select class="fp-folder">'+opts+'</select></label><span class="count fp-n">'+wsEsc(msg)+'</span>';
+  var sf=document.getElementById('fp-sf');
+  if(!sf){ var tp=document.getElementById('tr-panel'); if(tp){ sf=document.createElement('div'); sf.className='shuf fp-row'; sf.id='fp-sf'; tp.parentNode.insertBefore(sf, tp); } }
+  if(sf) sf.innerHTML='<span class="shuflabel">즐겨찾기</span>'+inner;
+  var ib=document.getElementById('fp-id');
+  if(!ib){ var rb=document.getElementById('id-rec'), fb=rb&&rb.closest('.filterbar'); if(fb){ ib=document.createElement('div'); ib.className='filterbar fp-row'; ib.id='fp-id'; fb.parentNode.insertBefore(ib, fb.nextSibling); } }
+  if(ib) ib.innerHTML=inner;
+  [].slice.call(document.querySelectorAll('.fp-folder')).forEach(function(s){ s.value=sel; });
+}
+function fpSig(){ var c=fpCfg(); return c.on+'|'+fpFolder()+'|'+Object.keys(FAV).filter(fpIs).join(','); }
+var FPSIG=null;
+function fpRefresh(){
+  fpUI(); FPSIG=fpSig();
+  try{ if(window.__sfFav) window.__sfFav.paint(); }catch(e){}
+  try{ if(window.__czFav) window.__czFav.paint(); }catch(e){}
+  try{ if(ideaRec.put) ideaRec.put('*'); }catch(e){}
+}
+document.addEventListener('change', function(ev){
+  var t=ev.target; if(!t || !t.classList) return;
+  if(t.classList.contains('fp-on')){ fpCfgSave({on:!!t.checked}); fpRefresh(); return; }
+  if(t.classList.contains('fp-folder')){ fpCfgSave({folder:t.value}); fpRefresh(); return; }
+  if(!t.classList.contains('fpsel') || !t.value) return;
+  var v=t.value; t.value='';
+  var sid=t.getAttribute('data-sid');
+  if(sid){ var kind=t.getAttribute('data-kind'), r=null;
+    if(kind==='m') r=fpRowsOf('m').filter(function(x){ return x[0]===v; })[0]; else r=fpMap(kind)[v];
+    if(r && ideaRec.put) ideaRec.put(sid, r, '★ 즐겨찾기에서 직접 골랐다'); return; }
+  var fk=t.getAttribute('data-fk'), fi=+t.getAttribute('data-fi');
+  if(fk==='c' && window.__sfFav) window.__sfFav.put(fi, fpMap('c')[v]);
+  else if(fk==='e' && window.__sfFav) window.__sfFav.endPut(fpEndList(true).filter(function(e){ return e.name===v; })[0]);
+  else if(fk==='cz' && window.__czFav){ var x=fpCzList().filter(function(y){ return y.plain===v; })[0];
+    if(x) window.__czFav.put(fi, {deco:x.deco, sub:x.sub+'<span class="czwhy"> · ★ 즐겨찾기에서 직접 골랐다</span>', plain:x.plain, text:x.text}); }
+});
+// 페이지를 열 때: 즐겨찾기·설정이 바뀌었을 때만 칸을 다시 그린다 (열어 둔 비틀기 결과를 지우지 않게)
+['shuffle','ideacomp'].forEach(function(id){ var prev=window.PAGE_ON[id]; window.PAGE_ON[id]=function(){ if(prev) try{ prev(); }catch(e){} if(fpSig()!==FPSIG) fpRefresh(); else fpUI(); }; });
+fpUI(); FPSIG=fpSig();
 // [[/MOD:favpick]]
 // [[MOD:cast]] 등장인물
 // [[/MOD:cast]]
