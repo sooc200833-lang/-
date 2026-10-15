@@ -484,6 +484,14 @@ textarea#pb-text{width:100%; font:inherit; font-size:.92rem; padding:.6rem .7rem
 .gen-h .chip, .gen-top .chip{font-size:.74rem; padding:.1rem .45rem}
 .gen-b{white-space:pre-wrap; font-size:.9rem; line-height:1.75}
 .gen-b.busy{color:var(--ink-3)}
+.wstage .gen-h{flex-wrap:wrap}
+.wstage .wconv{display:inline-flex; gap:.3rem; align-items:center; font-weight:400; font-size:.78rem; color:var(--ink-3); margin-left:auto}
+.wstage .wconv .chip.next{border-color:var(--mark); color:var(--mark)}
+.wstage + .wstage{margin-top:0}
+.wstage + .wstage::before{content:"↓"; display:block; text-align:center; color:var(--ink-3); margin:-.45rem 0 .2rem; font-size:.8rem}
+textarea.wedit{display:block; width:100%; box-sizing:border-box; border:1px dashed var(--rule-hard); background:transparent; color:inherit; font:inherit; font-size:.9rem; line-height:1.75; padding:.35rem .45rem; resize:vertical; min-height:6em}
+textarea.wedit:focus{outline:none; border-style:solid}
+.wstage .whint{font-size:.74rem; color:var(--ink-3); margin-top:.2rem}
 #ai-out{margin:.4rem 0 1rem; font-size:.9rem; line-height:1.7; white-space:pre-wrap}
 #ai-out:empty{display:none}
 #ai-out.busy{color:var(--ink-3)}
@@ -4353,19 +4361,22 @@ function ideaWriteBar(){
   if(!aiReady()){ bar.innerHTML='<span class="count">AI 연결에서 키를 넣으면 쓸 수 있다. <a href="#ai">AI 연결</a></span>'; return; }
   var c0=window.__cutTotal?window.__cutTotal():70;
   bar.innerHTML=wfmtHTML('wfi')+'<label class="wcut">분량 <select id="idw-cut"><option value="20">20컷</option><option value="40">40컷</option><option value="70">70컷</option><option value="100">100컷</option></select></label>'+
-    '<button class="chip" id="idw-go">글쓰기</button><span class="count" id="idw-src"></span>';
+    '<button class="chip" id="idw-go">글쓰기</button>'+WCHAIN_BTN.replace('data-chain','id="idw-chain" data-chain')+'<span class="count" id="idw-src"></span>';
   wfmtBind(bar,'wfi');
   var sel=document.getElementById('idw-cut'); sel.value=String(c0<=20?20:(c0<=40?40:(c0<=70?70:100)));
-  document.getElementById('idw-go').addEventListener('click',function(){
+  wsRestore(document.getElementById('idw-out'),'idwChain');
+  document.getElementById('idw-go').addEventListener('click',function(){ run(false); });
+  document.getElementById('idw-chain').addEventListener('click',function(){ run(true); });
+  function run(chain){
     var out=document.getElementById('idw-out'), ta=document.getElementById('id-text'), idea=(ta&&ta.value||'').trim();
     var plan=(ideaRec.plan&&ideaRec.plan())||'';
     if(!idea && !plan){ out.innerHTML='<p class="small">아이디어를 먼저 적는다.</p>'; return; }
     var src=(plan?'[구성안]\n'+plan+'\n\n':'')+(idea?'[작가 아이디어 — 최우선으로 반영한다]\n'+idea:'');
-    var w=writePrompt(src, wfmtVal('wfi'), parseInt(sel.value,10)||70);
+    var cut=parseInt(sel.value,10)||70, fmt=chain?'plot':wfmtVal('wfi');
+    var w=writePrompt(src, fmt, cut);
     var lab=document.getElementById('idw-src'); if(lab) lab.textContent=plan?'구성안 + 아이디어로':'아이디어만으로';
-    aiBusy(out, w.title);
-    aiAsk(WSYS, w.prompt, w.maxTok).then(function(t){ aiResult(out, w.title+(plan?' — 구성안':' — 아이디어'), t); });
-  });
+    wsStart(out, w.title+(plan?' — 구성안':' — 아이디어'), w, {fmt:fmt, cut:cut, ref:src, save:'idwChain', chain:chain});
+  }
 }
 
 // ----- 작품 분석 -----
@@ -4673,26 +4684,126 @@ function wfmtBind(root,name){
   });
 }
 function wfmtVal(name){ var r=document.querySelector('input[name="'+name+'"]:checked'); return r?r.value:wfmtGet(); }
+function cutsRule(cut, tag){
+  var n=cut<=40?16:24;
+  var how= cut<=20 ? '20컷을 1번부터 20번까지 빠짐없이 적는다.' : '핵심 컷 '+n+'개를 골라 적는다. 번호는 전체 '+cut+'컷 안에서의 번호로 적는다.';
+  return {text:'컷별 콘티로 쓴다. '+how+' 각 컷은 「번호. 화면 묘사 — 대사」 한 줄이다. 대사가 없으면 「—」 뒤를 비운다. 대사는 한 컷에 한 문장까지. 대사로 설명할 것을 화면으로 바꿀 수 있으면 화면으로 처리한다. 첫 컷은 설명 없이 상황 한가운데에서 시작하고, 마지막 컷은 다음이 궁금하게 끝낸다.'+
+    (tag?' 클리셰가 쓰인 컷에는 줄 끝에 「클리셰 이름」을 붙인다.':''), maxTok: cut<=20?1700:2600};
+}
+function novelRule(cut){
+  var len= cut<=20?'600~900자':(cut<=40?'1200~1600자':'2000~2600자');
+  return {text:'웹소설 문체로 한 화 본문을 쓴다. 분량은 '+len+'. 3인칭 시점, 짧은 문단, 대사는 큰따옴표. 감정은 설명하지 않고 행동과 대사로 보여 준다. 첫 문장은 상황 한가운데에서 시작한다. 마지막 문단은 다음 화가 궁금하게 끊는다. 소제목·요약·작가 후기 없이 본문만 쓴다.',
+    maxTok: cut<=20?1800:(cut<=40?2800:4200)};
+}
 function writePrompt(src, fmt, cut){
   if(fmt==='plot') return {prompt:plotPrompt(src,cut), maxTok:1200, title:'줄거리'};
   var head=src+'\n\n[분량] '+cut+'컷\n\n';
   var common='재료의 초반·중반·후반 클리셰를 순서대로 모두 쓰고, 앞 사건이 원인이 되어 다음 사건이 일어나게 잇는다. 우연으로 넘어가지 않는다. 재료에 엔딩이 있으면 그 엔딩으로 닫는다. 재료에 없는 설정을 새로 만들지 않는다. 작가 아이디어가 있으면 최우선으로 따른다. ';
-  if(fmt==='cuts'){
-    var n=cut<=40?16:24;
-    var how= cut<=20 ? '20컷을 1번부터 20번까지 빠짐없이 적는다.' : '핵심 컷 '+n+'개를 골라 적는다. 번호는 전체 '+cut+'컷 안에서의 번호로 적는다.';
-    return {prompt:head+common+'\n\n컷별 콘티로 쓴다. '+how+' 각 컷은 「번호. 화면 묘사 — 대사」 한 줄이다. 대사가 없으면 「—」 뒤를 비운다. 대사는 한 컷에 한 문장까지. 대사로 설명할 것을 화면으로 바꿀 수 있으면 화면으로 처리한다. 첫 컷은 설명 없이 상황 한가운데에서 시작하고, 마지막 컷은 다음이 궁금하게 끝낸다. 클리셰가 쓰인 컷에는 줄 끝에 「클리셰 이름」을 붙인다.',
-            maxTok: cut<=20?1700:2600, title:'컷별 콘티'};
-  }
-  var len= cut<=20?'600~900자':(cut<=40?'1200~1600자':'2000~2600자');
-  return {prompt:head+common+'\n\n웹소설 문체로 한 화 본문을 쓴다. 분량은 '+len+'. 3인칭 시점, 짧은 문단, 대사는 큰따옴표. 감정은 설명하지 않고 행동과 대사로 보여 준다. 첫 문장은 상황 한가운데에서 시작한다. 마지막 문단은 다음 화가 궁금하게 끊는다. 소제목·요약·작가 후기 없이 본문만 쓴다.',
-          maxTok: cut<=20?1800:(cut<=40?2800:4200), title:'웹소설'};
+  if(fmt==='cuts'){ var c=cutsRule(cut,true); return {prompt:head+common+'\n\n'+c.text, maxTok:c.maxTok, title:'컷별 콘티'}; }
+  var r=novelRule(cut);
+  return {prompt:head+common+'\n\n'+r.text, maxTok:r.maxTok, title:'웹소설'};
 }
+// ----- 써진 글 고치기 · 다른 형식으로 바꾸기 (줄거리 → 웹소설 → 컷별) -----
+var WNAME={plot:'줄거리', novel:'웹소설', cuts:'컷별 콘티'};
+var WOBJ={plot:'줄거리를', novel:'웹소설을', cuts:'컷별 콘티를'};
+var WNEXT={plot:['novel','cuts'], novel:['cuts','plot'], cuts:['novel','plot']};
+function wsEsc(t){ return String(t==null?'':t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function convPrompt(text, from, to, cut, ref){
+  var head='[원본 — '+WNAME[from]+']\n'+text.trim()+'\n\n'+
+    (ref?'[처음 재료 — 참고만 한다. 원본과 다르면 원본을 따른다]\n'+String(ref).slice(0,1500)+'\n\n':'')+'[분량] '+cut+'컷\n\n';
+  var keep='원본의 사건 순서·인물·관계·결말을 그대로 따른다. 원본은 작가가 직접 고친 글일 수 있으니 고친 내용을 그대로 존중한다. 원본에 없는 사건·인물·설정을 새로 만들지 않는다. ';
+  if(to==='plot'){
+    return {prompt:head+keep+'이 글을 줄거리로 줄인다. '+(cut<=20?'5줄':(cut<=40?'8줄':'12줄'))+'. 각 줄 앞에 [초반] [중반] [후반] [엔딩] 중 하나를 붙인다.', maxTok:1200, title:'줄거리'};
+  }
+  if(to==='novel'){
+    var r=novelRule(cut);
+    return {prompt:head+keep+(from==='plot'?'줄거리의 각 줄을 순서대로 장면으로 풀어 쓴다. 줄과 줄 사이는 이어 주는 행동과 대사만 채운다. 「쓴 장치」 줄은 본문에 쓰지 않는다. ':'콘티의 컷 순서대로 장면을 풀어 쓰고, 콘티의 대사를 살린다. 화면 묘사는 문장으로 바꾼다. ')+r.text,
+      maxTok:r.maxTok, title:'웹소설'};
+  }
+  var c=cutsRule(cut, !!ref || /「[^」]+」/.test(text));
+  return {prompt:head+keep+(from==='novel'?'본문의 장면을 순서대로 컷으로 나눈다. 본문의 대사를 살리되 한 컷 한 문장으로 줄인다. 내면 서술과 설명은 표정·행동·배경·소품 같은 화면으로 바꾼다. ':'줄거리의 각 줄을 장면으로 나눠 순서대로 컷에 옮긴다. ')+c.text,
+    maxTok:c.maxTok, title:'컷별 콘티'};
+}
+function wsSave(box){
+  var S=box._ws; if(!S||!S.opt.save) return;
+  try{ localStorage.setItem(S.opt.save, JSON.stringify({cut:S.opt.cut, ref:String(S.opt.ref||'').slice(0,1500),
+    stages:S.stages.filter(function(x){ return !x.busy; }).map(function(x){ return {fmt:x.fmt,title:x.title,text:x.text||'',err:x.err||''}; })})); }catch(e){}
+}
+function wsRestore(box, key){
+  if(!box || box.innerHTML.trim()) return false;
+  var d=null; try{ d=JSON.parse(localStorage.getItem(key)||'null'); }catch(e){}
+  if(!d || !d.stages || !d.stages.length) return false;
+  box._ws={opt:{cut:d.cut||70, ref:d.ref||'', save:key}, stages:d.stages};
+  wsRender(box); return true;
+}
+function wsRows(t){ var lines=String(t||'').split('\n'); var n=0; lines.forEach(function(l){ n+=1+Math.floor(l.length/48); }); return Math.max(6, Math.min(40, n+1)); }
+function wsFit(ta){ if(!ta) return; ta.style.height='auto'; if(ta.scrollHeight) ta.style.height=(ta.scrollHeight+4)+'px'; }
+function wsRender(box){
+  var S=box._ws; if(!S) return;
+  box.innerHTML=S.stages.map(function(st,i){
+    var conv='';
+    if(!st.busy && !st.err){
+      conv='<span class="wconv">바꾸기 '+WNEXT[st.fmt].map(function(f,j){
+        return '<button class="chip'+(j===0&&st.fmt!=='cuts'?' next':'')+'" data-to="'+f+'">'+WNAME[f]+'로</button>'; }).join('')+'</span>';
+    }
+    var tools=(!st.busy && !st.err)?'<button class="chip" data-a="copy">복사</button><button class="chip" data-a="memo">메모에 넣기</button>':'';
+    var body= st.busy ? '<div class="gen-b busy">'+(i?WOBJ[S.stages[i-1].fmt]+' '+wsEsc(WNAME[st.fmt])+'로 바꾸는 중…':'만드는 중…')+'</div>'
+      : st.err ? '<div class="gen-b">'+wsEsc(st.err)+'</div>'+(i?'<button class="chip" data-a="retry">다시</button>':'')
+      : '<textarea class="wedit" rows="'+wsRows(st.text)+'" spellcheck="false"></textarea>'+(i===S.stages.length-1?'<div class="whint">글을 직접 고친 뒤 바꾸기를 누르면 고친 글로 바꾼다.</div>':'');
+    return '<div class="aires wstage" data-i="'+i+'"><div class="gen-h">'+wsEsc(st.title)+' '+tools+conv+'</div>'+body+'</div>';
+  }).join('');
+  [].slice.call(box.querySelectorAll('.wstage')).forEach(function(el){
+    var i=+el.getAttribute('data-i'), st=S.stages[i], ta=el.querySelector('textarea.wedit');
+    if(ta){ ta.value=st.text||''; setTimeout(function(){ wsFit(ta); },0);
+      ta.addEventListener('input',function(){ st.text=ta.value; wsFit(ta); clearTimeout(S.tm); S.tm=setTimeout(function(){ wsSave(box); },500); });
+      ta.addEventListener('focus',function(){ wsFit(ta); }); }
+    [].slice.call(el.querySelectorAll('button')).forEach(function(b){
+      b.addEventListener('click',function(){
+        var a=b.getAttribute('data-a'), to=b.getAttribute('data-to'), txt=ta?ta.value:(st.text||'');
+        if(to){ wsConv(box,i,to,false); return; }
+        if(a==='retry'){ wsConv(box,i-1,st.fmt,false); return; }
+        if(a==='memo'){ var f=fmAppend(st.title,txt); b.textContent='「'+f+'」에 넣음'; setTimeout(function(){ b.textContent='메모에 넣기'; },1600); return; }
+        if(a==='copy'){
+          try{ if(navigator.clipboard&&navigator.clipboard.writeText){ navigator.clipboard.writeText(txt).catch(function(){window.prompt('복사',txt);});
+            b.textContent='복사됨'; setTimeout(function(){b.textContent='복사';},1200); } else window.prompt('복사',txt);
+          }catch(e){ window.prompt('복사',txt); }
+        }
+      });
+    });
+  });
+}
+function wsConv(box, i, to, auto){
+  var S=box._ws; if(!S) return; var src=S.stages[i]; if(!src || src.busy || src.err) return;
+  if(!String(src.text||'').trim()){ return; }
+  var w=convPrompt(src.text, src.fmt, to, S.opt.cut||70, S.opt.ref);
+  var st={fmt:to, title:WNAME[to]+' ← '+WNAME[src.fmt], busy:true};
+  S.stages=S.stages.slice(0,i+1); S.stages.push(st); wsRender(box);
+  var last=box.querySelector('.wstage:last-child'); if(last && last.scrollIntoView && !auto) try{ last.scrollIntoView({block:'nearest'}); }catch(e){}
+  aiAsk(WSYS, w.prompt, w.maxTok).then(function(t){
+    if(S.stages.indexOf(st)<0 || box._ws!==S) return;
+    st.busy=false; if(aiIsErr(t)) st.err=t; else st.text=t;
+    wsRender(box); wsSave(box);
+    if(auto && !st.err && to==='novel') wsConv(box, S.stages.indexOf(st), 'cuts', false);
+  });
+}
+// 처음 쓰기. opt={fmt, cut, ref, save, chain}
+function wsStart(box, title, w, opt){
+  var S={opt:opt, stages:[{fmt:opt.chain?'plot':opt.fmt, title:title, busy:true}]}; box._ws=S; wsRender(box);
+  var st=S.stages[0];
+  aiAsk(WSYS, w.prompt, w.maxTok).then(function(t){
+    if(box._ws!==S) return;
+    st.busy=false; if(aiIsErr(t)) st.err=t; else st.text=t;
+    wsRender(box); wsSave(box);
+    if(opt.chain && !st.err) wsConv(box, 0, 'novel', true);
+  });
+}
+var WCHAIN_BTN='<button class="chip" data-chain="1" title="줄거리를 쓰고 이어서 웹소설, 컷별 콘티로 바꾼다">차례로 쓰기 (줄거리→웹소설→컷별)</button>';
 function aiBar(){
   var bar=document.getElementById('ai-bar'); if(!bar) return;
   if(!aiReady()){ bar.innerHTML='<span class="count">AI 기능은 <a href="#ai">AI 연결</a>에서 키를 넣으면 쓸 수 있다.</span>'; return; }
   bar.innerHTML='<button class="chip" id="ai-link">AI로 잇기</button>'+
     '<button class="chip" id="ai-rel">연관짓기</button>'+
-    '<span class="wsep"></span>'+wfmtHTML('wfg')+'<button class="chip" id="ai-write">글쓰기</button>';
+    '<span class="wsep"></span>'+wfmtHTML('wfg')+'<button class="chip" id="ai-write">글쓰기</button>'+WCHAIN_BTN.replace('data-chain','id="ai-chain" data-chain');
   wfmtBind(bar,'wfg');
   var out=document.getElementById('ai-out');
   document.getElementById('ai-link').addEventListener('click',function(){
@@ -4706,12 +4817,15 @@ function aiBar(){
       '\n\n뽑힌 칸들을 초반→중반→후반→엔딩 순서의 원인과 결과 사슬로 잇는다. 각 연결을 「A → B — 이유 한 문장」 형식으로 쓴다. 이어지기 어려운 연결이 있으면 그 사이에 들어갈 사건을 한 줄 제안한다. 마지막에 이 조합 전체를 한 문장으로 요약한다. 새 클리셰나 설정을 만들지 않는다.')
     .then(function(t){ aiResult(out,'연관짓기',t); });
   });
-  document.getElementById('ai-write').addEventListener('click',function(){
+  function sfWrite(chain){
     if(window.unmaskAllNow) window.unmaskAllNow();
-    var w=writePrompt('[지금 구성]\n'+aiDrawn(), wfmtVal('wfg'), window.__cutTotal?window.__cutTotal():70);
-    aiBusy(out,w.title);
-    aiAsk(WSYS, w.prompt, w.maxTok).then(function(t){ aiResult(out,w.title,t); });
-  });
+    var src='[지금 구성]\n'+aiDrawn(), cut=window.__cutTotal?window.__cutTotal():70, fmt=chain?'plot':wfmtVal('wfg');
+    var w=writePrompt(src, fmt, cut);
+    wsStart(out, w.title, w, {fmt:fmt, cut:cut, ref:src, save:'sfChain', chain:chain});
+  }
+  document.getElementById('ai-write').addEventListener('click',function(){ sfWrite(false); });
+  document.getElementById('ai-chain').addEventListener('click',function(){ sfWrite(true); });
+  wsRestore(out,'sfChain');
 }
 function favAiBar(){
   var bar=document.getElementById('fav-ai-bar'); if(!bar) return;
@@ -4719,7 +4833,7 @@ function favAiBar(){
   var c0=window.__cutTotal?window.__cutTotal():70;
   bar.innerHTML='<button class="chip" id="fav-ai-rel">연관짓기</button><span class="wsep"></span>'+wfmtHTML('wff')+
     '<label class="wcut">분량 <select id="fav-cut"><option value="20">20컷</option><option value="40">40컷</option><option value="70">70컷</option></select></label>'+
-    '<button class="chip" id="fav-ai-write">글쓰기</button>'+
+    '<button class="chip" id="fav-ai-write">글쓰기</button>'+WCHAIN_BTN.replace('data-chain','id="fav-ai-chain" data-chain')+
     '<span class="count">보고 있는 폴더의 항목으로</span>';
   wfmtBind(bar,'wff');
   var sel=document.getElementById('fav-cut'); sel.value=String(c0<=20?20:(c0<=40?40:70));
@@ -4739,14 +4853,17 @@ function favAiBar(){
       '\n\n이 항목들 사이의 연관을 찾는다. 어떤 항목이 어떤 항목의 원인·결과·대비가 될 수 있는지를 「A → B — 이유 한 문장」 형식으로 세 줄에서 여섯 줄. 서로 이어지기 어려운 항목은 이어지지 않는다고 쓰고 이유를 한 줄. 목록에 없는 항목이나 설정을 만들지 않는다.')
     .then(function(t){ aiResult(box,'연관짓기',t); });
   });
-  document.getElementById('fav-ai-write').addEventListener('click',function(){
+  document.getElementById('fav-ai-write').addEventListener('click',function(){ favWrite(false); });
+  document.getElementById('fav-ai-chain').addEventListener('click',function(){ favWrite(true); });
+  wsRestore(box,'favChain');
+  function favWrite(chain){
     var s=favSrc();
     if(!s.keys.length && !ideaBlock('fav')){ box.innerHTML='<p class="small">이 폴더에 담긴 항목도, 아이디어도 없다.</p>'; return; }
     var memo=(typeof fmGet==='function')?fmGet(s.vw==='*'?(CURFOLDER||'기본'):s.vw):'';
-    var w=writePrompt('[즐겨찾기 재료]\n'+s.text+(memo?'\n\n[폴더 메모]\n'+memo.slice(0,2500):''), wfmtVal('wff'), parseInt(sel.value,10));
-    aiBusy(box,w.title);
-    aiAsk(WSYS, w.prompt, w.maxTok).then(function(t){ aiResult(box,'「'+(s.vw==='*'?'전체':s.vw)+'」 '+w.title,t); });
-  });
+    var src='[즐겨찾기 재료]\n'+s.text+(memo?'\n\n[폴더 메모]\n'+memo.slice(0,2500):''), cut=parseInt(sel.value,10)||70, fmt=chain?'plot':wfmtVal('wff');
+    var w=writePrompt(src, fmt, cut);
+    wsStart(box, '「'+(s.vw==='*'?'전체':s.vw)+'」 '+w.title, w, {fmt:fmt, cut:cut, ref:src, save:'favChain', chain:chain});
+  }
 }
 
 // 색인 AI 창
