@@ -607,6 +607,64 @@ details.gdet[open] summary{margin-bottom:.5rem}
 /* [[CSS:favpick]] */
 /* [[/CSS:favpick]] */
 /* [[CSS:cast]] */
+.cast-f{display:grid; grid-template-columns:repeat(6,minmax(0,1fr)); gap:.45rem .8rem; margin:.4rem 0 .5rem}
+.cast-l{display:flex; flex-direction:column; gap:.12rem; min-width:0; font-size:.8rem; color:var(--ink-3); grid-column:span 3}
+.cast-l.cast-s{grid-column:span 2}
+.cast-l > span{font-family:"Hahmlet",serif; font-weight:700}
+.cast-l.cast-w{grid-column:1 / -1}
+.cast-in{font:inherit; font-size:.88rem; color:var(--ink); background:var(--paper); border:1px solid var(--rule-hard); padding:.3rem .45rem; width:100%; box-sizing:border-box; line-height:1.55}
+textarea.cast-in{resize:vertical; min-height:2.6em; overflow:hidden}
+.cast-in:focus{outline:2px solid var(--note); outline-offset:0}
+.cast-acts{display:flex; flex-wrap:wrap; gap:.4rem; align-items:center; margin-top:.35rem}
+.cast-fold{display:inline-flex; gap:.3rem; flex-wrap:wrap}
+.cast-fs, .cast-fn, .cast-opt select{font:inherit; font-size:.82rem; padding:.18rem .3rem; background:var(--paper); color:var(--ink); border:1px solid var(--rule-hard); max-width:100%}
+.cast-fn[hidden]{display:none}
+.cast-build{border:1px solid var(--rule-hard); border-left:3px solid var(--green); background:var(--paper-2); padding:.6rem .8rem; margin:.6rem 0 1rem}
+.cast-build h4{margin:0 0 .2rem; font-size:.95rem}
+.cast-build .small{margin:0}
+.chadd{border:1px solid var(--rule-hard); background:var(--paper); color:var(--ink-3); cursor:pointer; font:inherit; font-size:.72rem; font-weight:400; padding:0 .3rem; margin-left:.35rem; line-height:1.4; vertical-align:middle}
+.chadd:hover{color:var(--green); border-color:var(--green)}
+#cast-q{font:inherit; font-size:.85rem; padding:.3rem .55rem; border:1px solid var(--rule-hard); background:var(--paper); color:var(--ink); width:min(240px,100%)}
+.cast-fbar{display:flex; flex-direction:column; gap:.4rem; margin:0 0 .8rem}
+.cast-fbar .cn{opacity:.6; font-size:.9em}
+.cast-fact{display:flex; flex-wrap:wrap; gap:.35rem; align-items:center}
+#cast-fname{font:inherit; font-size:.8rem; padding:.18rem .4rem; border:1px solid var(--rule-hard); background:var(--paper); color:var(--ink); width:min(190px,100%)}
+.cast-opt{display:flex; flex-wrap:wrap; gap:.3rem 1rem; align-items:center; font-size:.84rem; border-top:1px solid var(--rule); border-bottom:1px solid var(--rule); padding:.45rem 0; margin:0 0 1rem}
+.cast-opt label{display:inline-flex; gap:.35rem; align-items:center}
+.cast-opt .small{font-size:.76rem; color:var(--ink-3); flex-basis:100%}
+.cast-gh{margin:1.2rem 0 .4rem; font-size:.98rem}
+.cast-gh .small{font-family:"IBM Plex Sans KR",system-ui,sans-serif; font-weight:400; color:var(--ink-3)}
+.cast-card{border:1px solid var(--rule); border-left:3px solid var(--note); background:var(--paper-2); margin:0 0 .35rem}
+.cast-card.open{border-color:var(--rule-hard); border-left-color:var(--mark)}
+.cast-h{display:flex; flex-wrap:wrap; gap:.2rem .55rem; align-items:baseline; width:100%; text-align:left; background:none; border:0; color:inherit; font:inherit; cursor:pointer; padding:.5rem .75rem}
+.cast-h b{font-family:"Hahmlet",serif; font-size:.98rem}
+.cast-h .small{font-size:.78rem; color:var(--ink-3)}
+.cast-role{font-size:.72rem; border:1px solid var(--rule-hard); padding:0 .35rem; color:var(--ink-2); white-space:nowrap}
+.cast-src{font-size:.68rem; color:var(--green)}
+.cast-d{flex-basis:100%; font-size:.84rem; color:var(--ink-2); line-height:1.5}
+.cast-d:empty{display:none}
+.cast-body{padding:0 .75rem .6rem; border-top:1px dashed var(--rule)}
+.cast-body[hidden]{display:none}
+.cast-mt{margin:.1rem 0 0; font-size:.78rem}
+.cast-saved{color:var(--green); font-size:.76rem}
+.cast-empty{border:1px dashed var(--rule-hard); padding:.8rem 1rem}
+.cast-ws:empty{display:none}
+.cast-note{border:1px solid var(--rule-hard); border-left:3px solid var(--green); background:var(--paper-2); padding:.5rem .75rem; margin:.4rem 0; font-size:.86rem; line-height:1.6}
+.cast-note.busy{color:var(--ink-3)}
+.cast-note > .small{display:block}
+.cast-pk{display:flex; gap:.45rem; align-items:flex-start; padding:.35rem 0; border-bottom:1px solid var(--rule)}
+.cast-pk input{margin-top:.35rem}
+.cast-pk .small{color:var(--ink-2)}
+.cast-det{display:block; font-size:.78rem; color:var(--ink-3)}
+.cast-tag{display:inline-flex; gap:.25rem; align-items:center; margin-right:.3rem}
+.cast-tag.gone b{text-decoration:line-through; color:var(--ink-3)}
+@media (max-width:640px){
+  .cast-f{grid-template-columns:1fr}
+  .cast-l, .cast-l.cast-s{grid-column:1 / -1}
+  .cast-h{padding:.5rem .6rem}
+  .cast-body{padding:0 .6rem .6rem}
+  #cast-q{width:100%; order:5}
+}
 /* [[/CSS:cast]] */
 /* [[CSS:texts]] */
 /* [[/CSS:texts]] */
@@ -2115,6 +2173,7 @@ details.gdet[open] summary{margin-bottom:.5rem}
     <button class="chip" id="ch-go">캐릭터 뽑기</button>
   </div>
   <div id="ch-out"></div>
+  <div id="ch-cast"></div>
   <hr class="rule">
   <div class="facets">
     <div class="fgroup"><span class="flabel">축</span><div class="chips">
@@ -4355,7 +4414,7 @@ function ideaRec(box){
     SEC.forEach(function(sc){ SL[sc.id]=shortlist(sc); OFF[sc.id]=0; });
     var txt=SEC.map(function(sc){ return '['+sc.id+' — '+sc.title+' 후보, '+sc.n+'개 고름]\n'+SL[sc.id].map(function(o,k){ var r=o.r; return (k+1)+'. '+r[sc.col]+' — '+String(sc.kind==='c'?r[8]:(sc.kind==='e'?r[2]:(sc.kind==='ch'?r[3]:r[1]))).slice(0,60); }).join('\n'); }).join('\n\n');
     return aiAsk('당신은 만화 기획 편집자다. 반드시 유효한 JSON만 출력한다.',
-      '[작가가 그리고 싶은 만화]\n'+t+(summary?'\n[핵심] '+summary:'')+'\n\n'+txt+
+      '[작가가 그리고 싶은 만화]\n'+t+(summary?'\n[핵심] '+summary:'')+(window.__castIdea?window.__castIdea(t):'')+'\n\n'+txt+
       '\n\n묶음마다 적힌 개수만큼 고른다. 아이디어에 가장 맞고, 초반→중반→후반→엔딩이 이어지는 것을 고른다. 같은 항목을 두 묶음에 고르지 않는다. 이유는 짧게 한 문장.\n'+
       'JSON만: {"m":[{"pick":번호,"why":""}],"early":[...],"mid":[...],"late":[...],"e":[...],"ch":[...]}', 900)
     .then(function(r2){
@@ -6115,7 +6174,7 @@ var runChar=makeIndex({
   val:function(r,k){ return k==='ca'?r[0]:r[0]+' · '+r[1]; },
   key:function(r){ return 'ch|'+r[2]; },
   text:function(r){ return r[0]+r[1]+r[2]+r[3]+r[4]; },
-  row:function(r){ return '<tr><td>'+star('ch|'+r[2])+'<b>'+r[2]+'</b></td><td><span class="small">'+r[0]+' · '+r[1]+'</span></td><td>'+r[3]+'</td><td>'+
+  row:function(r){ return '<tr><td>'+star('ch|'+r[2])+'<b>'+r[2]+'</b><button class="chadd" data-cm="'+String(r[2]).replace(/"/g,'&quot;')+'" title="만드는 인물에 넣기">＋</button></td><td><span class="small">'+r[0]+' · '+r[1]+'</span></td><td>'+r[3]+'</td><td>'+
     (r[4]?r[4]:'<span class="small">—</span>')+'</td></tr>'; }
 });
 
@@ -6169,6 +6228,7 @@ var runChar=makeIndex({
       b.addEventListener('click',function(e){ e.stopPropagation();
         var k=b.getAttribute('data-ck'), i=+b.getAttribute('data-cl'); lk[k][i]=!lk[k][i]; render(); });
     });
+    if(window.__charRendered) window.__charRendered();
   }
   window.__charState=function(){ return {cur:cur, lk:lk}; };
   window.__charLink=function(done){
@@ -6702,6 +6762,382 @@ var runChar=makeIndex({
 // [[MOD:favpick]] 즐겨찾기 우선 뽑기
 // [[/MOD:favpick]]
 // [[MOD:cast]] 등장인물
+// 기록 mangaCast: 인물 {id,name,alias,folder,role,desc,look,persona,lack,memo(특징),speech,rel,motifs,src,made,at}, 폴더 {id:'cf_'+이름, kind:'folder', name, made}
+var CAST_KEY='mangaCast';
+var CAST_TXT=[['look','외모'],['persona','성격'],['lack','결핍'],['memo','특징'],['speech','말투'],['rel','관계']];
+var CAST_ROLES=['주인공','조연','악역','라이벌','조력자','주변 인물'];
+function castLs(k,v){ try{ if(v===undefined) return localStorage.getItem(k); if(v===null) localStorage.removeItem(k); else localStorage.setItem(k,String(v)); }catch(e){} return null; }
+function castAll(){ return recList(CAST_KEY).filter(function(x){ return x && !x.kind; }); }
+function castFolders(){
+  var seen={'기본':1}, out=['기본'];
+  recList(CAST_KEY).filter(function(x){ return x && x.kind==='folder' && x.name; })
+    .sort(function(a,b){ return (a.made||a.at||0)-(b.made||b.at||0); })
+    .forEach(function(f){ if(!seen[f.name]){ seen[f.name]=1; out.push(f.name); } });
+  castAll().forEach(function(m){ var f=m.folder||'기본'; if(!seen[f]){ seen[f]=1; out.push(f); } });
+  return out;
+}
+function castFolderMake(name){
+  name=String(name||'').replace(/\s+/g,' ').trim().slice(0,40); if(!name) return '';
+  if(name!=='기본' && !recLoad(CAST_KEY).items['cf_'+name]) recPut(CAST_KEY,{id:'cf_'+name, kind:'folder', name:name, made:Date.now()});
+  return name;
+}
+function castNames(m){ return [m.name].concat(m.alias||[]).map(function(s){ return String(s||'').trim(); }).filter(Boolean); }
+function castFind(name){ name=String(name||'').trim(); if(!name) return null;
+  return castAll().filter(function(m){ return castNames(m).indexOf(name)>-1; })[0]||null; }
+function castDef(){ var f=castLs('castDef')||'기본'; return castFolders().indexOf(f)>-1?f:'기본'; }
+function castAutoOn(){ return castLs('castAuto')==='1'; }
+function castNew(o, folder, src){
+  var m={name:String(o.name||'').trim(), alias:Array.isArray(o.alias)?o.alias.slice():[], folder:castFolderMake(folder||'기본')||'기본',
+    role:String(o.role||'').trim(), desc:String(o.desc||'').trim(), motifs:Array.isArray(o.motifs)?o.motifs.slice():[], src:src||'manual', made:Date.now()};
+  CAST_TXT.forEach(function(f){ m[f[0]]=String(o[f[0]]||'').trim(); });
+  return recPut(CAST_KEY, m);
+}
+// ----- 글쓰기에 붙이는 인물 설정 -----
+function castLine(m){
+  var head=m.name+(m.role?'('+m.role+')':'')+((m.alias||[]).length?' [별명: '+m.alias.join('·')+']':''), parts=[];
+  if(m.desc) parts.push(String(m.desc).trim());
+  CAST_TXT.forEach(function(f){ var v=String(m[f[0]]||'').replace(/\s+/g,' ').trim(); if(v) parts.push(f[1]+': '+v); });
+  return head+': '+(parts.join(' / ')||'(적힌 설정 없음)');
+}
+function castCtx(text){
+  text=String(text||''); if(!text) return '';
+  var def=castDef(), hit=[], by={};
+  castAll().forEach(function(m){
+    if(!m.name) return;
+    var pos=-1; castNames(m).forEach(function(n){ if(n.length<2) return; var p=text.indexOf(n); if(p>-1 && (pos<0||p<pos)) pos=p; });
+    if(pos<0) return;
+    var o={m:m, pos:pos}, old=by[m.name];
+    if(old){ if((m.folder||'기본')!==def) return; hit.splice(hit.indexOf(old),1); }   // 같은 이름이 여러 작품에 있으면 기본 폴더 것
+    by[m.name]=o; hit.push(o);
+  });
+  if(!hit.length) return '';
+  hit.sort(function(a,b){ return a.pos-b.pos; });
+  var out='[등장인물 — 이름이 나오면 이 설정을 그대로 따른다. 적히지 않은 설정은 지어내지 않는다]', n=0;
+  for(var i=0;i<hit.length;i++){
+    var l=castLine(hit[i].m); if(l.length>600) l=l.slice(0,600)+'…';
+    if(out.length+1+l.length>1500){ if(!n){ out+='\n'+l.slice(0,1500-out.length-2)+'…'; n++; } break; }
+    out+='\n'+l; n++;
+  }
+  return out;
+}
+WS_CTX.push(castCtx);
+window.__castCtx=castCtx;
+window.__castIdea=function(t){ var c=castCtx(t); return c?'\n\n'+c+'\n캐릭터 모티브는 이 인물 설정과 어긋나지 않는 것을 고른다.':''; };
+// ----- 글에서 인물 뽑기 -----
+var CAST_GENERIC=/^(노인|노파|남자|여자|소년|소녀|아이|아기|꼬마|청년|아가씨|엄마|아빠|어머니|아버지|할머니|할아버지|형|누나|언니|오빠|동생|친구|선생님?|선배|후배|경비병?|병사|군인|상인|주인|사장님?|손님|의사|경찰|기사|왕|왕자|공주|여왕|마녀|괴물|용사|주인공|그|그녀|나|너|우리|사람|남자아이|여자아이|아저씨|아주머니|아줌마|학생|직원|점원|행인|목소리|화자|남편|아내|딸|아들|부하|동료|상사|팀장|반장|담임|이웃|낯선 사람|정체불명|누군가|그림자|사내|여인|남녀|모두|일행|무리)$/;
+function castParse(t){
+  var s=String(t||'').replace(/```(?:json)?/gi,'').trim(), a=s.indexOf('['), b=s.lastIndexOf(']'), arr=null;
+  if(a>-1 && b>a){ try{ arr=JSON.parse(s.slice(a,b+1)); }catch(e){ arr=null; } }
+  if(!Array.isArray(arr)){ var c=s.indexOf('{'), d=s.lastIndexOf('}');
+    if(c>-1 && d>c){ try{ var o=JSON.parse(s.slice(c,d+1)); arr=o&&(o.characters||o.cast||o.items||o.list||o.people)||(o&&o.name?[o]:null); }catch(e){ arr=null; } } }
+  if(!Array.isArray(arr) && /^\s*\[\s*\]\s*$/.test(s)) arr=[];
+  return Array.isArray(arr)?arr:null;
+}
+function castClean(arr){
+  var seen={}, out=[];
+  (arr||[]).forEach(function(x){
+    if(!x || typeof x!=='object') return;
+    var nm=String(x.name||'').replace(/["'「」『』《》()（）]/g,'').replace(/\s+/g,' ').trim();
+    if(!nm || nm.length>20 || CAST_GENERIC.test(nm) || seen[nm] || castFind(nm)) return;
+    seen[nm]=1;
+    var o={name:nm, role:String(x.role||'').trim().slice(0,30), desc:String(x.desc||'').trim().slice(0,300)};
+    CAST_TXT.forEach(function(f){ var v=x[f[0]]; o[f[0]]=String(Array.isArray(v)?v.join(', '):(v||'')).trim().slice(0,400); });
+    if(Array.isArray(x.alias)) o.alias=x.alias.map(function(s){ return String(s||'').trim(); }).filter(function(s){ return s && s!==nm && !CAST_GENERIC.test(s); }).slice(0,5);
+    out.push(o);
+  });
+  return out;
+}
+function castExtract(text){
+  if(!aiReady()) return Promise.resolve({list:[], err:'AI 연결에서 키를 먼저 넣는다.'});
+  var have=[]; castAll().forEach(function(m){ castNames(m).forEach(function(n){ if(have.indexOf(n)<0) have.push(n); }); });
+  return aiAsk('당신은 원고에서 등장인물을 정리하는 편집자다. 반드시 유효한 JSON만 출력한다.',
+    '[글]\n'+String(text||'').slice(0,8000)+'\n\n[이미 등록된 인물 — 빼고 답한다]\n'+(have.length?have.slice(0,120).join(', '):'(없음)')+
+    '\n\n이 글에 나오는 등장인물 가운데 고유한 이름이 있는 인물만 뽑는다. 「노인」「남자」「소녀」「경비병」처럼 이름 없이 불리는 인물은 뺀다. 이미 등록된 인물은 뺀다.\n'+
+    '글에 적힌 사실만 쓴다. 지어내거나 짐작해서 채우지 않는다. 글에서 알 수 없는 칸은 빈 문자열로 둔다.\n'+
+    'role 주인공·조연·악역 등 글에서 알 수 있는 역할, desc 이 글에서의 처지 한 문장, look 외모, persona 성격, lack 결핍·상처, speech 말투, rel 다른 인물과의 관계.\n'+
+    '없으면 []. JSON 배열만: [{"name":"","role":"","desc":"","look":"","persona":"","lack":"","speech":"","rel":""}]', 1400)
+  .then(function(t){
+    if(aiIsErr(t)) return {list:[], err:String(t)};
+    var arr=castParse(t); if(!arr) return {list:[], err:'응답을 읽지 못했다. 다시 눌러 본다.'};
+    return {list:castClean(arr), err:''};
+  }, function(){ return {list:[], err:'AI 호출에 실패했다.'}; });
+}
+// 글쓰기 결과 아래 칸 (결과 상자는 다시 그려지므로 바로 뒤 형제로 둔다)
+function castPanel(box){
+  var p=box._castP;
+  if(!p || !p.parentNode){
+    p=document.createElement('div'); p.className='cast-ws';
+    if(box.parentNode) box.parentNode.insertBefore(p, box.nextSibling); else box.appendChild(p);
+    box._castP=p;
+    if(window.MutationObserver) try{ new MutationObserver(function(){ if(p._S && p._S!==box._ws){ p.innerHTML=''; p._S=box._ws; } }).observe(box,{childList:true}); }catch(e){}
+  }
+  if(p._S!==box._ws){ p.innerHTML=''; p._S=box._ws; }
+  return p;
+}
+function castSub(p, k){ var d=p.querySelector('.cast-'+k); if(!d){ d=document.createElement('div'); d.className='cast-'+k; p.appendChild(d); } return d; }
+function castFoldUI(sel){
+  var fs=castFolders(); sel=sel||castDef();
+  return '<span class="cast-fold"><select class="cast-fs" aria-label="작품(폴더)">'+fs.map(function(f){ return '<option'+(f===sel?' selected':'')+' value="'+wsEsc(f)+'">'+wsEsc(f)+'</option>'; }).join('')+
+    '<option value="__new">＋ 새 폴더…</option></select><input class="cast-fn" placeholder="새 폴더 이름" hidden></span>';
+}
+function castFoldBind(root, cb){
+  var s=root.querySelector('.cast-fs'), n=root.querySelector('.cast-fn'); if(!s) return;
+  s.addEventListener('change',function(){ n.hidden=s.value!=='__new'; if(!n.hidden){ try{ n.focus(); }catch(e){} } else if(cb) cb(s.value); });
+  if(cb) n.addEventListener('change',function(){ var v=castFolderMake(n.value); if(v) cb(v); });
+}
+function castFoldGet(root){
+  var s=root.querySelector('.cast-fs'), n=root.querySelector('.cast-fn'); if(!s) return castDef();
+  return s.value==='__new' ? castFolderMake(n.value) : s.value;
+}
+function castPick(d, r){
+  if(r.err){ d.innerHTML='<div class="cast-note">인물 뽑기 — '+wsEsc(String(r.err).slice(0,200))+'</div>'; return; }
+  if(!r.list.length){ d.innerHTML='<div class="cast-note">새로 넣을 인물이 없다. 이미 등장인물에 있는 이름은 뺐다. <button class="chip" data-x="1">닫기</button></div>';
+    d.querySelector('[data-x]').addEventListener('click',function(){ d.innerHTML=''; }); return; }
+  d.innerHTML='<div class="cast-note"><b>글에 나온 새 인물</b> <span class="small">글에 적힌 것만 채웠다. 넣을 인물을 고른다.</span>'+
+    r.list.map(function(o,i){
+      var det=CAST_TXT.map(function(f){ return o[f[0]]?f[1]+': '+o[f[0]]:''; }).filter(Boolean).join(' / ');
+      return '<label class="cast-pk"><input type="checkbox" data-i="'+i+'" checked><span><b>'+wsEsc(o.name)+'</b>'+(o.role?' <span class="cast-role">'+wsEsc(o.role)+'</span>':'')+
+        (o.desc?' <span class="small">'+wsEsc(o.desc)+'</span>':'')+(det?'<span class="cast-det">'+wsEsc(det)+'</span>':'')+'</span></label>';
+    }).join('')+
+    '<div class="cast-acts">'+castFoldUI()+'<button class="chip" data-go="1"><b>넣기</b></button><button class="chip" data-x="1">닫기</button></div></div>';
+  castFoldBind(d);
+  d.querySelector('[data-x]').addEventListener('click',function(){ d.innerHTML=''; });
+  d.querySelector('[data-go]').addEventListener('click',function(){
+    var f=castFoldGet(d); if(!f){ var n=d.querySelector('.cast-fn'); if(n) n.placeholder='새 폴더 이름을 적는다'; return; }
+    var ids=[], names=[];
+    [].slice.call(d.querySelectorAll('input[type=checkbox][data-i]')).forEach(function(c){ if(!c.checked) return;
+      var o=r.list[+c.getAttribute('data-i')]; if(!o || castFind(o.name)) return; var m=castNew(o,f,'auto'); ids.push(m.id); names.push(m.name); });
+    if(!ids.length){ d.innerHTML='<div class="cast-note">넣은 인물이 없다.</div>'; return; }
+    d.innerHTML='<div class="cast-note">'+ids.length+'명을 「'+wsEsc(f)+'」에 넣었다 — '+names.map(wsEsc).join(', ')+'. <a href="#cast">등장인물 보기</a> <button class="chip" data-undo="1">되돌리기</button></div>';
+    d.querySelector('[data-undo]').addEventListener('click',function(){ ids.forEach(function(id){ recDel(CAST_KEY,id); }); d.innerHTML='<div class="cast-note">되돌렸다.</div>'; castRefresh(); });
+    castRefresh();
+  });
+}
+WS_TOOLS.push({label:'인물 뽑아 넣기', fn:function(ctx){
+  var text=String(ctx.text||''); if(!text.trim()) return;
+  var p=castPanel(ctx.box), d=castSub(p,'tool'), tok=d._tok=(d._tok||0)+1;
+  d.innerHTML='<div class="cast-note busy">글에서 새 인물을 찾는 중…</div>';
+  castExtract(text).then(function(r){ if(d._tok===tok) castPick(d, r); });
+}});
+WS_DONE.push(function(st, box){
+  if(!castAutoOn() || !aiReady()) return;
+  var S=box._ws; if(!S || S.stages.indexOf(st)!==0) return;   // 처음 쓴 글만 (바꾸기는 원본 인물을 그대로 쓴다)
+  var text=String(st.text||''); if(!text.trim()) return;
+  var p=castPanel(box), d=castSub(p,'auto'), tok=d._tok=(d._tok||0)+1;
+  d.innerHTML='<div class="cast-note busy">새 인물을 찾아 등장인물에 넣는 중…</div>';
+  castExtract(text).then(function(r){
+    if(d._tok!==tok) return;
+    if(r.err){ d.innerHTML='<div class="cast-note">인물 자동 넣기를 못 했다 — '+wsEsc(String(r.err).slice(0,160))+'</div>'; return; }
+    var f=castDef(), added=r.list.filter(function(o){ return !castFind(o.name); }).map(function(o){ return castNew(o,f,'auto'); });
+    if(!added.length){ d.innerHTML=''; return; }
+    d.innerHTML='<div class="cast-note">새 인물을 「'+wsEsc(f)+'」에 넣었다: '+added.map(function(m){ return '<span class="cast-tag"><b>'+wsEsc(m.name)+'</b> <button class="chip" data-out="'+wsEsc(m.id)+'">빼기</button></span>'; }).join(' ')+' <a href="#cast">등장인물 보기</a></div>';
+    [].slice.call(d.querySelectorAll('[data-out]')).forEach(function(b){ b.addEventListener('click',function(){
+      recDel(CAST_KEY, b.getAttribute('data-out')); var t=b.parentNode; t.classList.add('gone'); b.remove(); castRefresh(); }); });
+    castRefresh();
+  });
+});
+// ----- 입력 칸 -----
+function castFieldsHTML(m){
+  m=m||{};
+  function val(f){ return f==='alias'?(m.alias||[]).join(', '):(m[f]||''); }
+  function inp(f,lab,ph,cls,list){ return '<label class="cast-l'+(cls?' '+cls:'')+'"><span>'+lab+'</span><input class="cast-in" data-f="'+f+'" value="'+wsEsc(val(f))+'" placeholder="'+ph+'"'+(list?' list="cast-roles"':'')+' autocomplete="off"></label>'; }
+  function ta(f,lab,ph){ return '<label class="cast-l"><span>'+lab+'</span><textarea class="cast-in" data-f="'+f+'" rows="2" placeholder="'+ph+'">'+wsEsc(val(f))+'</textarea></label>'; }
+  return '<div class="cast-f">'+inp('name','이름','글에 나올 이름','cast-s')+inp('alias','별명','쉼표로 여러 개','cast-s')+inp('role','역할','주인공·조연·악역…','cast-s',1)+
+    inp('desc','한 줄 설명','어떤 사람인지 한 줄','cast-w')+ta('look','외모','')+ta('persona','성격','')+ta('lack','결핍','')+
+    ta('memo','특징','직업·나이·능력·버릇')+ta('speech','말투','반말·존댓말·입버릇')+ta('rel','관계','다른 인물과의 관계')+'</div>';
+}
+function castRead(root){
+  var o={};
+  [].slice.call(root.querySelectorAll('.cast-in[data-f]')).forEach(function(el){ var f=el.getAttribute('data-f'), v=String(el.value||'');
+    if(f==='alias') o.alias=v.split(/[,，、]/).map(function(s){ return s.trim(); }).filter(Boolean); else o[f]=v.trim(); });
+  return o;
+}
+function castFit(ta){ if(!ta || ta.tagName!=='TEXTAREA') return; ta.style.height='auto'; if(ta.scrollHeight) ta.style.height=(ta.scrollHeight+2)+'px'; }
+(function(){ if(document.getElementById('cast-roles')) return; var dl=document.createElement('datalist'); dl.id='cast-roles';
+  dl.innerHTML=CAST_ROLES.map(function(r){ return '<option value="'+r+'">'; }).join(''); document.body.appendChild(dl); })();
+// ----- 캐릭터 모티브 색인 → 등장인물 -----
+var CB={dirty:{}, extra:[], drawn:[], arm:0};
+function castBuildSync(){
+  var box=document.getElementById('ch-cast'); if(!box || !box.firstChild) return;
+  var st=window.__charState?window.__charState():null, cur=st?st.cur:{외모:[],성격:[],결핍:[]};
+  CB.drawn=[];
+  [['외모','look'],['성격','persona'],['결핍','lack']].forEach(function(p){
+    var names=(cur[p[0]]||[]).filter(Boolean).map(function(x){ return x[2]; });
+    names.forEach(function(n){ CB.drawn.push(n); });
+    CB.extra.forEach(function(n){ var r=CHARS.filter(function(x){ return x[2]===n; })[0]; if(r && r[0]===p[0] && names.indexOf(n)<0) names.push(n); });
+    var el=box.querySelector('.cast-in[data-f="'+p[1]+'"]'); if(el && !CB.dirty[p[1]]){ el.value=names.join(', '); castFit(el); }
+  });
+}
+window.__charRendered=function(){ try{ castBuildSync(); }catch(e){} };
+function castBuildMount(){
+  var box=document.getElementById('ch-cast'); if(!box) return;
+  var keep=box.firstChild?castRead(box):null, kf=box.firstChild?castFoldGet(box):'';
+  box.innerHTML='<div class="cast-build"><h4>등장인물로 넣기</h4><p class="small">뽑은 모티브가 외모·성격·결핍 칸에 들어간다. 고쳐 써도 된다. 아래 색인의 ＋로 모티브를 더한다. 이름을 적고 넣으면 <a href="#cast">등장인물</a> 폴더에 저장된다.</p>'+
+    castFieldsHTML(keep||{})+'<div class="cast-acts"><span class="small">작품(폴더)</span>'+castFoldUI(kf&&castFolders().indexOf(kf)>-1?kf:castDef())+
+    '<button class="chip" id="chb-save"><b>등장인물에 넣기</b></button><button class="chip" id="chb-clear" title="적은 칸을 비우고 모티브를 다시 넣는다">비우기</button><span class="small" id="chb-msg"></span></div></div>';
+  castFoldBind(box);
+  [].slice.call(box.querySelectorAll('.cast-in')).forEach(function(el){
+    el.addEventListener('input',function(){ var f=el.getAttribute('data-f'); if(f==='look'||f==='persona'||f==='lack') CB.dirty[f]=1; castFit(el); }); });
+  var msg=document.getElementById('chb-msg'), sv=document.getElementById('chb-save');
+  function say(h){ msg.innerHTML=h; }
+  sv.addEventListener('click',function(){
+    var o=castRead(box);
+    if(!o.name){ say('이름을 적는다.'); var n=box.querySelector('[data-f="name"]'); if(n) try{ n.focus(); }catch(e){} return; }
+    var f=castFoldGet(box); if(!f){ say('새 폴더 이름을 적는다.'); return; }
+    if(castFind(o.name) && CB.arm!==1){ CB.arm=1; sv.innerHTML='<b>한 번 더 누르면 따로 넣음</b>'; say('「'+wsEsc(o.name)+'」이(가) 이미 있다.');
+      setTimeout(function(){ CB.arm=0; sv.innerHTML='<b>등장인물에 넣기</b>'; },4000); return; }
+    CB.arm=0; sv.innerHTML='<b>등장인물에 넣기</b>';
+    o.motifs=CB.drawn.concat(CB.extra.filter(function(n){ return CB.drawn.indexOf(n)<0; }));
+    var m=castNew(o, f, 'chars');
+    say('「'+wsEsc(m.name)+'」을(를) 「'+wsEsc(f)+'」에 넣었다. <a href="#cast">등장인물 보기</a>');
+    CB.dirty={}; CB.extra=[];
+    [].slice.call(box.querySelectorAll('.cast-in')).forEach(function(el){ el.value=''; castFit(el); });
+    castBuildSync(); castBuildFolders(f); castRefresh();
+  });
+  document.getElementById('chb-clear').addEventListener('click',function(){
+    CB.dirty={}; CB.extra=[]; [].slice.call(box.querySelectorAll('.cast-in')).forEach(function(el){ el.value=''; castFit(el); }); castBuildSync(); say(''); });
+  castBuildSync();
+}
+function castBuildFolders(sel){
+  var box=document.getElementById('ch-cast'); if(!box) return; var w=box.querySelector('.cast-fold'); if(!w) return;
+  var cur=sel||castFoldGet(box); var t=document.createElement('span'); t.innerHTML=castFoldUI(castFolders().indexOf(cur)>-1?cur:castDef());
+  w.parentNode.replaceChild(t.firstChild, w); castFoldBind(box);
+}
+(function(){
+  var tb=document.getElementById('ctbl'); if(!tb) return;
+  tb.addEventListener('click',function(e){
+    var b=e.target.closest?e.target.closest('.chadd'):null; if(!b) return;
+    var nm=b.getAttribute('data-cm'), r=CHARS.filter(function(x){ return x[2]===nm; })[0], box=document.getElementById('ch-cast'); if(!r||!box) return;
+    var f={외모:'look',성격:'persona',결핍:'lack'}[r[0]], el=box.querySelector('.cast-in[data-f="'+f+'"]'); if(!el) return;
+    if(CB.extra.indexOf(nm)<0 && CB.drawn.indexOf(nm)<0) CB.extra.push(nm);
+    var parts=String(el.value||'').split(/,\s*/).map(function(s){ return s.trim(); }).filter(Boolean);
+    if(parts.indexOf(nm)<0){ parts.push(nm); el.value=parts.join(', '); castFit(el); }
+    b.textContent='✓'; b.title='「'+r[0]+'」 칸에 넣음'; setTimeout(function(){ b.textContent='＋'; b.title='만드는 인물에 넣기'; },1400);
+  });
+})();
+// ----- 등장인물 페이지 -----
+var CP={open:{}, draft:null, tm:{}, armF:0};
+function castView(){ var v=castLs('castView')||''; return (v && castFolders().indexOf(v)<0)?'':v; }
+function castRefresh(){ if(document.getElementById('cast-list')) castRender(); }
+function castMount(){
+  var root=document.getElementById('cast-root'); if(!root) return;
+  if(!document.getElementById('cast-list')){
+    root.innerHTML='<p class="lede">내 작품의 인물을 작품(폴더)별로 모아 둔다. 랜덤 구성기·아이디어 구성기·즐겨찾기에서 글을 쓸 때 재료나 글에 <b>이름이나 별명이 나오면</b> 그 인물의 설정을 AI에게 함께 보낸다. 적히지 않은 설정은 지어내지 않게 한다.</p>'+
+      '<div class="filterbar cast-top"><button class="chip" id="cast-new"><b>＋ 새 인물</b></button><a class="chip" href="#chars">캐릭터 모티브로 만들기</a>'+
+      '<input id="cast-q" type="search" placeholder="이름·별명·설명 검색" aria-label="등장인물 검색"><span class="count" id="cast-count"></span></div>'+
+      '<div class="cast-fbar" id="cast-fbar"></div>'+
+      '<div class="cast-opt"><label><input type="checkbox" id="cast-auto"> 글이 완성되면 새 인물을 자동으로 넣기</label><label>넣을 폴더 <select id="cast-def"></select></label>'+
+      '<span class="small">글쓰기 결과의 「인물 뽑아 넣기」는 언제든 누를 수 있다. 자동은 글 한 편마다 AI를 한 번 더 부른다.</span></div>'+
+      '<div id="cast-list"></div>';
+    var q=document.getElementById('cast-q'); q.addEventListener('input',function(){ castRender(); });
+    var au=document.getElementById('cast-auto'); au.addEventListener('change',function(){ castLs('castAuto',au.checked?'1':'0'); });
+    var df=document.getElementById('cast-def'); df.addEventListener('change',function(){ castLs('castDef',df.value); });
+    document.getElementById('cast-new').addEventListener('click',function(){
+      var v=castView(); CP.draft={id:recId(), name:'', alias:[], folder:v||castDef(), src:'manual', made:Date.now()};
+      CP.open[CP.draft.id]=1; var qq=document.getElementById('cast-q'); if(qq) qq.value='';
+      castRender(); var n=document.querySelector('#cast-list .cast-card[data-id="'+CP.draft.id+'"] [data-f="name"]'); if(n) try{ n.focus(); }catch(e){}
+    });
+  }
+  castRender();
+}
+function castRender(){
+  var list=document.getElementById('cast-list'); if(!list) return;
+  var fs=castFolders(), all=castAll(), v=castView();
+  var au=document.getElementById('cast-auto'); if(au) au.checked=castAutoOn();
+  var df=document.getElementById('cast-def'); if(df){ var d=castDef(); df.innerHTML=fs.map(function(f){ return '<option'+(f===d?' selected':'')+' value="'+wsEsc(f)+'">'+wsEsc(f)+'</option>'; }).join(''); }
+  // 폴더 줄
+  var cnt={}; all.forEach(function(m){ var f=m.folder||'기본'; cnt[f]=(cnt[f]||0)+1; });
+  var fb=document.getElementById('cast-fbar');
+  if(fb){
+    fb.innerHTML='<div class="chips">'+['',].concat(fs).map(function(f){ return '<button class="chip" data-v="'+wsEsc(f)+'" aria-pressed="'+(f===v?'true':'false')+'">'+(f?wsEsc(f):'전체')+' <span class="cn">'+(f?(cnt[f]||0):all.length)+'</span></button>'; }).join('')+'</div>'+
+      '<div class="cast-fact">'+(v&&v!=='기본'?'<button class="chip" data-fa="ren">이름 바꾸기</button><button class="chip" data-fa="del">폴더 삭제</button>':'')+
+      '<input id="cast-fname" placeholder="새 작품(폴더) 이름"><button class="chip" data-fa="add">폴더 만들기</button><span class="small" id="cast-fmsg"></span></div>';
+    [].slice.call(fb.querySelectorAll('button[data-v]')).forEach(function(b){ b.addEventListener('click',function(){ castLs('castView',b.getAttribute('data-v')); CP.armF=0; castRender(); }); });
+    var fmsg=document.getElementById('cast-fmsg');
+    var say=function(t){ if(fmsg){ fmsg.textContent=t; setTimeout(function(){ if(fmsg.textContent===t) fmsg.textContent=''; },3500); } };
+    [].slice.call(fb.querySelectorAll('button[data-fa]')).forEach(function(b){ b.addEventListener('click',function(){
+      var a=b.getAttribute('data-fa'), inp=document.getElementById('cast-fname'), nv=String(inp.value||'').replace(/\s+/g,' ').trim();
+      if(a==='add'){ if(!nv){ say('폴더 이름을 적는다.'); return; } if(fs.indexOf(nv)>-1){ say('이미 있는 폴더다.'); return; }
+        castFolderMake(nv); castLs('castView',nv); castRender(); castBuildFolders(); return; }
+      if(a==='ren'){
+        if(!nv){ say('위 칸에 새 이름을 적고 누른다.'); try{ inp.focus(); }catch(e){} return; }
+        if(fs.indexOf(nv)>-1){ say('이미 있는 폴더다.'); return; }
+        castFolderMake(nv); all.forEach(function(m){ if((m.folder||'기본')===v){ m.folder=nv; recPut(CAST_KEY,m); } });
+        recDel(CAST_KEY,'cf_'+v); if(castLs('castDef')===v) castLs('castDef',nv);
+        castLs('castView',nv); castRender(); castBuildFolders(); return; }
+      if(a==='del'){
+        var n=cnt[v]||0;
+        if(n && CP.armF!==1){ CP.armF=1; b.textContent='한 번 더 누르면 폴더와 인물 '+n+'명 삭제'; b.setAttribute('data-arm','1');
+          setTimeout(function(){ if(b.getAttribute('data-arm')==='1'){ CP.armF=0; b.setAttribute('data-arm',''); b.textContent='폴더 삭제'; } },4000); return; }
+        CP.armF=0; all.forEach(function(m){ if((m.folder||'기본')===v) recDel(CAST_KEY,m.id); });
+        recDel(CAST_KEY,'cf_'+v); if(typeof gdIntent==='function') gdIntent();
+        if(castLs('castDef')===v) castLs('castDef','기본');
+        castLs('castView',''); castRender(); castBuildFolders(); say('「'+v+'」를 지웠다.'); }
+    }); });
+  }
+  // 인물 목록
+  var q=String((document.getElementById('cast-q')||{}).value||'').trim().toLowerCase();
+  var ms=all.filter(function(m){ return !v || (m.folder||'기본')===v; });
+  if(q) ms=ms.filter(function(m){ return [m.name,(m.alias||[]).join(' '),m.role,m.desc].join(' ').toLowerCase().indexOf(q)>-1; });
+  var roleN=function(m){ var i=CAST_ROLES.indexOf(String(m.role||'').trim()); return i<0?CAST_ROLES.length:i; };
+  ms.sort(function(a,b){ return roleN(a)-roleN(b) || (a.made||a.at||0)-(b.made||b.at||0); });
+  if(CP.draft && !all.some(function(m){ return m.id===CP.draft.id; })) ms.unshift(CP.draft); else CP.draft=null;
+  var c=document.getElementById('cast-count'); if(c) c.textContent=(q||v?ms.length+' / ':'')+all.length+'명';
+  var groups=[]; (v?[v]:fs).forEach(function(f){ var g=ms.filter(function(m){ return (m.folder||'기본')===f; }); if(g.length) groups.push([f,g]); });
+  if(!groups.length){
+    list.innerHTML='<p class="small cast-empty">'+(q?'검색에 맞는 인물이 없다.':(all.length?'이 폴더에 인물이 없다. 「＋ 새 인물」을 누른다.':'아직 인물이 없다. 「＋ 새 인물」을 누르거나 <a href="#chars">캐릭터 모티브 색인</a>에서 뽑아 넣는다. 글쓰기 결과의 「인물 뽑아 넣기」로 글에 나온 인물을 넣을 수도 있다.'))+'</p>';
+    return;
+  }
+  list.innerHTML=groups.map(function(g){ return '<div class="cast-grp"><h4 class="cast-gh">'+wsEsc(g[0])+' <span class="small">'+g[1].length+'명</span></h4>'+g[1].map(castCardHTML).join('')+'</div>'; }).join('');
+  [].slice.call(list.querySelectorAll('.cast-card')).forEach(castCardBind);
+}
+var CAST_SRC={chars:'모티브', auto:'글에서', manual:''};
+function castHeadHTML(m){
+  return '<b>'+(m.name?wsEsc(m.name):'<span class="small">(이름 없음)</span>')+'</b>'+(m.role?'<span class="cast-role">'+wsEsc(m.role)+'</span>':'')+
+    ((m.alias||[]).length?'<span class="small">'+wsEsc(m.alias.join(', '))+'</span>':'')+(CAST_SRC[m.src]?'<span class="cast-src">'+CAST_SRC[m.src]+'</span>':'')+
+    '<span class="cast-d">'+(m.desc?wsEsc(m.desc):'')+'</span>';
+}
+function castCardHTML(m){
+  var op=!!CP.open[m.id];
+  return '<div class="cast-card'+(op?' open':'')+'" data-id="'+wsEsc(m.id)+'"><button class="cast-h" aria-expanded="'+(op?'true':'false')+'">'+castHeadHTML(m)+'</button>'+
+    '<div class="cast-body"'+(op?'':' hidden')+'>'+castFieldsHTML(m)+
+    ((m.motifs||[]).length?'<p class="small cast-mt">모티브 — '+m.motifs.map(wsEsc).join(' · ')+'</p>':'')+
+    '<div class="cast-acts"><span class="small">작품(폴더)</span>'+castFoldUI(m.folder||'기본')+'<button class="chip" data-del="1">삭제</button><span class="small cast-saved"></span></div></div></div>';
+}
+function castCardBind(card){
+  var id=card.getAttribute('data-id'), h=card.querySelector('.cast-h'), body=card.querySelector('.cast-body'), saved=card.querySelector('.cast-saved');
+  function get(){ var o=recLoad(CAST_KEY).items[id]; return o || (CP.draft&&CP.draft.id===id?CP.draft:null); }
+  h.addEventListener('click',function(){ var op=body.hidden; body.hidden=!op; card.classList.toggle('open',op); h.setAttribute('aria-expanded',op?'true':'false');
+    if(op){ CP.open[id]=1; [].slice.call(body.querySelectorAll('textarea')).forEach(castFit); } else delete CP.open[id]; });
+  if(!body.hidden) setTimeout(function(){ [].slice.call(body.querySelectorAll('textarea')).forEach(castFit); },0);
+  function save(){
+    var m=get(); if(!m) return; var o=castRead(body);
+    var empty=!o.name && !(o.alias||[]).length && !o.role && !o.desc && CAST_TXT.every(function(f){ return !o[f[0]]; });
+    if(empty && CP.draft && CP.draft.id===id) return;
+    Object.keys(o).forEach(function(k){ m[k]=o[k]; });
+    recPut(CAST_KEY, m); if(CP.draft && CP.draft.id===id) CP.draft=null;
+    h.innerHTML=castHeadHTML(m); if(saved){ saved.textContent='저장됨'; setTimeout(function(){ saved.textContent=''; },1200); }
+  }
+  [].slice.call(body.querySelectorAll('.cast-in')).forEach(function(el){
+    el.addEventListener('input',function(){ castFit(el); clearTimeout(CP.tm[id]); CP.tm[id]=setTimeout(save,400); });
+    el.addEventListener('blur',function(){ if(CP.tm[id]){ clearTimeout(CP.tm[id]); CP.tm[id]=0; save(); } });
+  });
+  castFoldBind(card.querySelector('.cast-acts'), function(f){
+    clearTimeout(CP.tm[id]); save(); var m=get(); if(!m) return; m.folder=f;
+    if(CP.draft && CP.draft.id===id){ CP.draft.folder=f; } else recPut(CAST_KEY,m);
+    var vv=castView(); if(vv && vv!==f) castLs('castView',f); castRender(); castBuildFolders(); });
+  var del=card.querySelector('[data-del]');
+  del.addEventListener('click',function(){
+    if(del.getAttribute('data-arm')!=='1'){ del.setAttribute('data-arm','1'); del.textContent='한 번 더 누르면 삭제';
+      setTimeout(function(){ if(del.isConnected!==false){ del.setAttribute('data-arm',''); del.textContent='삭제'; } },4000); return; }
+    clearTimeout(CP.tm[id]); if(CP.draft && CP.draft.id===id) CP.draft=null; else recDel(CAST_KEY,id);
+    delete CP.open[id]; castRender(); });
+}
+(function(){
+  var pc=PAGE_ON.chars; PAGE_ON.chars=function(){ if(pc) try{ pc(); }catch(e){} castBuildFolders(); };
+  var pk=PAGE_ON.cast; PAGE_ON.cast=function(){ if(pk) try{ pk(); }catch(e){} castMount(); };
+  castBuildMount(); castMount();
+})();
 // [[/MOD:cast]]
 // [[MOD:texts]] 글 보관함
 // [[/MOD:texts]]
