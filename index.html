@@ -415,6 +415,10 @@ li.twres{list-style:none; display:block}
 
 .addtag{color:var(--note)}
 .czwhy{color:var(--note)}
+#idr-plan .plan{border:2px solid var(--mark); padding:.6rem .9rem; margin:.6rem 0 1rem; background:var(--paper)}
+#idr-plan .plan h4{margin:0 0 .3rem} #idr-plan ol{margin:0; padding-left:1.2rem} #idr-plan li{margin:.15rem 0}
+#id-recout .pbrow .inplan{color:var(--mark); white-space:nowrap}
+#ideacomp .idbox textarea{width:100%}
 .aistat{border:1px solid var(--rule-hard); background:var(--paper-2,rgba(0,0,0,.03)); padding:.55rem .75rem; margin:.6rem 0; font-size:.86rem; line-height:1.55}
 .aistat b{color:var(--mark)} .aistat .warn{color:var(--mark)} .aistat .chip{margin:.25rem .3rem 0 0}
 .aiwhy{display:block; color:var(--note); font-size:.8rem; margin-top:.2rem}
@@ -1640,13 +1644,7 @@ details.gdet[open] summary{margin-bottom:.5rem}
   <div id="sf-out"></div>
   <div id="sf-endbox"></div>
   <div id="sf-cut"></div>
-  <details class="aidet idbox" open><summary>아이디어</summary>
-    <p class="small">떠오른 것을 대충 적는다. 체크해 두면 이 구성기의 AI 결과에 함께 반영되고, 색인에서 어울리는 항목도 찾아 붙인다. 두 곳의 아이디어 칸은 같은 내용이다.</p>
-    <textarea class="id-text" id="id-text" rows="5" placeholder="예) 기억을 파는 가게 / 주인공은 동생 병원비 때문에 자기 기억을 판다 / 끝은 씁쓸하게"></textarea>
-    <div class="filterbar"><label style="font-size:.84rem"><input type="checkbox" class="id-use" id="id-use" checked> AI에 반영</label><span class="count id-count"></span><button class="chip" id="id-rec">아이디어로 추천받기</button></div>
-    <p class="small">「아이디어로 추천받기」 — 적어 둔 내용만 보고 사전에서 <b>소재·클리셰(초반·중반·후반)·엔딩·캐릭터 모티브</b>를 골라 준다. ① AI가 아이디어에서 장르와 연관어를 뽑고 ② 그 연관어로 사전을 검색해 갈래마다 후보를 추린 뒤 ③ 그중에서 이어지게 고른다. 갈래마다 ↻로 검색 결과의 다음 후보를 본다. 마음에 들면 ☆로 담거나 구성기에 바로 채운다.</p>
-    <div id="id-recout"></div>
-  </details>
+  <p class="small">내 아이디어에서 출발해 짜려면 → <a href="#ideacomp"><b>아이디어 구성기</b></a>. 이 구성기는 아이디어와 상관없이 소재와 후보로만 굴린다(줄거리 쓰기만 아이디어를 함께 읽는다).</p>
   <div class="filterbar" id="ai-bar"></div>
   <div id="ai-out"></div>
 
@@ -1679,6 +1677,24 @@ details.gdet[open] summary{margin-bottom:.5rem}
   <div class="warnbox">소재는 재료일 뿐 주제가 아니다. 뽑힌 소재가 <b>왜 이 인물에게 치명적인가</b>를 만들어 내는 것이 작업의 절반이다.</div>
 </section>
 
+
+<section class="blk" id="ideacomp">
+  <h2 class="big">아이디어 구성기</h2>
+  <p class="lede">그리고 싶은 만화를 한두 줄 적으면, AI가 <b>장르와 연관어</b>를 뽑고 그 말로 사전을 찾아 <b>소재 → 초반 → 중반 → 후반 → 엔딩 → 주인공</b>을 이어지게 골라 <b>구성안</b>을 만든다. 무작위로 굴리는 <a href="#shuffle">랜덤 구성기</a>와 달리 여기서는 내 아이디어가 출발점이다.</p>
+  <div class="idbox">
+    <textarea class="id-text" id="id-text" rows="6" placeholder="예) 기억을 파는 가게 / 주인공은 동생 병원비 때문에 자기 기억을 판다 / 끝은 씁쓸하게"></textarea>
+    <div class="filterbar"><button class="chip" id="id-rec"><b>구성안 만들기</b></button><label style="font-size:.84rem"><input type="checkbox" class="id-use" id="id-use" checked> 다른 AI 글쓰기에도 반영</label><span class="count id-count"></span></div>
+    <p class="small">이 아이디어는 즐겨찾기 페이지의 아이디어 칸과 같은 내용이다. 「다른 AI 글쓰기에도 반영」을 켜 두면 랜덤 구성기·즐겨찾기의 줄거리 쓰기에도 함께 들어간다.</p>
+  </div>
+  <div id="id-recout"></div>
+  <h3>쓰는 법</h3>
+  <ul class="small">
+    <li><b>구성안 만들기</b> — AI를 두 번 부른다. ① 아이디어에서 핵심·장르·연관어 ② 연관어로 사전에서 찾은 후보 중에서 고르기. 빠른 모델이면 몇 초.</li>
+    <li>맨 위 <b>구성안</b>은 갈래마다 첫 번째 추천을 이어 놓은 것이다. 아래 갈래에서 다른 항목의 <b>구성안에</b>를 누르면 그걸로 바뀐다.</li>
+    <li>갈래 제목 옆 <b>↻</b>는 검색 결과의 다음 후보를 보여 준다(AI를 다시 부르지 않는다).</li>
+    <li><b>랜덤 구성기로 보내기</b>는 구성안을 랜덤 구성기 칸에 넣고 📌 고정한 뒤 그 페이지로 넘어간다. 거기서 궁합 점검·줄거리 쓰기를 이어 할 수 있다.</li>
+  </ul>
+</section>
 
 <section class="blk" id="arc">
   <h2 class="big">아크 점검표</h2>
@@ -2628,6 +2644,7 @@ var PAGES=[
  {g:'기초',id:'authors',t:'작가별 연출 문법',d:'나루토·죠죠·아키라·원피스·핑퐁 등 12가지 대표 연출.'},
  {g:'기초',id:'pagemap',t:'페이지 배분 설계',d:'도입·초반·중반·정점·마무리 다섯 구간의 지면 계산.'},
  {g:'도구',id:'shuffle',t:'랜덤 구성기',d:'소재·클리셰·엔딩을 한 번에. 연재 모드와 고정 지원.'},
+ {g:'도구',id:'ideacomp',t:'아이디어 구성기',d:'적어 둔 아이디어로 소재·클리셰·엔딩·주인공을 골라 구성안을 만든다.'},
  {g:'도구',id:'arc',t:'아크 점검표',d:'장편용. 네 칸을 채워 점검하고 장르별 예시 48개.'},
  {g:'도구',id:'epidx',t:'에피소드 소재 색인',d:'220개. 한 화를 채우는 작은 사건. 로맨스·개그·일상.'},
  {g:'도구',id:'ai',t:'AI 연결',d:'OpenRouter 키를 넣고 비틀기·연관짓기·글쓰기를 쓴다.'},
@@ -4152,6 +4169,7 @@ function relWordsLocal(text){
   var raw=String(text||'').replace(/[^\uAC00-\uD7A3A-Za-z0-9 ]/g,' ').split(/\s+/).filter(function(w){ return w.length>=2; }), out=[];
   raw.forEach(function(w){ var st=ixStem(w);
     if(st===w && /(고|은|는|다|한|된|던|며|서|게|지|요|니|면)$/.test(w)) return;   // 「열리고」「읽은」 같은 서술어 꼴은 검색어로 쓰지 않는다
+    if(REL_STOP[st]) return;
     [st,w].forEach(function(x){ if(x && x.length>=2 && !IX_STOP[x] && !REL_STOP[x] && out.indexOf(x)<0) out.push(x); }); });
   return out.slice(0,24);
 }
@@ -4217,14 +4235,33 @@ function ideaRec(box){
     {id:'ch', title:'캐릭터 모티브', n:3, col:2, key:kch, kind:'ch', meta:function(r){ return r[0]+' · '+r[1]+' — '+r[3]; }, base:function(){ return CHARS; }}
   ];
   var R={}, SL={}, OFF={}, summary='', genre='', words=[];
-  box.innerHTML='<div class="aires"><p id="idr-sum" class="small">1/2 아이디어에서 장르와 연관어를 뽑는 중…</p>'+SEC.map(function(sc){ return '<div class="pbsec" id="idr-'+sc.id+'"><h4>'+sc.title+'</h4><p class="small">기다리는 중…</p></div>'; }).join('')+
-    '<div id="idr-extra"></div><div class="filterbar" id="idr-bar" hidden><button class="chip" id="id-apply">구성기에 채우기 (첫 번째 추천으로, 고정)</button><button class="chip" id="id-favall">전부 ☆ 담기</button><button class="chip" id="id-copy">복사</button></div></div>';
+  box.innerHTML='<div class="aires"><p id="idr-sum" class="small">1/2 아이디어에서 장르와 연관어를 뽑는 중…</p><div id="idr-plan"></div>'+SEC.map(function(sc){ return '<div class="pbsec" id="idr-'+sc.id+'"><h4>'+sc.title+'</h4><p class="small">기다리는 중…</p></div>'; }).join('')+
+    '<div id="idr-extra"></div><div class="filterbar" id="idr-bar" hidden><button class="chip" id="id-apply"><b>랜덤 구성기로 보내기</b> (구성안을 칸에 넣고 고정)</button><button class="chip" id="id-favall">전부 ☆ 담기</button><button class="chip" id="id-copy">구성안 복사</button></div></div>';
   function el(id){ return document.getElementById(id); }
+  function planText(){
+    var L=[], nm=function(id,col){ var o=(R[id]||[])[0]; return o?o.r[col]:''; };
+    if(summary) L.push('핵심: '+summary);
+    if(genre) L.push('장르: '+genre);
+    if(nm('m',0)) L.push('소재: '+nm('m',0));
+    [['early','초반'],['mid','중반'],['late','후반']].forEach(function(x){ if(nm(x[0],0)) L.push(x[1]+': '+nm(x[0],0)); });
+    if(nm('e',1)) L.push('엔딩: '+nm('e',1));
+    var ch=(R.ch||[]).map(function(o){ return o.r[0]+' '+o.r[2]; }); if(ch.length) L.push('주인공: '+ch.join(' / '));
+    return L.join('\n');
+  }
+  function renderPlan(){
+    var d=el('idr-plan'); if(!d) return;
+    var rows=[['m','소재',0],['early','초반',0],['mid','중반',0],['late','후반',0],['e','엔딩',1]].map(function(x){ var o=(R[x[0]]||[])[0]; return o?'<li><b>'+x[1]+'</b> '+esc(o.r[x[2]])+' <span class="small">— '+esc(o.why)+'</span></li>':''; }).join('');
+    var ch=(R.ch||[]).map(function(o){ return esc(o.r[0]+' · '+o.r[2]); });
+    if(ch.length) rows+='<li><b>주인공</b> '+ch.join(' / ')+'</li>';
+    d.innerHTML=rows?'<div class="plan"><h4>구성안</h4><ol>'+rows+'</ol></div>':'';
+  }
   function paintSec(sc){
     var d=el('idr-'+sc.id); if(!d) return;
     if(!R[sc.id] || !R[sc.id].length){ d.innerHTML='<h4>'+sc.title+'</h4><p class="small">연관어에 맞는 항목을 찾지 못했다.</p>'; return; }
-    d.innerHTML='<h4>'+sc.title+((SL[sc.id]||[]).length>sc.n?' <button class="chip" data-idr="'+sc.id+'" title="검색 결과의 다음 항목으로">↻</button>':'')+'</h4>'+R[sc.id].map(function(o){ var k=sc.key(o.r), on=!!FAV[k];
-      return '<div class="pbrow"><button class="fav" data-k="'+esc(k).replace(/"/g,'&quot;')+'" data-meta="아이디어 추천" aria-pressed="'+(on?'true':'false')+'">'+(on?'★':'☆')+'</button><div class="b"><b>'+esc(o.r[sc.col])+'</b> <span class="small">'+esc(sc.meta(o.r))+'</span><span class="w">'+esc(o.why)+'</span></div></div>'; }).join('');
+    d.innerHTML='<h4>'+sc.title+((SL[sc.id]||[]).length>sc.n?' <button class="chip" data-idr="'+sc.id+'" title="검색 결과의 다음 항목으로">↻</button>':'')+'</h4>'+R[sc.id].map(function(o,i2){ var k=sc.key(o.r), on=!!FAV[k];
+      return '<div class="pbrow"><button class="fav" data-k="'+esc(k).replace(/"/g,'&quot;')+'" data-meta="아이디어 추천" aria-pressed="'+(on?'true':'false')+'">'+(on?'★':'☆')+'</button><div class="b"><b>'+esc(o.r[sc.col])+'</b> <span class="small">'+esc(sc.meta(o.r))+'</span><span class="w">'+esc(o.why)+'</span></div>'+
+        (sc.id!=='ch'?(i2===0?'<span class="small inplan">구성안</span>':'<button class="chip" data-pick="'+sc.id+':'+i2+'">구성안에</button>'):'')+'</div>'; }).join('');
+    renderPlan();
   }
   function shortlist(sc){
     var list;
@@ -4239,7 +4276,7 @@ function ideaRec(box){
   }
   function finish(){
     if(tok!==ideaRec.tok) return;
-    SEC.forEach(paintSec);
+    SEC.forEach(paintSec); renderPlan();
     var bar=el('idr-bar'); if(bar) bar.hidden=!SEC.some(function(sc){ return R[sc.id]&&R[sc.id].length; });
   }
   // 1) 아이디어 → 장르·연관어
@@ -4263,13 +4300,14 @@ function ideaRec(box){
     var txt=SEC.map(function(sc){ return '['+sc.id+' — '+sc.title+' 후보, '+sc.n+'개 고름]\n'+SL[sc.id].map(function(o,k){ var r=o.r; return (k+1)+'. '+r[sc.col]+' — '+String(sc.kind==='c'?r[8]:(sc.kind==='e'?r[2]:(sc.kind==='ch'?r[3]:r[1]))).slice(0,60); }).join('\n'); }).join('\n\n');
     return aiAsk('당신은 만화 기획 편집자다. 반드시 유효한 JSON만 출력한다.',
       '[작가가 그리고 싶은 만화]\n'+t+(summary?'\n[핵심] '+summary:'')+'\n\n'+txt+
-      '\n\n묶음마다 적힌 개수만큼 고른다. 아이디어에 가장 맞고, 초반→중반→후반→엔딩이 이어지는 것을 고른다. 이유는 짧게 한 문장.\n'+
+      '\n\n묶음마다 적힌 개수만큼 고른다. 아이디어에 가장 맞고, 초반→중반→후반→엔딩이 이어지는 것을 고른다. 같은 항목을 두 묶음에 고르지 않는다. 이유는 짧게 한 문장.\n'+
       'JSON만: {"m":[{"pick":번호,"why":""}],"early":[...],"mid":[...],"late":[...],"e":[...],"ch":[...]}', 900)
     .then(function(r2){
       if(tok!==ideaRec.tok) return;
       var j2=null; try{ j2=JSON.parse(String(r2).replace(/```json|```/g,'').trim().replace(/^[^{]*/,'').replace(/[^}]*$/,'')); }catch(e){}
+      var usedC={};   // 초반·중반·후반에 같은 클리셰가 겹치지 않게
       SEC.forEach(function(sc){
-        var sl=SL[sc.id], out=[], seen={};
+        var sl=SL[sc.id], out=[], seen=(sc.kind==='c')?usedC:{};
         ((j2&&j2[sc.id])||[]).forEach(function(x){ var n=parseInt(x&&x.pick,10); if(isNaN(n)) return; var o=sl[n<=0?0:n-1]; if(o && !seen[o.r[sc.col]] && out.length<sc.n){ seen[o.r[sc.col]]=1; out.push({r:o.r, why:String(x.why||'')}); } });
         sl.forEach(function(o){ if(out.length<sc.n && !seen[o.r[sc.col]]){ seen[o.r[sc.col]]=1; out.push({r:o.r, why:(j2?'':'(AI 선택을 못 받아) ')+'연관어 점수 '+o.s}); } });
         R[sc.id]=out;
@@ -4281,6 +4319,8 @@ function ideaRec(box){
   var g=function(id){ return (R[id]||[])[0]; };
   box.onclick=function(ev){
     var bt=ev.target.closest?ev.target.closest('button'):null; if(!bt) return;
+    var pk=bt.getAttribute('data-pick');
+    if(pk){ var pp=pk.split(':'), arr=R[pp[0]]||[], it2=arr.splice(+pp[1],1)[0]; if(it2) arr.unshift(it2); paintSec(SEC.filter(function(x){ return x.id===pp[0]; })[0]); return; }
     var sid=bt.getAttribute('data-idr');
     if(sid){ var sc=SEC.filter(function(x){ return x.id===sid; })[0], sl=SL[sid]||[]; OFF[sid]=(OFF[sid]+sc.n)%Math.max(1,sl.length);
       var o=[]; for(var k=0;k<sc.n && k<sl.length;k++){ var it=sl[(OFF[sid]+k)%sl.length]; if(!o.some(function(x){ return x.r===it.r; })) o.push({r:it.r, why:'검색 결과 다음 후보 (연관어 점수 '+it.s+')'}); }
@@ -4289,13 +4329,13 @@ function ideaRec(box){
       var n=0;
       if(window.__sfApply) n+=window.__sfApply({early:g('early')&&g('early').r, mid:g('mid')&&g('mid').r, late:g('late')&&g('late').r, end:g('e')&&g('e').r});
       if((R.m||[]).length && window.__czSet){ var cn=document.getElementById('cz-n'), k2=Math.min(R.m.length, cn?(parseInt(cn.value,10)||1):1); window.__czSet(R.m.slice(0,k2)); n+=k2; }
-      bt.textContent='채웠다 — '+n+'칸 고정'; var so=document.getElementById('cz-out'); if(so&&so.scrollIntoView) so.scrollIntoView({block:'start'});
+      bt.textContent='보냈다 — '+n+'칸 고정'; setTimeout(function(){ location.hash='#shuffle'; },400);
     } else if(bt.id==='id-favall'){
       var c=0; SEC.forEach(function(sc){ (R[sc.id]||[]).forEach(function(o){ var k=sc.key(o.r); if(!FAV[k]){ favToggle(k,'아이디어 추천'); c++; } }); });
       [].slice.call(box.querySelectorAll('.fav')).forEach(function(b2){ var on=!!FAV[b2.getAttribute('data-k')]; b2.setAttribute('aria-pressed',on?'true':'false'); b2.textContent=on?'★':'☆'; });
       bt.textContent='「'+CURFOLDER+'」에 '+c+'개 담음';
     } else if(bt.id==='id-copy'){
-      var txt=box.querySelector('.aires').innerText.replace(/[☆★↻]/g,'').replace(/\n(구성기에 채우기|전부 ☆ 담기|복사)[^\n]*/g,'');
+      var txt='[구성안]\n'+planText()+'\n\n[아이디어]\n'+t;
       try{ navigator.clipboard.writeText(txt); bt.textContent='복사됨'; }catch(e){ window.prompt('복사',txt); }
     }
   };
@@ -5433,7 +5473,7 @@ function trBlock(kind){
     if(slotIdx.length) parts.push('클리셰 '+slotIdx.length+'칸 × 후보 '+AIK+'개');
     if(EC) parts.push('엔딩 후보 '+EC.length+'개'); if(MC&&MC.idxs.length) parts.push('소재 '+MC.idxs.length+'칸 × 후보 4개');
     aiStat('<b>AI 검토 중</b> — '+(pre&&pre.seed?seedLine(pre.seed)+' → ':'')+parts.join(' · ')+(pre?'를 연관어로 찾아':'를 무작위로 뽑아')+' 하나씩 고르는 중…');
-    var g=nowGenre(), idea=ideaBlock('sf');
+    var g=nowGenre(), idea='';   // 랜덤 구성기는 아이디어와 상관없이 고른다
     var prompt=(idea?idea.replace(/^\n\n/,'')+'\n\n':'')+(g?'[장르] '+g+'\n':'')+(pre&&pre.seed?'[출발점 소재] '+pre.seed.text+' — 연관어: '+pre.seed.words.slice(0,10).join(', ')+'\n(후보는 이 연관어로 사전에서 찾은 것이다)\n':'')+'[분량] '+cutTotal()+'컷\n\n[이미 정해진 것]\n'+(fixed.length?fixed.join('\n'):'(없음)')+
       '\n\n'+txt.join('\n\n')+
       '\n\n각 후보 묶음에서 하나씩 고른다. 묶음마다 따로 고르지 말고, 고른 것들을 이어 붙였을 때 하나의 이야기가 되는 조합을 찾는다.\n'+
@@ -5521,7 +5561,7 @@ function trBlock(kind){
     var tok=++aiTokG, mode=sfModeV();
     var fixedG=(gsel.value!=='rec' && gsel.value!=='all')?gsel.value:null;
     var ci=window.__czInfo?window.__czInfo():{on:false};
-    var idea=ideaText();
+    var idea='';   // 아이디어로 짜는 건 아이디어 구성기에서
     function proceed(sd){
       if(tok!==aiTokG) return;
       if(!sd.genre || gs.indexOf(sd.genre)<0 && sd.genre!=='서사 구조 (장르 공통)'){
@@ -5561,7 +5601,7 @@ function trBlock(kind){
     if(ci.on){ if(ci.ai){ if(window.__czFast) window.__czFast(); } else if(window.__czDraw) window.__czDraw(); }   // AI 없이 소재 정하기
     var texts=ci.on && window.__czItems ? window.__czItems().map(function(x){ return x.plain; }).filter(Boolean) : [];
     if(!texts.length && idea) texts=[idea];
-    if(!texts.length){ aiStat('<span class="small">소재가 꺼져 있고 아이디어도 없어 무작위로 뽑았다.</span>'); var o=sfMode.value; sfMode.value='rand'; all_(); sfMode.value=o; return; }
+    if(!texts.length){ var o=sfMode.value; sfMode.value='rand'; all_(); sfMode.value=o; aiStat('<span class="small">소재가 꺼져 있어 무작위로 뽑았다. 아이디어로 짜려면 <a href="#ideacomp">아이디어 구성기</a>.</span>'); return; }
     if(mode==='ai' && aiReady()) askWords(texts.join(' / ')); else { var loc2=motifSeedInfo(texts.concat(idea&&texts[0]!==idea?[idea]:[])); proceed({text:texts.join(' / '), genre:'', genres:loc2.genres, words:loc2.words}); }
     function askWords(seedText){
       aiStat('<b>연관어 뽑는 중</b> — 소재 「'+hEsc(seedText.slice(0,40))+'」에서 장르와 연관어를 고르는 중…');
@@ -5588,7 +5628,7 @@ function trBlock(kind){
     if(curEnd && elvl()>=0) L.push('엔딩: '+plainEnd(curEnd)+' — '+String(curEnd.note).replace(/<[^>]+>/g,''));
     [].slice.call(document.querySelectorAll('#cz-out .czreal')).forEach(function(x){ var t=x.childNodes[0]?x.textContent.split(' · AI')[0].trim():''; if(t) L.push('소재: '+t); });
     if(!L.length){ aiStat('먼저 「전체 다시 뽑기」로 칸을 채운다.'); return; }
-    var idea=ideaBlock('sf'), g=nowGenre();
+    var idea='', g=nowGenre();
     aiStat('<b>궁합 점검 중</b> — 지금 칸들이 서로 이어지는지 보는 중…');
     aiAsk('당신은 만화 구성 편집자다. 반드시 유효한 JSON만 출력한다.',
       (idea?idea.replace(/^\n\n/,'')+'\n\n':'')+(g?'[장르] '+g+'\n':'')+'[지금 구성]\n'+L.join('\n')+
@@ -5720,7 +5760,7 @@ function trBlock(kind){
       endC=endC.slice(0,40);
       txt.push('[엔딩 후보]\n'+endC.map(function(e,k){ return k+'. '+e[1]+' ('+e[0]+') '+e[2]; }).join('\n'));
     }
-    var prompt=(ideaBlock('sf')?ideaBlock('sf').replace(/^\n\n/,'')+'\n\n':'')+'[고정된 칸]\n'+(anchor.length?anchor.join('\n'):'(없음 — 자유롭게 흐름을 만든다)')+
+    var prompt='[고정된 칸]\n'+(anchor.length?anchor.join('\n'):'(없음 — 자유롭게 흐름을 만든다)')+
       '\n\n'+txt.join('\n\n')+
       '\n\n고정된 칸을 기준으로, 초반→중반→후반→엔딩이 원인과 결과로 이어지도록 비어 있는 칸마다 후보 하나를 고른다. '+
       '앞 칸의 결과가 다음 칸의 원인이 되어야 한다. 무난한 조합보다 한 번 긴장이 꺾이는 흐름을 택한다.\n'+
@@ -6005,7 +6045,7 @@ var runChar=makeIndex({
   function buildOptions(){
     tsel.innerHTML='';
     var raw=lvRaw();
-    if(raw===-1 || raw===7){ var ox=document.createElement('option'); ox.value='-1'; ox.textContent=(raw===7?'아이디어·구성 보고':'—'); tsel.appendChild(ox); return; }
+    if(raw===-1 || raw===7){ var ox=document.createElement('option'); ox.value='-1'; ox.textContent=(raw===7?'지금 구성 보고':'—'); tsel.appendChild(ox); return; }
     if(raw===6){ ['무작위','로맨스','개그','일상','포스트 아포칼립스'].forEach(function(g,i){ var o=document.createElement('option'); o.value=(i===0?-1:i-1); o.textContent=g; tsel.appendChild(o); }); return; }
     var L=raw, o0=document.createElement('option'); o0.value='-1';
     o0.textContent = L===0 ? '갈래 무작위' : '틀 무작위'; tsel.appendChild(o0);
@@ -6108,7 +6148,7 @@ var runChar=makeIndex({
         '<button class="czre" data-i="'+idx+'" title="이것만 다시">\u21bb</button></span></div>';
     }).join('');
     out.style.display='block';
-    if(!items.length && lvRaw()===7) out.innerHTML='<p class="small czhint">AI 추천 — 「소재만 뽑기」나 「전체 다시 뽑기」를 누르면 아래 아이디어 칸과 지금 뽑힌 구성을 보고 사전에서 골라 준다.</p>';
+    if(!items.length && lvRaw()===7) out.innerHTML='<p class="small czhint">AI 추천 — 「소재만 뽑기」나 「전체 다시 뽑기」를 누르면 무작위 후보 4개 중에서 지금 구성에 맞는 것을 AI가 골라 준다.</p>';
     [].slice.call(out.querySelectorAll('.czrow')).forEach(function(row,idx){
       row.addEventListener('click',function(e){
         if(e.target.closest && (e.target.closest('.fav')||e.target.closest('.czre'))) return;
@@ -6166,7 +6206,7 @@ var runChar=makeIndex({
     idxs.forEach(function(k,n){ items[k]=waitItem(cands[n].length); imask[k]=false; });
     paint();
     var keep=items.filter(function(x,k){ return idxs.indexOf(k)<0 && x && x.plain && !x.wait; }).map(function(x){ return x.plain; });
-    var g=window.__genreNow?window.__genreNow():null, idea=ideaBlock('sf');
+    var g=window.__genreNow?window.__genreNow():null, idea='';
     var txt=idxs.map(function(k,n){ return '[소재 '+k+' 후보]\n'+cands[n].map(function(x,q){ return (q+1)+'. '+(x.text||x.plain)+' ('+String(x.sub).replace(/<[^>]+>/g,'')+')'; }).join('\n'); }).join('\n\n');
     var prompt=(idea?idea.replace(/^\n\n/,'')+'\n\n':'')+(g?'[장르] '+g+'\n\n':'')+'[지금 랜덤 구성기에 뽑힌 것]\n'+(drawnCtx()||'(아직 없음)')+
       (keep.length?'\n\n[이미 고른 소재]\n'+keep.join(' / '):'')+'\n\n'+txt+

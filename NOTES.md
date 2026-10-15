@@ -18,7 +18,7 @@
 - 큰 파일이라 `<script>` 태그가 여러 개 잡히면 플랫폼이 주입한 스크립트다. 가장 긴 것이 본 코드다
 
 ## 페이지 (섹션 id)
-oneshot, length, redflag, grammar, authors, pagemap, shuffle, arc, epidx, pino, pcre, pmemo, ai, index, motifidx, chars, favs, endidx, combo, refs, advice, final
+oneshot, length, redflag, grammar, authors, pagemap, shuffle, ideacomp, arc, epidx, pino, pcre, pmemo, ai, index, motifidx, chars, favs, endidx, combo, refs, advice, final
 - `m1`~`m10`은 본편 해설
 - **피노 전용**(`pino`, `pcre`, `pmemo`)은 즐겨찾기 폴더 이름이 **피노설정집**일 때만 홈·목차에 나타난다 (`pinoInsert`, `PINOPAGES`)
 
@@ -105,3 +105,5 @@ arcForm, deviceId, folderMemo, gdBase, gdLast, gdLinked, ideaText, mangaDataVer,
 - **소재 먼저 뽑기 (2026-10, 기본)**: 구성기 「뽑는 방식」(`sf-mode`, localStorage `sfMode`): `ai` 소재 먼저 → AI가 고름 / `fast` 소재 먼저 → 바로(AI 없음) / `rand` 무작위. 흐름 `seedFlow`: ① 소재 정하기(소재가 「AI 추천」이면 후보 4개 중 AI가 고르면서 장르·연관어 10개도 한 번에 받음, 아니면 지금 방식으로 뽑고 `askWords`로 연관어만) ② 장르: 고정 장르 > AI 답 > `MTAG`(소재 138개에 붙인 장르·연관어) > `relGenreGuess` ③ `buildCands`가 연관어로 칸별 후보 4개(그 장르 고유 2개 보장)와 엔딩 후보 4개를 `relRank`로 찾음 ④ `ai`면 `aiReview(…, pre)`로 고르고, `fast`면 `fastPick`이 점수 1등. ↻는 `lastSeed`로 그 칸만. 소재가 꺼져 있으면 아이디어 칸 글을 출발점으로
 - 연관어 검색 도구: `relWordsLocal`(서술어 꼴·`REL_STOP` 제외), `relScore`(이름 3·본문 1.5·앞 두 글자 0.8/0.4), `relRank`, `motifSeedInfo`. 소재 글은 `czText`로 띄어 쓴 형태(`text`)를 넘긴다. 별표 키는 예전 `plain` 그대로
 - **아이디어로 추천받기**도 같은 길: AI 1번(핵심·장르·연관어 12개·사전 밖 제안) → 연관어로 갈래별 후보 8개 → AI 1번(전부 한꺼번에 고름). 고르는 응답을 못 읽으면 점수 순. 갈래 ↻는 검색 결과 다음 후보(AI 안 부름)
+- **아이디어 구성기 페이지(`ideacomp`, 2026-10)**: 아이디어 칸(`id-text`, `id-use`)과 「구성안 만들기」(`id-rec` → `ideaRec`)를 랜덤 구성기에서 떼어 냈다. 맨 위 「구성안」(갈래별 첫 추천을 이은 것, `renderPlan`), 항목마다 「구성안에」(`data-pick`)로 바꾸기, 「랜덤 구성기로 보내기」(칸에 넣고 고정 후 `#shuffle`로 이동), 「구성안 복사」. 초반·중반·후반은 같은 클리셰가 겹치지 않게(`usedC`)
+- **랜덤 구성기는 아이디어를 쓰지 않는다**: AI 검토·소재 먼저·궁합 점검·AI로 잇기·소재 AI 추천에서 아이디어 글을 뺐다. 줄거리 쓰기(`aiDrawn` 기본값)만 아이디어를 읽는다(「다른 AI 글쓰기에도 반영」 체크 시). 소재가 꺼져 있으면 무작위
