@@ -432,6 +432,9 @@ textarea#pb-text{width:100%; font:inherit; font-size:.92rem; padding:.6rem .7rem
 #ix-box .ix-in textarea{flex:1; font:inherit; font-size:16px; padding:.35rem .5rem; border:1px solid var(--rule-hard); background:var(--paper); color:var(--ink); resize:none; max-height:7.5rem; line-height:1.5}
 #ix-box .ix-foot{display:flex; align-items:center; gap:.4rem; padding:0 .6rem .5rem}
 #ix-box .ix-foot .ix-web{padding:0; flex:1}
+#ix-box .ix-src{font-size:.78rem; color:var(--ink-2); white-space:nowrap}
+#ix-box .ix-src select{font-size:.78rem; max-width:9rem}
+#ix-box.mini .ix-src{display:none}
 .ix-newbtn{border:1px solid var(--rule-hard); background:var(--paper-2); color:var(--ink-2); cursor:pointer; font:inherit; font-size:.76rem; padding:.15rem .5rem}
 #ix-box.mini .ix-foot{display:none}
 #ix-big{right:4.2rem}
@@ -2470,9 +2473,9 @@ details.gdet[open] summary{margin-bottom:.5rem}
 </footer>
 <button id="ix-open" title="색인에게 묻기">🔎</button>
 <div id="ix-box" hidden><div class="ix-head">AI와 이야기 <span class="small">— 눌러서 접기</span><button id="ix-big" aria-label="크게">⤢</button><button id="ix-min" aria-label="접기">─</button><button id="ix-close" aria-label="닫기">✕</button></div>
-<div class="ix-log" id="ix-log"><p class="small ix-hello">편하게 이야기한다. 앞에서 한 말을 기억하고 이어 간다. 관련된 사전 항목은 알아서 찾아 「」로 짚어 준다.<br>예) 복수극인데 중반이 늘어져, 뭘 넣지? / 방금 그거 좀 더 어둡게 / 《피노》 주인공 첫 등장 어떻게 할까<br><b>사전에 직접 써넣는다.</b> 「방금 그거 사전에 넣어줘」, 「복수극 클리셰 세 개 만들어서 등록해줘」처럼 말하면 AI가 바로 등록한다. 답마다 붙는 <b>사전에 등록</b> 버튼을 눌러도 그 답에 나온 장치가 들어간다. 「○○ 빼줘」로 뺀다. 「이거 1화 폴더에 담아줘」, 「복수극 클리셰 다섯 개 골라서 복수 폴더에 넣어줘」처럼 말하면 <b>즐겨찾기 폴더에 담는다</b>(없는 폴더는 새로 만듦).<br>본 작품을 분석하려면 제목을 《》로 감싸고 「분석」을 붙인다. 예) 《기생충》 분석해줘 → 쓰인 장치를 찾고 새 장치는 색인에 <b>알아서 추가</b>.</p></div>
+<div class="ix-log" id="ix-log"><p class="small ix-hello">편하게 이야기한다. 앞에서 한 말을 기억하고 이어 간다. 관련된 사전 항목은 알아서 찾아 「」로 짚어 준다.<br>예) 복수극인데 중반이 늘어져, 뭘 넣지? / 방금 그거 좀 더 어둡게 / 《피노》 주인공 첫 등장 어떻게 할까<br>아래 <b>참고</b>에서 답의 근거를 고른다 — 자동 / 내 말만 / 랜덤 구성기만 / 폴더만. 「1화 폴더 것만으로」, 「내가 말한 것만으로」처럼 말해도 된다.<br><b>사전에 직접 써넣는다.</b> 「방금 그거 사전에 넣어줘」, 「복수극 클리셰 세 개 만들어서 등록해줘」처럼 말하면 AI가 바로 등록한다. 답마다 붙는 <b>사전에 등록</b> 버튼을 눌러도 그 답에 나온 장치가 들어간다. 「○○ 빼줘」로 뺀다. 「이거 1화 폴더에 담아줘」, 「복수극 클리셰 다섯 개 골라서 복수 폴더에 넣어줘」처럼 말하면 <b>즐겨찾기 폴더에 담는다</b>(없는 폴더는 새로 만듦).<br>본 작품을 분석하려면 제목을 《》로 감싸고 「분석」을 붙인다. 예) 《기생충》 분석해줘 → 쓰인 장치를 찾고 새 장치는 색인에 <b>알아서 추가</b>.</p></div>
 <div class="ix-in"><textarea id="ix-q" rows="1" placeholder="편하게 말한다 (Shift+Enter 줄바꿈)"></textarea><button id="ix-send">보내기</button></div>
-<div class="ix-foot"><button id="ix-new" class="ix-newbtn">새 대화</button><label class="ix-web"><input type="checkbox" id="ix-web"> 🌐 웹 검색 <span class="small">(한 번에 약 10~30원)</span></label></div></div>
+<div class="ix-foot"><button id="ix-new" class="ix-newbtn">새 대화</button><label class="ix-src">참고 <select id="ix-src"><option value="auto">자동</option></select></label><label class="ix-web"><input type="checkbox" id="ix-web"> 🌐 웹 검색 <span class="small">(한 번에 약 10~30원)</span></label></div></div>
 <div id="tr-float" hidden><div class="face" id="tr-face">🙂</div><div class="time" id="tr-time">00:00</div><div class="msg" id="tr-msg"></div><button id="tr-min" title="접기">─</button><button id="tr-stop" title="멈추기">✕</button></div>
 
 </div>
@@ -4399,6 +4402,7 @@ function favAiBar(){
     var lastQ=''; HIST.forEach(function(m){ if(m.role==='user'){ addQ(m.content); lastQ=m.content; } else addA(m.content, lastQ); }); }
   var SYS='당신은 만화·웹툰 작가의 동료이자 편집자다. 편하게 대화한다. 아이디어를 같이 내고, 좋고 나쁨을 솔직하게 말하고, 필요하면 짧게 되묻는다. 앞에서 한 이야기를 기억하고 이어 간다. '+
     '아래에 붙는 [사전에서 찾은 관련 항목]은 참고 자료다. 도움이 될 때만 쓰고, 쓸 때는 항목 이름을 「이름」으로 표시한다. 사전에 없는 것을 사전 항목처럼 말하지 않는다. 자기 생각과 새 아이디어는 자유롭게 말해도 된다. '+
+    '[참고 범위]를 반드시 지킨다. 범위 밖의 자료를 가져오거나, 붙지 않은 자료가 있는 것처럼 말하지 않는다. '+
     '[작품 설정]이 붙어 있으면 그 설정을 어기지 않고, 거기 없는 설정을 확정된 것처럼 말하지 않는다. '+
     '말투는 편한 존댓말. 길이는 질문에 맞춘다. 마크다운 기호(#, *, -)는 쓰지 않는다.\n\n'+
     '[사전 쓰기 권한] 당신은 이 사전(색인)에 직접 써넣을 수 있다. 작가가 사전·색인·데이터베이스에 넣어 달라, 등록해 달라, 남겨 달라고 하거나, 새 클리셰·소재를 만들어서 넣어 달라고 하면 말로만 넣었다고 하지 말고 답 맨 끝에 아래 블록을 붙인다. 블록이 있어야 실제로 등록된다. 블록 안은 유효한 JSON 배열이어야 한다. 작가가 요청하지 않았으면 블록을 붙이지 않는다. [사전에서 찾은 관련 항목]에 이미 있는 것은 넣지 않는다.\n'+
@@ -4406,23 +4410,76 @@ function favAiBar(){
     '작가가 예전에 추가한 항목을 빼 달라고 하면 <<삭제>>["이름"]<<끝>> 을 붙인다. 뺄 수 있는 것은 [작가가 사전에 추가한 항목]뿐이고, 기본 사전 항목은 뺄 수 없다고 말한다.\n\n'+
     '[폴더에 담기 권한] 작가가 클리셰·소재를 즐겨찾기 폴더에 담아 달라, 넣어 달라, 모아 달라고 하면 답 끝에 아래 블록을 붙인다. 블록이 있어야 실제로 담긴다. 이름은 사전 이름 그대로 쓴다. 폴더 이름을 말하지 않았으면 [즐겨찾기 폴더]의 지금 담는 곳을 쓴다. 없는 폴더 이름이면 새로 만들어진다. 사전에 없는 것을 담으려면 같은 답에서 먼저 <<등록>>으로 등록한 뒤 같은 이름으로 담는다. 폴더가 여러 개면 블록을 여러 번 붙인다.\n'+
     '<<담기>>{"folder":"폴더 이름","items":[{"type":"클리셰","name":"사전 이름"},{"type":"소재","name":"사전 이름"}]}<<끝>>';
-  function ctxFor(t){
+  // --- 참고 범위: 무엇을 근거로 답할지 ---
+  var srcSel=document.getElementById('ix-src');
+  function srcFill(){
+    if(!srcSel) return;
+    var cur=srcSel.value||''; try{ if(!cur || cur==='auto') cur=localStorage.getItem('ixSrc')||'auto'; }catch(e){}
+    srcSel.innerHTML='<option value="auto">자동</option><option value="only">내 말만</option><option value="draw">랜덤 구성기만</option>'+
+      FOLDERS.map(function(f){ return '<option value="f:'+encodeURIComponent(f)+'">📁 '+f.replace(/</g,'&lt;')+'만</option>'; }).join('');
+    srcSel.value=[].some.call(srcSel.options,function(o){ return o.value===cur; })?cur:'auto';
+  }
+  if(srcSel){ srcFill();
+    srcSel.addEventListener('focus',srcFill); srcSel.addEventListener('mousedown',srcFill);
+    srcSel.addEventListener('change',function(){ try{ localStorage.setItem('ixSrc',srcSel.value); }catch(e){} }); }
+  function srcMode(t){
+    var v=srcSel?srcSel.value:'auto';
+    if(v.indexOf('f:')===0){ var f=decodeURIComponent(v.slice(2)); if(FOLDERS.indexOf(f)>-1) return {k:'folder', f:f}; v='auto'; }
+    if(v!=='auto') return {k:v};
+    // 말로 범위를 정한 경우: 「○○만」
+    if(/(내가\s*(말한|쓴|적은|한)|내\s*말|이\s*내용|방금\s*쓴|위에\s*쓴)\s*(것|거|내용|말)?\s*만/.test(t)) return {k:'only'};
+    if(/(랜덤\s*)?구성기\S*\s*(에\s*)?(뽑힌|있는|나온)?\s*(것|거|내용)?\s*만/.test(t)) return {k:'draw'};
+    var nf=folderNamed(t);
+    if(nf && new RegExp(nf.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'\\s*(폴더)?\\S*\\s*(에\\s*)?(담긴|있는|든|안의)?\\s*(것|거|내용|항목)?\\s*만').test(t)) return {k:'folder', f:nf};
+    return {k:'auto', f:nf};
+  }
+  function folderNamed(t){
+    var c=FOLDERS.filter(function(f){ return f!=='기본' && f.length>=1 && t.indexOf(f)>-1; }).sort(function(a,b){ return b.length-a.length; });
+    if(c.length) return c[0];
+    if(/기본\s*폴더/.test(t)) return '기본';
+    return null;
+  }
+  function folderCtx(f){
+    var rowMap={}, motMap={}; ROWS.forEach(function(x){ rowMap[x[0]]=x; }); MOTIFDATA.forEach(function(x){ motMap[x[0]]=x; });
+    var ks=Object.keys(FAV).filter(function(k){ return (FAVDIR[k]||'기본')===f; });
+    var lines=ks.map(function(k){ var tp=k.split('|')[0], nm=k.slice(k.indexOf('|')+1), r;
+      if(tp==='c' && (r=rowMap[nm])) return '[클리셰] '+nm+' ('+r[1]+' · '+r[2]+') — '+r[8];
+      if(tp==='m' && (r=motMap[nm])) return '[소재] '+nm+' ('+r[1]+')';
+      return '['+((typeof LABELS!=='undefined'&&LABELS[tp])||tp)+'] '+nm; });
+    var memo=(typeof fmGet==='function')?fmGet(f):'';
+    return '[「'+f+'」 폴더에 담긴 것 — '+ks.length+'개]\n'+(lines.join('\n')||'(비어 있음)')+(memo?'\n\n[「'+f+'」 폴더 메모]\n'+memo.slice(0,1500):'');
+  }
+  function opsCtx(t){
+    // 등록·담기·빼기에 필요한 정보. 내용 자료가 아니라 작업용이라 어느 범위에서나 붙인다
     var parts=[];
-    var hit=ixSearch(t+' '+HIST.slice(-2).map(function(m){ return m.content; }).join(' ').slice(0,300),20);
-    if(hit.length) parts.push('[사전에서 찾은 관련 항목]\n'+ixText(hit));
-    if(/지금|이거|뽑힌|구성|칸|방금 뽑/.test(t) && typeof aiDrawn==='function'){ var dr=aiDrawn(true); if(dr.trim()) parts.push('[지금 랜덤 구성기에 뽑힌 것]\n'+dr); }
-    if(/피노/.test(t) && typeof pinoOn==='function' && pinoOn() && typeof pinoContext==='function') parts.push('[작품 설정]\n'+pinoContext(3500));
-    var idea=''; try{ idea=(localStorage.getItem('ideaText')||'').trim(); }catch(e){}
-    if(idea && /아이디어|내 (생각|구상)|내가 적은/.test(t)) parts.push('[작가 아이디어]\n'+idea.slice(0,1500));
     if(/추가한|등록한|넣은|넣었던|빼|삭제|지워/.test(t)){ var uu=pbUser(), un=(uu.c||[]).map(function(x){ return x[0]+'(클리셰)'; }).concat((uu.m||[]).map(function(x){ return x[0]+'(소재)'; }));
       parts.push('[작가가 사전에 추가한 항목]\n'+(un.length?un.join(' / '):'없음')); }
-    if(/폴더|즐겨찾기|담아|담기|담을|모아|별표/.test(t)){
-      parts.push('[즐겨찾기 폴더] 지금 담는 곳: '+CURFOLDER+'\n'+FOLDERS.map(function(f){
-        var ks=Object.keys(FAV).filter(function(k){ return (FAVDIR[k]||'기본')===f && /^(c|m)\|/.test(k); });
-        return f+' ('+ks.length+'개)'+(ks.length?': '+ks.slice(0,30).map(function(k){ return k.slice(2); }).join(' / '):'');
-      }).join('\n'));
+    if(/폴더|즐겨찾기|담아|담기|담을|모아|별표/.test(t)) parts.push('[즐겨찾기 폴더 이름] 지금 담는 곳: '+CURFOLDER+' / 전체: '+FOLDERS.join(', '));
+    return parts;
+  }
+  function ctxFor(t){
+    var md=srcMode(t), parts=[], scope='';
+    if(md.k==='only'){
+      scope='작가가 이번에 한 말과 앞의 대화만 근거로 답한다. 사전 검색 결과·랜덤 구성기·즐겨찾기 폴더·아이디어 칸은 붙이지 않았다. 그런 것을 짐작해서 끌어오지 않는다.';
+    } else if(md.k==='draw'){
+      var dr=(typeof aiDrawn==='function')?aiDrawn(true):'';
+      parts.push('[지금 랜덤 구성기에 뽑힌 것]\n'+(dr.trim()||'(아직 뽑힌 것이 없다)'));
+      scope='[지금 랜덤 구성기에 뽑힌 것]과 작가의 말만 근거로 답한다. 즐겨찾기 폴더·아이디어 칸·사전의 다른 항목은 쓰지 않는다.';
+    } else if(md.k==='folder'){
+      parts.push(folderCtx(md.f));
+      scope='「'+md.f+'」 폴더에 담긴 것과 작가의 말만 근거로 답한다. 랜덤 구성기, 다른 폴더, 아이디어 칸의 내용은 쓰지 않는다. 폴더에 없는 장치를 새로 말할 때는 「폴더에는 없지만」이라고 밝힌다.';
+    } else {
+      var hit=ixSearch(t+' '+HIST.slice(-2).map(function(m){ return m.content; }).join(' ').slice(0,300),20);
+      if(hit.length) parts.push('[사전에서 찾은 관련 항목]\n'+ixText(hit));
+      if(md.f) parts.push(folderCtx(md.f));
+      if(/랜덤\s*구성기|구성기|뽑힌|뽑은|뽑아\s*놓은/.test(t) && typeof aiDrawn==='function'){ var dr2=aiDrawn(true); if(dr2.trim()) parts.push('[지금 랜덤 구성기에 뽑힌 것]\n'+dr2); }
+      if(/피노/.test(t) && typeof pinoOn==='function' && pinoOn() && typeof pinoContext==='function') parts.push('[작품 설정]\n'+pinoContext(3500));
+      var idea=''; try{ idea=(localStorage.getItem('ideaText')||'').trim(); }catch(e){}
+      if(idea && /아이디어\s*(칸|노트)|내\s*(생각|구상)|내가\s*적은/.test(t)) parts.push('[작가 아이디어]\n'+idea.slice(0,1500));
+      scope='아래 붙은 자료 가운데 작가의 말과 관계있는 것만 쓴다. 붙지 않은 자료(랜덤 구성기, 다른 폴더, 아이디어 칸)는 있다고 짐작해서 말하지 않는다.'+(md.f?' 이번 말은 「'+md.f+'」 폴더 이야기다.':'');
     }
-    return parts.join('\n\n');
+    parts=parts.concat(opsCtx(t));
+    return '[참고 범위] '+scope+(parts.length?'\n\n'+parts.join('\n\n'):'');
   }
   // --- 사전에 써넣기 ---
   function mkNews(arr){
