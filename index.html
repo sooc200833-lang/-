@@ -609,6 +609,46 @@ details.gdet[open] summary{margin-bottom:.5rem}
 /* [[CSS:cast]] */
 /* [[/CSS:cast]] */
 /* [[CSS:texts]] */
+#texts-root .lede{margin-bottom:1.2rem}
+.tx-top{display:flex; flex-wrap:wrap; gap:.5rem .8rem; align-items:center; margin:0 0 1rem; padding-bottom:.6rem; border-bottom:1px solid var(--rule)}
+.tx-tabs{display:flex; flex-wrap:wrap; gap:.3rem}
+.tx-tabs .chip{font-size:.84rem; padding:.28rem .7rem}
+.tx-n{font-size:.74rem; opacity:.75; font-variant-numeric:tabular-nums}
+.tx-tools{display:flex; flex-wrap:wrap; gap:.4rem .8rem; align-items:center; margin-left:auto}
+.tx-q{font:inherit; font-size:.85rem; padding:.34rem .6rem; border:1px solid var(--rule-hard); background:var(--paper); color:var(--ink); width:min(220px,100%)}
+.tx-auto{font-size:.8rem; color:var(--ink-2); display:inline-flex; align-items:center; gap:.3rem; cursor:pointer; white-space:nowrap}
+.tx-grp h3{font-size:1.02rem; margin:1.4rem 0 .5rem; padding-bottom:.25rem; border-bottom:1px solid var(--rule)}
+.tx-grp:first-child h3{margin-top:.2rem}
+.tx-it{border:1px solid var(--rule-hard); background:var(--paper-2); padding:.6rem .8rem .55rem; margin:0 0 .7rem; transition:box-shadow .3s}
+.tx-it.tx-flash{box-shadow:0 0 0 2px var(--note)}
+.tx-h{display:flex; align-items:center; gap:.5rem}
+.tx-fmt{flex:none; font-size:.7rem; color:var(--ink-3); border:1px solid var(--rule-hard); padding:0 .3rem; line-height:1.5}
+.tx-title{flex:1; min-width:0; font-family:"Hahmlet",serif; font-weight:700; font-size:.95rem; color:var(--ink); background:transparent; border:0; border-bottom:1px dashed transparent; padding:.1rem 0}
+.tx-title:hover{border-bottom-color:var(--rule-hard)}
+.tx-title:focus{outline:none; border-bottom-color:var(--ink-3)}
+.tx-meta{font-size:.76rem; color:var(--ink-3); margin:.15rem 0 .4rem; line-height:1.6}
+.tx-links{display:inline-flex; flex-wrap:wrap; gap:.15rem .5rem; margin-left:.2rem}
+.tx-kids .tx-lk{margin-left:.15rem}
+.tx-lk{font:inherit; font-size:.76rem; background:none; border:0; padding:0; color:var(--note); cursor:pointer; text-decoration:underline; text-underline-offset:2px}
+.tx-pre{white-space:pre-wrap; font-size:.9rem; line-height:1.75; max-height:calc(1.75em * 4); overflow:hidden; cursor:pointer;
+  -webkit-mask-image:linear-gradient(#000 55%, transparent); mask-image:linear-gradient(#000 55%, transparent)}
+.tx-fold{display:block; margin:.15rem 0 0}
+.tx-act{display:flex; flex-wrap:wrap; gap:.3rem; align-items:center; margin-top:.45rem}
+.tx-act .chip{font-size:.74rem; padding:.1rem .45rem}
+.tx-conv{display:inline-flex; flex-wrap:wrap; gap:.3rem; align-items:center; font-size:.76rem; color:var(--ink-3); margin-left:.3rem}
+.tx-act .tx-del{margin-left:auto}
+.tx-act .tx-del[data-arm="1"]{border-color:var(--mark); color:var(--mark)}
+.tx-note{font-size:.8rem; color:var(--green); margin-top:.35rem}
+.tx-note.err{color:var(--mark)}
+.tx-empty{border:1px dashed var(--rule-hard); padding:1rem; color:var(--ink-2)}
+.tx-empty p{margin:.2rem 0}
+.wstage .chip.tx-in{border-color:var(--green); color:var(--green)}
+@media (max-width:640px){
+  .tx-tools{margin-left:0; width:100%}
+  .tx-q{flex:1; width:auto; font-size:16px}
+  .tx-title, textarea.tx-ed{font-size:16px}
+  .tx-conv{margin-left:0}
+}
 /* [[/CSS:texts]] */
 /* [[CSS:desk]] */
 /* [[/CSS:desk]] */
@@ -6704,6 +6744,194 @@ var runChar=makeIndex({
 // [[MOD:cast]] 등장인물
 // [[/MOD:cast]]
 // [[MOD:texts]] 글 보관함
+// 기록: mangaTexts {items:{id:{id,fmt,title,text,from,cut,ref,parent,created,at}}, gone}. textsAuto(기기별, '0'=끔), textsTab(기기별)
+var TXK='mangaTexts', TXFROM={shuffle:'랜덤 구성기', ideacomp:'아이디어 구성기', favs:'즐겨찾기'}, TXFMT=['plot','novel','cuts'];
+var TX={tab:null, q:'', open:{}, busy:{}, note:{}, pend:{}, ptm:{}, built:false};
+function txAuto(){ try{ return localStorage.getItem('textsAuto')!=='0'; }catch(e){ return true; } }
+function txGet(id){ return id ? (recLoad(TXK).items[id]||null) : null; }
+function txUpd(id, patch){ var it=txGet(id); if(!it) return null; Object.keys(patch).forEach(function(k){ it[k]=patch[k]; }); return recPut(TXK,it); }
+function txFind(fmt, text){ text=String(text||''); if(!text.trim()) return null;
+  var L=recList(TXK); for(var i=0;i<L.length;i++) if(L[i].fmt===fmt && L[i].text===text) return L[i]; return null; }
+function txOn(){ var s=document.getElementById('texts'); return !!(s && s.classList.contains('page-on')); }
+function txKick(){ if(txOn()) txList(); }
+// 구성기 결과 한 칸을 보관함에 넣거나 고친다
+function txStageSave(st, box, opt, text){
+  opt=opt||{}; var S=box&&box._ws, stages=(S&&S.stages)||[], i=stages.indexOf(st);
+  var prev=i>0?stages[i-1]:null, next=i>=0?stages[i+1]:null;
+  text=String(text!=null?text:(st.text||''));
+  var pid=(prev && prev.tid && txGet(prev.tid)) ? prev.tid : '';
+  var rec=st.tid ? txGet(st.tid) : null;
+  if(!rec){ rec=txFind(st.fmt, text); if(rec) st.tid=rec.id; }
+  if(rec){ if(rec.text!==text || (!rec.parent && pid)){ rec.text=text; if(!rec.parent && pid) rec.parent=pid; rec=recPut(TXK, rec); } }
+  else { rec=recPut(TXK, {fmt:st.fmt, title:st.title||WNAME[st.fmt], text:text, from:opt.from||'', cut:opt.cut||70,
+    ref:String(opt.ref||'').slice(0,1500), parent:pid, created:Date.now()}); st.tid=rec.id; }
+  if(next && next.tid){ var c=txGet(next.tid); if(c && !c.parent){ c.parent=rec.id; recPut(TXK,c); } }
+  txKick(); return rec;
+}
+var TXTOOL={label:'보관함에 저장', fn:function(c){
+  txWatch(c.box); txStageSave(c.stage, c.box, c.opt, c.text); txDeco(c.box);
+  var b=c.button; b.textContent='저장됨'; clearTimeout(b.__tm); b.__tm=setTimeout(function(){ txDeco(c.box); },1300);
+}};
+WS_TOOLS.push(TXTOOL);
+WS_DONE.push(function(st, box, opt){ txWatch(box); if(txAuto()) txStageSave(st, box, opt, st.text); txDeco(box); });
+// 결과 머리의 버튼 글자: 보관함에 저장 / 보관함에 있음 / 고친 글 저장
+function txDeco(box){
+  var S=box&&box._ws; if(!S) return; var k=WS_TOOLS.indexOf(TXTOOL), L=null;
+  [].slice.call(box.querySelectorAll('.wstage')).forEach(function(el){
+    var st=S.stages[+el.getAttribute('data-i')], b=el.querySelector('button[data-wt="'+k+'"]'); if(!st || !b) return;
+    var ta=el.querySelector('textarea.wedit'), txt=ta?ta.value:(st.text||'');
+    if(!L) L=recLoad(TXK).items;
+    var rec=st.tid ? L[st.tid] : null;
+    if(!rec){ st.tid=null; Object.keys(L).some(function(id){ var x=L[id]; if(x && x.fmt===st.fmt && x.text===txt && String(txt).trim()){ rec=x; st.tid=id; return true; } }); }
+    txLab(b, rec, txt);
+    if(ta && !ta.__tx){ ta.__tx=1;
+      ta.addEventListener('input', function(){
+        if(!st.tid) return; b.textContent='고친 글 저장'; b.classList.remove('tx-in');
+        if(!txAuto()) return;
+        clearTimeout(ta.__txm); ta.__txm=setTimeout(function(){ if(st.tid && txUpd(st.tid,{text:ta.value})){ txLab(b, txGet(st.tid), ta.value); txKick(); } },800);
+      }); }
+  });
+}
+function txLab(b, rec, txt){ var same=!!rec && rec.text===txt;
+  b.textContent=!rec?'보관함에 저장':(same?'보관함에 있음':'고친 글 저장'); b.classList.toggle('tx-in', same);
+  b.title=!rec?'이 글을 글 보관함에 넣는다':(same?'글 보관함에 들어 있다':'고친 내용으로 보관함의 글을 바꾼다'); }
+function txWatch(box){
+  if(!box || box.__txw || typeof MutationObserver==='undefined') return;
+  box.__txw=new MutationObserver(function(){ txDeco(box); }); box.__txw.observe(box,{childList:true});
+}
+['ai-out','idw-out','fav-ai-out'].forEach(function(id){ txWatch(document.getElementById(id)); });
+
+// ----- 글 보관함 페이지 -----
+function txTab(){ if(TX.tab) return TX.tab; var t='all'; try{ t=localStorage.getItem('textsTab')||'all'; }catch(e){} if(t!=='all' && !WNAME[t]) t='all'; return (TX.tab=t); }
+function txDate(ms){ var d=new Date(ms||0), n=new Date();
+  return (d.getFullYear()!==n.getFullYear()?d.getFullYear()+'. ':'')+(d.getMonth()+1)+'/'+d.getDate()+' '+d.getHours()+':'+('0'+d.getMinutes()).slice(-2); }
+function txLong(t){ t=String(t||''); return t.length>320 || t.split('\n').length>6; }
+function txHit(it, q){ if(!q) return true; q=q.toLowerCase().replace(/\s+/g,'');
+  var s=(String(it.title||'')+'\n'+String(it.text||'')).toLowerCase().replace(/\s+/g,''); return s.indexOf(q)>=0; }
+function txFlush(){ var p=TX.pend; TX.pend={}; Object.keys(p).forEach(function(k){ clearTimeout(TX.ptm[k]); try{ p[k](); }catch(e){} }); }
+function txLater(key, fn, ms){ clearTimeout(TX.ptm[key]); TX.pend[key]=fn;
+  TX.ptm[key]=setTimeout(function(){ if(TX.pend[key]===fn){ delete TX.pend[key]; fn(); } }, ms); }
+function txRender(){
+  var root=document.getElementById('texts-root'); if(!root) return;
+  if(!TX.built || !root.querySelector('.tx-list')){
+    root.innerHTML='<p class="lede">랜덤 구성기·아이디어 구성기·즐겨찾기에서 쓴 줄거리·웹소설·컷별 콘티가 여기 모인다. 여기서 고친 글은 바로 저장되고, 다른 갈래로 바꾼 글은 그 갈래에 새로 들어간다.</p>'+
+      '<div class="tx-top"><div class="tx-tabs" role="tablist"></div>'+
+      '<div class="tx-tools"><input type="search" class="tx-q" placeholder="제목·본문 검색" aria-label="글 검색">'+
+      '<label class="tx-auto"><input type="checkbox" class="tx-autock"> 쓴 글 자동 저장</label></div></div><div class="tx-list"></div>';
+    TX.built=true;
+    var q=root.querySelector('.tx-q'), ck=root.querySelector('.tx-autock');
+    q.value=TX.q; q.addEventListener('input',function(){ TX.q=q.value; clearTimeout(TX.qtm); TX.qtm=setTimeout(txList,200); });
+    ck.addEventListener('change',function(){ try{ localStorage.setItem('textsAuto', ck.checked?'1':'0'); }catch(e){} });
+  }
+  root.querySelector('.tx-autock').checked=txAuto();
+  txList();
+}
+function txList(){
+  var root=document.getElementById('texts-root'); if(!root) return;
+  if(!root.querySelector('.tx-list')){ txRender(); return; }
+  txFlush();
+  // 다시 그려도 쓰던 칸을 놓치지 않게
+  var ae=document.activeElement, keep=null;
+  if(ae && root.contains(ae) && ae.closest && ae.closest('.tx-it')){
+    keep={id:ae.closest('.tx-it').getAttribute('data-id'), cls:ae.classList.contains('tx-title')?'.tx-title':(ae.classList.contains('tx-ed')?'.tx-ed':null)};
+    try{ keep.s=ae.selectionStart; keep.e=ae.selectionEnd; }catch(e){}
+  }
+  var all=recList(TXK).filter(function(x){ return x && WNAME[x.fmt]; }).sort(function(a,b){ return (b.created||b.at||0)-(a.created||a.at||0); });
+  var byId={}, kids={}; all.forEach(function(x){ byId[x.id]=x; }); all.forEach(function(x){ if(x.parent && byId[x.parent]) (kids[x.parent]=kids[x.parent]||[]).push(x); });
+  var q=TX.q.trim(), hits=all.filter(function(x){ return txHit(x,q); }), tab=txTab();
+  var cnt={all:hits.length}; TXFMT.forEach(function(f){ cnt[f]=hits.filter(function(x){ return x.fmt===f; }).length; });
+  root.querySelector('.tx-tabs').innerHTML=['all'].concat(TXFMT).map(function(f){
+    return '<button class="chip" role="tab" data-tab="'+f+'" aria-pressed="'+(f===tab)+'">'+(f==='all'?'전체':WNAME[f])+' <span class="tx-n">'+cnt[f]+'</span></button>'; }).join('');
+  [].slice.call(root.querySelectorAll('.tx-tabs button')).forEach(function(b){
+    b.addEventListener('click',function(){ TX.tab=b.getAttribute('data-tab'); try{ localStorage.setItem('textsTab',TX.tab); }catch(e){} txList(); }); });
+  var box=root.querySelector('.tx-list'), html='';
+  if(!all.length){
+    html='<div class="tx-empty"><p>아직 모인 글이 없다.</p><p class="small"><a href="#shuffle">랜덤 구성기</a>·<a href="#ideacomp">아이디어 구성기</a>·<a href="#favs">즐겨찾기</a>에서 글쓰기를 하면 쓴 글이 줄거리·웹소설·컷별 콘티로 나뉘어 여기 쌓인다. 「쓴 글 자동 저장」을 끄면 결과 위 「보관함에 저장」을 누른 글만 들어온다.</p></div>';
+  } else {
+    var show=hits.filter(function(x){ return tab==='all' || x.fmt===tab; });
+    if(!show.length) html='<p class="small tx-none">'+(q?'「'+wsEsc(q)+'」에 맞는 글이 없다.':'이 갈래에 모인 글이 없다. 다른 갈래의 글에서 「'+WNAME[tab]+'로」를 눌러 바꿔 넣을 수도 있다.')+'</p>';
+    else if(tab==='all') TXFMT.forEach(function(f){ var g=show.filter(function(x){ return x.fmt===f; }); if(!g.length) return;
+      html+='<div class="tx-grp"><h3>'+WNAME[f]+' <span class="tx-n">'+g.length+'</span></h3>'+g.map(function(x){ return txItem(x,byId,kids); }).join('')+'</div>'; });
+    else html=show.map(function(x){ return txItem(x,byId,kids); }).join('');
+  }
+  box.innerHTML=html;
+  [].slice.call(box.querySelectorAll('.tx-it')).forEach(function(el){ txBind(el, byId[el.getAttribute('data-id')]); });
+  if(keep && keep.cls){ var t=box.querySelector('.tx-it[data-id="'+keep.id+'"] '+keep.cls);
+    if(t){ try{ t.focus(); if(keep.s!=null) t.setSelectionRange(keep.s,keep.e); }catch(e){} } }
+}
+function txItem(it, byId, kids){
+  var id=it.id, open=!txLong(it.text)||TX.open[id], busy=TX.busy[id], note=TX.note[id];
+  var meta=[txDate(it.created||it.at), TXFROM[it.from]||(it.from?it.from:'직접'), it.cut?it.cut+'컷':'', '<span class="tx-len">'+String(it.text||'').length+'자</span>'].filter(Boolean).join(' · ');
+  var links='';
+  if(it.parent && byId[it.parent]) links+='<button class="tx-lk" data-go="'+it.parent+'">원본 보기 ('+WNAME[byId[it.parent].fmt]+')</button>';
+  if(kids[id]){ var ks=kids[id].slice().sort(function(a,b){ return (a.created||0)-(b.created||0); });
+    links+='<span class="tx-kids">바꾼 글 '+ks.length+': '+ks.map(function(k){ return '<button class="tx-lk" data-go="'+k.id+'">'+WNAME[k.fmt]+'</button>'; }).join(' ')+'</span>'; }
+  var body=open?'<textarea class="wedit tx-ed" rows="'+wsRows(it.text)+'" spellcheck="false"></textarea>'+(txLong(it.text)?'<button class="tx-lk tx-fold" data-a="fold">접기</button>':'')
+    :'<div class="tx-pre" data-a="unfold">'+wsEsc(it.text)+'</div><button class="tx-lk tx-fold" data-a="unfold">펼치기</button>';
+  var conv=WNEXT[it.fmt].map(function(f){ return '<button class="chip" data-to="'+f+'"'+(busy?' disabled':'')+'>'+(busy===f?'바꾸는 중…':WNAME[f]+'로')+'</button>'; }).join('');
+  var nt='';
+  if(note && note.err) nt='<div class="tx-note err">'+wsEsc(note.err)+'</div>';
+  else if(note && note.id && byId[note.id]) nt='<div class="tx-note">'+WNAME[note.fmt]+'로 바꾼 글을 「'+WNAME[note.fmt]+'」 갈래에 넣었다. <button class="tx-lk" data-go="'+note.id+'">바로 보기</button></div>';
+  return '<article class="tx-it" data-id="'+wsEsc(id)+'"><div class="tx-h"><span class="tx-fmt">'+WNAME[it.fmt]+'</span><input class="tx-title" type="text" aria-label="제목"></div>'+
+    '<div class="tx-meta">'+meta+(links?' <span class="tx-links">'+links+'</span>':'')+'</div>'+body+
+    '<div class="tx-act"><button class="chip" data-a="copy">복사</button><button class="chip" data-a="memo">메모에 넣기</button>'+
+    '<span class="tx-conv">바꾸기 '+conv+'</span><button class="chip tx-del" data-a="del">삭제</button></div>'+nt+'</article>';
+}
+function txBind(el, it){
+  if(!it) return; var id=it.id, ta=el.querySelector('textarea.tx-ed'), ti=el.querySelector('.tx-title');
+  ti.value=it.title||'';
+  ti.addEventListener('input',function(){ var v=ti.value; txLater('ti'+id, function(){ txUpd(id,{title:v}); }, 500); });
+  if(ta){ ta.value=it.text||''; setTimeout(function(){ wsFit(ta); },0);
+    ta.addEventListener('focus',function(){ wsFit(ta); });
+    ta.addEventListener('input',function(){ var v=ta.value; wsFit(ta); var n=el.querySelector('.tx-len'); if(n) n.textContent=v.length+'자';
+      txLater('tx'+id, function(){ txUpd(id,{text:v}); }, 600); }); }
+  [].slice.call(el.querySelectorAll('[data-a],[data-to],[data-go]')).forEach(function(b){
+    b.addEventListener('click',function(){
+      var a=b.getAttribute('data-a'), to=b.getAttribute('data-to'), go=b.getAttribute('data-go'), txt=ta?ta.value:(it.text||'');
+      if(go){ txGo(go); return; }
+      if(to){ txConv(id,to); return; }
+      if(a==='unfold'){ TX.open[id]=true; txList(); var t=document.querySelector('#texts-root .tx-it[data-id="'+id+'"] textarea'); if(t) try{ t.focus(); t.setSelectionRange(0,0); }catch(e){} return; }
+      if(a==='fold'){ delete TX.open[id]; txList(); return; }
+      if(a==='memo'){ var f=fmAppend(ti.value||it.title||WNAME[it.fmt], txt); b.textContent='「'+f+'」에 넣음'; setTimeout(function(){ b.textContent='메모에 넣기'; },1600); return; }
+      if(a==='copy'){
+        try{ if(navigator.clipboard&&navigator.clipboard.writeText){ navigator.clipboard.writeText(txt).catch(function(){window.prompt('복사',txt);});
+          b.textContent='복사됨'; setTimeout(function(){b.textContent='복사';},1200); } else window.prompt('복사',txt);
+        }catch(e){ window.prompt('복사',txt); }
+        return; }
+      if(a==='del'){
+        if(b.getAttribute('data-arm')!=='1'){ b.setAttribute('data-arm','1'); b.textContent='한 번 더'; clearTimeout(b.__tm);
+          b.__tm=setTimeout(function(){ b.removeAttribute('data-arm'); b.textContent='삭제'; },3000); return; }
+        delete TX.pend['tx'+id]; delete TX.pend['ti'+id];
+        recDel(TXK,id); delete TX.note[id]; delete TX.open[id]; txList(); return; }
+    });
+  });
+}
+function txGo(id){
+  txFlush(); var it=txGet(id); if(!it) return;
+  if(TX.tab!=='all' && TX.tab!==it.fmt){ TX.tab=it.fmt; try{ localStorage.setItem('textsTab',TX.tab); }catch(e){} }
+  if(TX.q && !txHit(it,TX.q.trim())){ TX.q=''; var q=document.querySelector('#texts-root .tx-q'); if(q) q.value=''; }
+  TX.open[id]=true; txList();
+  var el=document.querySelector('#texts-root .tx-it[data-id="'+id+'"]'); if(!el) return;
+  try{ el.scrollIntoView({block:'start', behavior:'smooth'}); }catch(e){ try{ el.scrollIntoView(); }catch(e2){} }
+  el.classList.add('tx-flash'); setTimeout(function(){ el.classList.remove('tx-flash'); },1800);
+}
+function txConv(id, to){
+  txFlush(); var it=txGet(id); if(!it || TX.busy[id] || !WNAME[to]) return;
+  if(!aiReady()){ TX.note[id]={err:'AI 연결에서 키를 넣으면 바꿀 수 있다.'}; txList(); return; }
+  var text=String(it.text||'').trim(); if(!text){ TX.note[id]={err:'글이 비어 있다.'}; txList(); return; }
+  var w=convPrompt(text, it.fmt, to, it.cut||70, it.ref||'');
+  TX.busy[id]=to; delete TX.note[id]; txList();
+  aiAsk(WSYS, w.prompt, w.maxTok).then(function(t){
+    delete TX.busy[id];
+    if(aiIsErr(t)) TX.note[id]={err:t};
+    else { var src=txGet(id)||it;
+      var rec=recPut(TXK, {fmt:to, title:WNAME[to]+' ← '+(src.title||WNAME[src.fmt]), text:t, from:src.from||'', cut:src.cut||70, ref:src.ref||'', parent:id, created:Date.now()});
+      TX.note[id]={id:rec.id, fmt:to}; }
+    txKick();
+  });
+}
+window.PAGE_ON.texts=txRender;
+window.addEventListener('storage',function(e){ if(e.key===TXK && txOn()) txList(); });
 // [[/MOD:texts]]
 // [[MOD:desk]] 홈 바탕화면
 // [[/MOD:desk]]
