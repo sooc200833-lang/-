@@ -3196,7 +3196,7 @@ var tbody=document.querySelector('#idxt tbody'), moreBtn=document.getElementById
     count=document.getElementById('count'), q=document.getElementById('q'),
     sel={fn:[],tool:[],pos:[],st:[],cost:[],g:[]}, favOnly=false, mineOnly=false, newOnly=false, filtered=[], shown=0, built=false, STEP=60;
 function match(r){
-  var m={g:r[1],fn:r[2],pos:r[3],st:r[4],cost:r[6]};
+  var m={g:r[1],fn:r[2],pos:r[3],st:r[4],cost:r[6],tool:r[7]};
   for(var k in sel){
     if(!sel[k].length) continue;
     var vals=(k==='tool'||k==='pos')?String(m[k]).split('|'):[m[k]];
