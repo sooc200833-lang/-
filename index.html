@@ -837,7 +837,33 @@ textarea.cast-in{resize:vertical; min-height:2.6em; overflow:hidden}
 }
 /* [[/CSS:poseref]] */
 /* [[CSS:bestcut]] */
+.cast-tabs{display:flex; gap:.2rem; margin:-.3rem 0 1.1rem; border-bottom:1px solid var(--rule-hard)}
+.cast-tab{font:inherit; font-size:.95rem; font-weight:600; letter-spacing:.01em; background:none; color:var(--ink-3); border:0; border-bottom:2px solid transparent; margin-bottom:-1px; padding:.45rem .9rem .5rem; cursor:pointer}
+.cast-tab:hover{color:var(--ink-2)}
+.cast-tab[aria-selected="true"]{color:var(--ink); border-bottom-color:var(--ink)}
+.cast-tab:focus-visible{outline:2px solid var(--note); outline-offset:-2px}
+.cast-tab .cn{font-size:.72rem; font-weight:400; color:var(--ink-3); font-variant-numeric:tabular-nums; margin-left:.1rem}
+#cast > [role=tabpanel][hidden]{display:none}
 #cutlib-root .lede{margin-bottom:1.1rem}
+.bc-pcs{display:flex; gap:.35rem; overflow-x:auto; padding:.1rem 0 .25rem; scrollbar-width:thin}
+.bc-pc{flex:0 0 auto; display:grid; justify-items:center; gap:.1rem; width:3.6rem; padding:.2rem .1rem; font:inherit; font-size:.7rem; color:var(--ink-2); background:var(--paper); border:1px solid var(--rule); cursor:pointer}
+.bc-pc canvas.cast-pic{width:34px; height:40px; display:block}
+.bc-pc span{max-width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+.bc-pc:hover{border-color:var(--rule-hard)}
+.bc-pc[aria-pressed="true"]{border-color:var(--note); box-shadow:inset 0 -3px 0 var(--note); color:var(--ink)}
+.bc-pc:focus-visible{outline:2px solid var(--note); outline-offset:1px}
+.bc-pcn{margin:0; color:var(--ink-3)}
+.bc-rnd{display:grid; gap:.4rem; padding:.5rem .55rem; background:var(--paper); border:1px solid var(--rule-hard); border-left:3px solid var(--mark)}
+.bc-rrow{display:flex; flex-wrap:wrap; gap:.35rem .5rem; align-items:center}
+.bc-rrow > b{font-size:.84rem; margin-right:.1rem}
+.bc-form label.bc-inl{display:inline-flex; gap:.3rem; align-items:center}
+.bc-rnd .chip{font-size:.78rem}
+.bc-locks{font-size:.8rem; color:var(--ink-2)}
+.bc-locks .small{color:var(--ink-3)}
+.bc-form .bc-locks label.bc-ck{padding-bottom:0}
+.bc-lnote{flex:1 1 10rem; text-align:right}
+.bc-c .bc-lk[aria-pressed="true"]{background:var(--ink); color:var(--paper); border-color:var(--ink)}
+.ct-dynl{display:inline-flex!important; gap:.3rem; align-items:center}
 .bc-make{display:grid; grid-template-columns:minmax(0,1.15fr) minmax(0,1fr); gap:1rem 1.2rem; align-items:start; margin:0 0 1.6rem; padding:.8rem; background:var(--paper-2); border:1px solid var(--rule)}
 .bc-view{position:sticky; top:4.2rem; min-width:0}
 #bc-cv{display:block; width:100%; aspect-ratio:4/3; background:var(--paper)}
@@ -899,6 +925,7 @@ textarea.cast-in{resize:vertical; min-height:2.6em; overflow:hidden}
   .bc-make{grid-template-columns:1fr; padding:.6rem}
   .bc-view{position:static}
   .bc-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .bc-lnote{text-align:left}
 }
 /* [[/CSS:bestcut]] */
 .chx{font:inherit; font-size:.72rem; border:0; background:none; color:var(--ink-3); cursor:pointer; padding:0 .2rem; margin-left:.15rem}
@@ -2609,11 +2636,6 @@ body.dk-drag, body.dk-drag *{user-select:none!important; -webkit-user-select:non
   <p class="small">대표 사례는 그 모티브가 <b>또렷하게 드러나는</b> 인물만 적었다. 사례를 그대로 가져오면 복제가 되니, <b>같은 모티브에 다른 결핍</b>을 붙이는 쪽으로 쓴다.</p>
 </section>
 
-<section class="blk" id="cutlib">
-  <h2 class="big">베스트컷</h2>
-  <div id="cutlib-root"></div>
-</section>
-
 <section class="blk" id="poses">
   <h2 class="big">만화 자세·구도</h2>
   <div id="poses-root"></div>
@@ -2621,7 +2643,12 @@ body.dk-drag, body.dk-drag *{user-select:none!important; -webkit-user-select:non
 
 <section class="blk" id="cast">
   <h2 class="big">등장인물</h2>
-  <div id="cast-root"></div>
+  <div class="cast-tabs" role="tablist" aria-label="등장인물 보기">
+    <button class="cast-tab" type="button" role="tab" id="cast-tab-p" data-tab="p" aria-controls="cast-root" aria-selected="true">인물</button>
+    <button class="cast-tab" type="button" role="tab" id="cast-tab-bc" data-tab="bc" aria-controls="cutlib-root" aria-selected="false" tabindex="-1">베스트컷 <span class="cn" id="cast-tab-bcn"></span></button>
+  </div>
+  <div id="cast-root" role="tabpanel" aria-labelledby="cast-tab-p"></div>
+  <div id="cutlib-root" role="tabpanel" aria-labelledby="cast-tab-bc" hidden></div>
 </section>
 
 <section class="blk" id="favs">
@@ -4199,8 +4226,7 @@ var PAGES=[
  {g:'도구',id:'index',t:'클리셰 색인',d:'813개. 기능·연출 도구·배치·상태·지면으로 검색.'},
  {g:'도구',id:'motifidx',t:'소재 색인',d:'138개. 세계 규칙·사회 조건·인물 처지. 원작 표시 포함.'},
  {g:'도구',id:'chars',t:'캐릭터 모티브 색인',d:'291개(판타지 70). 외모·성격·결핍 세 축의 재료.'},
- {g:'도구',id:'cutlib',t:'베스트컷',d:'등장인물에 자세·구도를 정해 컷을 만들고 폴더에 모아 둔다. 콘티에서 꺼내 쓴다.'},
- {g:'도구',id:'cast',t:'등장인물',d:'내 작품의 인물. 구성기가 글을 쓸 때 이름이 나오면 여기 적힌 특징을 따른다.'},
+ {g:'도구',id:'cast',t:'등장인물',d:'내 작품의 인물. 구성기가 글을 쓸 때 이름이 나오면 여기 적힌 특징을 따른다. 「베스트컷」 탭에서 자세·구도를 정해 컷을 만든다.'},
  {g:'도구',id:'endidx',t:'엔딩 색인',d:'334개. 구조·승패·인물·관계·세계·정서·반전·연재.'},
  {g:'도구',id:'favs',t:'즐겨찾기',d:'별표한 클리셰·소재·캐릭터를 한 화면에 모아 본다.'},
  {g:'도구',id:'combo',t:'금지 조합과 표준 체인',d:'서로 죽이는 짝 20개, 덩어리로 움직이는 줄 9개.'},
@@ -9011,8 +9037,24 @@ function castBuildFolders(sel){
 var CP={open:{}, draft:null, tm:{}, armF:0};
 function castView(){ var v=castLs('castView')||''; return (v && castFolders().indexOf(v)<0)?'':v; }
 function castRefresh(){ if(document.getElementById('cast-list')) castRender(); }
+// 위의 탭: 「인물」(p) · 「베스트컷」(bc, 베스트컷 모듈이 #cutlib-root를 채운다). 마지막 탭은 이 브라우저에 기억
+function castTab(){ return castLs('castTab')==='bc'?'bc':'p'; }
+function castTabSet(t){ castLs('castTab', t==='bc'?'bc':'p'); castTabApply(); }
+function castTabApply(){
+  var t=castTab(), pr=document.getElementById('cast-root'), br=document.getElementById('cutlib-root');
+  [].slice.call(document.querySelectorAll('#cast .cast-tab')).forEach(function(b){ var on=b.getAttribute('data-tab')===t; b.setAttribute('aria-selected',on?'true':'false'); b.tabIndex=on?0:-1; });
+  if(pr) pr.hidden=(t!=='p'); if(br) br.hidden=(t!=='bc');
+  if(t==='bc'){ if(window.__bcMount) window.__bcMount(); } else if(document.getElementById('cast-list')) castRender();
+}
+function castTabBind(){
+  var bar=document.querySelector('#cast .cast-tabs'); if(!bar || bar.getAttribute('data-b')) return; bar.setAttribute('data-b','1');
+  bar.addEventListener('click',function(e){ var b=e.target.closest('.cast-tab'); if(b && b.getAttribute('data-tab')!==castTab()) castTabSet(b.getAttribute('data-tab')); });
+  bar.addEventListener('keydown',function(e){ if(e.key!=='ArrowLeft' && e.key!=='ArrowRight' && e.key!=='Home' && e.key!=='End') return; e.preventDefault();
+    var t=castTab()==='bc'?'p':'bc'; if(e.key==='Home') t='p'; if(e.key==='End') t='bc'; castTabSet(t); var nb=bar.querySelector('[data-tab="'+t+'"]'); if(nb) try{ nb.focus(); }catch(x){} });
+}
 function castMount(){
   var root=document.getElementById('cast-root'); if(!root) return;
+  castTabBind();
   if(!document.getElementById('cast-list')){
     root.innerHTML='<p class="lede">내 작품의 인물을 작품(폴더)별로 모아 둔다. 랜덤 구성기·아이디어 구성기·즐겨찾기에서 글을 쓸 때 재료나 글에 <b>이름이나 별명이 나오면</b> 그 인물의 설정을 AI에게 함께 보낸다. 적히지 않은 설정은 지어내지 않게 한다.</p>'+
       '<div class="filterbar cast-top"><button class="chip" id="cast-new"><b>＋ 새 인물</b></button><a class="chip" href="#chars">캐릭터 모티브로 만들기</a>'+
@@ -9030,7 +9072,7 @@ function castMount(){
       castRender(); var n=document.querySelector('#cast-list .cast-card[data-id="'+CP.draft.id+'"] [data-f="name"]'); if(n) try{ n.focus(); }catch(e){}
     });
   }
-  castRender();
+  castTabApply();
 }
 function castRender(){
   var list=document.getElementById('cast-list'); if(!list) return;
@@ -11561,6 +11603,7 @@ function applyBest(c, rec){
   var ch=(rec.chars||[]).slice(0,3); c.who=ch.map(function(x){ return String(x.name||''); }); c.wp={};
   ch.forEach(function(x,i){ var w={}; if(x.pose) w.pose=x.pose; if(x.face) w.face=x.face; if(x.x!=null && isFinite(+x.x)) w.x=+x.x; c.wp[x.name||('#'+i)]=w; });
   if(rec.id) c.bc=rec.id;
+  var dy=Math.max(0,Math.min(2,Math.round(+rec.dyn||0))); if(dy) c.dyn=dy; else delete c.dyn;   // 역동성 0 보통·1 역동·2 과장
   return c;
 }
 function openEdit(f){
@@ -11570,6 +11613,7 @@ function openEdit(f){
     '<label>앵글 <select class="ct-a">'+ANGS.map(function(a){ return '<option value="'+a[0]+'"'+(a[0]===(c.ang||'')?' selected':'')+'>'+a[2]+'</option>'; }).join('')+'</select></label>'+
     '<div class="ct-chk"><label><input type="checkbox" class="ct-f"'+(c.focus?' checked':'')+'>집중선</label><label><input type="checkbox" class="ct-fl"'+(c.flash?' checked':'')+'>회상 테두리</label></div>'+
     '<label>인물 (왼쪽부터, 쉼표 · 이름 없으면 ?) <input class="ct-w" type="text"></label><div class="ct-wp"></div>'+
+    '<label class="ct-dynl">역동성 <select class="ct-dyn">'+[['0','보통'],['1','역동'],['2','과장']].map(function(d){ return '<option value="'+d[0]+'"'+(String(c.dyn||0)===d[0]?' selected':'')+'>'+d[1]+'</option>'; }).join('')+'</select></label>'+
     '<label>화면 <textarea class="ct-s" rows="2"></textarea></label><label>대사 <input class="ct-l" type="text"></label>'+
     '<div class="filterbar"><button class="chip ct-ok" type="button">저장</button><button class="chip ct-x" type="button">닫기</button>'+
     '<button class="chip ct-add" type="button">뒤에 컷 추가</button><button class="chip ct-del" type="button">이 컷 지우기</button></div>'+
@@ -11594,6 +11638,7 @@ function openEdit(f){
     wpRead(); c.who=wpNames(ed.querySelector('.ct-w').value);
     var wp={}; c.who.forEach(function(nm,i){ var k=nm||('#'+i), w=wpCur[k]; if(!w) return; var o={}; if(w.pose) o.pose=w.pose; if(w.face) o.face=w.face; if(w.x!=null) o.x=w.x; if(Object.keys(o).length) wp[k]=o; });
     if(Object.keys(wp).length) c.wp=wp; else delete c.wp;
+    var dy=+ed.querySelector('.ct-dyn').value||0; if(dy) c.dyn=dy; else delete c.dyn;
   }
   ed.querySelector('.ct-ok').addEventListener('click',function(){ apply(); save(); refreshCut(n); });
   ed.querySelector('.ct-add').addEventListener('click',function(){ insertCut(n); });
@@ -11803,12 +11848,13 @@ window.__contiShow=function(){
 };
 })();
 
-// [[MOD:bestcut]] 베스트컷 (콘티 모듈 뒤)
-// 기록 mangaCuts(동기화): 컷 {id,title,folder,k,ang,focus,flash,chars:[{name,pose,face,x}],scr,line,made,at}, 컷 폴더 {id:'bf_'+이름, kind:'folder', name, made}
-// 그림은 콘티 구성기 창구(__ctCutData → __ctPortrait)로 그려서 콘티 칸과 같은 그림이 된다. 넣을 때는 __ctApplyBest
+// [[MOD:bestcut]] 베스트컷 (콘티 모듈 뒤) — 등장인물 페이지의 「베스트컷」 탭(#cutlib-root). 옛 #cutlib 주소는 #cast + 베스트컷 탭으로 보낸다
+// 기록 mangaCuts(동기화): 컷 {id,title,folder,k,ang,focus,flash,dyn,chars:[{name,pose,face,x}],scr,line,made,at}, 컷 폴더 {id:'bf_'+이름, kind:'folder', name, made}
+// 그림은 콘티 구성기 창구(__ctCutData → __ctPortrait)로 그려서 콘티 칸과 같은 그림이 된다. 넣을 때는 __ctApplyBest. dyn 0 보통·1 역동·2 과장(그림은 c.dyn을 읽는다)
 var BC_KEY='mangaCuts';
-var BC={cur:null, dirty:false, armF:0, act:0, pend:null, tm:0, cf:'', mounted:false};
+var BC={cur:null, dirty:false, armF:0, act:0, pend:null, tm:0, cf:'', mounted:false, lock:{k:0,ang:0,fo:0,dyn:0}, last:'roll', lastRef:-1, refTitle:'', why:''};
 var BC_FACE=[['','구도대로'],['front','정면'],['left','왼쪽'],['right','오른쪽'],['back','뒤']];
+var BC_DYN=[[0,'보통'],[1,'역동'],[2,'과장']];
 function bcEsc(t){ return wsEsc(t); }
 function bcAll(){ return recList(BC_KEY).filter(function(x){ return x && !x.kind; }); }
 function bcFolders(){
@@ -11829,49 +11875,200 @@ function bcAutoX(n,k){ if(n<=1) return [.5]; if(n===2) return k==='two'?[.26,.74
 function bcFaceKey(v){ v=String(v||'').trim(); return {left:'left',right:'right',back:'back',front:'front','왼쪽':'left','오른쪽':'right','뒤':'back','뒷모습':'back','정면':'front'}[v]||''; }
 function bcAngKey(v){ v=String(v||'').trim(); return {high:'high',low:'low',dutch:'dutch','부감':'high','앙각':'low','더치':'dutch'}[v]||''; }
 function bcShotKey(v){ v=String(v||'').trim(); var L=v.toLowerCase(), hit=''; bcShots().forEach(function(s){ if(s[0]===L || s[1].toLowerCase()===L || s[2]===v) hit=s[0]; }); return hit; }
+function bcDynKey(v){ v=Math.round(+v||0); return v<0?0:(v>2?2:v); }
 function bcClean(r){ r=r||{}; var P=bcPoses(), k=bcShotKey(r.k)||'fs';
   var ch=(Array.isArray(r.chars)?r.chars:[]).slice(0,3).map(function(c,i,a){ c=c||{}; var x=+c.x; return {name:String(c.name||'').trim(), pose:P.indexOf(c.pose)>-1?c.pose:'', face:bcFaceKey(c.face), x:(c.x!=null && c.x!=='' && isFinite(x))?Math.max(0,Math.min(1,x)):bcAutoX(a.length,k)[i]}; });
-  return {id:r.id||'', title:String(r.title||'').trim().slice(0,60), folder:String(r.folder||'기본').trim()||'기본', k:k, ang:bcAngKey(r.ang), focus:r.focus?1:0, flash:r.flash?1:0,
+  return {id:r.id||'', title:String(r.title||'').trim().slice(0,60), folder:String(r.folder||'기본').trim()||'기본', k:k, ang:bcAngKey(r.ang), focus:r.focus?1:0, flash:r.flash?1:0, dyn:bcDynKey(r.dyn),
     chars:ch, scr:String(r.scr||'').trim(), line:String(r.line||'').trim(), made:r.made||0}; }
 function bcSeed(t){ t=String(t||''); var h=0; for(var i=0;i<t.length;i++) h=(h*31+t.charCodeAt(i))%9973; return 300+h; }
-function bcToCut(r){ var c=window.__ctApplyBest?window.__ctApplyBest({}, r):{k:r.k}; c.n=bcSeed(r.id||r.made||r.title); c.scr=r.scr||''; c.line=r.line||''; return c; }
+function bcToCut(r){ var c=window.__ctApplyBest?window.__ctApplyBest({}, r):{k:r.k}; c.n=bcSeed(r.id||r.made||r.title); c.scr=r.scr||''; c.line=r.line||'';
+  if(r.dyn) c.dyn=bcDynKey(r.dyn); else delete c.dyn; return c; }
 function bcAutoTitle(r){ var ns=r.chars.map(function(c){ return c.name; }).filter(Boolean), ps=r.chars.map(function(c){ return c.pose; }).filter(Boolean);
   return (ns.length?ns.join('·'):'인물')+' · '+bcShotName(r.k)+(ps.length?' · '+ps[0]:''); }
-function bcMeta(r){ var a=window.__ctAngName?window.__ctAngName(r.ang):''; return bcShotName(r.k)+(a?' · '+a:'')+(r.focus?' · 집중선':'')+(r.flash?' · 회상':''); }
+function bcMeta(r){ var a=window.__ctAngName?window.__ctAngName(r.ang):''; return bcShotName(r.k)+(a?' · '+a:'')+(r.focus?' · 집중선':'')+(r.flash?' · 회상':'')+(r.dyn?' · '+BC_DYN[bcDynKey(r.dyn)][1]:''); }
 function bcWho(r){ return r.chars.map(function(c){ return (c.name||'(이름 없음)')+(c.pose?' '+c.pose:''); }).join(', '); }
 // 그림 칸에 그리기 (콘티 그림 그대로)
 function bcDraw(cv, r){ if(!cv || !window.__ctCutData || !window.__ctPortrait) return; r=bcClean(r);
   window.__ctCutData(cv, bcToCut(r)); cv.setAttribute('role','img'); cv.setAttribute('aria-label', (r.title||bcAutoTitle(r))+' 컷 그림'); window.__ctPortrait(cv); }
 function bcDrawAll(root){ if(!root) return; [].slice.call(root.querySelectorAll('canvas[data-bc]')).forEach(function(cv){ var r=recLoad(BC_KEY).items[cv.getAttribute('data-bc')]; if(r) bcDraw(cv, r); }); }
-function bcBlank(o){ var b={id:'', title:'', folder:bcView()||'기본', k:'fs', ang:'', focus:0, flash:0, chars:[{name:'', pose:'', face:'', x:.5}], scr:'', line:'', made:0, autoX:true};
+function bcBlank(o){ var b={id:'', title:'', folder:bcView()||'기본', k:'fs', ang:'', focus:0, flash:0, dyn:0, chars:[{name:'', pose:'', face:'', x:.5}], scr:'', line:'', made:0, autoX:true};
   if(o) Object.keys(o).forEach(function(k){ b[k]=o[k]; }); return b; }
 
-// ----- 페이지 -----
-function bcOn(){ var s=document.getElementById('cutlib'); return !!(s && s.classList.contains('page-on')); }
+// ----- 랜덤 자세·구도 -----
+// 자세표: m 어울리는 갈래(a 액션·v 대치·e 감정·d 일상), act 움직임 0~2, tr 이동(멀리 잡는다), im 타격(집중선), def 받는 쪽, an 어울리는 앵글
+// 자세 목록에 없는 이름은 건너뛴다. 콘티 쪽 window.__ctPoseInfo {자세:{act,travel,impact}}가 있으면 act·tr·im은 그것을 먼저 쓴다
+var BC_PI={
+  '구부정':{m:'ed',act:0}, '곧은':{m:'vd',act:0}, '팔짱':{m:'vd',act:0}, '주머니에 손':{m:'vd',act:0}, '뒷짐':{m:'vd',act:0}, '무언가 안음':{m:'ed',act:0}, '고개 기울임':{m:'de',act:0},
+  '걷기':{m:'d',act:1,tr:1}, '달리기':{m:'ad',act:2,tr:1}, '점프':{m:'ad',act:2,tr:1,an:'low'}, '앉기':{m:'de',act:0}, '무릎 꿇기':{m:'ev',act:0,an:'high'}, '주저앉기':{m:'e',act:0,an:'high'},
+  '쓰러짐':{m:'ae',act:1,def:1,an:'high'}, '주먹 지르기':{m:'a',act:2,im:1}, '발차기':{m:'a',act:2,im:1}, '검 겨누기':{m:'av',act:1,def:1}, '검 휘두르기':{m:'a',act:2,im:1},
+  '가리키기':{m:'vd',act:1}, '손 내밀기':{m:'ed',act:0}, '손 흔들기':{m:'d',act:0}, '뒤돌아보기':{m:'ed',act:0}, '머리 감싸기':{m:'e',act:0}, '얼굴 가리기':{m:'e',act:0},
+  '하늘 보기':{m:'e',act:0,an:'low'}, '팔 벌리기':{m:'ev',act:1,an:'low'}, '착지':{m:'a',act:2,im:1,an:'low'}, '마법 시전':{m:'av',act:2,im:1}, '활 쏘기':{m:'a',act:1}, '기대기':{m:'dv',act:0}, '엄지 척':{m:'d',act:0},
+  '날아차기':{m:'a',act:2,tr:1,im:1,an:'low'}, '돌진':{m:'a',act:2,tr:1}, '내려찍기':{m:'a',act:2,im:1,an:'low'}, '점프 베기':{m:'a',act:2,tr:1,im:1,an:'low'},
+  '몸 비틀어 피하기':{m:'a',act:2,def:1}, '미끄러지며 착지':{m:'a',act:2,tr:1,im:1}, '손 뻗어 붙잡기':{m:'ae',act:2,tr:1}, '외치기':{m:'ev',act:1,an:'low'},
+  '막아서기':{m:'va',act:1,def:1}, '도약 준비':{m:'av',act:1}, '회전 베기':{m:'a',act:2,im:1}, '날아가며 맞음':{m:'a',act:2,tr:1,im:1,def:1}
+};
+// 갈래별 구도 규칙: s1 혼자·s2 둘 이상 구도 가중치, an 앵글, fo 집중선 확률, f2 둘 이상일 때 방향(vs 마주 봄·team 같은 쪽·away 등 돌림·same 같은 쪽)
+var BC_MOOD=[['','전체'],['a','액션'],['v','대치'],['e','감정'],['d','일상']];
+var BC_RULE={
+  a:{w:35, s1:{fs:4,ls:3,ms:1}, s2:{fs:4,ls:3,two:1}, an:{low:4,dutch:3,'':1,high:1}, fo:.55, f2:{vs:3,team:2}},
+  v:{w:25, s1:{fs:2,ms:2,bs:2}, s2:{stand:5,two:2,ots:2,fs:1}, an:{'':3,low:3,dutch:1}, fo:.2, f2:{vs:1}},
+  e:{w:20, s1:{bs:3,cu:2,ms:2}, s2:{two:3,ms:2,ots:2}, an:{'':4,high:2,low:1}, fo:0, f2:{vs:2,away:1,same:1}},
+  d:{w:20, s1:{ms:3,bs:2,fs:2}, s2:{two:3,ms:2,fs:1}, an:{'':5,high:1}, fo:0, f2:{vs:2,same:2}}
+};
+function bcPI(p){
+  var o=BC_PI[p], x=window.__ctPoseInfo&&typeof window.__ctPoseInfo==='object'?window.__ctPoseInfo[p]:null; if(!o && !x) return null;
+  o=Object.assign({m:'',act:0,tr:0,im:0}, o||{});
+  if(x){ if(x.act!=null) o.act=typeof x.act==='boolean'?(x.act?2:0):Math.max(0,Math.min(2,Math.round(+x.act||0)));
+    if(x.travel!=null) o.tr=x.travel?1:0; if(x.impact!=null) o.im=x.impact?1:0; }
+  if(!o.m) o.m=(o.act||o.tr||o.im)?'a':'d';
+  return o;
+}
+function bcQuiet(i){ return !i || (!i.act && !i.tr && !i.im); }
+function bcPick(w, rnd){ var ks=Object.keys(w).filter(function(k){ return w[k]>0; }), t=0; ks.forEach(function(k){ t+=w[k]; }); if(!ks.length) return null;
+  var v=rnd()*t; for(var i=0;i<ks.length;i++){ v-=w[ks[i]]; if(v<0) return ks[i]; } return ks[ks.length-1]; }
+function bcAny(a, rnd){ return a.length?a[Math.floor(rnd()*a.length)%a.length]:null; }
+function bcPool(mood){ return bcPoses().filter(function(p){ var i=bcPI(p); return i && (!mood || i.m.indexOf(mood)>-1); }); }
+// r: 지금 컷(chars[i].lk = 자세·방향 고정), mood: ''|a|v|e|d, L: {k,ang,fo,dyn} 고정. 돌려주는 것 {mood,k,ang,focus,dyn,chars:[{pose,face,x}]}
+function bcRandom(r, mood, L, rnd){
+  rnd=rnd||Math.random; L=L||{}; var n=Math.max(1,(r.chars||[]).length), chars=(r.chars||[{}]).map(function(c){ return Object.assign({},c); });
+  var lockedP=chars.filter(function(c){ return c.lk && c.pose; }).map(function(c){ return bcPI(c.pose); }).filter(Boolean);
+  if(!mood || !BC_RULE[mood]){   // 전체: 고정한 자세에 맞는 갈래에서
+    var w={}; Object.keys(BC_RULE).forEach(function(m){ if(lockedP.every(function(i){ return i.m.indexOf(m)>-1; }) && bcPool(m).length) w[m]=BC_RULE[m].w; });
+    if(!Object.keys(w).length) Object.keys(BC_RULE).forEach(function(m){ if(bcPool(m).length) w[m]=BC_RULE[m].w; });
+    mood=bcPick(w, rnd)||'d';
+  }
+  var R=BC_RULE[mood], pool=bcPool(mood); if(!pool.length) pool=bcPool('');
+  // 방향 짜임(둘 이상)
+  var f2=n>1?bcPick(R.f2, rnd):'';
+  // 자세
+  var used={};
+  chars.forEach(function(c){ if(c.lk && c.pose) used[c.pose]=1; });
+  chars.forEach(function(c,i){
+    if(c.lk) return; var pl=pool;
+    if(mood==='a' && f2==='vs' && i===n-1 && n>1 && rnd()<.5){ var d=pool.filter(function(p){ return bcPI(p).def; }); if(d.length) pl=d; }
+    if(mood==='a' && f2==='team'){ var t=pool.filter(function(p){ return !bcPI(p).def; }); if(t.length) pl=t; }
+    var p=null; for(var k=0;k<8;k++){ p=bcAny(pl, rnd); if(!used[p] || pl.length<=n) break; }
+    c.pose=p||''; used[c.pose]=1;
+  });
+  var I=chars.map(function(c){ return bcPI(c.pose); }), anyTr=I.some(function(i){ return i && i.tr; }), anyIm=I.some(function(i){ return i && i.im; });
+  var maxAct=0; I.forEach(function(i){ if(i && i.act>maxAct) maxAct=i.act; }); var allQ=I.every(bcQuiet);
+  // 구도
+  var k=r.k;
+  if(!L.k){ var sw=Object.assign({}, n>1?R.s2:R.s1);
+    if(n<2){ delete sw.two; delete sw.stand; delete sw.ots; } if(n>2) delete sw.ots;
+    if(anyTr) sw=n>1?{fs:4,ls:3}:{fs:4,ls:3};
+    else if(allQ && mood==='a') sw=n>1?{two:2,fs:2,ms:1}:{ms:3,fs:2,bs:1};
+    if(allQ && (mood==='e'||mood==='d') && n<2) sw={bs:3,ms:3,cu:mood==='e'?1:0};
+    k=bcPick(sw, rnd)||'fs'; }
+  // 앵글
+  var ang=r.ang||'';
+  if(!L.ang){ var aw=Object.assign({}, R.an);
+    I.forEach(function(i){ if(i && i.an) aw[i.an]=(aw[i.an]||0)+2; });
+    if(maxAct<1 || allQ) delete aw.dutch;
+    if(allQ && mood!=='v') delete aw.low;
+    ang=bcPick(aw, rnd)||''; }
+  // 집중선
+  var focus=r.focus?1:0;
+  if(!L.fo){ var fo=R.fo; if(mood==='e' && maxAct>=1) fo=.3; if(anyTr) fo=Math.max(fo,.5); if(anyIm) fo=.85; if(allQ) fo=0; focus=rnd()<fo?1:0; }
+  // 역동성
+  var dyn=bcDynKey(r.dyn);
+  if(!L.dyn){ if(mood==='a') dyn=(anyIm||anyTr)?(rnd()<.6?2:1):(rnd()<.3?2:1);
+    else if(allQ) dyn=0; else if(mood==='v') dyn=rnd()<.5?1:0; else if(mood==='e') dyn=maxAct>=2?1:0; else dyn=0; }
+  // 자리
+  var X=chars.map(function(c){ return c.x; });
+  if(!L.k){ X=bcAutoX(n,k).slice(); if(n>1){ var sp=f2==='vs'?.04:.02; X=X.map(function(x,i){ var j=(rnd()-.5)*.08+(i===0?-sp:(i===n-1?sp:0)); return Math.round(Math.max(.08,Math.min(.92,x+j))*20)/20; }); } }
+  // 방향
+  var dir=rnd()<.5?'left':'right';
+  if(n===1){ var c0=chars[0];
+    if(!c0.lk){ var i0=I[0]; if(i0 && (i0.tr || i0.act>=2)) c0.face=dir; else if(c0.pose==='뒤돌아보기') c0.face=''; else c0.face=rnd()<.7?'':'front';
+      if(!L.k && (c0.face==='left'||c0.face==='right') && k!=='cu' && k!=='ecu') X[0]=c0.face==='right'?.4:.6; } }
+  else {
+    var ord=chars.map(function(c,i){ return i; }).sort(function(a,b){ return X[a]-X[b]; });
+    ord.forEach(function(ix,j){ var c=chars[ix]; if(c.lk) return; var first=j===0, last=j===ord.length-1;
+      if(f2==='vs') c.face=first?'right':(last?'left':'');
+      else if(f2==='team') c.face=(n>2 && rnd()<.3)?'front':dir;
+      else if(f2==='away') c.face=last?(bcQuiet(I[ix])?'back':'right'):'right';
+      else c.face=dir;
+    });
+  }
+  return {mood:mood, f2:f2, k:k, ang:ang, focus:focus, dyn:dyn, chars:chars.map(function(c,i){ return {pose:c.pose||'', face:c.face||'', x:X[i]}; })};
+}
+function bcMoodName(m){ var o=''; BC_MOOD.forEach(function(x){ if(x[0]===m) o=x[1]; }); return o||'전체'; }
+function bcLockSnap(){ var r=BC.cur; return {k:r.k, ang:r.ang, focus:r.focus, dyn:r.dyn, n:r.chars.length, chars:r.chars.map(function(c){ return {pose:c.pose, face:c.face, x:c.x, lk:c.lk}; })}; }
+function bcRoll(){
+  bcRead(); var r=BC.cur, rk=document.getElementById('bc-rk'), mood=rk?rk.value:'';
+  var o=bcRandom(r, mood, BC.lock, Math.random);
+  r.k=o.k; r.ang=o.ang; r.focus=o.focus; r.dyn=o.dyn;
+  o.chars.forEach(function(x,i){ var c=r.chars[i]; if(!c) return; if(!c.lk){ c.pose=x.pose; c.face=x.face; } if(!BC.lock.k) c.x=x.x; });
+  BC.last='roll'; BC.why=bcMoodName(o.mood)+(o.f2?' · '+({vs:'마주 봄',team:'같은 편',away:'등 돌림',same:'같은 쪽'}[o.f2]):'');
+  bcForm(); bcMsg('랜덤 · '+BC.why);
+  return o;
+}
+function bcRefPool(mood){
+  var out=[]; if(typeof POSE_REF==='undefined' || !Array.isArray(POSE_REF)) return out;
+  var R=BC_RULE[mood];
+  POSE_REF.forEach(function(p,i){ if(!p) return; if(!R){ out.push(i); return; }
+    var pi=p.pose?bcPI(p.pose):null, k=bcShotKey(p.k);
+    if(pi ? pi.m.indexOf(mood)>-1 : !!(k && (R.s1[k]||R.s2[k]))) out.push(i); });
+  return out;
+}
+function bcRollRef(){
+  var rk=document.getElementById('bc-rk'), mood=rk?rk.value:'', pool=bcRefPool(mood); if(!pool.length) pool=bcRefPool('');
+  if(!pool.length) return -1;
+  var i=pool[Math.floor(Math.random()*pool.length)]; if(pool.length>1) for(var t=0;t<6 && i===BC.lastRef;t++) i=pool[Math.floor(Math.random()*pool.length)];
+  bcRead(); var r=BC.cur, S=bcLockSnap(), L=BC.lock;
+  var free=-1; r.chars.forEach(function(c,j){ if(free<0 && !c.lk) free=j; }); BC.act=free<0?0:free;
+  if(r.title && r.title===BC.refTitle){ r.title=''; var ti=document.getElementById('bc-title'); if(ti) ti.value=''; }
+  bcApplyRef(i); r=BC.cur;
+  BC.refTitle=(r.title===String(POSE_REF[i].name||''))?r.title:'';
+  if(L.k){ r.k=S.k; r.chars.length=Math.min(r.chars.length, S.n); r.chars.forEach(function(c,j){ if(S.chars[j]) c.x=S.chars[j].x; }); }
+  if(L.ang) r.ang=S.ang; if(L.fo) r.focus=S.focus;
+  r.chars.forEach(function(c,j){ var s=S.chars[j]; if(s && s.lk){ c.pose=s.pose; c.face=s.face; c.lk=1; } });
+  if(!L.dyn){ var pi=bcPI(POSE_REF[i].pose); r.dyn=(mood==='a')?((pi&&(pi.im||pi.tr))?2:1):((pi&&(pi.im||pi.tr))?1:0); } else r.dyn=S.dyn;
+  BC.lastRef=i; BC.last='ref'; BC.why='유명 자세·구도 · '+(POSE_REF[i].name||'');
+  bcForm(); bcMsg(BC.why);
+  return i;
+}
+
+// ----- 탭 -----
+function bcOn(){ var s=document.getElementById('cast'), br=document.getElementById('cutlib-root'); return !!(s && s.classList.contains('page-on') && br && !br.hidden); }
+function bcTabCount(){ var n=document.getElementById('cast-tab-bcn'); if(n){ var c=bcAll().length; n.textContent=c?String(c):''; } }
 function bcMount(){
   var root=document.getElementById('cutlib-root'); if(!root) return;
-  if(BC.pend){ var p=BC.pend; BC.pend=null; BC.cur=bcBlank({chars:[{name:p.name||'', pose:'', face:'', x:.5}], title:''}); if(p.folder) BC.cf=p.folder; BC.dirty=false; }
+  if(BC.pend){ var p=BC.pend; BC.pend=null; BC.cur=bcBlank({chars:[{name:p.name||'', pose:'', face:'', x:.5}], title:''}); BC.cf=p.folder||castView(); BC.dirty=false; BC.act=0; }
+  else BC.cf=castView();
   if(!BC.cur) BC.cur=bcBlank();
   if(!document.getElementById('bc-cv')){
     var ref=(typeof POSE_REF!=='undefined' && Array.isArray(POSE_REF) && POSE_REF.length);
-    root.innerHTML='<p class="lede">등장인물에게 자세와 방향을 주고 구도를 골라 컷 한 칸을 만든다. 폴더에 모아 두고, 콘티 구성기의 컷 고치기에서 「베스트컷에서 넣기」로 꺼내 쓴다.</p>'+
+    root.innerHTML='<p class="lede">인물에게 자세와 방향을 주고 구도를 골라 컷 한 칸을 만든다. 「랜덤」은 고른 자세에 어울리는 구도·앵글·집중선을 함께 맞춘다. 모아 둔 컷은 콘티 구성기 컷 고치기의 「베스트컷에서 넣기」로 꺼내 쓴다.</p>'+
       '<div class="bc-make" id="bc-make"><div class="bc-view"><canvas id="bc-cv"></canvas><p class="bc-cap" id="bc-cap"></p></div>'+
       '<div class="bc-form">'+
-        '<div class="bc-row"><label class="bc-grow">제목 <input id="bc-title" type="text" maxlength="60" placeholder="비우면 자동"></label><label>폴더 <select id="bc-folder"></select></label></div>'+
-        (ref?'<label>유명 자세·구도에서 <select id="bc-ref"></select></label><p class="small bc-refnote" id="bc-refnote"></p>':'')+
-        '<div class="bc-who"><div class="bc-wh"><b>인물</b><label class="small">작품 <select id="bc-cfold"></select></label></div><div id="bc-chars"></div>'+
-          '<button class="chip" id="bc-addc" type="button">＋ 인물</button></div>'+
+        '<div class="bc-who"><div class="bc-wh"><b>인물</b><label class="small">작품 <select id="bc-cfold"></select></label></div>'+
+          '<div class="bc-pcs" id="bc-pcs" role="group" aria-label="이 작품의 인물 — 누르면 컷에 넣고 다시 누르면 뺀다"></div>'+
+          '<div id="bc-chars"></div><button class="chip" id="bc-addc" type="button">＋ 인물</button></div>'+
+        '<div class="bc-rnd" role="group" aria-label="랜덤">'+
+          '<div class="bc-rrow"><b>랜덤</b><label class="bc-inl">갈래 <select id="bc-rk">'+BC_MOOD.map(function(m){ return '<option value="'+m[0]+'">'+m[1]+'</option>'; }).join('')+'</select></label>'+
+            '<button class="chip bc-ok" id="bc-roll" type="button">자세·구도 랜덤</button>'+
+            (ref?'<button class="chip" id="bc-rref" type="button">유명 자세·구도에서 랜덤</button>':'')+
+            '<button class="chip bc-again" id="bc-again" type="button" title="고정한 것은 두고 한 번 더">↻ 다시</button></div>'+
+          '<div class="bc-rrow bc-locks"><span class="small">고정</span>'+
+            [['k','구도·자리'],['ang','앵글'],['fo','집중선'],['dyn','역동성']].map(function(x){ return '<label class="bc-ck"><input type="checkbox" class="bc-lock" data-l="'+x[0]+'">'+x[1]+'</label>'; }).join('')+
+            '<span class="small bc-lnote">인물별 자세는 줄마다 「고정」</span></div></div>'+
         '<div class="bc-row"><label>구도 <select id="bc-k"></select></label><label>앵글 <select id="bc-a"></select></label>'+
+          '<label>역동성 <select id="bc-dyn">'+BC_DYN.map(function(d){ return '<option value="'+d[0]+'">'+d[1]+'</option>'; }).join('')+'</select></label>'+
           '<label class="bc-ck"><input type="checkbox" id="bc-f">집중선</label><label class="bc-ck"><input type="checkbox" id="bc-fl">회상</label></div>'+
+        (ref?'<label>유명 자세·구도에서 고르기 <select id="bc-ref"></select></label><p class="small bc-refnote" id="bc-refnote"></p>':'')+
         '<label>화면 <textarea id="bc-scr" rows="2" placeholder="예: 비 오는 옥상, 역광"></textarea></label>'+
         '<label>대사 <input id="bc-line" type="text"></label>'+
+        '<div class="bc-row"><label class="bc-grow">제목 <input id="bc-title" type="text" maxlength="60" placeholder="비우면 자동"></label><label>폴더 <select id="bc-folder"></select></label></div>'+
         '<div class="filterbar bc-acts"><button class="chip bc-ok" id="bc-save" type="button">저장</button><button class="chip" id="bc-asnew" type="button" hidden>새 컷으로 저장</button>'+
-          '<button class="chip" id="bc-new" type="button">새 컷</button><span class="small bc-msg" id="bc-msg"></span></div>'+
+          '<button class="chip" id="bc-new" type="button">새 컷</button><span class="small bc-msg" id="bc-msg" role="status"></span></div>'+
       '</div></div>'+
       '<h3 class="bc-lh">모아 둔 컷 <span class="count" id="bc-count"></span></h3>'+
       '<div class="bc-fbar" id="bc-fbar"></div>'+
       '<div class="filterbar bc-top"><input id="bc-q" type="search" placeholder="제목·인물·자세·화면 검색" aria-label="베스트컷 검색"></div>'+
       '<div class="bc-grid" id="bc-grid"></div>';
+    var rk=document.getElementById('bc-rk'); if(rk){ var sv=castLs('bcMood')||''; if(BC_RULE[sv]) rk.value=sv; }
     bcBind(); BC.mounted=true;
   }
   bcForm(); bcList();
@@ -11883,6 +12080,15 @@ function bcCastOpts(sel){
   if(!have) h+='<option selected value="'+bcEsc(sel)+'">'+bcEsc(sel)+'</option>';
   return h;
 }
+// 이 작품의 인물 얼굴 줄: 누르면 컷에 넣고(빈 줄 먼저), 다시 누르면 뺀다
+function bcPcsHTML(){
+  var v=BC.cf, all=castAll(), ms=all.filter(function(m){ return m.name && (!v || (m.folder||'기본')===v); }), inCut={};
+  BC.cur.chars.forEach(function(c){ if(c.name) inCut[c.name]=1; });
+  if(!ms.length) return '<p class="small bc-pcn">'+(all.length?'이 작품에 이름 있는 인물이 없다.':'아직 인물이 없다. 「인물」 탭에서 만들면 여기서 고른다.')+'</p>';
+  return ms.slice(0,40).map(function(m){ return '<button type="button" class="bc-pc" data-n="'+bcEsc(m.name)+'" aria-pressed="'+(inCut[m.name]?'true':'false')+'" title="'+bcEsc(m.name+(m.role?' · '+m.role:''))+'">'+
+    '<canvas class="cast-pic" aria-hidden="true"'+castPicAttr(m)+'></canvas><span>'+bcEsc(m.name)+'</span></button>'; }).join('');
+}
+function bcPcsDraw(){ var b=document.getElementById('bc-pcs'); if(!b) return; b.innerHTML=bcPcsHTML(); castPics(b); }
 function bcCharsHTML(){
   var P=bcPoses(), r=BC.cur;
   return r.chars.map(function(c,i){
@@ -11892,6 +12098,7 @@ function bcCharsHTML(){
       '<select class="bc-cp" aria-label="자세"><option value="">'+(op?'기본('+bcEsc(op)+')':'기본 자세')+'</option>'+P.map(function(p){ return '<option'+(c.pose===p?' selected':'')+'>'+p+'</option>'; }).join('')+'</select>'+
       '<select class="bc-cf" aria-label="방향">'+BC_FACE.map(function(o){ return '<option value="'+o[0]+'"'+((c.face||'')===o[0]?' selected':'')+'>'+o[1]+'</option>'; }).join('')+'</select>'+
       '<label class="bc-cxl">자리 <input type="range" class="bc-cx" min="0" max="100" step="5" value="'+Math.round((c.x==null?.5:c.x)*100)+'" aria-label="왼쪽에서 자리"></label>'+
+      '<button class="chip bc-lk" type="button" aria-pressed="'+(c.lk?'true':'false')+'" title="랜덤을 눌러도 이 인물의 자세·방향은 그대로">고정</button>'+
       (r.chars.length>1?'<button class="chip bc-cd" type="button">빼기</button>':'')+'</div>';
   }).join('');
 }
@@ -11903,9 +12110,11 @@ function bcForm(){
   $('bc-cfold').innerHTML='<option value="">전체</option>'+cfs.map(function(f){ return '<option'+(f===BC.cf?' selected':'')+' value="'+bcEsc(f)+'">'+bcEsc(f)+'</option>'; }).join('');
   $('bc-k').innerHTML=bcShots().map(function(s){ return '<option value="'+s[0]+'"'+(s[0]===r.k?' selected':'')+'>'+s[2]+'</option>'; }).join('');
   $('bc-a').innerHTML=bcAngs().map(function(a){ return '<option value="'+a[0]+'"'+(a[0]===(r.ang||'')?' selected':'')+'>'+a[2]+'</option>'; }).join('');
+  $('bc-dyn').value=String(bcDynKey(r.dyn));
   $('bc-f').checked=!!r.focus; $('bc-fl').checked=!!r.flash;
+  [].slice.call(document.querySelectorAll('#bc-make .bc-lock')).forEach(function(x){ x.checked=!!BC.lock[x.getAttribute('data-l')]; });
   $('bc-title').value=r.title||''; $('bc-scr').value=r.scr||''; $('bc-line').value=r.line||'';
-  $('bc-chars').innerHTML=bcCharsHTML(); $('bc-addc').hidden=r.chars.length>=3;
+  $('bc-chars').innerHTML=bcCharsHTML(); $('bc-addc').hidden=r.chars.length>=3; bcPcsDraw();
   $('bc-asnew').hidden=!r.id; $('bc-save').textContent=r.id?'고친 것 저장':'저장';
   var rf=$('bc-ref'); if(rf && !rf.options.length){
     var G={}; POSE_REF.forEach(function(p,i){ var g=p.kind||'기타'; (G[g]=G[g]||[]).push('<option value="'+i+'">'+bcEsc(p.name||p.id||('#'+i))+'</option>'); });
@@ -11920,18 +12129,22 @@ function bcMsg(t){ var m=document.getElementById('bc-msg'); if(!m) return; m.tex
 function bcRead(){   // 폼 → BC.cur
   var r=BC.cur, $=function(id){ return document.getElementById(id); };
   r.title=$('bc-title').value; r.folder=$('bc-folder').value||'기본'; r.k=$('bc-k').value; r.ang=$('bc-a').value||''; r.focus=$('bc-f').checked?1:0; r.flash=$('bc-fl').checked?1:0;
+  r.dyn=bcDynKey($('bc-dyn').value);
   r.scr=$('bc-scr').value; r.line=$('bc-line').value;
   [].slice.call(document.querySelectorAll('#bc-chars .bc-c')).forEach(function(row){ var c=r.chars[+row.getAttribute('data-i')]; if(!c) return;
     c.name=row.querySelector('.bc-cn').value; c.pose=row.querySelector('.bc-cp').value; c.face=row.querySelector('.bc-cf').value; c.x=(+row.querySelector('.bc-cx').value)/100; });
   BC.dirty=true;
 }
 function bcRelayout(){ var r=BC.cur; if(!r.autoX) return; var X=bcAutoX(r.chars.length, r.k); r.chars.forEach(function(c,i){ c.x=X[i]; }); }
+function bcAddChar(name){ var r=BC.cur; if(r.chars.length>=3) return false; r.chars.push({name:name||'', pose:'', face:'', x:.5}); BC.act=r.chars.length-1;
+  if(!r.autoX){ r.chars[BC.act].x=BC.act===1?.7:.85; } bcRelayout(); return true; }
 function bcSave(asNew){
   bcRead(); var r=bcClean(BC.cur); if(asNew){ r.id=''; r.made=0; }
   if(!r.chars.length && r.k!=='empty'){ bcMsg('인물을 하나 넣는다.'); return null; }
-  var rec={id:r.id||recId(), title:r.title||bcAutoTitle(r), folder:bcFolderMake(r.folder)||'기본', k:r.k, ang:r.ang, focus:r.focus, flash:r.flash, chars:r.chars, scr:r.scr, line:r.line, made:r.made||Date.now()};
+  var rec={id:r.id||recId(), title:r.title||bcAutoTitle(r), folder:bcFolderMake(r.folder)||'기본', k:r.k, ang:r.ang, focus:r.focus, flash:r.flash, dyn:r.dyn, chars:r.chars, scr:r.scr, line:r.line, made:r.made||Date.now()};
   recPut(BC_KEY, rec);
-  BC.cur=bcBlank(JSON.parse(JSON.stringify(rec))); BC.cur.autoX=false; BC.dirty=false;
+  var lk=BC.cur.chars.map(function(c){ return c.lk; });
+  BC.cur=bcBlank(JSON.parse(JSON.stringify(rec))); BC.cur.autoX=false; BC.dirty=false; BC.cur.chars.forEach(function(c,i){ if(lk[i]) c.lk=1; });
   bcForm(); bcList(); bcMsg(asNew?'새 컷으로 저장했다.':'저장했다 · '+rec.folder);
   return rec;
 }
@@ -11951,22 +12164,35 @@ function bcApplyRef(i){
 function bcBind(){
   var $=function(id){ return document.getElementById(id); }, ch=$('bc-chars');
   ['bc-title','bc-scr','bc-line'].forEach(function(id){ $(id).addEventListener('input',function(){ bcRead(); bcPreview(); }); });
-  ['bc-folder','bc-f','bc-fl','bc-a'].forEach(function(id){ $(id).addEventListener('change',function(){ bcRead(); bcPreview(); }); });
+  ['bc-folder','bc-f','bc-fl','bc-a','bc-dyn'].forEach(function(id){ $(id).addEventListener('change',function(){ bcRead(); bcPreview(); }); });
   $('bc-k').addEventListener('change',function(){ bcRead(); bcRelayout(); bcForm(); });
-  $('bc-cfold').addEventListener('change',function(){ bcRead(); BC.cf=this.value; $('bc-chars').innerHTML=bcCharsHTML(); });
+  $('bc-cfold').addEventListener('change',function(){ bcRead(); BC.cf=this.value; castLs('castView',BC.cf); $('bc-chars').innerHTML=bcCharsHTML(); bcPcsDraw(); });
+  $('bc-pcs').addEventListener('click',function(e){ var b=e.target.closest('.bc-pc'); if(!b) return; bcRead(); var nm=b.getAttribute('data-n'), r=BC.cur, at=-1;
+    r.chars.forEach(function(c,i){ if(at<0 && c.name===nm) at=i; });
+    if(at>-1){ if(r.chars.length>1){ r.chars.splice(at,1); BC.act=0; bcRelayout(); } else r.chars[0].name=''; }
+    else { var a=r.chars[BC.act], e2=-1; r.chars.forEach(function(c,i){ if(e2<0 && !c.name) e2=i; });
+      if(a && !a.name) a.name=nm; else if(e2>-1){ r.chars[e2].name=nm; BC.act=e2; } else if(!bcAddChar(nm)) (a||r.chars[0]).name=nm; }
+    bcForm(); });
   ch.addEventListener('change',function(e){ var row=e.target.closest('.bc-c'); if(row) BC.act=+row.getAttribute('data-i');
-    bcRead(); if(e.target.classList.contains('bc-cn')){ $('bc-chars').innerHTML=bcCharsHTML(); } bcPreview(); });
+    bcRead(); if(e.target.classList.contains('bc-cn')){ $('bc-chars').innerHTML=bcCharsHTML(); bcPcsDraw(); } bcPreview(); });
   ch.addEventListener('input',function(e){ if(!e.target.classList.contains('bc-cx')) return; BC.cur.autoX=false; bcRead(); bcPreview(); });
   ch.addEventListener('focusin',function(e){ var row=e.target.closest('.bc-c'); if(!row) return; BC.act=+row.getAttribute('data-i');
     [].slice.call(ch.querySelectorAll('.bc-c')).forEach(function(x){ x.classList.toggle('on', x===row); }); });
-  ch.addEventListener('click',function(e){ var b=e.target.closest('.bc-cd'); if(!b) return; bcRead(); var i=+b.closest('.bc-c').getAttribute('data-i');
+  ch.addEventListener('click',function(e){
+    var lk=e.target.closest('.bc-lk'); if(lk){ var c=BC.cur.chars[+lk.closest('.bc-c').getAttribute('data-i')]; if(!c) return; if(c.lk) delete c.lk; else c.lk=1; lk.setAttribute('aria-pressed',c.lk?'true':'false'); return; }
+    var b=e.target.closest('.bc-cd'); if(!b) return; bcRead(); var i=+b.closest('.bc-c').getAttribute('data-i');
     BC.cur.chars.splice(i,1); BC.act=0; bcRelayout(); bcForm(); });
-  $('bc-addc').addEventListener('click',function(){ bcRead(); if(BC.cur.chars.length>=3) return; BC.cur.chars.push({name:'', pose:'', face:'', x:.5}); BC.act=BC.cur.chars.length-1;
-    if(!BC.cur.autoX){ BC.cur.chars[BC.act].x=BC.act===1?.7:.85; } bcRelayout(); bcForm(); });
+  $('bc-addc').addEventListener('click',function(){ bcRead(); if(bcAddChar('')) bcForm(); });
+  // 랜덤
+  $('bc-rk').addEventListener('change',function(){ castLs('bcMood',this.value); });
+  $('bc-roll').addEventListener('click',function(){ bcRoll(); });
+  var rr=$('bc-rref'); if(rr) rr.addEventListener('click',function(){ bcRollRef(); });
+  $('bc-again').addEventListener('click',function(){ if(BC.last==='ref' && $('bc-rref')) bcRollRef(); else bcRoll(); });
+  [].slice.call(document.querySelectorAll('#bc-make .bc-lock')).forEach(function(x){ x.addEventListener('change',function(){ BC.lock[x.getAttribute('data-l')]=x.checked?1:0; }); });
   var rf=$('bc-ref'); if(rf) rf.addEventListener('change',function(){ if(rf.value!=='') bcApplyRef(rf.value); rf.value=''; });
   $('bc-save').addEventListener('click',function(){ bcSave(false); });
   $('bc-asnew').addEventListener('click',function(){ bcSave(true); });
-  $('bc-new').addEventListener('click',function(){ BC.cur=bcBlank(); BC.act=0; BC.dirty=false; bcForm(); bcList(); bcMsg('새 컷'); });
+  $('bc-new').addEventListener('click',function(){ BC.cur=bcBlank(); BC.act=0; BC.dirty=false; BC.refTitle=''; bcForm(); bcList(); bcMsg('새 컷'); });
   $('bc-q').addEventListener('input',function(){ bcList(); });
   // 목록
   $('bc-grid').addEventListener('click',function(e){
@@ -11983,6 +12209,7 @@ function bcBind(){
   try{ if('ResizeObserver' in window){ var lw=0; new ResizeObserver(function(){ var cv=$('bc-cv'); if(!cv) return; var w=cv.getBoundingClientRect().width; if(w && Math.abs(w-lw)>2){ lw=w; bcPreview(); } }).observe($('bc-cv')); } }catch(e){}
 }
 function bcList(){
+  bcTabCount();
   var grid=document.getElementById('bc-grid'); if(!grid) return;
   var fs=bcFolders(), all=bcAll(), v=bcView(), cnt={};
   all.forEach(function(m){ var f=m.folder||'기본'; cnt[f]=(cnt[f]||0)+1; });
@@ -12022,11 +12249,14 @@ function bcList(){
       '<span class="bc-ca"><button class="chip" type="button" data-act="edit">고치기</button><button class="chip" type="button" data-act="dup">복제</button><button class="chip" type="button" data-act="del">삭제</button></span></figcaption></figure>'; }).join('');
   setTimeout(function(){ bcDrawAll(grid); },0);
 }
-window.PAGE_ON=window.PAGE_ON||{};
-(function(){ var pb=window.PAGE_ON.cutlib; window.PAGE_ON.cutlib=function(){ if(pb) try{ pb(); }catch(e){} bcMount(); }; })();
-window.addEventListener('storage',function(e){ if(e.key===BC_KEY && bcOn()) bcList(); });
-// 등장인물 카드 「베스트컷 만들기」 → 그 인물을 넣고 베스트컷 페이지로
-window.__bcStart=function(o){ BC.pend=o||{}; if((location.hash||'')==='#cutlib') bcMount(); else location.hash='#cutlib'; };
+window.__bcMount=bcMount;
+// 옛 주소 #cutlib → #cast + 「베스트컷」 탭 (라우터 show를 감싼다. 해시 바뀜·첫 열기 모두 show를 부른다)
+(function(){ if(typeof show!=='function') return; var s0=show;
+  show=function(id){ if(id==='cutlib'){ castLs('castTab','bc'); try{ history.replaceState(null,'','#cast'); }catch(e){} id='cast'; } return s0(id); }; })();
+window.addEventListener('storage',function(e){ if(e.key===BC_KEY){ bcTabCount(); if(bcOn()) bcList(); } });
+// 등장인물 카드 「베스트컷 만들기」 → 그 인물을 넣고 「베스트컷」 탭으로
+window.__bcStart=function(o){ BC.pend=o||{}; castLs('castTab','bc');
+  if((location.hash||'')==='#cast'){ castTabApply(); try{ window.scrollTo(0,0); }catch(e){} } else location.hash='#cast'; };
 document.addEventListener('click',function(e){
   var b=e.target && e.target.closest && e.target.closest('[data-bcut]'); if(!b) return;
   var card=b.closest('.cast-card'), id=card&&card.getAttribute('data-id'), m=id?(recLoad(CAST_KEY).items[id] || (CP.draft&&CP.draft.id===id?CP.draft:null)):null;
@@ -12044,7 +12274,7 @@ window.__bcPick=function(host, cb){
     var ms=bcAll().filter(function(m){ return !f || (m.folder||'기본')===f; });
     if(q) ms=ms.filter(function(m){ return [m.title, m.scr, m.line, (m.chars||[]).map(function(c){ return c.name+' '+c.pose; }).join(' ')].join(' ').toLowerCase().indexOf(q)>-1; });
     ms.sort(function(a,b){ return (b.at||0)-(a.at||0); });
-    if(!ms.length){ g.innerHTML='<p class="small">'+(bcAll().length?'맞는 컷이 없다.':'베스트컷이 없다. <a href="#cutlib">베스트컷</a>에서 만든다.')+'</p>'; return; }
+    if(!ms.length){ g.innerHTML='<p class="small">'+(bcAll().length?'맞는 컷이 없다.':'베스트컷이 없다. <a href="#cutlib">등장인물 › 베스트컷</a>에서 만든다.')+'</p>'; return; }
     g.innerHTML=ms.slice(0,60).map(function(m){ return '<button type="button" class="bc-pi" data-id="'+bcEsc(m.id)+'"><canvas data-bc="'+bcEsc(m.id)+'"></canvas><span>'+bcEsc(m.title||bcAutoTitle(bcClean(m)))+'</span></button>'; }).join('');
     setTimeout(function(){ bcDrawAll(g); },0); }
   pf.addEventListener('change',draw); pq.addEventListener('input',draw);
@@ -12055,12 +12285,14 @@ window.__bcPick=function(host, cb){
 // 콘티 컷 → 베스트컷 기록 (지금 보는 폴더에)
 window.__bcFromConti=function(c, who){
   if(!c) return null; who=who||[]; var k=bcShotKey(c.k)||'ms', X=bcAutoX(Math.min(3,who.length), k);
-  var r=bcClean({k:k, ang:c.ang, focus:c.focus, flash:c.flash, scr:c.scr, line:c.line, folder:bcView()||'기본',
+  var r=bcClean({k:k, ang:c.ang, focus:c.focus, flash:c.flash, dyn:c.dyn, scr:c.scr, line:c.line, folder:bcView()||'기본',
     chars:who.slice(0,3).map(function(w,i){ return {name:w.name||'', pose:w.pose||'', face:w.face||'', x:w.x!=null?w.x:X[i]}; })});
-  var rec={id:recId(), title:(c.scr?String(c.scr).slice(0,24):(c.n?c.n+'번 컷':'콘티 컷')), folder:bcFolderMake(r.folder)||'기본', k:r.k, ang:r.ang, focus:r.focus, flash:r.flash, chars:r.chars, scr:r.scr, line:r.line, made:Date.now(), from:'conti'};
-  recPut(BC_KEY, rec); if(bcOn()) bcList(); return rec;
+  var rec={id:recId(), title:(c.scr?String(c.scr).slice(0,24):(c.n?c.n+'번 컷':'콘티 컷')), folder:bcFolderMake(r.folder)||'기본', k:r.k, ang:r.ang, focus:r.focus, flash:r.flash, dyn:r.dyn, chars:r.chars, scr:r.scr, line:r.line, made:Date.now(), from:'conti'};
+  recPut(BC_KEY, rec); bcTabCount(); if(bcOn()) bcList(); return rec;
 };
 window.__bcList=function(folder){ return bcAll().filter(function(m){ return !folder || (m.folder||'기본')===folder; }).map(bcClean); };
+window.__bcRandom=function(r, mood, L){ return bcRandom(bcClean(r||{}), mood||'', L||{}, Math.random); };
+bcTabCount();
 // [[/MOD:bestcut]]
 aiBar(); favAiBar(); aiSlots(); if(typeof ideaWriteBar==='function') ideaWriteBar();
 if(window.__reSlots) window.__reSlots(); if(typeof renderFavs==='function') renderFavs();
