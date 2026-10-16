@@ -836,6 +836,107 @@ textarea.cast-in{resize:vertical; min-height:2.6em; overflow:hidden}
   .pr-cv{height:9.5rem}
 }
 /* [[/CSS:poseref]] */
+/* [[CSS:imgfx]] */
+.pb-tabs{margin:.2rem 0 1.4rem}
+#probe > [role=tabpanel][hidden]{display:none}
+#imgfx-root .lede{margin-bottom:1.1rem}
+.ifx-pick{display:grid; gap:.7rem; margin:0 0 .5rem}
+.ifx-drop{position:relative; display:grid; gap:.2rem; justify-items:center; text-align:center; padding:1.5rem 1rem; border:1.5px dashed var(--rule-hard); background:var(--paper-2); cursor:pointer; transition:border-color .15s, background .15s}
+.ifx-drop.has{padding:.6rem 1rem; justify-items:start; text-align:left}
+.ifx-drop:hover, .ifx-drop.over{border-color:var(--note); background:var(--paper-3)}
+.ifx-drop:focus-visible{outline:2px solid var(--note); outline-offset:2px}
+.ifx-drop .ifx-dt{font-family:"Hahmlet",serif; font-weight:700; font-size:.95rem; color:var(--ink)}
+.ifx-drop .ifx-ds{font-size:.8rem; color:var(--ink-3)}
+.ifx-file{position:absolute; width:1px; height:1px; opacity:0; overflow:hidden; pointer-events:none}
+.ifx-sel{display:grid; grid-template-columns:minmax(0,9rem) minmax(0,1fr); gap:.8rem; align-items:start}
+.ifx-sel > img{width:100%; height:auto; max-height:14rem; object-fit:contain; object-position:top left; border:1px solid var(--rule-hard); background:#fff}
+.ifx-sf{display:grid; gap:.45rem; min-width:0}
+.ifx-sf label{display:grid; gap:.15rem; font-size:.8rem; color:var(--ink-3)}
+.ifx-sf select, .ifx-sf input, .ifx-f select, .ifx-f input[type=text], .ifx-title, .ifx-rin{font:inherit; font-size:.86rem; padding:.3rem .45rem; border:1px solid var(--rule-hard); background:var(--paper); color:var(--ink); min-width:0; max-width:100%; box-sizing:border-box}
+.ifx-sf .filterbar{margin:0}
+.ifx-go{background:var(--ink); color:var(--paper); border-color:var(--ink); font-weight:600}
+.ifx-go[disabled]{opacity:.55; cursor:progress}
+.ifx-priv{margin:.2rem 0 .8rem; padding-left:.6rem; border-left:2px solid var(--rule-hard); max-width:none}
+#ifx-stat{min-height:1.3em; margin:0 0 .8rem}
+#ifx-stat:empty{min-height:0; margin:0}
+.ifx-err{color:var(--mark)}
+.ifx-raw pre{white-space:pre-wrap; font-size:.75rem; max-height:12rem; overflow:auto; background:var(--paper-2); padding:.4rem}
+.ifx-res{border-top:2px solid var(--ink); padding-top:.8rem; margin:0 0 1.6rem}
+.ifx-head{display:flex; flex-wrap:wrap; gap:.3rem .7rem; align-items:baseline; margin:0 0 .5rem}
+.ifx-title{flex:1 1 14rem; font-family:"Hahmlet",serif; font-weight:700; font-size:1.05rem; border-color:transparent; background:transparent; padding:.15rem .3rem; margin-left:-.3rem}
+.ifx-title:hover, .ifx-title:focus{border-color:var(--rule-hard); background:var(--paper)}
+.ifx-acts{margin:0 0 .9rem}
+.ifx-conti{border-color:var(--note); color:var(--note); font-weight:600}
+.ifx-grid{display:grid; gap:1rem; grid-template-columns:minmax(0,1fr)}
+@media (min-width:760px){
+  .ifx-grid{grid-template-columns:minmax(0,5fr) minmax(0,6fr); align-items:start}
+  .ifx-stage{position:sticky; top:3.4rem; max-height:calc(100vh - 4rem); overflow:auto; scrollbar-width:thin}
+}
+.ifx-imgw{position:relative; line-height:0; border:1px solid var(--rule-hard); background:#fff}
+.ifx-imgw img{display:block; width:100%; height:auto}
+.ifx-box{position:absolute; box-sizing:border-box; padding:0; margin:0; border:2px solid var(--mark); background:rgba(168,44,34,.06); cursor:pointer; line-height:1}
+.ifx-box span{position:absolute; left:-2px; top:-2px; min-width:1.35rem; padding:.18rem .25rem; font:700 .74rem/1 system-ui,sans-serif; color:#fff; background:var(--mark); text-align:center}
+.ifx-box:hover{background:rgba(168,44,34,.14)}
+.ifx-box.on{border-color:var(--note); border-width:3px; background:rgba(38,92,135,.16); z-index:2}
+.ifx-box.on span{background:var(--note)}
+.ifx-box:focus-visible{outline:2px solid var(--note); outline-offset:1px}
+.ifx-sb h4{margin:.1rem 0 .25rem; font-size:.9rem}
+.ifx-sb p{margin:0; font-size:.9rem; line-height:1.7; max-width:none}
+.ifx-read{margin-top:.7rem; padding:.55rem .7rem; background:var(--paper-2); border-left:3px solid var(--note)}
+ol.ifx-rows{list-style:none; margin:0; padding:0; max-width:none; display:grid; gap:.55rem}
+.ifx-row{border:1px solid var(--rule); background:var(--paper); padding:.5rem .6rem; scroll-margin:4.5rem}
+.ifx-row.on{border-color:var(--note); box-shadow:inset 3px 0 0 var(--note)}
+.ifx-rh{display:flex; flex-wrap:wrap; gap:.2rem .5rem; align-items:center; margin-bottom:.4rem}
+.ifx-ck{display:inline-flex; align-items:center; gap:.25rem; cursor:pointer}
+.ifx-n{display:inline-block; min-width:1.4rem; padding:.12rem .25rem; font:700 .78rem/1 system-ui,sans-serif; text-align:center; color:#fff; background:var(--mark)}
+.ifx-row.on .ifx-n{background:var(--note)}
+.ifx-kn{font:inherit; font-size:.86rem; font-weight:700; background:none; border:0; padding:0; color:var(--ink); cursor:pointer; text-align:left}
+.ifx-kn:hover{color:var(--note)}
+.ifx-note{flex-basis:100%; font-size:.84rem; color:var(--ink-2)}
+.ifx-rb{display:grid; grid-template-columns:6.8rem minmax(0,1fr); gap:.6rem; align-items:start}
+.ifx-cv{width:100%; aspect-ratio:1.3; display:block; border:1px solid var(--rule)}
+.ifx-f{display:grid; gap:.3rem; min-width:0}
+.ifx-f1{display:flex; flex-wrap:wrap; gap:.3rem}
+.ifx-f1 label{display:grid; gap:.05rem; font-size:.72rem; color:var(--ink-3); flex:1 1 5.5rem; min-width:0}
+.ifx-f1 select{width:100%; font-size:.8rem; padding:.2rem .25rem}
+.ifx-f2{display:flex; flex-wrap:wrap; gap:.1rem .7rem; font-size:.8rem; color:var(--ink-2)}
+.ifx-f2 label{display:inline-flex; gap:.2rem; align-items:center; cursor:pointer}
+.ifx-w{display:grid; grid-template-columns:2.4rem minmax(0,1fr); gap:.3rem; align-items:center; font-size:.74rem; color:var(--ink-3)}
+.ifx-w input{width:100%; font-size:.82rem; padding:.22rem .35rem}
+.ifx-ra{margin-top:.4rem; display:flex; flex-wrap:wrap; gap:.3rem .6rem; align-items:center}
+.ifx-ra .chip{font-size:.74rem}
+.ifx-sum{display:grid; gap:.8rem; margin-top:1.1rem; grid-template-columns:minmax(0,1fr)}
+@media (min-width:760px){ .ifx-sum{grid-template-columns:minmax(0,1fr) minmax(0,1fr)} .ifx-sum .ifx-tags{grid-column:1 / -1} }
+.ifx-sum .ifx-sb{padding:.55rem .7rem; border:1px solid var(--rule); background:var(--paper)}
+.ifx-use{white-space:pre-line}
+.ifx-chips{display:flex; flex-wrap:wrap; gap:.3rem; align-items:center; margin:.15rem 0}
+.ifx-chips > b{font-size:.8rem; min-width:6.2rem; color:var(--ink-2)}
+#imgfx-root a.chip{text-decoration:none; display:inline-block}
+.ifx-hist{margin:1.2rem 0 0; border-top:1px solid var(--rule-hard); padding-top:.5rem}
+.ifx-hist > summary{cursor:pointer; font-family:"Hahmlet",serif; font-weight:700; font-size:.95rem}
+.ifx-hist .cn{font-weight:400; font-size:.8rem; color:var(--ink-3)}
+ul.ifx-hl{list-style:none; padding:0; margin:.6rem 0 0; max-width:none; display:grid; gap:.4rem}
+.ifx-hi{display:grid; grid-template-columns:3.6rem minmax(0,1fr) auto; gap:.6rem; align-items:center; padding:.35rem .4rem; border:1px solid var(--rule); background:var(--paper)}
+.ifx-hi.cur{border-color:var(--note)}
+.ifx-ho{padding:0; border:1px solid var(--rule); background:#fff; cursor:pointer; width:3.6rem; height:3.6rem; overflow:hidden; display:block}
+.ifx-ho img{width:100%; height:100%; object-fit:cover; object-position:top; display:block}
+.ifx-nothumb{display:grid; place-items:center; height:100%; color:var(--ink-3)}
+.ifx-hm{display:grid; gap:.1rem; min-width:0}
+.ifx-ht{cursor:pointer; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:.9rem}
+.ifx-hb{display:flex; flex-wrap:wrap; gap:.25rem; justify-content:flex-end}
+.ifx-hb .chip{font-size:.72rem; padding:.15rem .45rem}
+.ifx-hb .chip[data-arm="1"]{border-color:var(--mark); color:var(--mark)}
+.ifx-redo{margin:0; color:var(--note)}
+@media (max-width:520px){
+  .ifx-sel{grid-template-columns:minmax(0,6rem) minmax(0,1fr)}
+  .ifx-rb{grid-template-columns:5.2rem minmax(0,1fr)}
+  .ifx-hi{grid-template-columns:3rem minmax(0,1fr)}
+  .ifx-ho{width:3rem; height:3rem}
+  .ifx-hb{grid-column:1 / -1; justify-content:flex-start}
+  .ifx-chips > b{min-width:0; flex-basis:100%}
+}
+:root[data-theme="dark"] .ifx-box{background:rgba(224,112,95,.08)}
+/* [[/CSS:imgfx]] */
 /* [[CSS:bestcut]] */
 .cast-tabs{display:flex; gap:.2rem; margin:-.3rem 0 1.1rem; border-bottom:1px solid var(--rule-hard)}
 .cast-tab{font:inherit; font-size:.95rem; font-weight:600; letter-spacing:.01em; background:none; color:var(--ink-3); border:0; border-bottom:2px solid transparent; margin-bottom:-1px; padding:.45rem .9rem .5rem; cursor:pointer}
@@ -2529,6 +2630,8 @@ body.dk-drag, body.dk-drag *{user-select:none!important; -webkit-user-select:non
 
 <section class="blk" id="probe">
   <h2 class="big">작품 분석</h2>
+  <div class="cast-tabs pb-tabs" role="tablist" aria-label="작품 분석 갈래"><button class="cast-tab" type="button" role="tab" id="pb-tab-s" data-pbt="s" aria-controls="pb-story" aria-selected="true">줄거리 분석</button><button class="cast-tab" type="button" role="tab" id="pb-tab-i" data-pbt="i" aria-controls="imgfx-root" aria-selected="false" tabindex="-1">이미지 연출 분석</button></div>
+  <div id="pb-story" role="tabpanel" aria-labelledby="pb-tab-s">
   <p class="lede">본 만화·영화·드라마의 이야기를 적으면, 그 안에 쓰인 <b>클리셰와 소재</b>를 색인에서 찾아 준다. 줄거리가 기억나지 않으면 작품 이름만 적고 <b>🌐 웹에서 줄거리 찾기</b>를 누른다(한 번에 약 10~30원). 색인에 없는 새 장치가 있으면 후보로 보여 주고, 고른 것만 <b>색인에 추가</b>한다.</p>
   <div class="arcform">
     <label><span>작품 이름</span><input id="pb-title" type="text" placeholder="예) 기생충"></label>
@@ -2541,6 +2644,8 @@ body.dk-drag, body.dk-drag *{user-select:none!important; -webkit-user-select:non
     <p class="small">작품 분석으로 추가한 항목이다. 이 브라우저에 저장되며, 드라이브 동기화와 백업에 함께 들어간다. 클리셰 색인과 소재 색인, 랜덤 구성기, 🔎 창에서 다른 항목과 똑같이 쓰인다.</p>
     <div id="pb-mine"></div>
   </details>
+  </div>
+  <div id="imgfx-root" role="tabpanel" aria-labelledby="pb-tab-i" hidden></div>
 </section>
 
 <section class="blk" id="index">
@@ -4280,7 +4385,7 @@ var PAGES=[
  {g:'도구',id:'arc',t:'아크 점검표',d:'장편용. 네 칸을 채워 점검하고 장르별 예시 48개.'},
  {g:'도구',id:'epidx',t:'에피소드 소재 색인',d:'220개. 한 화를 채우는 작은 사건. 로맨스·개그·일상.'},
  {g:'도구',id:'ai',t:'AI 연결',d:'구글 제미나이 키를 넣고 비틀기·연관짓기·글쓰기를 쓴다.'},
- {g:'도구',id:'probe',t:'작품 분석',d:'본 작품의 이야기에서 클리셰·소재를 찾고, 새 장치는 색인에 추가한다.'},
+ {g:'도구',id:'probe',t:'작품 분석',d:'본 작품의 이야기에서 클리셰·소재를 찾고, 만화 이미지의 컷 연출을 읽는다.'},
  {g:'도구',id:'index',t:'클리셰 색인',d:'813개. 기능·연출 도구·배치·상태·지면으로 검색.'},
  {g:'도구',id:'motifidx',t:'소재 색인',d:'138개. 세계 규칙·사회 조건·인물 처지. 원작 표시 포함.'},
  {g:'도구',id:'chars',t:'캐릭터 모티브 색인',d:'291개(판타지 70). 외모·성격·결핍 세 축의 재료.'},
@@ -9752,6 +9857,396 @@ window.addEventListener('resize', function(){ clearTimeout(PR.rz); PR.rz=setTime
 window.__poseRef={list:function(){ return POSE_REF; }, comp:prComp, who:prWho, show:prShow, filter:function(k,q){ PR.kind=k||''; PR.q=q||''; if(!PR.built) prBuild(); else prFilter(); }};
 })();
 // [[/MOD:poseref]]
+// [[MOD:imgfx]] 이미지 연출 분석 — 작품 분석 페이지(#probe)의 「이미지 연출 분석」 탭
+// 이미지를 줄여(긴 변 1600px, JPEG .85) aiCall의 opts.images로 보내고, 컷마다 구도·앵글·효과·인물·화면·대사 요지·하는 일과
+// 시선 흐름·연출 도구·콘티 연출 기법(CONTI_FX가 있을 때)·클리셰·왜 효과적인가·쓰는 법을 JSON으로 받는다.
+// 기록 imgFxHist(이 기기만 — 동기화·백업 안 함): [{id, at, title, thumb(360px JPEG dataURL), w, h, result}] 최근 20개. 원본 이미지는 남기지 않는다
+// 콘티로 가져오기 → window.__ctInsertCuts, 베스트컷 저장 → window.__bcFromConti, 그림 → window.__ctCutData + window.__ctPortrait
+(function(){
+var root=document.getElementById('imgfx-root'); if(!root) return;
+var IF_KEY='imgFxHist', IF_MAX=20;
+var IF={img:null, cur:null, busy:false, built:false, on:-1, saveTm:0, redo:'', full:{}, tick:0, dropped:0};
+var IF_SHOT=[['els','익스트림 롱숏','아주 먼 풍경·장소 전체'],['ls','롱숏','인물 전신과 주변 공간'],['fs','풀숏','인물 전신이 화면에 꽉 참'],['ms','미디엄숏','허리 위'],['bs','바스트숏','가슴 위'],
+  ['cu','클로즈업','얼굴'],['ecu','익스트림 클로즈업','눈·입·손 같은 한 부분'],['two','투숏','두 사람이 나란히'],['ots','어깨 너머','한 사람 어깨 너머로 다른 사람'],['stand','대치','두 사람이 양쪽 끝에서 마주 섬'],
+  ['frame','프레임 속 프레임','문·창 같은 틀 안의 인물'],['bird','버즈아이','바로 위에서 내려다봄'],['insert','인서트','물건·손·화면 같은 사물 컷'],['pov','시점 숏','인물의 눈으로 본 화면'],
+  ['back','뒷모습','인물의 등'],['empty','빈 배경','사람 없는 장소'],['crowd','군중','여러 사람·관중']];
+var IF_ANG=[['','앵글 보통'],['high','부감'],['low','앙각'],['dutch','더치']];
+var IF_FMT={print:'출판만화 한 쪽', webtoon:'웹툰 세로 화면', single:'한 컷'};
+var IF_TOOLS0=['같은 구도 반복','글자·말풍선','넘김·전환','무음·여백','반응 컷','원경·생략','컷 리듬·톤','클로즈업'];
+function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g,function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
+function clamp(v,a,b){ return Math.max(a,Math.min(b,v)); }
+function $(s){ return root.querySelector(s); }
+function shotName(k){ for(var i=0;i<IF_SHOT.length;i++) if(IF_SHOT[i][0]===k) return IF_SHOT[i][1]; return k; }
+function angName(a){ for(var i=0;i<IF_ANG.length;i++) if(IF_ANG[i][0]===a) return IF_ANG[i][1]; return ''; }
+function ifPoses(){ var L=[]; try{ FIG_SEL.forEach(function(x){ if(x[0]==='pose') L=x[2].slice(); }); }catch(e){} return L; }
+function ifTools(){ try{ if(typeof PB_ENUM!=='undefined' && PB_ENUM.tool && PB_ENUM.tool.length) return PB_ENUM.tool.slice(); }catch(e){} return IF_TOOLS0.slice(); }
+function ifFx(){   // 콘티 연출 색인(다른 모듈)이 있으면 [{id,name,group,desc}]
+  var L=null; try{ if(typeof CONTI_FX!=='undefined' && Array.isArray(CONTI_FX)) L=CONTI_FX; }catch(e){}
+  if(!L && window.__ctFx && typeof window.__ctFx.list==='function') try{ L=window.__ctFx.list(); }catch(e){}
+  return (Array.isArray(L)?L:[]).filter(function(f){ return f && f.id && f.name; });
+}
+function ifCliches(){ try{ if(typeof ROWS!=='undefined') return ROWS.map(function(r){ return r && r[0]; }).filter(Boolean); }catch(e){} return []; }
+function ifStrong(){   // 콘티 구성기 strongModel과 같은 규칙: 추천 중 오늘 막히지 않은 Pro, 없으면 고른 모델
+  try{ var r=((typeof ORM!=='undefined'&&ORM.rec)||[]).filter(function(x){ return x && x.m && /pro/.test(x.m.id) && !(typeof qIsOut==='function' && qIsOut(x.m.id)); })[0]; return r?r.m.id:undefined; }catch(e){ return undefined; }
+}
+function ifId(){ return 'if'+Date.now().toString(36)+Math.random().toString(36).slice(2,6); }
+function ifDate(t){ var d=new Date(t||Date.now()); function p(n){ return (n<10?'0':'')+n; } return (d.getMonth()+1)+'/'+d.getDate()+' '+p(d.getHours())+':'+p(d.getMinutes()); }
+
+/* ---------- 기록 (이 기기만) ---------- */
+function histLoad(){ try{ var a=JSON.parse(localStorage.getItem(IF_KEY)||'[]'); return Array.isArray(a)?a.filter(function(x){ return x && x.id && x.result; }):[]; }catch(e){ return []; } }
+function isQuota(e){ return e && (e.name==='QuotaExceededError' || e.name==='NS_ERROR_DOM_QUOTA_REACHED' || e.code===22 || e.code===1014 || /quota/i.test(e.message||'')); }
+function histSave(a){
+  a=a.slice(0,IF_MAX);
+  for(var guard=0; guard<IF_MAX+3; guard++){
+    try{ localStorage.setItem(IF_KEY, JSON.stringify(a)); return a; }
+    catch(e){ if(!isQuota(e)) return a;
+      if(a.length>1){ a=a.slice(0,-1); IF.dropped++; continue; }   // 공간이 모자라면 가장 오래된 것부터 뺀다
+      if(a.length===1 && a[0].thumb){ a[0]=Object.assign({},a[0],{thumb:''}); continue; }
+      try{ localStorage.removeItem(IF_KEY); }catch(_){} return []; }
+  }
+  return a;
+}
+function histPut(e){ var a=histLoad().filter(function(x){ return x.id!==e.id; }); a.unshift(e); return histSave(a); }
+function histUpd(e){ var a=histLoad(), hit=false; a=a.map(function(x){ if(x.id===e.id){ hit=true; return e; } return x; }); if(!hit) a.unshift(e); return histSave(a); }
+function histDel(id){ return histSave(histLoad().filter(function(x){ return x.id!==id; })); }
+function histGet(id){ return histLoad().filter(function(x){ return x.id===id; })[0]||null; }
+function saveSoon(){ clearTimeout(IF.saveTm); IF.saveTm=setTimeout(function(){ if(IF.cur){ IF.cur.edited=Date.now(); histUpd(IF.cur); histList(); } },500); }
+
+/* ---------- 이미지 줄이기 ---------- */
+function ifDims(w,h,long,tShort,tLong){
+  var s=Math.min(1,long/Math.max(w,h));
+  if(h/w>2.5) s=Math.min(1,tShort/w,tLong/h);        // 웹툰처럼 긴 세로 이미지는 너비를 지킨다
+  else if(w/h>2.5) s=Math.min(1,tShort/h,tLong/w);
+  return [Math.max(1,Math.round(w*s)),Math.max(1,Math.round(h*s))];
+}
+function ifJpeg(src,w,h,q){ var c=document.createElement('canvas'); c.width=w; c.height=h; var x=c.getContext('2d'); if(!x) throw new Error('canvas');
+  x.fillStyle='#fff'; x.fillRect(0,0,w,h); x.drawImage(src,0,0,w,h); return c.toDataURL('image/jpeg',q); }
+function ifScale(im,ow,oh,name){
+  var d=ifDims(ow,oh,1600,900,3600), url=ifJpeg(im,d[0],d[1],.85), t=ifDims(ow,oh,360,200,900), th=ifJpeg(im,t[0],t[1],.72);
+  return {url:url, data:url.split(',')[1]||'', mime:'image/jpeg', w:d[0], h:d[1], ow:ow, oh:oh, thumb:th, name:name||''};
+}
+function ifLoad(file){
+  if(!file) return;
+  if(!/^image\//.test(file.type||'') && !/\.(jpe?g|png|webp|gif|bmp|avif)$/i.test(file.name||'')){ stat('이미지 파일이 아니다. JPG·PNG·WEBP를 올린다.'); return; }
+  stat('이미지를 여는 중…');
+  var url=''; try{ url=URL.createObjectURL(file); }catch(e){ stat('이 브라우저에서는 이미지를 열 수 없다.'); return; }
+  var im=new Image();
+  im.onload=function(){ var r=null; try{ r=ifScale(im, im.naturalWidth||im.width, im.naturalHeight||im.height, file.name); }catch(e){} try{ URL.revokeObjectURL(url); }catch(e){}
+    if(!r || !r.data){ stat('이미지를 줄이지 못했다. 다른 이미지로 해 본다.'); return; } ifUse(r); };
+  im.onerror=function(){ try{ URL.revokeObjectURL(url); }catch(e){} stat('이 이미지를 읽지 못했다. JPG·PNG·WEBP로 바꿔서 다시 올린다.'); };
+  im.src=url;
+}
+function ifUse(r){ IF.img=r; renderPick(); stat(''); var b=$('.ifx-go'); if(b) try{ b.focus(); }catch(e){} }
+
+/* ---------- 프롬프트 · 읽기 ---------- */
+function ifSys(){ return '당신은 만화·웹툰 연출을 가르치는 편집자다. 받은 이미지 한 장의 컷 연출을 분석한다. 이미지에 보이는 것만 근거로 쓰고 지어내지 않는다. 대사는 그대로 옮겨 적지 말고 요지만 짧게 쓴다. 반드시 유효한 JSON 하나만 출력한다. 다른 글자·마크다운은 쓰지 않는다.'; }
+function ifPrompt(hint, memo){
+  var poses=ifPoses(), tools=ifTools(), fx=ifFx(), names=ifCliches(), L=[];
+  L.push('[할 일] 이 이미지(만화 한 쪽, 컷 몇 개, 또는 웹툰 화면 캡처)를 읽는 순서대로 컷으로 나누고, 컷마다 구도·앵글·효과·인물·화면·대사 요지·이 컷이 하는 일을 적는다. 그다음 전체의 시선 흐름, 쓰인 연출 도구, 왜 효과적인지, 내 작품에 쓰는 법을 쓴다.');
+  if(hint && IF_FMT[hint]) L.push('[사용자가 고른 형식] '+hint+' ('+IF_FMT[hint]+')');
+  if(memo) L.push('[사용자 메모 — 작품·장면·인물 이름 참고] '+String(memo).slice(0,200));
+  L.push('[format] print=출판만화 한 쪽(칸이 격자로 나뉨), webtoon=세로 스크롤(컷 사이 여백이 큼), single=컷 하나. 출판만화는 말풍선 배치와 구도로 읽는 방향(일본식 오른쪽→왼쪽, 한국·서양식 왼쪽→오른쪽)을 판단해 그 순서로 번호를 매긴다.');
+  L.push('[box] 컷 테두리 상자 [x,y,w,h]. 이미지 왼쪽 위가 0,0이고 너비·높이에 대한 백분율(0~100). 테두리가 없는 컷은 그림이 차지한 영역.');
+  L.push('[k 구도 — 이 코드 중 하나] '+IF_SHOT.map(function(s){ return s[0]+'='+s[1]+'('+s[2]+')'; }).join(', '));
+  L.push('[ang 앵글] ""=보통, high=부감(위에서 내려다봄), low=앙각(아래에서 올려다봄), dutch=더치(화면이 기울어짐)');
+  L.push('[효과] focus=집중선·속도선이 있으면 1, flash=회상(옅은 톤·검은 테두리·흐린 화면)이면 1, silent=대사·효과음이 없는 무음 컷이면 1. 아니면 0');
+  L.push('[who] 화면에 보이는 인물을 왼쪽부터. 이름이 이미지에 적혀 있거나 사용자 메모로 확실할 때만 이름을 쓰고, 아니면 「인물1」「인물2」처럼 쓴다. 같은 사람은 컷이 바뀌어도 같은 번호. 사람이 없으면 []');
+  if(poses.length) L.push('[pose] 첫 인물의 자세. 이 목록에 있는 이름만, 맞는 것이 없으면 "": '+poses.join(', '));
+  L.push('[tools 연출 도구 — 이 이름만, 이 이미지에서 쓰인 것만] '+tools.join(', '));
+  if(fx.length) L.push('[fx 콘티 연출 기법 — 분명히 쓰인 것만 id로, 많아야 4개] '+fx.slice(0,120).map(function(f){ return f.id+'='+f.name; }).join(', '));
+  if(names.length) L.push('[cliches 클리셰 — 아래 사전 이름 중 이 이미지에 분명히 쓰인 것만 이름 그대로, 많아야 3개, 없으면 []] '+names.join(' / '));
+  L.push('[출력 JSON 모양] {"format":"print","panels":[{"n":1,"box":[52,3,45,30],"k":"ls","ang":"","focus":0,"flash":0,"silent":0,"who":["인물1"],"scr":"화면 설명 40자 이내","line":"대사 요지, 없으면 빈 글","pose":"","note":"이 컷이 하는 일 한 줄"}],"read":"시선 흐름 2~3문장","tools":["반응 컷"],'+(fx.length?'"fx":[],':'')+'"cliches":[],"why":"왜 효과적인가 2~3문장","use":"내 작품에 쓰는 법 2~3줄"}');
+  L.push('컷은 많아야 16개. 모든 글은 한국어로.');
+  return L.join('\n');
+}
+function ifJSON(t){ t=String(t||'').replace(/```json|```/g,'').trim(); var a=t.indexOf('{'), b=t.lastIndexOf('}'); if(a<0||b<a) return null; try{ return JSON.parse(t.slice(a,b+1)); }catch(e){ return null; } }
+function bit(v){ return (v===1||v===true||v==='1'||v==='true')?1:0; }
+function str(v,n){ if(Array.isArray(v)) v=v.join('\n'); return String(v==null?'':v).replace(/\s+$/,'').replace(/^\s+/,'').slice(0,n); }
+function shotKey(v){ var s=String(v||'').trim(), L=s.toLowerCase(); for(var i=0;i<IF_SHOT.length;i++){ if(IF_SHOT[i][0]===L || IF_SHOT[i][1]===s) return IF_SHOT[i][0]; } return ''; }
+function angKey(v){ v=String(v||'').trim().toLowerCase(); return {high:'high',low:'low',dutch:'dutch','부감':'high','앙각':'low','더치':'dutch'}[v]||''; }
+function ifParse(t){
+  var j=(typeof t==='string')?ifJSON(t):t; if(!j || typeof j!=='object') return null;
+  var P=Array.isArray(j.panels)?j.panels.filter(function(p){ return p && typeof p==='object'; }):[]; if(!P.length) return null;
+  P=P.map(function(p,i){ return {p:p, i:i, n:+p.n}; }).sort(function(a,b){ var x=isFinite(a.n)?a.n:1e9, y=isFinite(b.n)?b.n:1e9; return x-y || a.i-b.i; }).map(function(x){ return x.p; }).slice(0,16);
+  // 상자 단위: 0~100(%)이 기본. 100을 넘으면 0~1000, 모두 1 이하면 0~1로 보고 맞춘다
+  var vals=[]; P.forEach(function(p){ if(Array.isArray(p.box)) p.box.slice(0,4).forEach(function(v){ v=+v; if(isFinite(v)) vals.push(v); }); });
+  var mx=vals.length?Math.max.apply(null,vals):0, sc=mx>100?0.1:(mx>0 && mx<=1?100:1);
+  var poses=ifPoses();
+  var panels=P.map(function(p,i){
+    var b=null; if(Array.isArray(p.box) && p.box.length>=4){ var a=p.box.slice(0,4).map(function(v){ return +v*sc; });
+      if(a.every(function(v){ return isFinite(v); })){ var x=clamp(a[0],0,98), y=clamp(a[1],0,98), w=clamp(a[2],2,100-x), h=clamp(a[3],2,100-y); b=[x,y,w,h].map(function(v){ return Math.round(v*10)/10; }); } }
+    var who=p.who; if(typeof who==='string') who=who.split(/[,，、]/);
+    who=(Array.isArray(who)?who:[]).map(function(w){ return String(w==null?'':w).trim().slice(0,12); }).filter(Boolean).slice(0,4);
+    return {n:i+1, box:b, k:shotKey(p.k)||'ms', ang:angKey(p.ang), focus:bit(p.focus), flash:bit(p.flash), silent:bit(p.silent), who:who,
+      scr:str(p.scr,60), line:str(p.line,80).replace(/^["“”]+|["“”]+$/g,''), pose:poses.indexOf(String(p.pose||'').trim())>-1?String(p.pose).trim():'', note:str(p.note,100)};
+  });
+  var tl=ifTools(), tools=[]; (Array.isArray(j.tools)?j.tools:[]).forEach(function(v){ v=String(v||'').trim(); var hit=tl.indexOf(v)>-1?v:'';
+    if(!hit && v) tl.forEach(function(x){ if(!hit && (x.replace(/\s/g,'')===v.replace(/\s/g,''))) hit=x; });
+    if(hit && tools.indexOf(hit)<0) tools.push(hit); });
+  var fl=ifFx(), fx=[]; (Array.isArray(j.fx)?j.fx:[]).forEach(function(v){ v=String(v||'').trim(); var hit=null; fl.forEach(function(f){ if(!hit && (String(f.id)===v || f.name===v)) hit=String(f.id); });
+    if(hit && fx.indexOf(hit)<0 && fx.length<6) fx.push(hit); });
+  var cn=ifCliches(), cl=[]; (Array.isArray(j.cliches)?j.cliches:[]).forEach(function(v){ v=String(v||'').trim(); if(!v) return; var hit=cn.indexOf(v)>-1?v:'';
+    if(!hit){ var s=v.replace(/\s/g,''); for(var i=0;i<cn.length;i++) if(cn[i].replace(/\s/g,'')===s){ hit=cn[i]; break; } }
+    if(hit && cl.indexOf(hit)<0 && cl.length<3) cl.push(hit); });
+  var fmt=IF_FMT[j.format]?j.format:(panels.length===1?'single':'print');
+  return {format:fmt, panels:panels, read:str(j.read,500), tools:tools, fx:fx, cliches:cl, why:str(j.why,600), use:str(j.use,600)};
+}
+
+/* ---------- 분석 ---------- */
+function stat(t, html){ var s=$('#ifx-stat'); if(!s) return; if(html) s.innerHTML=html; else s.textContent=t||''; }
+function ifRun(){
+  if(IF.busy) return; var im=IF.img;
+  if(!im || !im.data){ stat('먼저 이미지를 고른다.'); return; }
+  if(typeof aiReady==='function' && !aiReady()){ stat('', 'AI 키가 없다. <a href="#ai">AI 연결</a>에서 구글 AI 스튜디오 키를 넣는다.'); return; }
+  var hint=($('.ifx-fmt')||{}).value||'', memo=String(($('.ifx-memo')||{}).value||'').trim();
+  IF.hint=hint; IF.memo=memo; IF.busy=true; var t0=Date.now(), go=$('.ifx-go'); if(go) go.disabled=true;
+  var tickF=function(){ stat('이미지를 읽는 중… '+Math.round((Date.now()-t0)/1000)+'초 (컷이 많으면 30초쯤 걸린다)'); };
+  tickF(); clearInterval(IF.tick); IF.tick=setInterval(tickF,1000);
+  aiAsk(ifSys(), ifPrompt(hint,memo), 3000, {images:[{mime:im.mime||'image/jpeg', data:im.data}], temperature:0.2, json:true, model:ifStrong()}).then(function(t){
+    IF.busy=false; clearInterval(IF.tick); var g=$('.ifx-go'); if(g) g.disabled=false;
+    if(typeof aiIsErr==='function' && aiIsErr(t)){ stat('', '<span class="ifx-err">'+esc(t)+'</span> <button class="chip" type="button" data-ifx="retry">다시</button>'); return; }
+    var r=ifParse(t);
+    if(!r){ stat('', '<span class="ifx-err">답을 읽지 못했다.</span> <button class="chip" type="button" data-ifx="retry">다시</button><details class="ifx-raw"><summary>받은 답</summary><pre>'+esc(String(t).slice(0,1500))+'</pre></details>'); return; }
+    var old=IF.redo?histGet(IF.redo):null;
+    var e={id:old?old.id:ifId(), at:Date.now(), title:old?old.title:(memo?memo.slice(0,40):(IF_FMT[r.format]+' · '+r.panels.length+'컷')), thumb:im.thumb||'', w:im.w, h:im.h, result:r};
+    IF.full[e.id]=im; IF.redo='';
+    IF.dropped=0; histPut(e); IF.cur=e; IF.on=-1;
+    stat(r.panels.length+'컷을 읽었다. 틀린 곳은 아래에서 고친다 — 고친 내용은 바로 저장된다.'+(IF.dropped?' (저장 공간이 모자라 오래된 분석 '+IF.dropped+'개를 지웠다)':''));
+    renderPick(); renderRes(); histList();
+  });
+}
+
+/* ---------- 화면: 고르기 ---------- */
+function build(){
+  if(IF.built) return; IF.built=true;
+  root.innerHTML='<p class="lede">만화 한 쪽, 컷 몇 개, 웹툰 화면 캡처를 올리면 컷마다 <b>구도·앵글·효과</b>와 <b>시선 흐름</b>, 쓰인 <b>연출 도구</b>를 읽어 준다. 잘못 읽은 곳은 고치고, 컷을 <b>콘티 구성기</b>나 <b>베스트컷</b>으로 가져간다.</p>'+
+    '<div class="ifx-pick"></div>'+
+    '<p class="small ifx-priv">이미지는 분석하려고 구글(제미나이)로 보낸다. 이 기기에는 작은 미리보기와 분석 결과만 남고 동기화되지 않는다. 다른 사람의 작품은 공부용으로만 쓴다.</p>'+
+    '<div id="ifx-stat" class="small" role="status" aria-live="polite"></div>'+
+    '<div id="ifx-out"></div>'+
+    '<details class="ifx-hist" id="ifx-hist"><summary>지난 분석 <span class="cn"></span></summary><ul class="ifx-hl"></ul></details>';
+  renderPick(); histList();
+  var h=histLoad(); if(h.length) $('#ifx-hist').open=true;
+  root.addEventListener('click', onClick);
+  root.addEventListener('change', onField);
+  root.addEventListener('input', onField);
+  root.addEventListener('keydown', onKey);
+  root.addEventListener('dragover', function(e){ if(!hasFile(e)) return; e.preventDefault(); var d=$('.ifx-drop'); if(d) d.classList.add('over'); });
+  root.addEventListener('dragleave', function(e){ var d=$('.ifx-drop'); if(d && !root.contains(e.relatedTarget)) d.classList.remove('over'); });
+  root.addEventListener('drop', function(e){ if(!hasFile(e)) return; e.preventDefault(); var d=$('.ifx-drop'); if(d) d.classList.remove('over');
+    var f=[].slice.call(e.dataTransfer.files||[]).filter(function(x){ return /^image\//.test(x.type||''); })[0]||(e.dataTransfer.files||[])[0]; ifLoad(f); });
+}
+function hasFile(e){ var t=e.dataTransfer&&e.dataTransfer.types; return !!t && [].slice.call(t).indexOf('Files')>-1; }
+function renderPick(){
+  var box=$('.ifx-pick'); if(!box) return; var im=IF.img, redo=IF.redo?histGet(IF.redo):null;
+  var h='<label class="ifx-drop'+(im?' has':'')+'" tabindex="0"><input class="ifx-file" type="file" accept="image/*" tabindex="-1">'+
+    '<span class="ifx-dt">'+(im?'다른 이미지 고르기':'이미지를 끌어다 놓거나 눌러서 고른다')+'</span><span class="ifx-ds">붙여 넣기(Ctrl+V)도 된다 · 만화 한 쪽 · 컷 몇 개 · 웹툰 화면 캡처</span></label>';
+  if(redo) h+='<p class="small ifx-redo">「'+esc(redo.title)+'」을(를) 다시 분석한다 — 원본 이미지는 남기지 않아서 같은 이미지를 다시 고른다. <button class="chip" type="button" data-ifx="unredo">그만두기</button></p>';
+  if(im){
+    h+='<div class="ifx-sel"><img src="'+esc(im.thumb||im.url)+'" alt="고른 이미지 미리보기"><div class="ifx-sf">'+
+      '<span class="small">'+esc(im.name||'붙여 넣은 이미지')+' · '+im.ow+'×'+im.oh+(im.ow!==im.w?' → 보낼 크기 '+im.w+'×'+im.h:'')+'</span>'+
+      '<label><span>형식</span><select class="ifx-fmt"><option value="">알아서</option><option value="print">출판만화 한 쪽</option><option value="webtoon">웹툰 세로 화면</option><option value="single">한 컷</option></select></label>'+
+      '<label><span>메모 (선택)</span><input class="ifx-memo" type="text" maxlength="120" placeholder="작품 이름·장면·인물 이름"></label>'+
+      '<div class="filterbar"><button class="chip ifx-go" type="button" data-ifx="run"'+(IF.busy?' disabled':'')+'>'+(redo?'다시 분석하기':'연출 분석하기')+'</button><button class="chip" type="button" data-ifx="clear">비우기</button></div>'+
+      '</div></div>';
+  }
+  box.innerHTML=h;
+  var fs=box.querySelector('.ifx-fmt'), ms=box.querySelector('.ifx-memo'); if(fs && IF.hint) fs.value=IF.hint; if(ms && IF.memo) ms.value=IF.memo;
+  var fi=box.querySelector('.ifx-file'); fi.addEventListener('change', function(){ var f=fi.files&&fi.files[0]; if(f) ifLoad(f); fi.value=''; });
+}
+
+/* ---------- 화면: 결과 ---------- */
+function headTxt(p){ return shotName(p.k)+(p.ang?' · '+angName(p.ang):'')+(p.focus?' · 집중선':'')+(p.flash?' · 회상':'')+(p.silent?' · 무음':''); }
+function opts(L,v){ return L.map(function(x){ return '<option value="'+esc(x[0])+'"'+(x[0]===v?' selected':'')+'>'+esc(x[1])+'</option>'; }).join(''); }
+function rowHTML(p,i){
+  var poses=ifPoses();
+  return '<li class="ifx-row" data-i="'+i+'">'+
+    '<div class="ifx-rh"><label class="ifx-ck" title="콘티로 가져올 컷 고르기"><input type="checkbox" data-ck="'+i+'"><b class="ifx-n">'+p.n+'</b></label>'+
+      '<button class="ifx-kn" type="button" data-pick="'+i+'">'+esc(headTxt(p))+'</button>'+(p.note?'<span class="ifx-note">'+esc(p.note)+'</span>':'')+'</div>'+
+    '<div class="ifx-rb"><canvas class="ifx-cv" data-cv="'+i+'" role="img" aria-label="'+p.n+'번 컷 콘티 그림"></canvas>'+
+    '<div class="ifx-f">'+
+      '<div class="ifx-f1"><label><span>구도</span><select data-f="k">'+opts(IF_SHOT.map(function(s){ return [s[0], s[0].toUpperCase()+' '+s[1]]; }),p.k)+'</select></label>'+
+      '<label><span>앵글</span><select data-f="ang">'+opts(IF_ANG,p.ang)+'</select></label>'+
+      (poses.length?'<label><span>자세</span><select data-f="pose">'+opts([['','자세 —']].concat(poses.map(function(x){ return [x,x]; })),p.pose)+'</select></label>':'')+'</div>'+
+      '<div class="ifx-f2"><label><input type="checkbox" data-f="focus"'+(p.focus?' checked':'')+'>집중선</label><label><input type="checkbox" data-f="flash"'+(p.flash?' checked':'')+'>회상</label><label><input type="checkbox" data-f="silent"'+(p.silent?' checked':'')+'>무음</label></div>'+
+      '<label class="ifx-w"><span>인물</span><input type="text" data-f="who" value="'+esc(p.who.join(', '))+'" placeholder="왼쪽부터, 쉼표로"></label>'+
+      '<label class="ifx-w"><span>화면</span><input type="text" data-f="scr" maxlength="60" value="'+esc(p.scr)+'"></label>'+
+      '<label class="ifx-w"><span>대사</span><input type="text" data-f="line" maxlength="80" value="'+esc(p.line)+'" placeholder="없음"></label>'+
+    '</div></div>'+
+    '<div class="ifx-ra"><button class="chip" type="button" data-bc="'+i+'">이 컷을 베스트컷으로 저장</button></div>'+
+  '</li>';
+}
+function boxHTML(p,i){ if(!p.box) return ''; var b=p.box;
+  return '<button class="ifx-box" type="button" data-box="'+i+'" style="left:'+b[0]+'%;top:'+b[1]+'%;width:'+b[2]+'%;height:'+b[3]+'%" aria-label="'+p.n+'번 컷"><span>'+p.n+'</span></button>'; }
+function chips(t,L,kind){ if(!L.length) return ''; return '<div class="ifx-chips"><b>'+t+'</b>'+L.join('')+'</div>'; }
+function sumHTML(r){
+  var fx=ifFx(), fxName={}; fx.forEach(function(f){ fxName[String(f.id)]=f; });
+  var tl=r.tools.map(function(t){ return '<a class="chip" href="#grammar" title="만화 연출 문법으로">'+esc(t)+'</a>'; });
+  var fl=(fx.length?r.fx:[]).filter(function(id){ return fxName[id]; }).map(function(id){ return '<button class="chip" type="button" data-fx="'+esc(id)+'" title="'+esc(fxName[id].desc||'')+'">'+esc(fxName[id].name)+'</button>'; });
+  var cl=r.cliches.map(function(n){ return '<button class="chip" type="button" data-cl="'+esc(n)+'" title="클리셰 색인에서 찾기">'+esc(n)+'</button>'; });
+  var h='<div class="ifx-sum">';
+  if(tl.length||fl.length||cl.length) h+='<div class="ifx-sb ifx-tags">'+chips('연출 도구',tl)+chips('콘티 연출 기법',fl)+chips('클리셰',cl)+'</div>';
+  if(r.why) h+='<div class="ifx-sb"><h4>왜 효과적인가</h4><p>'+esc(r.why)+'</p></div>';
+  if(r.use) h+='<div class="ifx-sb"><h4>내 작품에 쓰는 법</h4><p class="ifx-use">'+esc(r.use)+'</p></div>';
+  return h+'</div>';
+}
+function renderRes(){
+  var out=$('#ifx-out'); if(!out) return; var e=IF.cur;
+  if(!e){ out.innerHTML=''; return; }
+  var r=e.result, full=IF.full[e.id], src=(full&&full.url)||e.thumb||'';
+  var h='<div class="ifx-res" data-id="'+esc(e.id)+'">'+
+    '<div class="ifx-head"><input class="ifx-title" type="text" maxlength="60" value="'+esc(e.title)+'" aria-label="분석 이름"><span class="small">'+esc(IF_FMT[r.format]||'')+' · '+r.panels.length+'컷 · '+ifDate(e.at)+'</span></div>'+
+    '<div class="filterbar ifx-acts"><button class="chip ifx-conti" type="button" data-ifx="conti">전체 콘티로 가져오기</button><button class="chip" type="button" data-ifx="again">다시 분석</button><button class="chip" type="button" data-ifx="close">닫기</button><span class="small ifx-amsg" role="status"></span></div>'+
+    '<div class="ifx-grid"><div class="ifx-stage">'+
+      (src?'<div class="ifx-imgw"><img src="'+esc(src)+'" alt="분석한 이미지">'+r.panels.map(boxHTML).join('')+'</div>':'<p class="small">미리보기가 없다(저장 공간이 모자라 뺐다).</p>')+
+      (r.read?'<div class="ifx-sb ifx-read"><h4>시선 흐름</h4><p>'+esc(r.read)+'</p></div>':'')+
+    '</div><ol class="ifx-rows">'+r.panels.map(rowHTML).join('')+'</ol></div>'+
+    sumHTML(r)+'</div>';
+  out.innerHTML=h; drawAll(); contiLabel();
+}
+function drawOne(i){
+  var e=IF.cur; if(!e || !window.__ctCutData || !window.__ctPortrait) return;
+  var p=e.result.panels[i], cv=root.querySelector('canvas[data-cv="'+i+'"]'); if(!p || !cv) return;
+  if(p.box && e.w && e.h){ var ar=(p.box[2]*e.w)/(p.box[3]*e.h); cv.style.aspectRatio=String(Math.round(clamp(isFinite(ar)?ar:1.3,.62,1.8)*100)/100); }
+  try{ window.__ctCutData(cv, spec(p,i,true)); window.__ctPortrait(cv); }catch(err){}
+}
+function drawAll(){ var e=IF.cur; if(!e) return; setTimeout(function(){ if(IF.cur!==e) return; e.result.panels.forEach(function(p,i){ drawOne(i); }); },30); }
+function castName(n){ n=String(n||'').trim(); if(!n || !window.__castFind) return ''; try{ var m=window.__castFind(n); return (m&&m.name)||''; }catch(e){ return ''; } }
+// 컷 → 콘티 칸 (sketch: 그림용이면 인물1 같은 이름표를 그대로, 아니면 등장인물에 있는 이름만 남긴다)
+function spec(p,i,sketch){
+  var who=sketch?p.who.slice(0,3):p.who.slice(0,3).map(castName), wp=null;
+  if(p.pose && p.who.length){ wp={}; wp[who[0]||'#0']={pose:p.pose}; }
+  if(!sketch){ while(who.length && !who[who.length-1] && !(wp && wp['#'+(who.length-1)])) who.pop(); }
+  var c={n:i+1, k:p.k, ang:p.ang, scr:p.scr, line:p.line};
+  if(p.focus) c.focus=1; if(p.flash) c.flash=1; if(p.silent) c.silent=1; if(who.length) c.who=who; if(wp) c.wp=wp;
+  return c;
+}
+function picked(){ return [].slice.call(root.querySelectorAll('input[data-ck]:checked')).map(function(x){ return +x.getAttribute('data-ck'); }); }
+function contiLabel(){ var b=$('.ifx-conti'); if(!b) return; var n=picked().length; b.textContent=n?'고른 '+n+'컷 콘티로 가져오기':'전체 콘티로 가져오기'; }
+function amsg(t){ var m=$('.ifx-amsg'); if(m) m.textContent=t||''; }
+function select(i, from){
+  IF.on=i;
+  [].slice.call(root.querySelectorAll('.ifx-row')).forEach(function(r){ r.classList.toggle('on', +r.getAttribute('data-i')===i); });
+  [].slice.call(root.querySelectorAll('.ifx-box')).forEach(function(b){ var on=+b.getAttribute('data-box')===i; b.classList.toggle('on', on); b.setAttribute('aria-pressed', on?'true':'false'); });
+  var t=root.querySelector(from==='box'?'.ifx-row[data-i="'+i+'"]':'.ifx-box[data-box="'+i+'"]');
+  if(t && t.scrollIntoView) try{ t.scrollIntoView({block:'nearest', behavior:'smooth'}); }catch(e){ t.scrollIntoView(); }
+}
+function goIndex(name){
+  var rs=document.getElementById('reset'); if(rs) rs.click();
+  var q=document.getElementById('q'); if(q) q.value=name;
+  location.hash='#index';
+  if(q) setTimeout(function(){ q.dispatchEvent(new Event('input')); },0);
+}
+function onClick(e){
+  var t=e.target; if(!t.closest) return;
+  var a=t.closest('[data-ifx]'), k=a&&a.getAttribute('data-ifx');
+  if(k==='run'||k==='retry'){ ifRun(); return; }
+  if(k==='clear'){ IF.img=null; IF.redo=''; IF.hint=''; IF.memo=''; renderPick(); stat(''); return; }
+  if(k==='unredo'){ IF.redo=''; renderPick(); return; }
+  if(k==='close'){ IF.cur=null; renderRes(); return; }
+  if(k==='again'){ if(!IF.cur) return; var full=IF.full[IF.cur.id];
+    if(full){ IF.img=full; IF.redo=IF.cur.id; renderPick(); ifRun(); return; }
+    IF.redo=IF.cur.id; IF.img=null; renderPick(); stat('원본 이미지는 이 기기에 남기지 않는다. 같은 이미지를 다시 고르면 이 분석을 새로 쓴다.');
+    var d=$('.ifx-drop'); if(d){ try{ d.focus(); }catch(_){} if(d.scrollIntoView) d.scrollIntoView({block:'center'}); } return; }
+  if(k==='conti'){ ifConti(); return; }
+  var bx=t.closest('[data-box]'); if(bx){ select(+bx.getAttribute('data-box'),'box'); return; }
+  var pk=t.closest('[data-pick]'); if(pk){ select(+pk.getAttribute('data-pick'),'row'); return; }
+  var bc=t.closest('[data-bc]'); if(bc){ ifBest(+bc.getAttribute('data-bc'), bc); return; }
+  var fx=t.closest('[data-fx]'); if(fx){ var id=fx.getAttribute('data-fx'); if(window.__ctFx && typeof window.__ctFx.show==='function') try{ window.__ctFx.show(id); }catch(_){} return; }
+  var cl=t.closest('[data-cl]'); if(cl){ goIndex(cl.getAttribute('data-cl')); return; }
+  var op=t.closest('[data-open]'); if(op){ ifOpen(op.getAttribute('data-open')); return; }
+  var rn=t.closest('[data-ren]'); if(rn){ renStart(rn.getAttribute('data-ren')); return; }
+  var dl=t.closest('[data-del]'); if(dl){ var id2=dl.getAttribute('data-del');
+    if(dl.getAttribute('data-arm')!=='1'){ dl.setAttribute('data-arm','1'); dl.textContent='한 번 더 누르면 삭제'; setTimeout(function(){ if(dl.isConnected){ dl.removeAttribute('data-arm'); dl.textContent='삭제'; } },3000); return; }
+    histDel(id2); delete IF.full[id2]; if(IF.cur && IF.cur.id===id2){ IF.cur=null; renderRes(); } if(IF.redo===id2){ IF.redo=''; renderPick(); } histList(); return; }
+  var row=t.closest('.ifx-row'); if(row && !t.closest('input,select,label,button')) select(+row.getAttribute('data-i'),'row');
+}
+function onField(e){
+  var t=e.target;
+  if(t.matches && t.matches('.ifx-title')){ if(IF.cur){ IF.cur.title=String(t.value||'').trim().slice(0,60)||IF.cur.title; saveSoon(); } return; }
+  if(t.matches && t.matches('input[data-ck]')){ contiLabel(); return; }
+  var f=t.getAttribute && t.getAttribute('data-f'); if(!f || !IF.cur) return;
+  var row=t.closest('.ifx-row'); if(!row) return; var i=+row.getAttribute('data-i'), p=IF.cur.result.panels[i]; if(!p) return;
+  if(f==='who'){ if(e.type!=='change' && e.type!=='input') return; p.who=String(t.value||'').split(/[,，、]/).map(function(x){ return x.trim().slice(0,12); }).filter(Boolean).slice(0,4); }
+  else if(f==='focus'||f==='flash'||f==='silent'){ if(e.type!=='change') return; p[f]=t.checked?1:0; }
+  else if(f==='k'){ p.k=shotKey(t.value)||'ms'; }
+  else if(f==='ang'){ p.ang=angKey(t.value); }
+  else if(f==='pose'){ p.pose=ifPoses().indexOf(t.value)>-1?t.value:''; }
+  else if(f==='scr'||f==='line'){ p[f]=String(t.value||'').slice(0,f==='scr'?60:80); }
+  var kn=row.querySelector('.ifx-kn'); if(kn) kn.textContent=headTxt(p);
+  clearTimeout(row._dt); row._dt=setTimeout(function(){ drawOne(i); }, f==='scr'||f==='line'||f==='who'?400:0);
+  saveSoon();
+}
+function onKey(e){
+  var t=e.target;
+  if(t.classList && t.classList.contains('ifx-drop') && (e.key==='Enter'||e.key===' ')){ e.preventDefault(); var fi=t.querySelector('.ifx-file'); if(fi) fi.click(); }
+  if(t.classList && t.classList.contains('ifx-rin')){ if(e.key==='Enter'){ e.preventDefault(); renDone(t,true); } if(e.key==='Escape'){ e.preventDefault(); renDone(t,false); } }
+}
+function ifConti(){
+  var e=IF.cur; if(!e) return;
+  if(typeof window.__ctInsertCuts!=='function'){ amsg('콘티 구성기가 없어 가져올 수 없다.'); return; }
+  var ix=picked(); if(!ix.length) ix=e.result.panels.map(function(p,i){ return i; });
+  var specs=ix.map(function(i){ var c=spec(e.result.panels[i],i,false); delete c.n; return c; });
+  var r=null; try{ r=window.__ctInsertCuts(specs,{label:'이미지 분석'}); }catch(err){ amsg('콘티에 넣지 못했다.'); return; }
+  amsg(r?'콘티 구성기 '+r.a+(r.b>r.a?'–'+r.b:'')+'번 컷에 넣었다.':'넣을 컷이 없다.');
+}
+function ifBest(i, btn){
+  var e=IF.cur, p=e&&e.result.panels[i]; if(!p) return;
+  if(typeof window.__bcFromConti!=='function'){ btn.textContent='베스트컷 기능이 없다'; return; }
+  var who=p.who.slice(0,3).map(function(n,j){ return {name:castName(n), pose:j===0?p.pose:''}; });
+  var rec=null; try{ rec=window.__bcFromConti({n:i+1, k:p.k, ang:p.ang, focus:p.focus, flash:p.flash, scr:p.scr||p.note||(e.title+' '+p.n+'번 컷'), line:p.line}, who); }catch(err){}
+  if(!rec){ btn.textContent='저장하지 못했다'; return; }
+  btn.textContent='베스트컷에 저장했다 ✓'; btn.disabled=true;
+  if(!btn.nextSibling) btn.insertAdjacentHTML('afterend',' <a class="small" href="#cutlib">등장인물 › 베스트컷에서 보기</a>');
+}
+
+/* ---------- 지난 분석 ---------- */
+function histList(){
+  var ul=$('.ifx-hl'), cn=$('#ifx-hist .cn'); if(!ul) return; var a=histLoad();
+  if(cn) cn.textContent=a.length?'('+a.length+')':'';
+  if(!a.length){ ul.innerHTML='<li class="small ifx-hnone">아직 없다. 분석하면 여기 최근 '+IF_MAX+'개가 남는다(이 기기에만).</li>'; return; }
+  ul.innerHTML=a.map(function(x){ var r=x.result||{}, n=(r.panels||[]).length;
+    return '<li class="ifx-hi'+(IF.cur&&IF.cur.id===x.id?' cur':'')+'" data-hid="'+esc(x.id)+'"><button class="ifx-ho" type="button" data-open="'+esc(x.id)+'" aria-label="'+esc(x.title)+' 열기">'+(x.thumb?'<img src="'+esc(x.thumb)+'" alt="" loading="lazy">':'<span class="ifx-nothumb">—</span>')+'</button>'+
+      '<div class="ifx-hm"><b class="ifx-ht" data-open="'+esc(x.id)+'">'+esc(x.title)+'</b><span class="small">'+ifDate(x.at)+' · '+esc(IF_FMT[r.format]||'')+' · '+n+'컷</span></div>'+
+      '<div class="ifx-hb"><button class="chip" type="button" data-open="'+esc(x.id)+'">열기</button><button class="chip" type="button" data-ren="'+esc(x.id)+'">이름 바꾸기</button><button class="chip" type="button" data-del="'+esc(x.id)+'">삭제</button></div></li>'; }).join('');
+}
+function ifOpen(id){ var x=histGet(id); if(!x) return; var r=ifParse(x.result); if(!r) return; x.result=r; IF.cur=x; IF.on=-1; renderRes(); histList(); stat('');
+  var o=$('#ifx-out'); if(o && o.scrollIntoView) try{ o.scrollIntoView({block:'start'}); }catch(e){} }
+function renStart(id){ var li=root.querySelector('.ifx-hi[data-hid="'+id+'"]'), b=li&&li.querySelector('.ifx-ht'), x=histGet(id); if(!b||!x) return;
+  var inp=document.createElement('input'); inp.type='text'; inp.className='ifx-rin'; inp.maxLength=60; inp.value=x.title; inp.setAttribute('data-rid',id); inp.setAttribute('aria-label','새 이름');
+  b.replaceWith(inp); inp.addEventListener('blur',function(){ renDone(inp,true); }); try{ inp.focus(); inp.select(); }catch(e){} }
+function renDone(inp, ok){ if(inp._done) return; inp._done=true; var id=inp.getAttribute('data-rid'), v=String(inp.value||'').trim().slice(0,60);
+  if(ok && v){ var x=histGet(id); if(x){ x.title=v; histUpd(x); } if(IF.cur && IF.cur.id===id){ IF.cur.title=v; var ti=$('.ifx-title'); if(ti) ti.value=v; } }
+  histList(); }
+
+/* ---------- 탭 · 붙여 넣기 ---------- */
+function tabSet(t, focus){
+  t=t==='i'?'i':'s';
+  [].slice.call(document.querySelectorAll('#probe .pb-tabs [data-pbt]')).forEach(function(b){ var on=b.getAttribute('data-pbt')===t; b.setAttribute('aria-selected',on?'true':'false'); b.tabIndex=on?0:-1; if(on&&focus) try{ b.focus(); }catch(e){} });
+  var s=document.getElementById('pb-story'); if(s) s.hidden=(t==='i'); root.hidden=(t!=='i');
+  try{ localStorage.setItem('pbTab',t); }catch(e){}
+  if(t==='i'){ build(); drawAll(); }
+}
+var tabs=document.querySelector('#probe .pb-tabs');
+if(tabs){
+  tabs.addEventListener('click',function(e){ var b=e.target.closest('[data-pbt]'); if(b) tabSet(b.getAttribute('data-pbt')); });
+  tabs.addEventListener('keydown',function(e){ if(e.key!=='ArrowLeft'&&e.key!=='ArrowRight'&&e.key!=='Home'&&e.key!=='End') return; e.preventDefault();
+    tabSet(root.hidden?'i':'s', true); });
+}
+var t0='s'; try{ t0=localStorage.getItem('pbTab')==='i'?'i':'s'; }catch(e){}
+tabSet(t0);
+window.PAGE_ON=window.PAGE_ON||{};
+var prevOn=window.PAGE_ON.probe; window.PAGE_ON.probe=function(){ if(prevOn) try{ prevOn(); }catch(e){} if(!root.hidden){ build(); drawAll(); } };
+document.addEventListener('paste',function(e){
+  var pg=document.getElementById('probe'); if(!pg || !pg.classList.contains('page-on') || root.hidden) return;
+  var it=[].slice.call((e.clipboardData&&e.clipboardData.items)||[]).filter(function(x){ return x.kind==='file' && /^image\//.test(x.type||''); })[0];
+  if(!it) return; var f=it.getAsFile(); if(!f) return; e.preventDefault(); build(); ifLoad(f);
+});
+window.addEventListener('resize',function(){ clearTimeout(IF.rz); IF.rz=setTimeout(function(){ if(!root.hidden && IF.cur) drawAll(); },250); });
+// 시험·다른 모듈용 창구
+window.__imgFx={use:function(r){ build(); ifUse(r); }, run:ifRun, parse:ifParse, prompt:ifPrompt, open:ifOpen, tab:tabSet, hist:histLoad, state:IF, spec:spec};
+})();
+// [[/MOD:imgfx]]
 // [[MOD:desk]] 홈 바탕화면
 // 아이콘 자리는 localStorage.deskLayout {v:1, at, pos:{"f:폴더"|"s:favs"|"s:cast"|"s:texts"|"s:trash": [열, 줄]}}
 var DK={open:null, sel:null, drag:null, dirty:false, trash:[], ask:null, newOn:false, ren:false, delArm:false, g:null, disp:{}, occ:{}, w:0, t:0, lastType:'mouse', noClick:0};
