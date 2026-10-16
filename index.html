@@ -10063,7 +10063,7 @@ function rowHTML(p,i){
   return '<li class="ifx-row" data-i="'+i+'">'+
     '<div class="ifx-rh"><label class="ifx-ck" title="콘티로 가져올 컷 고르기"><input type="checkbox" data-ck="'+i+'"><b class="ifx-n">'+p.n+'</b></label>'+
       '<button class="ifx-kn" type="button" data-pick="'+i+'">'+esc(headTxt(p))+'</button>'+(p.note?'<span class="ifx-note">'+esc(p.note)+'</span>':'')+'</div>'+
-    '<div class="ifx-rb"><canvas class="ifx-cv" data-cv="'+i+'" role="img" aria-label="'+p.n+'번 컷 콘티 그림"></canvas>'+
+    '<div class="ifx-rb"><canvas class="ifx-cv" role="img" aria-label="'+p.n+'번 컷 콘티 그림"></canvas>'+
     '<div class="ifx-f">'+
       '<div class="ifx-f1"><label><span>구도</span><select data-f="k">'+opts(IF_SHOT.map(function(s){ return [s[0], s[0].toUpperCase()+' '+s[1]]; }),p.k)+'</select></label>'+
       '<label><span>앵글</span><select data-f="ang">'+opts(IF_ANG,p.ang)+'</select></label>'+
@@ -10106,7 +10106,7 @@ function renderRes(){
 }
 function drawOne(i){
   var e=IF.cur; if(!e || !window.__ctCutData || !window.__ctPortrait) return;
-  var p=e.result.panels[i], cv=root.querySelector('canvas[data-cv="'+i+'"]'); if(!p || !cv) return;
+  var p=e.result.panels[i], cv=root.querySelector('.ifx-row[data-i="'+i+'"] canvas.ifx-cv'); if(!p || !cv) return;   // __ctCutData가 data-*를 지우므로 줄에서 찾는다
   if(p.box && e.w && e.h){ var ar=(p.box[2]*e.w)/(p.box[3]*e.h); cv.style.aspectRatio=String(Math.round(clamp(isFinite(ar)?ar:1.3,.62,1.8)*100)/100); }
   try{ window.__ctCutData(cv, spec(p,i,true)); window.__ctPortrait(cv); }catch(err){}
 }
@@ -10187,8 +10187,12 @@ function ifConti(){
   if(typeof window.__ctInsertCuts!=='function'){ amsg('콘티 구성기가 없어 가져올 수 없다.'); return; }
   var ix=picked(); if(!ix.length) ix=e.result.panels.map(function(p,i){ return i; });
   var specs=ix.map(function(i){ var c=spec(e.result.panels[i],i,false); delete c.n; return c; });
-  var r=null; try{ r=window.__ctInsertCuts(specs,{label:'이미지 분석'}); }catch(err){ amsg('콘티에 넣지 못했다.'); return; }
-  amsg(r?'콘티 구성기 '+r.a+(r.b>r.a?'–'+r.b:'')+'번 컷에 넣었다.':'넣을 컷이 없다.');
+  // 콘티 페이지로 먼저 옮기고(그 페이지를 열 때 상태 줄을 새로 쓰므로) 연 뒤에 넣는다
+  var done=false, put=function(){ if(done) return; done=true; window.removeEventListener('hashchange', put);
+    var r=null; try{ r=window.__ctInsertCuts(specs,{label:'이미지 분석'}); }catch(err){ amsg('콘티에 넣지 못했다.'); return; }
+    amsg(r?'콘티 구성기 '+r.a+(r.b>r.a?'–'+r.b:'')+'번 컷에 넣었다.':'넣을 컷이 없다.'); };
+  if((location.hash||'')==='#conti'){ put(); return; }
+  window.addEventListener('hashchange', put); location.hash='#conti'; setTimeout(put, 400);
 }
 function ifBest(i, btn){
   var e=IF.cur, p=e&&e.result.panels[i]; if(!p) return;
