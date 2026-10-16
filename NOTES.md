@@ -30,7 +30,16 @@ oneshot, length, redflag, grammar, authors, pagemap, shuffle, ideacomp, arc, epi
 ## 주요 함수
 aiBar, favAiBar, twistAsk, writePrompt, wfmtHTML, aiAsk, aiCall, aiResult, ideaBlock, ixSearch, fmAppend, gdSync, gdMerge, dataMigrate, trBlock, placeHint, pinoInsert, pinoContext, bkDump
 
-## AI (OpenRouter) — 세 가지만 남겼다
+## AI 제공처 — 2026-10-16부터 구글 제미나이 직접 연결
+- 사용자 요청으로 **OpenRouter → 구글 제미나이 API**(`generativelanguage.googleapis.com/v1beta`)로 바꿨다. 아래 OpenRouter 관련 줄(잔액 402·무료 모델 자동 전환·openrouter:web_search·free-models-per-day)은 **옛 내용**이다
+- 키·모델: localStorage `gmKey`(AIza…), `gmModel`, 모델 목록 캐시 `gmModels`(12시간). `PROV='gm'`. 키 헤더는 `x-goog-api-key`. 동기화 `GD_AIKEYS=['gmKey','gmModel','webOn']`
+- `ormLoad`가 `models` 목록을 받아(generateContent 되는 gemini-* 텍스트 모델만) 계열별 최신 Flash·Flash-Lite·Pro를 「추천」으로(`ormPickRec`, `gmVer`). 키를 넣으면 0.7초 뒤 목록을 받는다
+- `aiCall`: systemInstruction + contents(history는 user/model로 바꿔 같은 역할끼리 합침). 생각: 2.5 Flash 계열 `thinkingBudget:0`, 2.5 Pro 128, 3.x 이후는 보내지 않음(`gmThink`). 400에 thinking이 나오면 빼고 다시. 답의 `thought` 조각은 버린다. 웹 검색은 `tools:[{google_search:{}}]`, 출처는 `groundingMetadata.groundingChunks`
+- 429: `limit: 0` → `qMarkZero`(무료 등급 불가), PerDay → `qMark`(다음 08:00 UTC까지 건너뜀), 분당 한도 → `retryDelay`만큼(5초·10초·15초 이상, 최대 65초) 세 번까지 기다렸다 다시. 그래도 안 되면 `aiAlt`(한도면 Flash-Lite 우선)로 이번만 대신. 원문은 `aiLastRaw`
+- 「AI로 줄거리 짜기」(`ct-plot`)는 **사용자 요청으로 삭제**(이야기 칸을 덮어썼다). 다시 넣지 않는다
+- **대강 이야기 칸(`ct-story`)은 말없이 덮어쓰지 않는다.** 비어 있을 때만 글쓰기 결과를 채우고, 아니면 `storyOffer`가 「새 글쓰기 결과로 바꾸기」(두 번 눌러야 함)와 「바꾸기 전 글로 되돌리기」(`contiStoryPrev`)를 보인다
+
+## AI (옛 OpenRouter 시절 기록) — 세 가지만 남겼다
 1. **비틀기** `twistAsk` — 색인 행, 랜덤 구성기 칸, 즐겨찾기 클리셰 옆
 2. **연관짓기** — 구성기(`ai-rel`, `AI로 잇기`), 즐겨찾기(`fav-ai-rel`)
 3. **글쓰기** `writePrompt` — 줄거리 / 컷별 / 웹소설 라디오(`wfg`, `wff`)
@@ -50,7 +59,7 @@ aiBar, favAiBar, twistAsk, writePrompt, wfmtHTML, aiAsk, aiCall, aiResult, ideaB
 
 - 웹 검색: `webPlot`이 `tools:[{type:'openrouter:web_search'}]`로 줄거리를 찾는다. 400이면 옛 방식 `plugins:[{id:'web'}]`로 한 번 재시도. 채팅창 🌐 체크(`webOn`, localStorage `webOn`)와 작품 분석의 「🌐 웹에서 줄거리 찾기」. 호출마다 검색비가 추가된다
 
-- 제공처는 **OpenRouter 하나**. 구글 제미나이 직접 연결(`gmCall` 등)은 사용자 요청으로 삭제했다(무료 등급 한도 문제). 다시 넣지 않는다. 시작할 때 `gmKey/gmModel/gmModels`를 지우고 `aiProv`를 `or`로 돌린다
+- (옛 내용, 2026-10-16에 뒤집힘) 제공처는 OpenRouter 하나였다. 제미나이 직접 연결은 무료 등급 한도 문제로 한때 뺐었다. 시작할 때 `gmKey/gmModel/gmModels`를 지우고 `aiProv`를 `or`로 돌린다
 - 오류 문구는 `aiIsErr`로 판별한다(오류를 결과로 착각하지 않게)
 
 - 🔎 채팅창은 자유 대화. 최근 12개 메시지를 `opts.history`로 보내고, 대화는 **여러 개**를 localStorage `ixChats`(`{cur, list:[{id,title,at,hist}]}`, 대화마다 최근 40개, 최대 20개, 동기화 안 함)에 남긴다. 옛 `ixChat`은 첫 대화로 옮기고 지운다. 위쪽 줄에서 고르기·＋ 새 대화·이름·삭제. 답이 오는 중에 다른 대화로 옮겨도 보낸 대화(`TT`/`H`)에 저장된다. 사전 검색 결과·피노 설정·지금 뽑힌 구성·아이디어를 말에 따라 붙인다(`ctxFor`). 작품 분석은 《제목》+분석 의도가 있을 때만(`isWork`)
