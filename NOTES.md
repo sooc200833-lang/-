@@ -167,3 +167,6 @@ arcForm, deviceId, folderMemo, gdBase, gdLast, gdLinked, ideaText, mangaDataVer,
 - 옛 판(구성기에서 가져온 것, `B.v`가 2가 아님)은 페이지를 열 때 클리셰를 지우고 `bandFor`로 다섯 구간을 다시 나눈다. 새 판은 `v:2`
 - **참고 글 (2026-10-16)**: 콘티 구성기 「글 보관함에서 함께 볼 글」에서 줄거리·웹소설·컷별 콘티를 하나씩 고른다(`renderRefs`, 기기별 localStorage `contiRefs` {plot,novel,cuts: mangaTexts id}). 하나를 고르면 `refChain`(parent로 이어진 글)으로 빈 갈래를 채운다. 대강 이야기는 비워도 된다
 - 「AI로 콘티 쓰기」는 참고 글이 있으면 먼저 **검토 호출**(`reviewPrompt`, `RSYS`)로 장면 배정표 「a-b|요약|꼭 보여 줄 것」 + 「검토|어긋남」을 받아 `B.scenes`·`B.scenesNote`에 저장하고(`parseScenes`, 재료가 같으면 `srcKey`로 다시 부르지 않음), 묶음마다 겹치는 장면만 붙여 쓴다(`scenesFor`). 우선순위: 대강 이야기 → 컷별 콘티 → 웹소설 → 줄거리. 검토 실패 시 「이어서 쓰기」는 처음부터(`dataset.n=0`)
+- **장면 단위 쓰기 (2026-10-16)**: `B.scenes`가 있으면 `chunks()`가 장면 하나를 한 묶음으로 쓴다(3컷 안 되면 이웃과 합침, 16컷 넘으면 나눔, 겹침은 뒤 장면을 자르고 빈틈은 구간 묶음으로 채워 1~끝 빈틈없이). 이름은 「구간 · 장면 요약」, 진행 표시에도 나온다. 묶음은 검토가 끝난 뒤 짠다(`writeAll` 안 `plan`)
+- 앞 맥락: `writeAll`이 `ch.prev={a,b}`를 넘기고 `cutPrompt`의 [바로 앞 컷]은 앞 묶음 전체(20줄까지)를 붙인다. 참고 글이 없어도 대강 이야기가 300자를 넘으면 검토를 돌린다(짧으면 재료가 바뀐 옛 배정표는 버림)
+- 모델·온도: `aiCall`이 `opts.temperature`를 받는다(기본 0.9). 검토는 `{temperature:0.5, model:strongModel()}`(추천 중 막히지 않은 Pro, 없으면 고른 모델), 컷 쓰기는 0.65. Pro가 무료 등급 `limit: 0`이면 `qMarkZero` 후 `aiAlt`로 Flash가 대신한다. 시험 `t_scene.py`(refs·story·short)

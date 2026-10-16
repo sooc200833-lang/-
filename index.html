@@ -5110,7 +5110,7 @@ function aiCall(system, user, onText, maxTok, _retry, opts){
   if(contents.length && contents[0].role==='model') contents.unshift({role:'user', parts:[{text:'(이전 대화)'}]});
   if(contents.length && contents[contents.length-1].role==='user') contents[contents.length-1].parts[0].text+='\n\n'+user;
   else contents.push({role:'user', parts:[{text:user}]});
-  var gc={maxOutputTokens:(opts._cap||((maxTok||900)+2500)), temperature:0.9};
+  var gc={maxOutputTokens:(opts._cap||((maxTok||900)+2500)), temperature:(typeof opts.temperature==='number'?opts.temperature:0.9)};
   var th=opts._noThink?null:gmThink(model); if(th) gc.thinkingConfig=th;
   var body={systemInstruction:{parts:[{text:system}]}, contents:contents, generationConfig:gc,
     safetySettings:['HARM_CATEGORY_HARASSMENT','HARM_CATEGORY_HATE_SPEECH','HARM_CATEGORY_SEXUALLY_EXPLICIT','HARM_CATEGORY_DANGEROUS_CONTENT'].map(function(c){ return {category:c, threshold:'BLOCK_ONLY_HIGH'}; })};
@@ -11708,12 +11708,55 @@ function removeCut(n){
 /* ---------- AI 콘티 쓰기 ---------- */
 var CSYS='당신은 한국 웹툰 콘티 작가다. 정해진 형식의 줄만 쓴다. 서론·설명·요약·마크다운 기호를 쓰지 않는다.';
 function chunks(){
-  var out=[];
-  B.band.forEach(function(b){
-    var len=b.b-b.a+1, k=Math.max(1,Math.ceil(len/14)), step=Math.ceil(len/k);
-    for(var a=b.a;a<=b.b;a+=step) out.push({a:a, b:Math.min(b.b,a+step-1), name:b.name});
-  });
-  return out;
+  // 판 구간대로 14컷 안쪽 묶음 (a~b 범위만)
+  function bandChunks(a0,b0){
+    var out=[];
+    B.band.forEach(function(b){
+      var a1=Math.max(a0,b.a), b1=Math.min(b0,b.b); if(b1<a1) return;
+      var len=b1-a1+1, k=Math.max(1,Math.ceil(len/14)), step=Math.ceil(len/k);
+      for(var a=a1;a<=b1;a+=step) out.push({a:a, b:Math.min(b1,a+step-1)});
+    });
+    return out;
+  }
+  function bandName(n){ var nm=''; B.band.forEach(function(b){ if(n>=b.a && n<=b.b) nm=b.name; }); return nm||(B.band[0]&&B.band[0].name)||''; }
+  var segs=[];
+  var sc=(B.scenes||[]).filter(function(x){ return x && x.a>=1 && x.b>=x.a && x.a<=B.total; })
+    .map(function(x){ return {a:x.a, b:Math.min(x.b,B.total), sum:x.sum||''}; })
+    .sort(function(x,y){ return x.a-y.a || x.b-y.b; });
+  if(!sc.length) segs=bandChunks(1,B.total);
+  else {
+    // 장면 단위. 겹치면 뒤 장면을 잘라 내고, 빈틈은 구간 묶음으로 채운다
+    var pos=1;
+    sc.forEach(function(x){
+      if(x.b<pos) return;
+      var a=Math.max(x.a,pos);
+      if(a>pos) segs=segs.concat(bandChunks(pos,a-1));
+      segs.push({a:a, b:x.b, sum:x.sum}); pos=x.b+1;
+    });
+    if(pos<=B.total) segs=segs.concat(bandChunks(pos,B.total));
+    // 3컷 안 되는 묶음은 이웃과 합친다(앞쪽 우선, 합쳐 16컷을 넘으면 뒤쪽)
+    var MIN=3, MAX=16, changed=true;
+    while(changed && segs.length>1){
+      changed=false;
+      for(var i=0;i<segs.length;i++){
+        var s=segs[i], len=s.b-s.a+1; if(len>=MIN) continue;
+        var pv=segs[i-1], nx=segs[i+1], j;
+        if(pv && (!nx || (s.b-pv.a+1)<=MAX || (nx.b-s.a+1)>(s.b-pv.a+1))) j=i-1; else j=i;
+        var A=segs[j], Bq=segs[j+1];
+        segs.splice(j,2,{a:A.a, b:Bq.b, sum:[A.sum,Bq.sum].filter(Boolean).join(' / ')});
+        changed=true; break;
+      }
+    }
+    // 16컷 넘는 묶음은 고르게 나눈다
+    var sp=[];
+    segs.forEach(function(s){
+      var len=s.b-s.a+1; if(len<=MAX){ sp.push(s); return; }
+      var k=Math.ceil(len/MAX), step=Math.ceil(len/k), part=1;
+      for(var a=s.a;a<=s.b;a+=step,part++) sp.push({a:a, b:Math.min(s.b,a+step-1), sum:s.sum?s.sum+' ('+part+'/'+k+')':''});
+    });
+    segs=sp;
+  }
+  return segs.map(function(s){ return {a:s.a, b:s.b, name:bandName(s.a)+(s.sum?' · '+s.sum:''), sum:s.sum||''}; });
 }
 var RSYS='당신은 한국 웹툰 콘티 감독이다. 원고들을 함께 검토해 컷 배정표를 만든다. 정해진 형식의 줄만 쓴다. 서론·마크다운 기호를 쓰지 않는다.';
 function reviewPrompt(){
@@ -11751,7 +11794,8 @@ function cutPrompt(ch){
   }
   L.push('[컷 배정표]\n'+rows.join('\n'));
   if(chars().length) L.push('[등장인물]\n'+chars().map(function(x){ return x.name+(x.role?' — '+x.role:'')+(x.note?' · '+x.note:''); }).join('\n'));
-  var prev=[]; for(var p=Math.max(1,ch.a-3);p<ch.a;p++){ var q=B.cuts[p-1]; if(q&&q.scr) prev.push(p+'|'+compText(q)+'|'+whoOf(q).map(function(x){ return x.name; }).join(',')+'|'+q.scr+'|'+(q.line||'')); }
+  var pa=ch.prev?Math.max(1,ch.prev.a,ch.a-20):Math.max(1,ch.a-3);   // 앞 묶음 전체(20줄까지)
+  var prev=[]; for(var p=pa;p<ch.a;p++){ var q=B.cuts[p-1]; if(q&&q.scr) prev.push(p+'|'+compText(q)+'|'+whoOf(q).map(function(x){ return x.name; }).join(',')+'|'+q.scr+'|'+(q.line||'')); }
   if(prev.length) L.push('[바로 앞 컷]\n'+prev.join('\n'));
   L.push('규칙\n'+
     '- 한 줄에 한 컷. 형식: 번호|구도|인물|화면|대사\n'+
@@ -11785,6 +11829,11 @@ function applyLines(t, ch){
   return got;
 }
 var running=false;
+function strongModel(){
+  // 검토용 강한 모델: 추천 목록의 Pro 중 오늘 막히지 않은 것. 없으면 undefined → 고른 모델(AIMODEL)
+  var r=((typeof ORM!=='undefined'&&ORM.rec)||[]).filter(function(x){ return x && x.m && /pro/.test(x.m.id) && !qIsOut(x.m.id); })[0];
+  return r?r.m.id:undefined;
+}
 function writeAll(fromN){
   if(running) return;
   if(!aiReady()){ stat('AI 연결에서 키를 넣어야 쓸 수 있다.'); return; }
@@ -11792,26 +11841,34 @@ function writeAll(fromN){
   if(!story0 && !refText().length){ stat('대강 이야기를 적거나 글 보관함에서 참고 글을 고른다.'); return; }
   if(!fromN && (!B || B.v!==2 || !B.cuts || !B.cuts.length || B.total!==(+tsel.value||B.total) || (B.cl&&B.cl.length))) fresh();
   B.story=document.getElementById('ct-story').value; var na=syncCast(); if(na) renderChars(); save();
-  var list=chunks().filter(function(ch){ return ch.b>=(fromN||1); });
+  var nRef=refText().length, needRev=nRef>0 || story0.length>300;
+  // 검토 대상이 아닌데 옛 배정표가 재료와 안 맞으면 버린다
+  if(!fromN && !needRev && B.scenes && B.scenesKey!==srcKey()){ B.scenes=null; B.scenesNote=''; save(); renderPlan(); }
+  var list=[];
+  function plan(){   // 장면 배정표가 정해진 뒤 묶음을 짠다. 앞 묶음 범위를 ch.prev로
+    var all=chunks();
+    all.forEach(function(ch,k){ if(k) ch.prev={a:all[k-1].a, b:all[k-1].b}; });
+    list=all.filter(function(ch){ return ch.b>=(fromN||1); });
+  }
   if(!fromN) B.cuts.forEach(function(c){ c.scr=''; c.line=''; });
   renderBoard();
   running=true; setBusy(true);
   var i=0;
   function review(){
-    if(fromN || !refText().length || (B.scenes && B.scenes.length && B.scenesKey===srcKey())){ next(); return; }
-    stat('참고 글 '+refText().length+'개를 함께 검토해 장면 배정표를 만드는 중…');
-    aiAsk(RSYS, reviewPrompt(), 1800).then(function(t){
+    if(fromN || !needRev || (B.scenes && B.scenes.length && B.scenesKey===srcKey())){ plan(); next(); return; }
+    stat((nRef?'참고 글 '+nRef+'개를 함께':'대강 이야기를')+' 검토해 장면 배정표를 만드는 중…');
+    aiAsk(RSYS, reviewPrompt(), 1800, {temperature:0.5, model:strongModel()}).then(function(t){
       if(aiIsErr(t)){ fail({a:0,name:'검토'}, String(t)); return; }
       var r=parseScenes(aiClean?aiClean(t):t);
       if(r.scenes.length){ B.scenes=r.scenes; B.scenesNote=r.note; B.scenesKey=srcKey(); save(); renderPlan(); }
-      next();
+      plan(); next();
     });
   }
   function next(){
     if(i>=list.length){ running=false; setBusy(false); stat('다 썼다. '+B.cuts.filter(function(c){return c.scr;}).length+'/'+B.cuts.length+'컷.'); save(); return; }
     var ch=list[i];
-    stat((i+1)+'/'+list.length+' · '+ch.a+'–'+ch.b+'번 컷('+ch.name+') 쓰는 중…');
-    aiAsk(CSYS, cutPrompt(ch), Math.min(2600, 200+(ch.b-ch.a+1)*120)).then(function(t){
+    stat((i+1)+'/'+list.length+' · '+ch.a+'–'+ch.b+'번 컷 「'+ch.name+'」 쓰는 중…');
+    aiAsk(CSYS, cutPrompt(ch), Math.min(2600, 200+(ch.b-ch.a+1)*120), {temperature:0.65}).then(function(t){
       if(aiIsErr(t)){ fail(ch, String(t)); return; }
       var got=applyLines(aiClean?aiClean(t):t, ch);
       if(!got){ fail(ch, '답을 콘티 형식으로 읽지 못했다.'); return; }
@@ -11821,7 +11878,7 @@ function writeAll(fromN){
   }
   function fail(ch, why){
     running=false; setBusy(false); save();
-    stat((ch.a?ch.a+'번 컷에서':'검토 단계에서')+' 멈췄다. '+why.slice(0,80));
+    stat((ch.a?ch.a+'번 컷'+(ch.name?'('+ch.name+')':'')+'에서':'검토 단계에서')+' 멈췄다. '+why.slice(0,80));
     var bar=document.getElementById('ct-resume'); bar.hidden=false; bar.dataset.n=ch.a;
   }
   document.getElementById('ct-resume').hidden=true;
