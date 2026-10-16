@@ -10628,10 +10628,10 @@ var POSE_J={
      x:{lean:.85, drop:.34, l:[[.22,.04,.27,.16],[-.14,.13,-.36,.16]]}},
    f:{drop:.28, sq:.7, a:[[.08,.14,0,.3,1],[.08,.14,0,.3,1]], l:[[.14,.12,.24,.22],[.14,.12,.24,.22]], hm:['fist','fist'], fx:'slam', imp:'ground', own:POSE_SW.concat(['지팡이']), bv:[0,1],
      x:{drop:.33, sq:.64, l:[[.15,.09,.27,.17],[.15,.09,.27,.17]]}}},
- '점프 베기':{s:{lift:.3, lean:.12, bow:-.02, a:[[.13,-.05,.24,-.07],[.11,-.06,.22,-.08]], l:[[.2,.1,.08,.3],[.06,.2,-.14,.3]], hm:['fist','fist'], fx:'jslash', bv:[.82,.57], mv:[.7,.7], ss:'up', own:POSE_SW,
+ '점프 베기':{s:{lift:.3, lean:.12, bow:-.02, a:[[.13,-.05,.24,-.07],[.11,-.06,.22,-.08]], l:[[.2,.1,.08,.3],[.06,.2,-.14,.3]], hm:['fist','fist'], fx:'jslash', bv:[.82,.57], mv:[.7,.7], ss:'up', own:POSE_SW, room:.12,
      x:{lift:.38, lean:.22, bow:-.04, bv:[.66,.75], l:[[.22,.07,.09,.26],[.04,.18,-.19,.25]]}},
-   f:{lift:.3, a:[[.1,-.12,.02,-.3,1],[.1,-.12,.02,-.3,1]], l:[[.12,.16,.08,.36],[.12,.16,.08,.36]], hm:['fist','fist'], fx:'jslash', bv:[.18,-1], mv:[0,-1], ss:'up', own:POSE_SW,
-     x:{lift:.38, bv:[.4,-.92]}}},
+   f:{lift:.3, a:[[.1,-.12,.02,-.3,1],[.1,-.12,.02,-.3,1]], l:[[.12,.16,.08,.36],[.12,.16,.08,.36]], hm:['fist','fist'], fx:'jslash', bv:[.5,-.86], mv:[0,-1], ss:'up', own:POSE_SW, room:.65,
+     x:{lift:.38, bv:[.62,-.78]}}},
  '몸 비틀어 피하기':{s:{lean:-.55, drop:.13, bow:.05, hr:-.15, a:[[.13,.08,.25,.1],[-.11,.08,-.22,.16]], l:[[.2,.16,.18,.42],[-.06,.22,-.24,.4]], hm:['open','open'], fx:'dodge', ghost:1, mv:[-1,0],
      x:{lean:-.72, drop:.18, bow:.07, l:[[.22,.12,.2,.38],[-.06,.2,-.28,.34]]}},
    f:{tilt:.45, drop:.12, a:[[.12,.1,.24,.17],[.14,.03,.27,.02]], l:[[.18,.16,.1,.44],[.14,.2,.28,.43]], hm:['open','open'], fx:'dodge', ghost:1, mv:[1,0],
@@ -10656,9 +10656,9 @@ var POSE_J={
      x:{lean:.85, drop:.42, a:[[.14,.03,.28,.15],[-.13,.06,-.26,.12]], l:[[.24,-.09,.21,.08],[-.11,.07,-.34,.08]]}},
    f:{drop:.35, sq:.65, look:'up', a:[[.06,.15,.03,.3,1],[.13,.06,.24,.12]], l:[[.18,.04,.15,.15],[.18,.04,.15,.15]], hm:['open','open'], fx:'ready', dust:'feet', ss:'down',
      x:{drop:.4, sq:.6, l:[[.2,0,.17,.1],[.2,0,.17,.1]]}}},
- '회전 베기':{s:{lean:.1, a:[[.14,-.01,.26,-.03],[-.06,.12,.05,.15]], l:[[.04,.25,.06,.5],[-.14,.15,-.26,.28]], hm:['fist','fist'], fx:'spin', bv:[.9,-.4], own:POSE_SW,
+ '회전 베기':{s:{lean:.1, a:[[.13,-.01,.23,-.03],[-.06,.12,.05,.15]], l:[[.04,.25,.06,.5],[-.14,.15,-.26,.28]], hm:['fist','fist'], fx:'spin', bv:[.8,-.6], own:POSE_SW,
      x:{lean:.2, l:[[.04,.25,.07,.5],[-.17,.11,-.3,.22]]}},
-   f:{tilt:-.1, a:[[.14,0,.26,-.01],[.1,.12,.03,.16,1]], l:[[.03,.25,.05,.5],[.15,.15,.1,.33]], hm:['fist','fist'], fx:'spin', bv:[.9,-.4], own:POSE_SW,
+   f:{tilt:-.1, a:[[.13,0,.22,-.01],[.1,.12,.03,.16,1]], l:[[.03,.25,.05,.5],[.15,.15,.1,.33]], hm:['fist','fist'], fx:'spin', bv:[.78,-.62], own:POSE_SW,
      x:{tilt:-.2, l:[[.04,.25,.07,.5],[.18,.1,.16,.28]]}}},
  '날아가며 맞음':{side:1, s:{lift:.22, lean:-.1, rot:-.85, bow:.05, hr:-.3, a:[[.13,-.02,.25,.05],[.1,.06,.2,.15]], l:[[.2,.12,.38,.22],[.14,.18,.3,.36]], hm:['open','open'], fx:'hitfly', imp:'body', mv:[-1,-.15], sp:1, shock:1,
      x:{lift:.28, lean:-.18, rot:-1.05, bow:.07}},
@@ -10955,7 +10955,7 @@ function figBody0(D,x,top,H,o){
       ctx.translate(hd*(want-reach), gy-.14*u-pcy); ctx.translate(x,pcy); ctx.rotate(hd*Math.PI/2); ctx.translate(-x,-pcy); }
     var ssk=(J.ss && E>0)?Math.min(E,3):0, ssx=1, ssy=1;
     if(ssk){ if(J.ss==='up'){ ssx=1-.04*ssk; ssy=1+.06*ssk; } else { ssx=1+.05*ssk; ssy=1-.05*ssk; } }
-    if(J.lift){ var lp=J.lift*lu*u, kz=Math.min(1, (footY-D.h*.1)/((footY-top)*ssy+lp+.2*u));   // 띄운 몸이 칸 안에 들게 줄인다
+    if(J.lift){ var lp=J.lift*lu*u, kz=Math.min(1, (footY-D.h*.1)/((footY-top)*ssy+lp+(.2+(E>0?J.room||0:0))*u));   // room: 머리 위로 칼이 올라가는 자세의 여유   // 띄운 몸이 칸 안에 들게 줄인다
       if(kz<1){ ctx.translate(x,footY); ctx.scale(kz,kz); ctx.translate(-x,-footY); }
       D.rc.ellipse(x, footY, .36*u, .07*u, D.ink({stroke:'none', fill:o.sil?D.c.ink:D.c.ink3, fillStyle:o.sil?'solid':'hachure', hachureGap:Math.max(2.5,u*.02)})); ctx.translate(0, -lp); }
     if(ssk){ ctx.translate(x,footY); ctx.scale(ssx,ssy); ctx.translate(-x,-footY); }   // 역동: 뛰면 늘이고 내려앉으면 찌부(발 기준)
