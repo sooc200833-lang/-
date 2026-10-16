@@ -1256,11 +1256,12 @@ body.dk-drag, body.dk-drag *{user-select:none!important; -webkit-user-select:non
 .ct-narh b{font-family:"Hahmlet",serif}
 .ct-narh .chip{margin-left:auto}
 .ct-npmsg{color:var(--ink-2); font-weight:600}
-.ct-nplist{list-style:none; margin:.2rem 0 .4rem; padding:0; display:grid; gap:0}
-.ct-npi{display:grid; grid-template-columns:auto auto minmax(0,1fr); gap:.2rem .45rem; align-items:center; padding:.35rem 0; border-top:1px solid var(--rule)}
+.ct-nplist{list-style:none; margin:.2rem 0 .4rem; padding:0; display:grid; gap:0; max-width:none}
+.ct-npi{display:grid; grid-template-columns:4.4em 4.2em minmax(0,1fr); gap:.2rem .45rem; align-items:center; margin:0; padding:.35rem 0; border-top:1px solid var(--rule)}
+@media (max-width:520px){ .ct-npi{grid-template-columns:4.4em auto} .ct-npi input[type=text]{grid-column:1/-1} }
 .ct-npi.off input[type=text],.ct-npi.off .ct-npctx,.ct-npi.off select{opacity:.5}
 .ct-npi input[type=text]{font:inherit; font-size:.86rem; min-width:0; width:100%; box-sizing:border-box; background:var(--paper); color:var(--ink); border:1px solid var(--rule-hard); padding:.22rem .38rem}
-.ct-npi select{font:inherit; font-size:.8rem; background:var(--paper); color:var(--ink); border:1px solid var(--rule-hard); padding:.12rem .2rem}
+.ct-npi select{justify-self:start; font:inherit; font-size:.8rem; background:var(--paper); color:var(--ink); border:1px solid var(--rule-hard); padding:.12rem .2rem}
 .ct-npn{white-space:nowrap; display:inline-flex; gap:.25rem; align-items:center; font-variant-numeric:tabular-nums}
 .ct-npk{font-size:.76rem; color:var(--note); font-weight:600}
 .ct-npctx{grid-column:1/-1; color:var(--ink-3); line-height:1.4}
@@ -13969,7 +13970,7 @@ function npRender(){
         (nar?'<select data-np-pos="'+i+'" aria-label="'+c.n+'번 나레이션 자리">'+['top','bottom','between'].map(function(k){ return '<option value="'+k+'"'+(it.pos===k?' selected':'')+'>'+NAR_POS[k]+'</option>'; }).join('')+'</select>'
             :'<span class="ct-npk">대사</span>')+
         '<input type="text" data-np-tx="'+i+'" value="'+cesc(it.text)+'" aria-label="'+c.n+'번 '+(nar?'나레이션':'대사')+' 문구">'+
-        '<span class="ct-npctx small">'+cesc(compText(c))+(npNames(c)?' · '+cesc(npNames(c)):'')+' · '+cesc(oneLn(c.scr).slice(0,44))+
+        '<span class="ct-npctx small">'+cesc(compText(c))+(npNames(c)?' · '+cesc(npNames(c).replace(/,/g,', ')):'')+' · '+cesc(oneLn(c.scr).slice(0,44))+
           (has?' · <em>지금 '+(nar?'나레이션':'대사')+': '+cesc(has.slice(0,34))+'</em>':'')+'</span></li>';
     }).join('')+'</ol>';
   });
