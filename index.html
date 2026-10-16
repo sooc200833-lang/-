@@ -13468,7 +13468,10 @@ function lineParse(line){
   if(parts.length>=6){ who=parts[2]; scr=parts[3]; ln=parts[4]; nr=parts.slice(5).join(' '); }
   else if(parts.length===5){ who=parts[2]; scr=parts[3]; ln=parts[4]; }
   else { scr=parts[2]; ln=parts.slice(3).join(' '); }
-  return {n:+mn[1], comp:parts[1], scr:String(scr).trim(), line:balloonsParse(ln).join('\n'), nar:nr===null?null:narParse(nr),
+  var bs=balloonsParse(ln), nar=nr===null?null:narParse(nr);
+  // 대사 칸에 「나레이션: …」을 적었으면 나레이션 칸으로 옮긴다
+  bs=bs.filter(function(b){ var m=/^(나레이션|내레이션|해설|NA|N): (.*)$/i.exec(b); if(!m) return true; if(!nar || !nar.nar) nar=narParse(m[2]); return false; });
+  return {n:+mn[1], comp:parts[1], scr:String(scr).trim(), line:bs.join('\n'), nar:nar,
     who:String(who).split(/[,，、]/).map(function(x){ return x.trim(); }).filter(function(x){ return x && !/^(없음|-|—)$/.test(x); }).slice(0,3)};
 }
 function applyLines(t, ch){
