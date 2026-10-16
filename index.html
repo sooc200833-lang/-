@@ -11435,7 +11435,7 @@ function bandFor(total){
 function fresh(){
   var total=+document.getElementById('ct-total').value||70, story=document.getElementById('ct-story').value;
   var keepCh=(B&&B.chars)||[], src=srcGet(), band=bandFor(total);
-  B={chars:keepCh, total:total, band:band, cl:[], drawn:'', story:story, srcAt:(B&&B.srcAt)||0, cuts:skeleton(total, band, [])};
+  B={v:2, chars:keepCh, total:total, band:band, cl:[], drawn:'', story:story, srcAt:(B&&B.srcAt)||0, cuts:skeleton(total, band, [])};
   var nc=syncCast(); save(); renderAll(); storyOffer();
   return nc;
 }
@@ -11711,7 +11711,7 @@ function writeAll(fromN){
   if(!aiReady()){ stat('AI 연결에서 키를 넣어야 쓸 수 있다.'); return; }
   var story0=document.getElementById('ct-story').value.trim();
   if(!story0){ stat('대강 이야기를 먼저 적는다.'); return; }
-  if(!fromN && (!B || !B.cuts || !B.cuts.length || B.total!==(+tsel.value||B.total) || (B.cl&&B.cl.length))) fresh();
+  if(!fromN && (!B || B.v!==2 || !B.cuts || !B.cuts.length || B.total!==(+tsel.value||B.total) || (B.cl&&B.cl.length))) fresh();
   B.story=document.getElementById('ct-story').value; var na=syncCast(); if(na) renderChars(); save();
   var list=chunks().filter(function(ch){ return ch.b>=(fromN||1); });
   if(!fromN) B.cuts.forEach(function(c){ c.scr=''; c.line=''; });
@@ -11796,7 +11796,10 @@ var shown=false;
 window.__contiShow=function(){
   if(!shown){
     shown=true; load();
-    if(B && B.cl && B.cl.length){ B.cl=[]; B.drawn=''; (B.cuts||[]).forEach(function(c){ delete c.cl; }); save(); }   // 구성기 재료는 더 쓰지 않는다
+    if(B && B.v!==2){   // 구성기에서 가져오던 옛 판 → 구성기 재료를 지우고 구간을 이야기 기준으로 다시 나눈다
+      B.cl=[]; B.drawn=''; B.v=2; (B.cuts||[]).forEach(function(c){ delete c.cl; });
+      B.total=(B.cuts&&B.cuts.length)||B.total||70; B.band=bandFor(B.total); save();
+    }
     if(B){ document.getElementById('ct-story').value=B.story||''; tsel.value=String(B.total); }
     else { tsel.value=String(window.__cutTotal?window.__cutTotal():70); if(!tsel.value) tsel.value='70'; }
     var src=srcGet(), note=document.getElementById('ct-srcinfo');
