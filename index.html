@@ -10732,7 +10732,7 @@ var POSE_DYN={
 Object.keys(POSE_DYN).forEach(function(k){ ['s','f'].forEach(function(v){ if(POSE_J[k] && POSE_J[k][v] && POSE_DYN[k][v]) Object.assign(POSE_J[k][v], POSE_DYN[k][v]); }); });
 // 자세 정보 (window.__ctPoseInfo): act 액션, travel 옆으로 움직임(기본 옆모습), impact 때리거나 맞음
 var POSE_NEW=['날아차기','돌진','내려찍기','점프 베기','몸 비틀어 피하기','미끄러지며 착지','손 뻗어 붙잡기','외치기','막아서기','도약 준비','회전 베기','날아가며 맞음'];
-var POSE_ACT=['달리기','점프','주먹 지르기','발차기','검 겨누기','검 휘두르기','가리키기','손 내밀기','착지','마법 시전','활 쏘기'].concat(POSE_NEW);
+var POSE_ACT=['달리기','점프','주먹 지르기','발차기','검 겨누기','검 휘두르기','가리키기','손 내밀기','착지','마법 시전','활 쏘기','쓰러짐'].concat(POSE_NEW);
 var POSE_TRAVEL=['걷기','달리기','날아차기','돌진','미끄러지며 착지','날아가며 맞음'];
 var POSE_IMPACT=['주먹 지르기','발차기','검 휘두르기','날아차기','내려찍기','점프 베기','회전 베기','날아가며 맞음'];
 var POSE_INFO={};
@@ -12334,8 +12334,9 @@ function bcRandom(r, mood, L, rnd){
   if(!L.fo){ var fo=R.fo; if(mood==='e' && maxAct>=1) fo=.3; if(anyTr) fo=Math.max(fo,.5); if(anyIm) fo=.85; if(allQ) fo=0; focus=rnd()<fo?1:0; }
   // 역동성
   var dyn=bcDynKey(r.dyn);
-  if(!L.dyn){ if(mood==='a') dyn=(anyIm||anyTr)?(rnd()<.6?2:1):(rnd()<.3?2:1);
-    else if(allQ) dyn=0; else if(mood==='v') dyn=rnd()<.5?1:0; else if(mood==='e') dyn=maxAct>=2?1:0; else dyn=0; }
+  if(!L.dyn){ if(allQ) dyn=0;   // 조용한 자세뿐이면 어느 갈래든 역동 없음
+    else if(mood==='a') dyn=(anyIm||anyTr)?(rnd()<.6?2:1):(rnd()<.3?2:1);
+    else if(mood==='v') dyn=rnd()<.5?1:0; else if(mood==='e') dyn=maxAct>=2?1:0; else dyn=0; }
   // 자리
   var X=chars.map(function(c){ return c.x; });
   if(!L.k){ X=bcAutoX(n,k).slice(); if(n>1){ var sp=f2==='vs'?.04:.02; X=X.map(function(x,i){ var j=(rnd()-.5)*.08+(i===0?-sp:(i===n-1?sp:0)); return Math.round(Math.max(.08,Math.min(.92,x+j))*20)/20; }); } }
