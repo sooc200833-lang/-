@@ -13032,19 +13032,19 @@ function balCands(D, it, M, top, hard, soft, heads){
   out.sort(function(a,b){ return a.s-b.s; });
   return out;
 }
-function balPlace(D, items, M, top, hard, soft){
+function balPlace(D, items, M, top, hard, soft, loose){
   var heads=(D.heads||[]).filter(function(x){ return balInPanel(D,x); }), C=items.map(function(it){ return balCands(D, it, M, top, hard, soft, heads); });
   if(C.some(function(c){ return !c.length; })) return null;
   var K=items.length===1?1:(items.length===2?40:22);
-  var L=C.map(function(c){ var o=[]; for(var i=0;i<c.length && o.length<K;i++){ var x=c[i]; if(!o.some(function(y){ return Math.abs(y.cx-x.cx)<2 && Math.abs(y.cy-x.cy)<2; })) o.push(x); } return o; });
+  var L=C.map(function(c,n){ var S=items[n].sz, o=[]; for(var i=0;i<c.length && o.length<K;i++){ var x=c[i]; if(!o.some(function(y){ return Math.abs(y.cx-x.cx)<S.RX*.45 && Math.abs(y.cy-x.cy)<S.RY*.45; })) o.push(x); } return o; });   // 서로 떨어진 후보들
   // 넉넉한 후보 중에서 겹치지 않는 조합 — 읽는 순서를 어기면 6점
   var best=null, bs=1e9, pick=[];
   (function go(i, sum){
     if(sum>=bs) return;
     if(i===items.length){ bs=sum; best=pick.slice(); return; }
     for(var j=0;j<L[i].length;j++){ var c=L[i][j], R2=[c.R[0]-2,c.R[1]-2,c.R[2]+2,c.R[3]+2];
-      if(pick.some(function(p){ return rOv(R2,p.R)>0; })) continue;
-      var pen=(i>0 && !balOrd(pick[i-1], c))?6:0;
+      var ov=pick.reduce(function(t,p){ return t+rOv(R2,p.R); },0); if(ov>0 && !loose) continue;
+      var pen=((i>0 && !balOrd(pick[i-1], c))?6:0)+(ov>0?20+ov/rArea(c.R)*20:0);
       pick.push(c); go(i+1, sum+c.s+pen); pick.pop(); }
   })(0, 0);
   if(!best) return null;
@@ -13130,7 +13130,9 @@ function bubbles(D, tq){
     items.forEach(function(it,i){ it.sz=sz[i]; });
     P=balPlace(D, items, M, top, hard, soft);
   }
-  if(!P){ items.forEach(function(it){ it.sz=balSize(D, it.b, fsMin, maxRX, maxRY, true); }); P=balPlace(D, items, M, top, [], soft)||[]; }   // 그래도 자리가 없으면 겹쳐도 놓는다
+  [.8,.62,.48].forEach(function(f){ if(P) return;   // 가장 작은 글씨로도 안 되면 풍선을 줄이고 더 줄인다(말줄임)
+    items.forEach(function(it){ it.sz=balSize(D, it.b, fsMin, maxRX*(f<.6?1:f), maxRY*f, true); }); P=balPlace(D, items, M, top, hard, soft); });
+  if(!P){ items.forEach(function(it){ it.sz=balSize(D, it.b, fsMin, maxRX, maxRY*.48, true); }); P=balPlace(D, items, M, top, [], soft, true)||[]; }   // 그래도 자리가 없으면 겹쳐도 놓는다
   P.forEach(function(p){ p.top=top; balDraw(D,p); res.R.push(p.R); });
   if(window.__ctBalLog) window.__ctBalLog.push({k:o.k, w:D.w, h:D.h, heads:D.heads, obs:soft, P:P.map(function(p){ return {cx:p.cx, cy:p.cy, RX:p.RX, RY:p.RY, fs:p.fs, lines:p.lines, kind:p.b.kind, head:p.head}; })});   // 시험·디버그용
   return res;
