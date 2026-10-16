@@ -10706,7 +10706,7 @@ function lerpJ(J,X,t){   // 관절표 J에서 과장표 X로 t만큼(배열은 �
   var o=Object.assign({},J); for(var k in X) o[k]=L(J[k],X[k]); delete o.x; return o; }
 function nrm(v){ var l=Math.hypot(v[0],v[1])||1; return [v[0]/l, v[1]/l]; }
 function rot2(v,a){ var c=Math.cos(a), s=Math.sin(a); return [v[0]*c-v[1]*s, v[0]*s+v[1]*c]; }
-function toT0(G,p){ if(!G.th) return p; var q=rot2([p[0]-G.x, p[1]-G.hipY], G.th); return [G.x+q[0], G.hipY+q[1]]; }   // 상체(기울인 틀)의 점 → 다리 틀
+function toT0(G,p){ if(!G.th) return p; var py=G.pvY||G.hipY, q=rot2([p[0]-G.x, p[1]-py], G.th); return [G.x+q[0], py+q[1]]; }   // 상체(기울인 틀)의 점 → 다리 틀
 function atT0(D,G,fn){ if(G.T0 && G.th){ D.ctx.save(); D.ctx.setTransform(G.T0); try{ fn(); } finally{ D.ctx.restore(); } } else fn(); }
 function nearK(G,J,kind,s){ if(!G.E || !J || !J.near || J.near[kind]==null) return 1; return J.near[kind]===(s===1?0:1)?1+.2*Math.min(G.E,3):1; }   // 카메라 쪽 팔다리 크기
 function dThin(D,w,e){ return D.ink(Object.assign({stroke:D.c.ink3, strokeWidth:(w||1)*D.sw, roughness:.5}, e||{})); }
@@ -10729,6 +10729,7 @@ function cracks(D,G,c,e){   // 땅이 갈라진 금과 튀는 돌
     [0,1].forEach(function(j){ var p=[c[0]+k*(.05+.07*j)*u*k2, c[1]-(.07+.06*j)*u*k2], q=.014*u; D.rc.polygon([[p[0],p[1]-q],[p[0]+q,p[1]+q*.6],[p[0]-q*.8,p[1]+q*.5]], D.ink({fill:D.c.ink2, fillStyle:'solid', strokeWidth:.8})); }); });
 }
 function burst(D,G,c,R,e,ring){   // 맞는 자리: 뾰족한 별 테두리 + 방사선 (ring: 방사선만)
+  R=Math.min(R, D.h*.12);
   var P=[], n=14; for(var i=0;i<n;i++){ var a=i/n*Math.PI*2+.2, rr=i%2?R*.55:R*(1+.14*((i*7)%3)); P.push([c[0]+Math.cos(a)*rr, c[1]+Math.sin(a)*rr]); }
   if(!ring) D.rc.polygon(P, D.ink({stroke:D.c.mark, strokeWidth:1.4*D.sw, roughness:.6}));
   for(var j=0;j<8;j++){ var b=j/8*Math.PI*2+.1; D.rc.line(c[0]+Math.cos(b)*R*1.25, c[1]+Math.sin(b)*R*1.25, c[0]+Math.cos(b)*R*(1.55+.15*e), c[1]+Math.sin(b)*R*(1.55+.15*e), D.ink({strokeWidth:1*D.sw})); }
@@ -10792,7 +10793,7 @@ function dynFx(D,G,J,ph,lk){
       var rc2=[x, G.shY+.08*u], rx2=(.46+.05*e)*u, ry2=(.1+.01*e)*u, O=[], I=[];
       for(var i2=0;i2<=12;i2++){ var a2=Math.PI*i2/12; O.push([rc2[0]+Math.cos(a2)*rx2, rc2[1]+Math.sin(a2)*ry2]); I.unshift([rc2[0]+Math.cos(a2)*rx2*.88, rc2[1]+Math.sin(a2)*ry2*.4]); }
       D.rc.polygon(O.concat(I), D.ink({stroke:D.c.ink3, strokeWidth:.9*D.sw, fill:D.c.ink3, fillStyle:'hachure', hachureGap:3, fillWeight:.6, roughness:.6})); }
-    if(fx==='dash' && own){ if(lk.weapon==='창' && H[1]) bladeDraw(D,G,H[1],nrm([m,.08]),'창'); else if(H[-1]) bladeDraw(D,G,H[-1],nrm([-m*.8,.6]),lk.weapon); }
+    if(fx==='dash' && own){ if(lk.weapon==='창' && H[1]) bladeDraw(D,G,H[1],rot2(nrm([m,.06]),-(G.th||0)),'창'); else if(H[-1]) bladeDraw(D,G,H[-1],nrm([-m*.8,.6]),lk.weapon); }
     if(fx==='guard' && own && H[1]) shieldAt(D,G,H[1],1+.08*e);
     if(fx==='slam'){ var g2=both(); if(g2){ var gB=toT0(G,g2);
       atT0(D,G,function(){ var hit;
@@ -10959,14 +10960,15 @@ function figBody0(D,x,top,H,o){
       D.rc.ellipse(x, footY, .36*u, .07*u, D.ink({stroke:'none', fill:o.sil?D.c.ink:D.c.ink3, fillStyle:o.sil?'solid':'hachure', hachureGap:Math.max(2.5,u*.02)})); ctx.translate(0, -lp); }
     if(ssk){ ctx.translate(x,footY); ctx.scale(ssx,ssy); ctx.translate(-x,-footY); }   // 역동: 뛰면 늘이고 내려앉으면 찌부(발 기준)
     dynFx(D,G,J,'base',lk);
-    if(J.rot){ var ra=(side?f:1)*J.rot, rcy=(top+footY)/2; G.ra=ra; ctx.translate(x,rcy); ctx.rotate(ra); ctx.translate(-x,-rcy); }   // 몸 전체 돌림(날아가며 맞음)
+    if(J.rot){ var ra=(side?f:1)*J.rot, rcy=wu?Math.min(hipY,D.h*.86):(top+footY)/2; G.ra=ra; ctx.translate(x,rcy); ctx.rotate(ra); ctx.translate(-x,-rcy); }   // 몸 전체 돌림(날아가며 맞음)
     poseFx(D,G,J,'pre',lk);
     if(ctx.getTransform) T0=ctx.getTransform();
   }
   var th=J?(side?f*(J.lean||0):(J.tilt||0)+(J.tiltW||0)*G.ws):0;   // 상체는 엉덩이를 축으로 기울인다(다리는 T0에서 그림)
   if(dv>0 && !E && !(J && J.lie) && !turn) th+=.04*dv*(f?-f:(x>D.w*.5?-1:1));   // 역동: 서 있는 자세는 살짝 기울인다(고개는 반대로)
-  if(th){ if(!T0 && ctx.getTransform) T0=ctx.getTransform(); ctx.translate(x,hipY); ctx.rotate(th); ctx.translate(-x,-hipY); }
-  G.th=th; G.T0=T0; G.tr=G.mvS?rot2([-G.mvS[0],-G.mvS[1]], -((G.ra||0)+th)):null;   // tr: 머리카락·망토·목도리가 날리는 쪽(상체 틀)
+  var pvY=(wu && E>0)?Math.min(hipY,D.h*.86):hipY;   // 허리 위 구도의 역동: 칸 안의 가슴께를 축으로 돌려 머리가 칸 밖으로 나가지 않게
+  if(th){ if(!T0 && ctx.getTransform) T0=ctx.getTransform(); ctx.translate(x,pvY); ctx.rotate(th); ctx.translate(-x,-pvY); }
+  G.th=th; G.pvY=pvY; G.T0=T0; G.tr=G.mvS?rot2([-G.mvS[0],-G.mvS[1]], -((G.ra||0)+th)):null;   // tr: 머리카락·망토·목도리가 날리는 쪽(상체 틀)
   // 몸 뒤 (앞·옆에서 볼 때): 날개·망토·꼬리·등에 진 무기
   if(!o.back){
     if(lk.wings) (f?[-f]:[-1,1]).forEach(function(s){ wingDraw(D,G,s,lk.wings); });
