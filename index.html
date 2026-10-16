@@ -12048,6 +12048,42 @@ function removeCut(n){
   renumber(); save(); renderAll(); document.getElementById('ct-total').value=String(B.total);
 }
 
+// 바깥(콘티 연출 색인·이미지 연출 분석 등)에서 컷 여러 개를 넣는 창구.
+// specs: [{k,ang,focus,flash,who:[이름],scr,line,wp,dyn}], opts: {at: 이 번호 뒤에(0이면 맨 앞, 없으면 마지막으로 쓴 컷 뒤), label}
+// 판이 없거나 아직 쓴 컷이 없으면 1번부터 빈 칸을 채운다. 넣은 범위 {a,b}를 돌려준다
+function insertCuts(specs, opts){
+  opts=opts||{}; specs=(specs||[]).filter(Boolean); if(!specs.length) return null;
+  if(!B || B.v!==2 || !B.cuts || !B.cuts.length) fresh();
+  var mk=function(x){ var c={k:String(x.k||'ms').toLowerCase(), ang:x.ang||'', scr:String(x.scr||''), line:String(x.line||'')};
+    if(x.focus) c.focus=1; if(x.flash) c.flash=1; if(x.silent) c.silent=1; if(x.hook) c.hook=1;
+    if(Array.isArray(x.who) && x.who.length) c.who=x.who.slice(0,3).map(String); if(x.wp) c.wp=JSON.parse(JSON.stringify(x.wp)); if(x.dyn) c.dyn=+x.dyn||0; return c; };
+  var written=B.cuts.filter(function(c){ return c.scr; }).length, a, added=[];
+  if(!written){
+    specs.forEach(function(x,i){ var c=mk(x); if(i<B.cuts.length){ var n0=B.cuts[i].n; Object.keys(B.cuts[i]).forEach(function(k){ if(k!=='cl') delete B.cuts[i][k]; }); Object.assign(B.cuts[i],c); B.cuts[i].n=n0; added.push(B.cuts[i]); }
+      else { B.cuts.push(c); added.push(c); } });
+    renumber(); a=1;
+  } else {
+    var at=(typeof opts.at==='number')?Math.max(0,Math.min(opts.at,B.cuts.length)):0;
+    if(typeof opts.at!=='number') B.cuts.forEach(function(c){ if(c.scr) at=c.n; });
+    var cs=specs.map(mk); B.cuts.splice.apply(B.cuts,[at,0].concat(cs)); shiftAfter(at, cs.length); renumber(); added=cs; a=at+1;
+  }
+  save(); renderAll(); var ts=document.getElementById('ct-total'); if(ts) ts.value=String(B.total);
+  var b=a+added.length-1;
+  stat((opts.label?'「'+opts.label+'」 ':'')+a+(b>a?'–'+b:'')+'번 컷에 넣었다.');
+  if(written) setUndo('ins','넣기 되돌리기',function(){
+    var ok=added.every(function(c){ return B.cuts.indexOf(c)>-1; }); if(!ok){ stat('그 뒤로 컷이 바뀌어 넣기를 되돌릴 수 없다.'); return; }
+    added.slice().reverse().forEach(function(c){ var n=B.cuts.indexOf(c)+1; B.cuts.splice(n-1,1); shiftAfter(n,-1); });
+    B.band=B.band.filter(function(x){ return x.b>=x.a; }); renumber(); save(); renderAll(); if(ts) ts.value=String(B.total); stat('넣은 컷을 뺐다.'); });
+  setTimeout(function(){ focusCut(a, true); }, 60);
+  return {a:a, b:b};
+}
+// 다른 페이지에서 부르면 콘티 구성기로 옮겨 가서 넣는다
+window.__ctInsertCuts=function(specs, opts){
+  if((location.hash||'')!=='#conti'){ location.hash='#conti'; }
+  if(window.__contiShow) try{ window.__contiShow(); }catch(e){}
+  return insertCuts(specs, opts);
+};
+
 /* ---------- 컷 옮기기 · 구간 다시 쓰기 ---------- */
 // 구간(band)·장면(scenes)·클리셰 칸(cl)은 컷 번호로 정한 자리라 그대로 두고, 컷 내용만 자리를 바꾼다.
 var UNDO=null;   // 마지막 옮기기 또는 다시 쓰기 하나 {kind, label, run}
