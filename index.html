@@ -1039,6 +1039,14 @@ body.dk-drag, body.dk-drag *{user-select:none!important; -webkit-user-select:non
 .ct-cl .ct-rng{display:inline-block; font-size:.78rem; color:var(--mark); margin-right:.5rem; font-variant-numeric:tabular-nums}
 .ct-cl .ct-pt{display:block}
 .ct-lab{display:block; margin:.4rem 0 .3rem}
+.ct-reft{font-family:"Hahmlet",serif; margin:1rem 0 .2rem; font-size:.95rem}
+.ct-refs{display:grid; gap:.5rem; margin:.4rem 0 .8rem}
+.ct-refs label{display:grid; grid-template-columns:6.5em 1fr; gap:.5rem; align-items:center; font-size:.85rem}
+.ct-refs select{font:inherit; font-size:.84rem; min-width:0; width:100%; background:var(--paper); color:var(--ink); border:1px solid var(--rule-hard); padding:.2rem .3rem}
+.ct-refs .pv{grid-column:2; font-size:.78rem; color:var(--ink-3); line-height:1.45; overflow:hidden; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical}
+.ct-scenes{list-style:none; padding:0; margin:.3rem 0 1rem; display:grid; gap:.25rem; font-size:.84rem}
+.ct-scenes li{display:grid; grid-template-columns:5.2em 1fr; gap:.4rem; border-left:3px solid var(--note); padding-left:.5rem}
+.ct-scenes li b{font-variant-numeric:tabular-nums; color:var(--note); font-weight:600}
 #ct-story{width:100%; box-sizing:border-box; font:inherit; font-size:.9rem; line-height:1.6; padding:.6rem; background:var(--paper); color:var(--ink); border:1px solid var(--rule-hard)}
 .ct-sec{margin:1.2rem 0 0}
 .ct-sec > h4{font-family:"Hahmlet",serif; margin:0 0 .5rem; font-size:1rem; border-bottom:1px solid var(--rule); padding-bottom:.2rem}
@@ -2184,13 +2192,16 @@ body.dk-drag, body.dk-drag *{user-select:none!important; -webkit-user-select:non
 
 <section class="blk" id="conti">
   <h2 class="big">콘티 구성기</h2>
-  <p class="lede">랜덤 구성기(아이디어로 추천받기로 채운 것 포함)의 구성과 대강 이야기를 가져와 <b>컷마다 구도 그림과 글</b>을 붙인다. 클리셰마다 정해진 지면·연출 도구와 구성기의 컷 배분을 그대로 따른다.</p>
-  <h3>1. 재료</h3>
-  <div class="filterbar"><button class="chip" id="ct-pull" type="button">구성기에서 가져오기</button><label class="small">분량 <select id="ct-total"></select></label><span class="count" id="ct-srcinfo"></span></div>
+  <p class="lede"><b>대강 이야기 하나만</b> 보고 컷마다 구도 그림과 글을 붙인다. 분량에 맞춰 도입·전개·전환·절정·마지막 훅으로 컷을 나누고, 구간마다 어울리는 기본 구도를 깐 뒤 AI가 이야기에 맞게 고친다.</p>
+  <h3>1. 대강 이야기</h3>
+  <label class="small ct-lab" for="ct-story">줄거리·웹소설·컷별 콘티 무엇이든 된다. 글쓰기 결과가 있으면 빈 칸일 때만 들어온다.</label>
+  <textarea id="ct-story" rows="9" placeholder="예) 서윤은 졸업식 날 옥상에서 도현에게 고백하려 한다. 그런데 도현이 먼저 전학 소식을 꺼낸다…"></textarea>
+  <div class="filterbar" id="ct-storybar" hidden></div>
+  <h4 class="ct-reft">글 보관함에서 함께 볼 글</h4>
+  <p class="small">줄거리·웹소설·컷별 콘티를 하나씩 고르면 AI가 <b>셋을 먼저 함께 검토해 장면 배정표</b>를 만들고, 그 배정표를 따라 콘티를 쓴다. 한 갈래만 골라도 된다. 하나를 고르면 같은 흐름에서 이어 쓴 다른 갈래도 비어 있는 칸에 자동으로 들어온다.</p>
+  <div class="ct-refs" id="ct-refs"></div>
+  <div class="filterbar"><label class="small">분량 <select id="ct-total"></select></label><span class="count" id="ct-srcinfo"></span></div>
   <div id="ct-plan"></div>
-  <label class="small ct-lab" for="ct-story">대강 이야기 — 글쓰기의 줄거리·컷별 콘티·웹소설 결과가 들어온다. 직접 고쳐도 된다.</label>
-  <textarea id="ct-story" rows="7" placeholder="비워 두면 구성만 보고 콘티를 짠다."></textarea>
-  <div class="filterbar"><button class="chip" id="ct-plot" type="button">AI로 줄거리 짜기</button></div>
   <h3>2. 등장인물</h3>
   <p class="small">인물을 적어 두면 콘티 그림에 <b>이름표</b>와 <b>생김새</b>(머리·안경·모자·흉터·체격)가 붙는다. 이야기에 적힌 특징만 넣고, 적혀 있지 않은 건 미정으로 둔다.</p>
   <p class="small"><a href="#cast">등장인물</a> 페이지의 인물은 대강 이야기나 컷에 <b>이름이 나오면 저절로</b> 여기 들어오고, 생김새도 그 페이지에서 고른 대로 그린다. 컷마다 누가 나오는지는 AI가 쓴 글의 이름을 보고 정한다. 직접 바꾸려면 컷을 눌러 「인물」 칸에 이름을 적는다.</p>
@@ -2434,18 +2445,18 @@ body.dk-drag, body.dk-drag *{user-select:none!important; -webkit-user-select:non
 
 <section class="blk" id="ai">
   <h2 class="big">AI 연결</h2>
-  <p class="lede">OpenRouter API 키를 넣으면 클리셰 비틀기·연관짓기·글쓰기(줄거리·컷별·웹소설)를 쓸 수 있다. 키는 <b>이 브라우저에만</b> 저장되며 파일에는 들어가지 않는다. 깃허브에 올려도 키가 노출되지 않는다.</p>
+  <p class="lede">구글 제미나이 API 키를 넣으면 클리셰 비틀기·연관짓기·글쓰기(줄거리·컷별·웹소설)를 쓸 수 있다. 키는 <b>이 브라우저에만</b> 저장되며 파일에는 들어가지 않는다. 깃허브에 올려도 키가 노출되지 않는다.</p>
   <div class="warnbox"><b>기기마다 넣기 번거로우면</b> 즐겨찾기 페이지에서 <b>구글 드라이브 동기화</b>를 켜 둔다. 한 기기에서 넣은 키가 다른 기기로 넘어간다.</div>
   <div class="warnbox"><b>주의.</b> 키를 넣은 뒤에도 파일 자체에는 아무것도 기록되지 않는다. 다만 공용 컴퓨터에서는 쓰고 나서 <b>키 지우기</b>를 누른다.</div>
   <div class="warnbox"><b>클로드 아티팩트 화면에서는 동작하지 않는다.</b> 미리보기 창이 외부 주소 호출을 막기 때문이다. 이 파일을 <b>깃허브 페이지</b>에 올리거나 내 컴퓨터에 내려받아 그 주소로 열면 정상 작동한다. 파일을 그냥 더블클릭해 여는 경우(file://)에도 막힐 수 있으니, 깃허브 주소로 쓰는 편이 확실하다.</div>
   <div class="arcform">
     <label><span>API 키</span>
-      <input id="ai-key" type="password" placeholder="sk-or-v1-...">
-      <i id="ai-keyinfo">openrouter.ai 에서 발급받는다. 한 키로 구글·앤트로픽·오픈AI 등 여러 회사 모델을 고른다. 입력하면 바로 저장된다.</i></label>
+      <input id="ai-key" type="password" placeholder="AIza...">
+      <i id="ai-keyinfo"><a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">aistudio.google.com/apikey</a> 에서 구글 계정으로 무료 발급받는다(「Create API key」). 입력하면 바로 저장된다. 무료 키는 분당·하루 호출 수에 한도가 있다.</i></label>
     <label><span>모델</span>
       <select id="ai-model"><option value="">모델 목록을 불러오는 중…</option></select>
-      <input id="ai-msearch" type="search" placeholder="모델 검색 (예: gemini, claude, free)" style="margin-top:.4rem">
-      <i id="ai-minfo">OpenRouter에서 지금 쓸 수 있는 모델만 보여 준다. 위쪽 「추천」은 싸고 한국어가 무난한 최신 모델이다. 가격은 100만 토큰당 입력/출력 달러.</i></label>
+      <input id="ai-msearch" type="search" placeholder="모델 검색 (예: flash, lite, pro)" style="margin-top:.4rem">
+      <i id="ai-minfo">이 키로 쓸 수 있는 제미나이 모델만 보여 준다. 위쪽 「추천」은 계열별 최신 모델이다.</i></label>
   </div>
   <div class="filterbar">
     <button class="chip" id="ai-test">연결 확인</button>
@@ -2453,7 +2464,7 @@ body.dk-drag, body.dk-drag *{user-select:none!important; -webkit-user-select:non
     <button class="chip" id="ai-clear">키 지우기</button>
     <span class="count" id="ai-msg"></span>
   </div>
-  <label class="small" style="display:block; margin:.3rem 0"><input type="checkbox" id="ai-autofree"> <b>잔액이 없으면 무료 모델로 자동 전환</b> — OpenRouter 잔액이 바닥나면(402) 무료 모델로 바꿔 다시 부른다. 무료 모델은 하루 50번(한 번이라도 10달러 충전한 계정은 1,000번), 웹 검색은 안 된다.</label>
+  
   <p class="small" id="ai-credit"></p>
   <p class="small" id="ai-lasterr"></p>
   <details class="aidet"><summary>구글이 보낸 원문 보기 (문제 신고용)</summary><p class="small" id="ai-lastraw" style="word-break:break-all"></p></details>
@@ -2693,7 +2704,7 @@ body.dk-drag, body.dk-drag *{user-select:none!important; -webkit-user-select:non
       <button class="chip" id="gd-hist">되돌리기 목록</button>
       <button class="chip" id="gd-off">연결 끊기</button>
     </div>
-    <label class="small" style="display:block; margin:.2rem 0 .4rem"><input type="checkbox" id="gd-keys"> <b>AI 키도 함께 동기화</b> — 한 기기에서 넣은 OpenRouter 키가 다른 기기에도 들어간다. 내 드라이브의 숨겨진 앱 폴더에만 저장된다. 공용 기기를 쓴다면 끈다.</label>
+    <label class="small" style="display:block; margin:.2rem 0 .4rem"><input type="checkbox" id="gd-keys"> <b>AI 키도 함께 동기화</b> — 한 기기에서 넣은 제미나이 키가 다른 기기에도 들어간다. 내 드라이브의 숨겨진 앱 폴더에만 저장된다. 공용 기기를 쓴다면 끈다.</label>
     <p class="small" id="gd-msg">연결되어 있지 않다.</p>
     <div id="gd-choice"></div>
     <div id="gd-list"></div>
@@ -4221,7 +4232,7 @@ var PAGES=[
  {g:'도구',id:'conti',t:'콘티 구성기',d:'구성기의 이야기와 클리셰 컷 배정으로 컷마다 구도 그림과 글을 짠다.'},
  {g:'도구',id:'arc',t:'아크 점검표',d:'장편용. 네 칸을 채워 점검하고 장르별 예시 48개.'},
  {g:'도구',id:'epidx',t:'에피소드 소재 색인',d:'220개. 한 화를 채우는 작은 사건. 로맨스·개그·일상.'},
- {g:'도구',id:'ai',t:'AI 연결',d:'OpenRouter 키를 넣고 비틀기·연관짓기·글쓰기를 쓴다.'},
+ {g:'도구',id:'ai',t:'AI 연결',d:'구글 제미나이 키를 넣고 비틀기·연관짓기·글쓰기를 쓴다.'},
  {g:'도구',id:'probe',t:'작품 분석',d:'본 작품의 이야기에서 클리셰·소재를 찾고, 새 장치는 색인에 추가한다.'},
  {g:'도구',id:'index',t:'클리셰 색인',d:'813개. 기능·연출 도구·배치·상태·지면으로 검색.'},
  {g:'도구',id:'motifidx',t:'소재 색인',d:'138개. 세계 규칙·사회 조건·인물 처지. 원작 표시 포함.'},
@@ -4901,11 +4912,10 @@ function trFloat(){
   });
 })();
 
-// ----- AI (OpenRouter) -----
-var AIKEY='', AIMODEL='', PROV='or';   // 제공처는 OpenRouter 하나. 제미나이 직접 연결은 뺐다
-try{ ['gmKey','gmModel','gmModels'].forEach(function(k){ localStorage.removeItem(k); });
-  if(localStorage.getItem('aiProv')==='gm') localStorage.setItem('aiProv','or');
-  AIKEY=localStorage.getItem('orKey')||''; AIMODEL=localStorage.getItem('orModel')||''; }catch(e){}
+// ----- AI (구글 제미나이) -----
+var AIKEY='', AIMODEL='', PROV='gm';   // 2026-10-16 사용자 요청으로 OpenRouter → 구글 제미나이 API 직접 연결로 바꿨다
+try{ localStorage.setItem('aiProv','gm');
+  AIKEY=localStorage.getItem('gmKey')||''; AIMODEL=localStorage.getItem('gmModel')||''; }catch(e){}
 function aiReady(){ return !!AIKEY; }
 function aiSave(){ try{ localStorage.setItem('aiProv',PROV); localStorage.setItem(PROV+'Key',AIKEY); localStorage.setItem(PROV+'Model',AIMODEL); }catch(e){} }
 function aiFavText(){
@@ -4934,41 +4944,30 @@ function aiDrawn(noIdea){
   return out;
 }
 
-// ----- 모델 목록 (OpenRouter 실시간) -----
+// ----- 모델 목록 (제미나이 실시간) -----
 var ORM={list:null, rec:[], loading:false};
-function ormPrice(m){
-  if(!m.pricing) return '';
-  var p=m.pricing||{}, a=parseFloat(p.prompt||'0')*1e6, b=parseFloat(p.completion||'0')*1e6;
-  if(!a && !b) return '무료';
-  function f(x){ return x<1?x.toFixed(2).replace(/0$/,''):x.toFixed(1).replace(/\.0$/,''); }
-  return '$'+f(a)+'/'+f(b);
-}
+function ormPrice(m){ return ''; }
+function gmVer(id){ var m=/gemini-(\d+(?:\.\d+)?)/.exec(id); return m?parseFloat(m[1]):0; }
 function ormTextOK(m){
-  var ar=m.architecture||{}, out=ar.output_modalities, inp=ar.input_modalities;
-  if(out && out.indexOf('text')<0) return false;
-  if(inp && inp.indexOf('text')<0) return false;
-  if(/image|audio|tts|embed|transcri|vision-only|guard|moderation/i.test(m.id)) return false;
+  var id=m.id||'';
+  if(!/^gemini-/.test(id)) return false;
+  if((m.methods||[]).indexOf('generateContent')<0) return false;
+  if(/image|tts|audio|live|embed|vision|robotics|computer-use|native|aqa|exp-|learnlm/i.test(id)) return false;
   return true;
 }
 function ormPickRec(list){
   var fam=[
-    [/^google\/gemini-[\d.]+-flash(-\d+)?$/, '구글 Flash — 싸고 빠름, 한국어 무난'],
-    [/^google\/gemini-[\d.]+-flash-lite(-\d+)?$/, '구글 Flash Lite — 가장 쌈'],
-    [/^anthropic\/claude-[a-z0-9.-]*haiku[a-z0-9.-]*$/, '클로드 Haiku — 문장이 자연스러움'],
-    [/^openai\/gpt-[\d.o]+-mini$/, 'GPT mini — 쌈'],
-    [/^deepseek\/deepseek-(chat|v[\d.]+)[a-z0-9.-]*$/, '딥시크 — 매우 쌈'],
-    [/^anthropic\/claude-[a-z0-9.-]*sonnet[a-z0-9.-]*$/, '클로드 Sonnet — 품질 우선, 비쌈']
+    [/^gemini-[\d.]+-flash(-\d+)?$/, 'Flash — 빠르고 한국어 무난, 무료 한도 넉넉한 편'],
+    [/^gemini-[\d.]+-flash-lite(-\d+)?$/, 'Flash-Lite — 가장 가볍고 무료 한도가 가장 넉넉함'],
+    [/^gemini-[\d.]+-pro(-\d+)?$/, 'Pro — 문장 품질 우선, 무료 한도 적음']
   ];
   var rec=[];
   fam.forEach(function(f){
-    var c=list.filter(function(m){ return f[0].test(m.id) && !/:free$/.test(m.id) && !/preview|exp/i.test(m.id); });
-    if(!c.length) c=list.filter(function(m){ return f[0].test(m.id) && !/:free$/.test(m.id); });
-    c.sort(function(a,b){ return (b.created||0)-(a.created||0); });
+    var c=list.filter(function(m){ return f[0].test(m.id); });
+    if(!c.length){ var loose=new RegExp(f[0].source.replace('(-\\d+)?$','(-\\d+|-preview[\\w-]*)?$')); c=list.filter(function(m){ return loose.test(m.id); }); }
+    c.sort(function(a,b){ return (gmVer(b.id)-gmVer(a.id)) || (/preview/.test(a.id)?1:0)-(/preview/.test(b.id)?1:0); });
     if(c[0]) rec.push({m:c[0], why:f[1]});
   });
-  var free=list.filter(function(m){ return /:free$/.test(m.id) && (m.context_length||0)>=32000; })
-    .sort(function(a,b){ return (b.created||0)-(a.created||0); }).slice(0,2);
-  free.forEach(function(m){ rec.push({m:m, why:'무료 — 한국어 품질은 들쭉날쭉, 자주 막힘'}); });
   return rec;
 }
 function ormFill(filter){
@@ -4984,27 +4983,37 @@ function ormFill(filter){
 }
 function ormHas(id){ return !!(ORM.list && ORM.list.some(function(m){ return m.id===id; })); }
 function ormFallback(except){
-  var r=ORM.rec.filter(function(x){ return x.m.id!==except && !/:free$/.test(x.m.id) && !(typeof qIsOut==='function' && qIsOut(x.m.id)); })[0];
-  return r?r.m.id:'openrouter/auto';
+  var r=ORM.rec.filter(function(x){ return x.m.id!==except && !/pro/.test(x.m.id) && !(typeof qIsOut==='function' && qIsOut(x.m.id)); })[0];
+  return r?r.m.id:(ORM.rec[0]?ORM.rec[0].m.id:'gemini-2.5-flash');
 }
 function ormLoad(force){
   if(ORM.loading) return Promise.resolve();
-  var cached=null; try{ cached=JSON.parse(localStorage.getItem('orModels')||'null'); }catch(e){}
+  var cached=null; try{ cached=JSON.parse(localStorage.getItem('gmModels')||'null'); }catch(e){}
   if(!force && cached && cached.at && Date.now()-cached.at<12*3600*1000 && cached.list && cached.list.length){
     ORM.list=cached.list; ORM.rec=ormPickRec(ORM.list); ormAfter(); return Promise.resolve();
   }
-  if(typeof fetch!=='function'){ if(cached&&cached.list){ ORM.list=cached.list; ORM.rec=ormPickRec(ORM.list); ormAfter(); } return Promise.resolve(); }
+  var info=document.getElementById('ai-minfo');
+  if(!AIKEY){ if(cached&&cached.list){ ORM.list=cached.list; ORM.rec=ormPickRec(ORM.list); ormAfter(); } else if(info) info.textContent='키를 넣으면 쓸 수 있는 모델 목록을 받아 온다.'; return Promise.resolve(); }
+  if(typeof fetch!=='function') return Promise.resolve();
   ORM.loading=true;
-  return fetch('https://openrouter.ai/api/v1/models').then(function(r){ return r.json(); }).then(function(j){
-    var list=(j&&j.data||[]).filter(ormTextOK).map(function(m){ return {id:m.id,name:m.name,created:m.created,context_length:m.context_length,pricing:m.pricing}; });
-    list.sort(function(a,b){ return a.id<b.id?-1:1; });
+  var all=[];
+  function page(tok){
+    return fetch(GM_BASE+'models?pageSize=1000'+(tok?'&pageToken='+encodeURIComponent(tok):''),{headers:{'x-goog-api-key':AIKEY}}).then(function(r){
+      if(!r.ok) return r.text().then(function(tx){ gmRaw(r.status+' '+tx); throw new Error(r.status===400||r.status===403?'키가 올바르지 않거나 막혔다.':'오류 '+r.status); });
+      return r.json(); }).then(function(j){
+      (j.models||[]).forEach(function(m){ all.push({id:String(m.name||'').replace(/^models\//,''), name:m.displayName, methods:m.supportedGenerationMethods||[], out:m.outputTokenLimit}); });
+      if(j.nextPageToken && all.length<2000) return page(j.nextPageToken);
+    });
+  }
+  return page('').then(function(){
+    var list=all.filter(ormTextOK).map(function(m){ return {id:m.id, name:m.name, methods:m.methods, out:m.out}; });
+    list.sort(function(a,b){ return (gmVer(b.id)-gmVer(a.id)) || (a.id<b.id?-1:1); });
     ORM.list=list; ORM.rec=ormPickRec(list); ORM.loading=false;
-    try{ localStorage.setItem('orModels',JSON.stringify({at:Date.now(),list:list})); }catch(e){}
+    try{ localStorage.setItem('gmModels',JSON.stringify({at:Date.now(),list:list})); }catch(e){}
     ormAfter();
-  }).catch(function(){
+  }).catch(function(e){
     ORM.loading=false;
-    var info=document.getElementById('ai-minfo');
-    if(info) info.textContent='모델 목록을 불러오지 못했다. 깃허브 주소에서 열었는지 확인한다. 아티팩트 화면에서는 외부 호출이 막힌다.';
+    if(info) info.textContent='모델 목록을 불러오지 못했다. '+(e&&e.message||'')+' 깃허브 주소에서 열었는지, 키가 맞는지 확인한다.';
     if(cached && cached.list){ ORM.list=cached.list; ORM.rec=ormPickRec(ORM.list); ormAfter(); }
   });
 }
@@ -5012,12 +5021,12 @@ function ormAfter(){
   var info=document.getElementById('ai-minfo'), note='';
   if(!ORM.list) return;
   if(!AIMODEL || !ormHas(AIMODEL)){
-    var old=AIMODEL, nu=ORM.rec[0]?ORM.rec[0].m.id:'openrouter/auto';
+    var old=AIMODEL, nu=ORM.rec[0]?ORM.rec[0].m.id:'gemini-2.5-flash';
     AIMODEL=nu; aiSave();
     if(old) note='전에 고른 모델 「'+old+'」은 지금 쓸 수 없어서 「'+nu+'」로 바꿨다. ';
   }
   ormFill(document.getElementById('ai-msearch')?document.getElementById('ai-msearch').value:'');
-  if(info) info.textContent=note+'지금 쓸 수 있는 모델 '+ORM.list.length+'개. '+'위쪽 「추천」은 싸고 한국어가 무난한 최신 모델이다. 가격은 100만 토큰당 입력/출력 달러.';
+  if(info) info.textContent=note+'이 키로 쓸 수 있는 제미나이 모델 '+ORM.list.length+'개. 위쪽 「추천」은 계열별 최신 모델이다. 무료 키라면 Flash 계열을 고른다.';
 }
 
 function aiClean(t){
@@ -5055,13 +5064,12 @@ function qMark(id){
 }
 function aiLastErr(t){ try{ localStorage.setItem('aiLastErr',new Date().toLocaleString()+' · '+t); }catch(e){} var el=document.getElementById('ai-lasterr'); if(el) el.textContent='최근 문제: '+new Date().toLocaleTimeString()+' · '+t; }
 function aiAlt(except, kind){
-  // 붐빔·한도일 때 이번 호출만 대신 부를 모델. 무료로 쓰기 쉬운 가벼운 모델부터.
-  var rec=(ORM&&ORM.rec)||[], ids=rec.map(function(r){ return r.m.id; }).filter(function(id){ return id!==except && !qIsOut(id); });
-  if(aiNoCredit() || /:free$/.test(except||'')){ var fl=aiFreeList([except]); if(fl.length) return fl[0]; }
-  var cheap=ids.filter(function(id){ return !/:free$/.test(id) && !/sonnet|opus|pro\b/.test(id); });
-  return cheap[0]||'openrouter/auto';
+  // 붐빔·한도일 때 이번 호출만 대신 부를 모델. 가벼운 Flash 계열부터
+  var ids=((ORM&&ORM.rec)||[]).map(function(r){ return r.m.id; }).filter(function(id){ return id!==except && !qIsOut(id) && !/pro/.test(id); });
+  if(kind==='quota'||kind==='day'){ var lite=ids.filter(function(id){ return /lite/.test(id); }); if(lite.length) return lite[0]; }
+  return ids[0]||'';
 }
-function aiShort(id){ return String(id||'').replace(/^[^\/]+\//,''); }
+function aiShort(id){ return String(id||'').replace(/^models\//,''); }
 function aiRetryAfter(tx){
   try{ var j=JSON.parse(tx), d=(j.error&&j.error.details)||[];
     for(var i=0;i<d.length;i++){ if(d[i]&&d[i].retryDelay){ var s=parseFloat(String(d[i].retryDelay)); if(s>0) return s*1000; } } }catch(e){}
@@ -5071,11 +5079,11 @@ function aiRetryAfter(tx){
 function aiRefresh(){
   var b=document.getElementById('ai-refresh'), st=document.getElementById('ai-ref-st');
   function set(t,cls,tip){ if(st) st.textContent=t; if(b){ b.className='synclink airef'+(cls?' '+cls:''); if(tip) b.title=tip; } }
-  try{ AIKEY=localStorage.getItem('orKey')||''; AIMODEL=localStorage.getItem('orModel')||AIMODEL; localStorage.removeItem('aiOut'); }catch(e){}
+  try{ AIKEY=localStorage.getItem('gmKey')||''; AIMODEL=localStorage.getItem('gmModel')||AIMODEL; localStorage.removeItem('aiOut'); }catch(e){}
   aiNoCreditMark(false);
   var k=document.getElementById('ai-key'); if(k) k.value=AIKEY;
   try{ aiBar(); favAiBar(); aiSlots(); if(typeof ideaWriteBar==='function') ideaWriteBar(); if(typeof pbBar==='function') pbBar(); if(window.__reSlots) window.__reSlots(); }catch(e){}
-  if(!AIKEY){ set('키 없음','warn','AI 연결 페이지에서 OpenRouter 키를 넣는다.'); return Promise.resolve(); }
+  if(!AIKEY){ set('키 없음','warn','AI 연결 페이지에서 구글 제미나이 키를 넣는다.'); return Promise.resolve(); }
   set('…','busy','모델 목록을 새로 받고 연결을 확인하는 중');
   var p0=(typeof ormLoad==='function')?ormLoad(true):Promise.resolve();
   return Promise.resolve(p0).catch(function(){}).then(function(){
@@ -5093,126 +5101,116 @@ function aiRefresh(){
 }
 (function(){ var b=document.getElementById('ai-refresh'); if(b) b.addEventListener('click',function(){ aiRefresh(); }); })();
 // ----- 잔액 없음 → 무료 모델 자동 전환 -----
-function aiAutoFree(){ try{ return localStorage.getItem('orAutoFree')!=='0'; }catch(e){ return true; } }
-function aiNoCredit(){ try{ var t=parseInt(localStorage.getItem('orNoCredit')||'0',10); return !!t && Date.now()<t; }catch(e){ return false; } }
-function aiNoCreditMark(on){ try{ if(on) localStorage.setItem('orNoCredit',String(Date.now()+6*3600*1000)); else localStorage.removeItem('orNoCredit'); }catch(e){} aiCreditUI(); }
+function aiAutoFree(){ return false; }
+function aiNoCredit(){ return false; }
+function aiNoCreditMark(on){ aiCreditUI(); }
 function aiCreditUI(){
   var el=document.getElementById('ai-credit'); if(!el) return;
   if(aiNoCredit()){ el.innerHTML='지금 상태: <b>잔액 없음 → 무료 모델로 부르는 중</b> (6시간 동안 유지). 충전했다면 <button class="chip" id="ai-credit-clear">충전했다 — 원래 모델로</button>';
     var b=document.getElementById('ai-credit-clear'); if(b) b.addEventListener('click',function(){ aiNoCreditMark(false); });
   } else el.textContent='';
 }
-function aiFreeList(except){
-  var tried=[].concat(except||[]);
-  var list=((typeof ORM!=='undefined'&&ORM.list)||[]).filter(function(m){ return /:free$/.test(m.id) && tried.indexOf(m.id)<0 && !qIsOut(m.id) && (m.context_length||0)>=16000 && !/image|vision|audio|embed|guard/i.test(m.id); });
-  var pref=[/^google\/gemini/, /^deepseek\//, /^qwen\//, /^meta-llama\//, /^mistralai\//, /^z-ai\/|^zhipu/, /^moonshot/, /^openai\//];
-  function rank(id){ for(var i=0;i<pref.length;i++) if(pref[i].test(id)) return i; return pref.length; }
-  list.sort(function(a,b){ return (rank(a.id)-rank(b.id)) || ((b.created||0)-(a.created||0)); });
-  return list.map(function(m){ return m.id; });
+function aiFreeList(except){ return []; }
+// ----- 제미나이 호출 (구글 Gemini API 직접) -----
+var GM_BASE='https://generativelanguage.googleapis.com/v1beta/';
+function gmThink(id){
+  // 2.5 Flash·Flash-Lite는 생각을 끈다(0). 2.5 Pro는 최소 128. 3.x 이후는 모델 기본값을 둔다(끌 수 없고 허용 값이 모델마다 다름)
+  id=String(id||'');
+  if(/^gemini-2\.5-.*flash/.test(id)) return {thinkingBudget:0};
+  if(/^gemini-2\.5-pro/.test(id)) return {thinkingBudget:128};
+  return null;
 }
+function gmRaw(t){ try{ localStorage.setItem('aiLastRaw', new Date().toLocaleString()+' · '+String(t).slice(0,1500)); }catch(e){} var el=document.getElementById('ai-lastraw'); if(el) el.textContent=String(t).slice(0,1500); }
 function aiCall(system, user, onText, maxTok, _retry, opts){
   opts=opts||{};
   if(!aiReady()){ onText('AI 연결 페이지에서 키를 먼저 넣어 주세요.'); return; }
-  // 잔액이 없다고 알려진 동안에는 처음부터 무료 모델로
-  if(!opts._freeWrap && !opts.model && aiAutoFree() && aiNoCredit() && !/:free$/.test(AIMODEL||'')){
-    var fr0=aiFreeList([]);
-    if(fr0.length){
-      var o0=Object.assign({},opts,{model:fr0[0], web:false, _freeWrap:true, _freeTried:[fr0[0]], _used:{m:fr0[0]}}), wasWeb=!!opts.web;
-      aiCall(system,user,function(t){ onText((t==='생각하는 중…'||aiIsErr(t))?t:t+'\n\n(잔액이 없어 무료 모델 「'+aiShort(o0._used.m)+'」로 불렀다'+(wasWeb?'. 웹 검색은 무료로 안 돼서 뺐다':'')+')'); },maxTok,_retry,o0);
-      return;
-    }
-  }
-  onText('생각하는 중…');
-  fetch('https://openrouter.ai/api/v1/chat/completions',{
-    method:'POST',
-    headers:{'Content-Type':'application/json','Authorization':'Bearer '+AIKEY,'HTTP-Referer':location.origin||'https://localhost','X-Title':'Manga Cliche Dictionary'},
-    body:JSON.stringify(Object.assign({model:(opts.model||AIMODEL||'openrouter/auto'), max_tokens:(opts._cap||((maxTok||900)+1500)), reasoning:{effort:'low', exclude:true},
-      messages:[{role:'system',content:system}].concat(opts.history||[]).concat([{role:'user',content:user}])},
-      opts.web ? (opts.legacyWeb ? {plugins:[{id:'web', max_results:5}]} : {tools:[{type:'openrouter:web_search'}]}) : {}))
+  var model=opts.model||AIMODEL||ormFallback('');
+  if(!opts._n) onText('생각하는 중…');
+  var contents=[];
+  (opts.history||[]).forEach(function(h){
+    if(!h || !h.content) return;
+    var role=(h.role==='assistant'||h.role==='model')?'model':'user';
+    if(contents.length && contents[contents.length-1].role===role) contents[contents.length-1].parts[0].text+='\n\n'+h.content;
+    else contents.push({role:role, parts:[{text:String(h.content)}]});
+  });
+  if(contents.length && contents[0].role==='model') contents.unshift({role:'user', parts:[{text:'(이전 대화)'}]});
+  if(contents.length && contents[contents.length-1].role==='user') contents[contents.length-1].parts[0].text+='\n\n'+user;
+  else contents.push({role:'user', parts:[{text:user}]});
+  var gc={maxOutputTokens:(opts._cap||((maxTok||900)+2500)), temperature:0.9};
+  var th=opts._noThink?null:gmThink(model); if(th) gc.thinkingConfig=th;
+  var body={systemInstruction:{parts:[{text:system}]}, contents:contents, generationConfig:gc,
+    safetySettings:['HARM_CATEGORY_HARASSMENT','HARM_CATEGORY_HATE_SPEECH','HARM_CATEGORY_SEXUALLY_EXPLICIT','HARM_CATEGORY_DANGEROUS_CONTENT'].map(function(c){ return {category:c, threshold:'BLOCK_ONLY_HIGH'}; })};
+  if(opts.web) body.tools=[{google_search:{}}];
+  fetch(GM_BASE+'models/'+encodeURIComponent(model)+':generateContent',{
+    method:'POST', headers:{'Content-Type':'application/json','x-goog-api-key':AIKEY}, body:JSON.stringify(body)
   }).then(function(r){
      if(!r.ok){ return r.text().then(function(tx){
-       var m=''; try{ var j=JSON.parse(tx); m=(j.error&&(j.error.message||j.error.code))||tx; }catch(e){ m=tx; }
-       if(r.status===401) throw new Error('키가 올바르지 않습니다 (401). AI 연결에서 키를 다시 확인하세요.');
-       if(r.status===402){
-         var af=String(m).match(/can only afford\s+(\d+)/i);
-         if(af && parseInt(af[1],10)>=600 && !opts._cap){ var ec=new Error('CAP'); ec.cap=parseInt(af[1],10)-50; throw ec; }
-         var en=new Error('NO_CREDIT'); en.detail=m; throw en; }
+       gmRaw(r.status+' '+tx);
+       var m='', st=''; try{ var j=JSON.parse(tx); m=(j.error&&j.error.message)||tx; st=(j.error&&j.error.status)||''; }catch(e){ m=tx; }
+       if(r.status===400 && /API key not valid|API_KEY_INVALID/i.test(m+tx)) throw new Error('키가 올바르지 않습니다. AI 연결에서 구글 AI 스튜디오 키(AIza로 시작)를 다시 넣는다.');
+       if(r.status===400 && th && /thinking/i.test(m)){ var et=new Error('NO_THINK'); throw et; }
+       if(r.status===400 && opts.web && /google_search|tool|grounding/i.test(m)){ var ew=new Error('NO_WEB'); throw ew; }
+       if(r.status===403) throw new Error('권한이 없다 (403). 키가 막혔거나 이 프로젝트에서 Generative Language API가 꺼져 있다. AI 스튜디오에서 새 키를 만든다.');
        if(r.status===429){
-         var cur0=opts.model||AIMODEL;
-         if(/free-models-per-day/i.test(m)){ qMark(cur0); var ed=new Error('OR_FREEDAY'); throw ed; }
-         var eq=new Error('RETRY'); eq.kind='quota'; eq.detail=m;
-         aiLastErr('「'+aiShort(cur0)+'」 '+(/upstream/i.test(m)?'제공사 쪽이 붐빔':(/per-min/i.test(m)?'분당 한도':'요청 한도'))); throw eq; }
-       if(r.status===402){ aiLastErr('OpenRouter 잔액 없음'); }
-       if(r.status===500||r.status===502||r.status===503||r.status===504||/overloaded|high demand|temporarily unavailable/i.test(m)){ var eb=new Error('RETRY'); eb.kind='busy'; eb.detail=m; throw eb; }
-       if(opts.web && !opts.legacyWeb && (r.status===400 || /tool|web_search|server tool/i.test(m))){
-         var ew=new Error('WEB_LEGACY'); throw ew; }
-       if(r.status===404 || /not a valid model|no endpoints|model.*(not found|does not exist|deprecated)/i.test(m)){
-         var e404=new Error('MODEL_GONE'); e404.detail=m; throw e404; }
+         if(/limit:\s*0\b/.test(tx)){ qMarkZero(model); var ez=new Error('ZERO'); throw ez; }
+         if(/PerDay|per day|daily/i.test(tx)){ qMark(model); var ed=new Error('RETRY'); ed.kind='day'; throw ed; }
+         var eq=new Error('RETRY'); eq.kind='quota'; eq.wait=aiRetryAfter(tx); aiLastErr('「'+model+'」 분당 한도'); throw eq; }
+       if(r.status===500||r.status===502||r.status===503||r.status===504||/overloaded|UNAVAILABLE|high demand/i.test(m+st)){ var eb=new Error('RETRY'); eb.kind='busy'; aiLastErr('「'+model+'」 구글 서버 붐빔'); throw eb; }
+       if(r.status===404 || /not found|is not supported for generateContent|deprecated/i.test(m)){ var e404=new Error('MODEL_GONE'); e404.detail=m; throw e404; }
        throw new Error('오류 '+r.status+' — '+String(m).slice(0,160));
      }); }
      return r.json();
    })
    .then(function(d){
-     var t=aiClean((d&&d.choices&&d.choices[0]&&d.choices[0].message&&d.choices[0].message.content)||'');
+     var c=(d&&d.candidates&&d.candidates[0])||null, parts=(c&&c.content&&c.content.parts)||[];
+     var t=aiClean(parts.filter(function(p){ return p && p.text && !p.thought; }).map(function(p){ return p.text; }).join(''));
      if(opts.onSources){
-       var ann=(d&&d.choices&&d.choices[0]&&d.choices[0].message&&d.choices[0].message.annotations)||[], src=[];
-       ann.forEach(function(a){ var u=a&&(a.url_citation||a); if(u&&u.url&&!src.some(function(s){return s.url===u.url;})) src.push({url:u.url,title:u.title||u.url}); });
+       var gm=(c&&c.groundingMetadata)||{}, src=[];
+       (gm.groundingChunks||[]).forEach(function(g){ var w=g&&g.web; if(w&&w.uri&&!src.some(function(s){ return s.url===w.uri; })) src.push({url:w.uri, title:w.title||w.uri}); });
        opts.onSources(src);
      }
-     if(!t && d&&d.choices&&d.choices[0]&&d.choices[0].finish_reason==='length') t='답이 길이 한도에 걸려 잘렸다. 다시 누르거나 AI 연결에서 다른 모델을 고른다.';
-     if(!t && d && d.error) t='오류: '+(d.error.message||JSON.stringify(d.error));
+     var fr=c&&c.finishReason;
+     if(!t && d && d.promptFeedback && d.promptFeedback.blockReason){ gmRaw(JSON.stringify(d.promptFeedback)); t='구글이 이 요청을 막았다 ('+d.promptFeedback.blockReason+'). 표현을 바꿔 다시 한다.'; }
+     else if(!t && (fr==='SAFETY'||fr==='PROHIBITED_CONTENT'||fr==='BLOCKLIST')){ gmRaw(JSON.stringify(c).slice(0,800)); t='구글이 이 요청을 막았다 ('+fr+'). 표현을 바꿔 다시 한다.'; }
+     else if(!t && fr==='MAX_TOKENS') t='답이 길이 한도에 걸려 잘렸다. 다시 누르거나 AI 연결에서 다른 모델을 고른다.';
+     else if(t && fr==='MAX_TOKENS') t+='\n\n(답이 길이 한도에서 끊겼다)';
      onText(t||'응답이 비어 있습니다.');
    })
    .catch(function(e){
      var m=e.message||String(e);
-     if(m==='WEB_LEGACY'){ opts.legacyWeb=true; aiCall(system,user,onText,maxTok,_retry,opts); return; }
-     if(m==='CAP'){ opts._cap=e.cap; aiCall(system,user,onText,maxTok,_retry,opts); return; }
-     if(m==='NO_CREDIT'){
-       var curN=opts.model||AIMODEL, tried=(opts._freeTried||[]).concat([curN]);
-       if(!/:free$/.test(curN)) aiNoCreditMark(true);
-       aiLastErr('OpenRouter 잔액 없음 (402)');
-       var nx=(aiAutoFree() && tried.length<=4)?aiFreeList(tried)[0]:null;
-       if(nx){
-         if(opts._used) opts._used.m=nx;
-         var o3=Object.assign({},opts,{model:nx, web:false, _freeWrap:true, _freeTried:tried.concat([nx]), _n:0, _alt:true, _cap:0}), hadWeb=!!opts.web;
-         aiCall(system,user,function(t){ onText((t==='생각하는 중…'||aiIsErr(t)||opts._freeWrap)?t:t+'\n\n(잔액이 없어 무료 모델 「'+aiShort(nx)+'」로 불렀다'+(hadWeb?'. 웹 검색은 무료로 안 돼서 뺐다':'')+')'); },maxTok,_retry,o3);
-         return;
+     if(m==='NO_THINK'){ opts._noThink=true; aiCall(system,user,onText,maxTok,_retry,opts); return; }
+     if(m==='NO_WEB'){ opts.web=false; aiCall(system,user,function(t){ onText((t==='생각하는 중…'||aiIsErr(t))?t:t+'\n\n(이 모델은 웹 검색을 못 해서 빼고 불렀다)'); },maxTok,_retry,opts); return; }
+     if(m==='ZERO'||m==='RETRY'){
+       var n=opts._n||0, cur=model;
+       if(m==='RETRY' && (e.kind==='busy'||e.kind==='quota') && n<3){
+         var wait=e.kind==='quota' ? Math.min(Math.max(e.wait||0, 5000*(n+1)), 65000) : 2000*(n+1);
+         opts._n=n+1; if(e.kind==='quota') onText('생각하는 중…');
+         setTimeout(function(){ aiCall(system,user,onText,maxTok,_retry,opts); }, wait); return;
        }
-       onText(aiAutoFree()
-         ? '잔액이 부족합니다 (402). 무료 모델로도 바꿔 봤지만 쓸 수 있는 게 없었다. openrouter.ai에서 충전하거나 잠시 뒤 다시 한다.'
-         : '잔액이 부족합니다 (402). OpenRouter에서 충전하거나, AI 연결에서 「잔액이 없으면 무료 모델로 자동 전환」을 켠다.');
-       return;
-     }
-     if(m==='OR_FREEDAY'){
-       onText('OpenRouter 무료 모델의 하루 한도를 다 썼다 (429). 한 번도 충전하지 않은 계정은 무료 모델이 하루 50번이다. openrouter.ai에서 10달러를 한 번 충전하면 하루 1,000번으로 늘고, 충전금으로 유료 모델도 쓸 수 있다.');
-       return;
-     }
-     if(m==='RETRY'){
-       var n=opts._n||0, cur=opts.model||AIMODEL;
-       if(n<2){ opts._n=n+1; setTimeout(function(){ aiCall(system,user,onText,maxTok,_retry,opts); }, (e.kind==='quota'?3000:1500)*(n+1)); return; }
        if(!opts._alt){
          var alt=aiAlt(cur, e.kind);
-         if(alt && alt!==cur){ var o2=Object.assign({},opts,{model:alt,_alt:true,_n:0}); if(opts._used) opts._used.m=alt;
-           aiCall(system,user,function(t){ onText((t==='생각하는 중…'||aiIsErr(t)||opts._freeWrap)?t:t+'\n\n(「'+aiShort(cur)+'」이 '+(e.kind==='quota'?'한도에 걸려':'붐벼서')+' 이번만 「'+aiShort(alt)+'」로 대신 불렀다)'); },maxTok,_retry,o2);
+         if(alt && alt!==cur){ var o2=Object.assign({},opts,{model:alt,_alt:true,_n:0,_noThink:false});
+           aiCall(system,user,function(t){ onText((t==='생각하는 중…'||aiIsErr(t))?t:t+'\n\n(「'+cur+'」이 '+(m==='ZERO'?'무료 등급에서 안 돼서':(e.kind==='day'?'오늘 한도를 다 써서':(e.kind==='quota'?'한도에 걸려':'붐벼서')))+' 이번만 「'+alt+'」로 대신 불렀다)'); },maxTok,_retry,o2);
            return; }
        }
-       onText(e.kind==='quota'
-         ? '요청 한도에 걸렸다 (429). 다른 모델로도 해 봤지만 안 됐다. 무료 모델이면 1분쯤 뒤 다시 하거나 추천의 유료 모델을 고른다.'
-         : '서버가 지금 붐빈다 (503). 몇 번 다시 시도하고 다른 모델로도 해 봤지만 안 됐다. 잠시 뒤 다시 누른다.');
+       onText(m==='ZERO' ? '「'+cur+'」은 무료 등급에서 쓸 수 없는 모델이다. AI 연결에서 Flash 계열을 고른다.'
+         : e.kind==='day' ? '오늘 쓸 수 있는 제미나이 무료 한도를 다 썼다. 한국 시간 오후 4~5시쯤 풀린다. AI 스튜디오에서 결제를 켜면 한도가 크게 늘어난다.'
+         : e.kind==='quota' ? '무료 한도에 걸렸다 (429). 1분쯤 기다렸다 다시 누른다. 자주 걸리면 AI 연결에서 Flash-Lite를 고르거나 결제를 켠다.'
+         : '구글 서버가 지금 붐빈다 (503). 몇 번 다시 시도하고 다른 모델로도 해 봤지만 안 됐다. 잠시 뒤 다시 누른다.');
        return;
      }
      if(m==='MODEL_GONE'){
        if(!_retry){
          var old=AIMODEL, nu=ormFallback(old);
-         AIMODEL=nu; aiSave(); if(typeof ormFill==='function') ormFill('');
-         aiCall(system,user,function(t){ onText(t==='생각하는 중…'?t:t+'\n\n(「'+old+'」은 쓸 수 없는 모델이라 「'+nu+'」로 바꿔 다시 불렀다)'); },maxTok,true,opts);
-         return;
+         if(nu && nu!==old){ AIMODEL=nu; aiSave(); if(typeof ormFill==='function') ormFill('');
+           aiCall(system,user,function(t){ onText(t==='생각하는 중…'?t:t+'\n\n(「'+old+'」은 쓸 수 없는 모델이라 「'+nu+'」로 바꿔 다시 불렀다)'); },maxTok,true,Object.assign({},opts,{model:nu}));
+           return; }
        }
-       m='모델을 쓸 수 없다. AI 연결에서 추천 모델 중 하나를 고른다. ('+String(e.detail||'').slice(0,120)+')';
+       m='모델을 쓸 수 없다. AI 연결에서 「모델 목록 새로 받기」 후 추천 모델을 고른다. ('+String(e.detail||'').slice(0,120)+')';
      }
      if(/Failed to fetch|NetworkError|Load failed/i.test(m)){
        m='연결이 차단되었습니다.\n\n이 화면이 클로드 아티팩트 안이라면 외부 주소 호출이 막혀 있어 AI 기능이 동작하지 않습니다. '
-        +'파일을 깃허브 페이지나 내 컴퓨터에 올려 그 주소로 열면 정상 작동합니다.';
+        +'깃허브 페이지 주소로 열면 정상 작동합니다.';
      }
      onText(m);
    });
@@ -5250,9 +5248,10 @@ var AISYS='당신은 한국 만화·웹툰 연출을 돕는 조력자다. 짧고
   try{ ormLoad(false); }catch(e){}
   var ms=document.getElementById('ai-msearch');
   if(ms) ms.addEventListener('input',function(){ ormFill(ms.value); });
+  var kT=0; k.addEventListener('input',function(){ clearTimeout(kT); kT=setTimeout(function(){ if(/^AIza/.test(AIKEY)) ormLoad(true); },700); });
   k.addEventListener('input',function(){ AIKEY=k.value.trim(); aiSave(); aiBar(); favAiBar(); aiSlots(); if(typeof ideaWriteBar==='function') ideaWriteBar(); if(typeof pbBar==='function') pbBar(); if(typeof apply==='function') apply(); if(window.__reSlots) window.__reSlots(); if(typeof renderFavs==='function') renderFavs(); });
   if(m) m.addEventListener('change',function(){
-    AIMODEL=m.value; aiSave(); if(!/:free$/.test(AIMODEL)) aiNoCreditMark(false);
+    AIMODEL=m.value; aiSave();
     try{ var o=JSON.parse(localStorage.getItem('aiOut')||'{}')||{}; if(o[PROV+'|'+AIMODEL]){ delete o[PROV+'|'+AIMODEL]; localStorage.setItem('aiOut',JSON.stringify(o)); } }catch(e){}
     msg.textContent='「'+aiShort(AIMODEL)+'」로 바꿨다. 연결 확인으로 되는지 본다.';
     if(typeof ormFill==='function'){ var ms2=document.getElementById('ai-msearch'); ormFill(ms2?ms2.value:''); }
@@ -5353,7 +5352,7 @@ function saveFile(name, text, type){
   }catch(e){ return false; }
 }
 function stampName(){ var d=new Date(); return d.getFullYear()+('0'+(d.getMonth()+1)).slice(-2)+('0'+d.getDate()).slice(-2); }
-var BK_KEYS=['mangaFav','mangaFolders','folderMemo','pinoMemo','pinoTodo','arcForm','ideaText','userAdds','mangaCast','mangaTexts','deskLayout','favPick','mangaCuts','orModel','mangaDataVer'];
+var BK_KEYS=['mangaFav','mangaFolders','folderMemo','pinoMemo','pinoTodo','arcForm','ideaText','userAdds','mangaCast','mangaTexts','deskLayout','favPick','mangaCuts','gmModel','mangaDataVer'];
 function bkDump(){
   var o={app:'manga-cliche-dictionary', v:1, dataVer:DATA_VER, at:new Date().toISOString(), data:{}};
   BK_KEYS.forEach(function(k){ try{ var v=localStorage.getItem(k); if(v!==null) o.data[k]=v; }catch(e){} });
@@ -5420,7 +5419,7 @@ function recMerge(l,r){
   Object.keys(items).forEach(function(k){ if(gone[k] && gone[k]>=(items[k].at||0)) delete items[k]; });
   return {items:items, gone:gone};
 }
-var GD_AIKEYS=['orKey','orModel','webOn','orAutoFree'];
+var GD_AIKEYS=['gmKey','gmModel','webOn'];
 function gdKeysOn(){ try{ return localStorage.getItem('gdKeys')!=='0'; }catch(e){ return true; } }
 function gdKeyList(){ return gdKeysOn()?GD_KEYS.concat(GD_AIKEYS):GD_KEYS; }
 function gdIntent(){ try{ localStorage.setItem('gdIntent',String(Date.now())); }catch(e){} }
@@ -11409,6 +11408,46 @@ function findChars(){
   });
 }
 
+/* ---------- 글 보관함 참고 글 ---------- */
+var REFK=['plot','novel','cuts'];
+function txAll(){ try{ return (typeof recList==='function')?recList('mangaTexts'):[]; }catch(e){ return []; } }
+function txById(id){ if(!id) return null; var L=txAll(); for(var i=0;i<L.length;i++) if(L[i].id===id) return L[i]; return null; }
+function refSel(){ var o={}; try{ o=JSON.parse(localStorage.getItem('contiRefs')||'{}')||{}; }catch(e){} return o; }
+function refSave(o){ try{ localStorage.setItem('contiRefs', JSON.stringify(o)); }catch(e){} }
+function refText(){ var o=refSel(), out=[]; REFK.forEach(function(k){ var t=txById(o[k]); if(t && String(t.text||'').trim()) out.push({fmt:k, title:t.title||WNAME[k], text:String(t.text), at:t.at||t.created||0}); }); return out; }
+function refWhen(t){ var d=new Date(t.at||t.created||0); return isNaN(d)?'':(d.getMonth()+1)+'/'+d.getDate()+' '+('0'+d.getHours()).slice(-2)+':'+('0'+d.getMinutes()).slice(-2); }
+function refChain(id){   // 같은 흐름(부모·자식)으로 이어진 글
+  var L=txAll(), by={}, seen={}, out=[]; L.forEach(function(t){ by[t.id]=t; });
+  var stack=[id]; while(stack.length){ var x=stack.pop(); if(!x||seen[x]) continue; seen[x]=1; var t=by[x]; if(!t) continue; out.push(t);
+    if(t.parent) stack.push(t.parent); L.forEach(function(c){ if(c.parent===x) stack.push(c.id); }); }
+  return out;
+}
+function renderRefs(){
+  var box=document.getElementById('ct-refs'); if(!box) return;
+  var L=txAll().sort(function(a,b){ return (b.at||0)-(a.at||0); }), o=refSel(), h='';
+  REFK.forEach(function(k){
+    var items=L.filter(function(t){ return t.fmt===k && String(t.text||'').trim(); }), cur=txById(o[k]);
+    h+='<label>'+WNAME[k]+' <select data-rk="'+k+'"><option value="">— 안 씀 —</option>'+items.map(function(t){
+      var from=(typeof TXFROM!=='undefined'&&TXFROM[t.from])?' · '+TXFROM[t.from]:'';
+      return '<option value="'+cesc(t.id)+'"'+(cur&&cur.id===t.id?' selected':'')+'>'+cesc((t.title||WNAME[k]).slice(0,40))+' · '+refWhen(t)+from+'</option>'; }).join('')+'</select>'+
+      (cur?'<span class="pv">'+cesc(String(cur.text).replace(/\s+/g,' ').slice(0,140))+'</span>':(items.length?'':'<span class="pv">보관함에 '+WNAME[k]+'이 없다. 글쓰기 결과를 「보관함에 저장」하면 여기 뜬다.</span>'))+'</label>';
+  });
+  box.innerHTML=h;
+}
+document.addEventListener('change', function(e){
+  var sel=e.target; if(!sel || !sel.matches || !sel.matches('#ct-refs select')) return;
+  var o=refSel(), k=sel.dataset.rk; o[k]=sel.value||'';
+  if(sel.value){ refChain(sel.value).forEach(function(t){ if(REFK.indexOf(t.fmt)>=0 && t.fmt!==k && !o[t.fmt]) o[t.fmt]=t.id; }); }
+  refSave(o); if(B){ B.scenes=null; save(); renderPlan(); } renderRefs();
+  var n=refText().length; stat(n?'참고 글 '+n+'개를 골랐다. 「AI로 콘티 쓰기」를 누르면 먼저 셋을 함께 검토한다.':'참고 글을 모두 뺐다.');
+});
+function srcAll(){   // 대강 이야기 + 참고 글을 하나로
+  var L=[], st=String(document.getElementById('ct-story').value||'').trim();
+  if(st) L.push('[대강 이야기 — 작가가 직접 적은 것, 가장 우선]\n'+st.slice(0,8000));
+  refText().forEach(function(r){ L.push('['+WNAME[r.fmt]+' — 「'+r.title+'」]\n'+r.text.slice(0, r.fmt==='novel'?9000:6000)); });
+  return L.join('\n\n');
+}
+
 /* ---------- 저장 ---------- */
 var B=null;
 function load(){ try{ B=JSON.parse(localStorage.getItem('contiBoard')||'null'); }catch(e){ B=null; } }
@@ -11457,6 +11496,42 @@ function secDefault(name, i, len){
 }
 
 /* ---------- 재료 가져오기 ---------- */
+// 대강 이야기 칸은 절대 말없이 덮어쓰지 않는다. 새 글쓰기 결과는 버튼으로만 넣고, 넣기 전 글은 되돌릴 수 있게 남긴다
+function storyOffer(){
+  var bar=document.getElementById('ct-storybar'); if(!bar) return;
+  var src=srcGet(), ta=document.getElementById('ct-story'), cur=ta?ta.value.trim():'', prev=null;
+  try{ prev=localStorage.getItem('contiStoryPrev'); }catch(e){}
+  var h='';
+  if(src && src.text && String(src.text).trim()!==cur && (!B || src.at>(B.srcAt||0))) h+='<button class="chip" type="button" id="ct-usesrc">새 글쓰기 결과('+cesc(src.title)+')로 바꾸기</button>';
+  if(prev!=null && prev.trim() && prev.trim()!==cur) h+='<button class="chip" type="button" id="ct-undostory">바꾸기 전 글로 되돌리기</button>';
+  bar.innerHTML=h; bar.hidden=!h;
+  var u=document.getElementById('ct-usesrc');
+  if(u) u.addEventListener('click',function(){
+    if(cur && !u.dataset.arm){ u.dataset.arm='1'; u.textContent='지금 쓴 글은 되돌리기로 남긴다. 한 번 더 누르면 바꾼다'; return; }
+    try{ localStorage.setItem('contiStoryPrev', ta.value); }catch(e){}
+    ta.value=src.text; ensureB(); B.story=src.text; B.srcAt=src.at; save(); storyOffer(); stat('대강 이야기를 글쓰기 결과로 바꿨다.');
+  });
+  var d=document.getElementById('ct-undostory');
+  if(d) d.addEventListener('click',function(){
+    var now=ta.value; ta.value=prev; ensureB(); B.story=prev; save();
+    try{ localStorage.setItem('contiStoryPrev', now); }catch(e){}
+    storyOffer(); stat('바꾸기 전 글로 되돌렸다.');
+  });
+}
+var BAND_SPEC=[['도입',10],['전개',34],['전환',14],['절정',32],['마지막 훅',10]];
+function bandFor(total){
+  var sum=0, acc=0, out=[]; BAND_SPEC.forEach(function(b){ sum+=b[1]; });
+  BAND_SPEC.forEach(function(b,i){ var n=(i===BAND_SPEC.length-1)?(total-acc):Math.max(1,Math.round(total*b[1]/sum)); out.push({name:b[0], a:acc+1, b:acc+n}); acc+=n; });
+  return out;
+}
+// 대강 이야기만으로 판을 새로 깐다 (구성기 재료는 쓰지 않는다)
+function fresh(){
+  var total=+document.getElementById('ct-total').value||70, story=document.getElementById('ct-story').value;
+  var keepCh=(B&&B.chars)||[], src=srcGet(), band=bandFor(total);
+  B={v:2, scenes:null, chars:keepCh, total:total, band:band, cl:[], drawn:'', story:story, srcAt:(B&&B.srcAt)||0, cuts:skeleton(total, band, [])};
+  var nc=syncCast(); save(); renderAll(); storyOffer();
+  return nc;
+}
 function pull(){
   var st=window.__sfState?window.__sfState():null;
   if(!st || !st.slots.length){ stat('랜덤 구성기에 뽑힌 칸이 없다. 먼저 구성기에서 뽑아 오자.'); return false; }
@@ -11466,11 +11541,13 @@ function pull(){
   var cl=st.slots.map(function(s){ var r=s.row; return {label:s.label, name:r[0], genre:r[1], fn:r[2], cost:r[6], tools:r[7], def:r[8], point:r[9], a:s.a, b:s.b}; });
   var story=document.getElementById('ct-story').value;
   var src=srcGet();
-  if(src && src.text && (!story.trim() || (B && src.at>(B.srcAt||0)))){ story=src.text; }
+  var pend=false;
+  if(src && src.text){ if(!story.trim()) story=src.text; else if(String(src.text).trim()!==story.trim() && (!B || src.at>(B.srcAt||0))) pend=true; }
   var keepCh=(B&&B.chars)||[];
-  B={chars:keepCh, total:total, band:band, cl:cl, drawn:(typeof aiDrawn==='function'?aiDrawn(true):''), story:story, srcAt:src?src.at:0, cuts:skeleton(total, band, cl)};
+  B={chars:keepCh, total:total, band:band, cl:cl, drawn:(typeof aiDrawn==='function'?aiDrawn(true):''), story:story, srcAt:(src&&!pend)?src.at:((B&&B.srcAt)||0), cuts:skeleton(total, band, cl)};
   document.getElementById('ct-story').value=story;
-  var nc=syncCast(); save(); renderAll(); stat('구성기에서 가져왔다. 클리셰 '+cl.length+'개, '+total+'컷.'+(nc?' 이야기에 나오는 등장인물 '+nc+'명도 가져왔다.':''));
+  var nc=syncCast(); save(); renderAll(); stat('구성기에서 가져왔다. 클리셰 '+cl.length+'개, '+total+'컷.'+(nc?' 이야기에 나오는 등장인물 '+nc+'명도 가져왔다.':'')+(pend?' 대강 이야기 칸은 그대로 뒀다.':''));
+  storyOffer();
   return true;
 }
 function rescale(st,total){
@@ -11553,10 +11630,12 @@ function cutData(cv,c){
 function stat(t){ var s=document.getElementById('ct-stat'); if(s) s.textContent=t||''; }
 function renderPlan(){
   var box=document.getElementById('ct-plan'); if(!box) return;
-  if(!B){ box.innerHTML='<p class="small">아직 가져온 구성이 없다. 랜덤 구성기에서 뽑은 뒤 「구성기에서 가져오기」를 누른다. 아이디어로 추천받기를 「구성기에 채우기」로 넣었다면 그대로 가져온다.</p>'; return; }
+  if(!B || !B.band || !B.band.length){ box.innerHTML='<p class="small">이야기를 적고 「뼈대만 깔기」나 「AI로 콘티 쓰기」를 누르면 컷 구간이 여기 보인다.</p>'; return; }
   var h='<div class="ct-band">';
   B.band.forEach(function(b){ h+='<div style="flex:'+(b.b-b.a+1)+'"><b>'+cesc(b.name)+'</b><span>'+b.a+'–'+b.b+'</span></div>'; });
-  h+='</div><ul class="ct-cl">';
+  h+='</div>';
+  if(B.scenes && B.scenes.length) h+='<h4 class="ct-reft">장면 배정표 <span class="small">(AI 검토)</span></h4>'+(B.scenesNote?'<p class="small">검토: '+cesc(B.scenesNote)+'</p>':'')+'<ul class="ct-scenes">'+B.scenes.map(function(x){ return '<li><b>'+x.a+'–'+x.b+'</b><span>'+cesc(x.sum)+(x.show?' <span class="small">· '+cesc(x.show)+'</span>':'')+'</span></li>'; }).join('')+'</ul>';
+  h+='<ul class="ct-cl">';
   B.cl.forEach(function(c){ h+='<li><span class="ct-rng">'+c.a+'–'+c.b+'번 컷</span><b>'+cesc(c.name)+'</b> <span class="small">'+cesc(c.cost)+' · '+cesc(String(c.tools||'').replace(/\|/g,', '))+'</span><span class="small ct-pt">'+cesc(c.point)+'</span></li>'; });
   h+='</ul>'; box.innerHTML=h;
 }
@@ -11681,22 +11760,41 @@ function chunks(){
   });
   return out;
 }
+var RSYS='당신은 한국 웹툰 콘티 감독이다. 원고들을 함께 검토해 컷 배정표를 만든다. 정해진 형식의 줄만 쓴다. 서론·마크다운 기호를 쓰지 않는다.';
+function reviewPrompt(){
+  return srcAll()+'\n\n[전체 분량] '+B.total+'컷\n[구간] '+B.band.map(function(b){ return b.name+' '+b.a+'–'+b.b; }).join(' · ')+'\n\n'+
+    '위 글들을 함께 검토해 '+B.total+'컷 콘티의 장면 배정표를 만든다.\n'+
+    '- 사건 순서와 결말은 줄거리를, 장면의 행동·대사·분위기는 웹소설을, 컷 나눔과 구도는 컷별 콘티를 주로 참고한다.\n'+
+    '- 글끼리 내용이 다르면 대강 이야기를 가장 우선하고, 그다음 컷별 콘티 → 웹소설 → 줄거리 순으로 따른다.\n'+
+    '- 어느 글에도 없는 사건·인물·설정을 새로 만들지 않는다.\n'+
+    '- 1번부터 '+B.total+'번까지 빈틈없이 장면으로 나눈다. 장면 하나는 2~8컷. 결정적 장면에 컷을 더 준다.\n'+
+    '형식(한 줄에 장면 하나): 시작번호-끝번호|장면 요약 25자 안쪽|이 장면에서 꼭 보여 줄 것(대사·행동·사물) 40자 안쪽\n'+
+    '마지막 줄에 「검토|」로 시작해 글끼리 어긋난 점과 어떻게 정리했는지 한 줄로 적는다. 어긋남이 없으면 「검토|어긋남 없음」.';
+}
+function parseScenes(t){
+  var sc=[], note='';
+  String(t).split(/\n/).forEach(function(line){
+    line=line.replace(/[*#]/g,'').trim();
+    var m=/^(\d+)\s*[-~–]\s*(\d+)\s*[|｜]\s*([^|｜]+)(?:[|｜](.*))?$/.exec(line);
+    if(m){ var a=+m[1], b=+m[2]; if(a>=1 && b>=a && a<=B.total) sc.push({a:a, b:Math.min(b,B.total), sum:m[3].trim(), show:String(m[4]||'').trim()}); return; }
+    var n=/^검토\s*[|｜]\s*(.*)$/.exec(line); if(n) note=n[1].trim();
+  });
+  return {scenes:sc, note:note};
+}
+function scenesFor(a,b){ return (B.scenes||[]).filter(function(x){ return x.b>=a && x.a<=b; }); }
 function cutPrompt(ch){
   var L=[];
-  L.push('[이야기]\n'+(B.story&&B.story.trim()?B.story.trim().slice(0,5000):'(따로 없음. 구성만 보고 짓는다)'));
-  if(B.drawn) L.push('[구성]\n'+B.drawn);
+  L.push(srcAll());
+  var scs=scenesFor(ch.a,ch.b);
+  if(scs.length) L.push('[장면 배정표 — 먼저 검토해 정한 것. 이 범위를 따른다]\n'+scs.map(function(x){ return x.a+'–'+x.b+' '+x.sum+(x.show?' · 꼭 보여 줄 것: '+x.show:''); }).join('\n'));
   L.push('[전체 분량] '+B.total+'컷. 이번에는 '+ch.a+'~'+ch.b+'번 컷('+ch.name+' 구간)만 쓴다.');
   L.push('[구간] '+B.band.map(function(b){ return b.name+' '+b.a+'–'+b.b; }).join(' · '));
   var used={}, rows=[];
   for(var n=ch.a;n<=ch.b;n++){
     var c=B.cuts[n-1]; if(!c) continue;
-    var cl=c.cl?clOf(n):null;
-    rows.push(n+' · 추천 '+compText(c)+(c.silent?' · 무음':'')+(c.hook?' · 넘김 훅':'')+(cl?' · 「'+cl.name+'」':''));
-    if(cl && !used[cl.name]){ used[cl.name]=1; }
+    rows.push(n+' · 추천 '+compText(c)+(c.silent?' · 무음':'')+(c.hook?' · 넘김 훅':''));
   }
   L.push('[컷 배정표]\n'+rows.join('\n'));
-  var cls=B.cl.filter(function(c){ return used[c.name]; });
-  if(cls.length) L.push('[이번 구간의 클리셰]\n'+cls.map(function(c){ return '「'+c.name+'」 '+c.a+'–'+c.b+'번 컷 · 지면 '+c.cost+' · '+c.def+' 연출: '+c.point; }).join('\n'));
   if(chars().length) L.push('[등장인물]\n'+chars().map(function(x){ return x.name+(x.role?' — '+x.role:'')+(x.note?' · '+x.note:''); }).join('\n'));
   var prev=[]; for(var p=Math.max(1,ch.a-3);p<ch.a;p++){ var q=B.cuts[p-1]; if(q&&q.scr) prev.push(p+'|'+compText(q)+'|'+whoOf(q).map(function(x){ return x.name; }).join(',')+'|'+q.scr+'|'+(q.line||'')); }
   if(prev.length) L.push('[바로 앞 컷]\n'+prev.join('\n'));
@@ -11705,8 +11803,10 @@ function cutPrompt(ch){
     '- 인물 칸에는 그 컷에 보이는 인물 이름을 화면 왼쪽부터 쉼표로 적는다(많아야 2명). 등장인물 목록의 이름을 그대로 쓴다. 인물이 없으면 비운다.\n'+
     '- 구도는 샷 하나에 필요하면 앵글 하나를 +로 붙인다. 샷: ELS LS FS MS BS CU ECU TWO OTS STAND FRAME BIRD INSERT(사물·손만) POV(인물이 보는 화면) BACK(뒷모습) EMPTY(사람 없는 배경) CROWD(세 명 이상). 앵글: 부감 앙각 더치. 예: BS+부감\n'+
     '- 효과는 꼭 필요한 컷에만 +집중선(충격·각성·결정적 순간), +회상(과거 장면)을 붙인다. 예: CU+집중선\n'+
-    '- 추천 구도를 기본으로 따르고, 이야기에 더 맞으면 바꾼다.\n'+
-    '- 클리셰가 배정된 컷에서는 그 클리셰의 연출을 실제 화면으로 보여 준다.\n'+
+    '- 추천 구도는 참고만 한다. 이야기의 장면에 맞는 구도를 고른다.\n'+
+    (scs.length ? '- 장면 배정표의 컷 범위를 그대로 지킨다. 장면의 대사·행동은 웹소설에, 컷 나눔은 컷별 콘티에 있으면 그것을 살린다.\n'
+                : '- 이야기의 사건을 처음부터 끝까지 순서대로 '+B.total+'컷에 나눠 담는다. 이번 구간('+ch.name+')에 해당하는 대목만 쓰고, 이야기를 앞당겨 끝내거나 같은 장면을 늘이지 않는다.\n')+
+    '- 글끼리 다르면 대강 이야기 → 컷별 콘티 → 웹소설 → 줄거리 순으로 따른다.\n'+
     '- 화면은 누가 어디서 무엇을 하는지 40자 안쪽. 대사는 한 문장까지. 대사가 없으면 비운다. 무음 컷은 대사를 비운다.\n'+
     '- 이야기에 없는 설정을 새로 만들지 않는다. 앞 컷과 이어지게 쓴다.\n'+
     '- '+ch.a+'번부터 '+ch.b+'번까지 빠짐없이 쓰고, 그 밖의 번호는 쓰지 않는다.');
@@ -11733,13 +11833,25 @@ var running=false;
 function writeAll(fromN){
   if(running) return;
   if(!aiReady()){ stat('AI 연결에서 키를 넣어야 쓸 수 있다.'); return; }
-  if(!B) { if(!pull()) return; }
+  var story0=document.getElementById('ct-story').value.trim();
+  if(!story0 && !refText().length){ stat('대강 이야기를 적거나 글 보관함에서 참고 글을 고른다.'); return; }
+  if(!fromN && (!B || B.v!==2 || !B.cuts || !B.cuts.length || B.total!==(+tsel.value||B.total) || (B.cl&&B.cl.length))) fresh();
   B.story=document.getElementById('ct-story').value; var na=syncCast(); if(na) renderChars(); save();
   var list=chunks().filter(function(ch){ return ch.b>=(fromN||1); });
   if(!fromN) B.cuts.forEach(function(c){ c.scr=''; c.line=''; });
   renderBoard();
   running=true; setBusy(true);
   var i=0;
+  function review(){
+    if(fromN || !refText().length || (B.scenes && B.scenes.length && B.scenesKey===srcKey())){ next(); return; }
+    stat('참고 글 '+refText().length+'개를 함께 검토해 장면 배정표를 만드는 중…');
+    aiAsk(RSYS, reviewPrompt(), 1800).then(function(t){
+      if(aiIsErr(t)){ fail({a:0,name:'검토'}, String(t)); return; }
+      var r=parseScenes(aiClean?aiClean(t):t);
+      if(r.scenes.length){ B.scenes=r.scenes; B.scenesNote=r.note; B.scenesKey=srcKey(); save(); renderPlan(); }
+      next();
+    });
+  }
   function next(){
     if(i>=list.length){ running=false; setBusy(false); stat('다 썼다. '+B.cuts.filter(function(c){return c.scr;}).length+'/'+B.cuts.length+'컷.'); save(); return; }
     var ch=list[i];
@@ -11754,18 +11866,18 @@ function writeAll(fromN){
   }
   function fail(ch, why){
     running=false; setBusy(false); save();
-    stat(ch.a+'번 컷에서 멈췄다. '+why.slice(0,80));
+    stat((ch.a?ch.a+'번 컷에서':'검토 단계에서')+' 멈췄다. '+why.slice(0,80));
     var bar=document.getElementById('ct-resume'); bar.hidden=false; bar.dataset.n=ch.a;
   }
   document.getElementById('ct-resume').hidden=true;
-  next();
+  review();
 }
-function setBusy(on){ ['ct-write','ct-pull','ct-skel','ct-plot','ct-findch','ct-fromcast'].forEach(function(id){ var b=document.getElementById(id); if(b) b.disabled=on; }); }
+function srcKey(){ var s=srcAll(), h=0; for(var i=0;i<s.length;i++){ h=(h*31+s.charCodeAt(i))|0; } return B.total+':'+s.length+':'+h; }
+function setBusy(on){ ['ct-write','ct-pull','ct-skel','ct-findch','ct-fromcast'].forEach(function(id){ var b=document.getElementById(id); if(b) b.disabled=on; }); }
 
 /* ---------- 연결 ---------- */
 var tsel=document.getElementById('ct-total');
 [20,30,40,50,60,70,80,100].forEach(function(n){ var o=document.createElement('option'); o.value=String(n); o.textContent=n+'컷'; tsel.appendChild(o); });
-document.getElementById('ct-pull').addEventListener('click', pull);
 document.getElementById('ct-findch').addEventListener('click', findChars);
 function fromCast(){
   var all=window.__castList?window.__castList():[];
@@ -11794,29 +11906,16 @@ document.getElementById('ct-chars').addEventListener('click', function(e){
   if(t.dataset.cd!=null){ if(t.dataset.arm){ B.chars.splice(+t.dataset.cd,1); save(); renderChars(); renderBoard(); } else { t.dataset.arm='1'; t.textContent='한 번 더'; } }
 });
 document.getElementById('ct-skel').addEventListener('click', function(){
-  if(!B){ pull(); return; }
-  var t=+tsel.value||B.total;
-  if(t!==B.total){ pull(); return; }
-  B.cuts=skeleton(B.total, B.band, B.cl); save(); renderBoard(); stat('뼈대를 다시 깔았다. 쓴 글은 지웠다.');
+  var nc=fresh(); stat('뼈대를 깔았다. '+B.total+'컷.'+(nc?' 이야기에 나오는 등장인물 '+nc+'명도 가져왔다.':''));
 });
+tsel.addEventListener('change', function(){ if(B && B.cuts && B.cuts.some(function(c){ return c.scr; })) stat('분량을 바꿨다. 「뼈대만 깔기」나 「AI로 콘티 쓰기」를 누르면 새 분량으로 다시 깐다.'); else if(B){ fresh(); } });
 document.getElementById('ct-write').addEventListener('click', function(){ writeAll(0); });
-document.getElementById('ct-resume').addEventListener('click', function(){ writeAll(+this.dataset.n||1); });
+document.getElementById('ct-resume').addEventListener('click', function(){ writeAll(+this.dataset.n||0); });
 document.getElementById('ct-redraw').addEventListener('click', function(){ SEED++; root.querySelectorAll('.ct-cut canvas').forEach(queue); });
 document.getElementById('ct-copy').addEventListener('click', function(){
   if(!B) return;
   var txt=B.cuts.map(function(c){ return c.n+'|'+compText(c)+'|'+whoOf(c).map(function(x){ return x.name; }).join(',')+'|'+(c.scr||'')+'|'+(c.line||''); }).join('\n'), b=this;
   try{ navigator.clipboard.writeText(txt).then(function(){ b.textContent='복사됨'; setTimeout(function(){ b.textContent='글로 복사'; },1200); }, function(){ window.prompt('복사',txt); }); }catch(e){ window.prompt('복사',txt); }
-});
-document.getElementById('ct-plot').addEventListener('click', function(){
-  if(!aiReady()){ stat('AI 연결에서 키를 넣어야 쓸 수 있다.'); return; }
-  if(!B && !pull()) return;
-  var w=writePrompt('[지금 구성]\n'+B.drawn, 'plot', B.total), ta=document.getElementById('ct-story');
-  setBusy(true); stat('줄거리 짜는 중…');
-  aiAsk(WSYS, w.prompt, w.maxTok).then(function(t){
-    setBusy(false);
-    if(aiIsErr(t)){ stat(String(t).slice(0,90)); return; }
-    ta.value=t; B.story=t; save(); stat('줄거리를 넣었다. 고친 뒤 「AI로 콘티 쓰기」를 누른다.');
-  });
 });
 document.getElementById('ct-story').addEventListener('input', function(){ if(B){ B.story=this.value; save(); } });
 document.getElementById('ct-board').addEventListener('click', function(e){
@@ -11832,18 +11931,27 @@ var shown=false;
 window.__contiShow=function(){
   if(!shown){
     shown=true; load();
+    if(B && B.v!==2){   // 구성기에서 가져오던 옛 판 → 구성기 재료를 지우고 구간을 이야기 기준으로 다시 나눈다
+      B.cl=[]; B.drawn=''; B.v=2; (B.cuts||[]).forEach(function(c){ delete c.cl; });
+      B.total=(B.cuts&&B.cuts.length)||B.total||70; B.band=bandFor(B.total); save();
+    }
     if(B){ document.getElementById('ct-story').value=B.story||''; tsel.value=String(B.total); }
     else { tsel.value=String(window.__cutTotal?window.__cutTotal():70); if(!tsel.value) tsel.value='70'; }
     var src=srcGet(), note=document.getElementById('ct-srcinfo');
     if(src && note) note.textContent='최근 글쓰기 결과: '+src.title;
-    if(B && src && src.at>(B.srcAt||0) && note) note.textContent='새 글쓰기 결과('+src.title+')가 있다. 「구성기에서 가져오기」로 넣는다.';
+    if(B && src && src.at>(B.srcAt||0) && note) note.textContent='새 글쓰기 결과('+src.title+')가 있다.';
+    storyOffer();
     var na0=B?syncCast():0; if(B) save();
     renderAll();
     if(na0) stat('이야기에 나오는 등장인물 '+na0+'명을 가져왔다. 생김새는 등장인물 페이지를 따른다.');
-  } else if(B){   // 다른 페이지에서 생김새를 고쳤을 수 있다 → 맞추고 다시 그린다
-    var na=syncCast(); save(); renderChars(); renderBoard();
-    if(na) stat('이야기에 나오는 등장인물 '+na+'명을 가져왔다. 생김새는 등장인물 페이지를 따른다.');
+  } else {
+    storyOffer();
+    if(B){   // 다른 페이지에서 생김새를 고쳤을 수 있다 → 맞추고 다시 그린다
+      var na=syncCast(); save(); renderChars(); renderBoard();
+      if(na) stat('이야기에 나오는 등장인물 '+na+'명을 가져왔다. 생김새는 등장인물 페이지를 따른다.');
+    }
   }
+  renderRefs();
   needRough(function(){ root.querySelectorAll('.ct-cut canvas').forEach(queue); });
 };
 })();
