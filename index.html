@@ -836,6 +836,58 @@ textarea.cast-in{resize:vertical; min-height:2.6em; overflow:hidden}
   .pr-cv{height:9.5rem}
 }
 /* [[/CSS:poseref]] */
+/* [[CSS:ctfx]] */
+#ctfx-root [hidden]{display:none!important}
+#ctfx-root .cf-bar .cf-q{font:inherit; font-size:.85rem; padding:.22rem .5rem; border:1px solid var(--rule-hard); background:var(--paper); color:var(--ink); width:12rem; max-width:100%}
+#ctfx-root .cf-bar{margin-bottom:.45rem}
+.cf-bar .cf-lab{font-size:.78rem; color:var(--ink-3); margin-right:.1rem}
+.cf-legend{display:flex; flex-wrap:wrap; gap:.3rem .9rem; font-size:.78rem; color:var(--ink-3); margin:.2rem 0 1.1rem}
+.cf-legend b{color:var(--ink-2)}
+.cf-sec{margin:0 0 1.8rem}
+.cf-sec > h3{margin:.4rem 0 .1rem}
+.cf-sec > h3 .cf-n{font-size:.8rem; font-weight:400; color:var(--ink-3)}
+.cf-sec > .small{margin:.1rem 0 .7rem}
+.cf-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(min(100%,25rem),1fr)); gap:.8rem}
+.cf-card{border:1px solid var(--rule); border-top:3px solid var(--note); background:var(--paper-2); min-width:0; padding:.6rem .75rem .75rem; transition:outline-color .3s}
+.cf-card[data-media="webtoon"]{border-top-color:var(--mark)}
+.cf-card.cf-hit{outline:3px solid var(--mark); outline-offset:2px}
+.cf-card h4{margin:0 0 .25rem; font-size:1.02rem}
+.cf-tags{display:flex; flex-wrap:wrap; gap:.3rem; margin:0 0 .4rem; font-size:.74rem}
+.cf-tag{border:1px solid var(--rule-hard); padding:0 .35rem; color:var(--ink-2); background:var(--paper)}
+.cf-tag.m{border-style:dashed; color:var(--ink-3)}
+.cf-desc{margin:0 0 .45rem; font-size:.9rem}
+.cf-seq{display:grid; grid-auto-flow:column; grid-auto-columns:minmax(6.6rem,1fr); gap:.45rem; overflow-x:auto; margin:.5rem 0 .6rem; padding:0 0 .25rem; overscroll-behavior-x:contain; max-width:100%}
+.cf-cut{margin:0; min-width:0}
+.cf-cv{display:block; width:100%; height:5.8rem; background:var(--paper)}
+.cf-cap{font-size:.72rem; line-height:1.38; margin:.25rem 0 0; color:var(--ink-2); overflow-wrap:anywhere}
+.cf-cap .cf-i{font-weight:700; color:var(--ink); margin-right:.2rem}
+.cf-cap code{font-family:"IBM Plex Mono",ui-monospace,monospace; color:var(--mark); font-size:.7rem}
+.cf-cap .cf-line{display:block; color:var(--note)}
+.cf-seq.v{grid-auto-flow:row; grid-template-columns:1fr; grid-auto-columns:auto; overflow:visible; gap:0}
+.cf-seq.v .cf-cut{display:flex; gap:.6rem; align-items:flex-start}
+.cf-seq.v .cf-cv{flex:0 0 8.6rem; width:8.6rem; height:5.4rem}
+.cf-seq.v .cf-cap{margin:0; flex:1 1 auto; min-width:0}
+.cf-gap{position:relative; height:.55rem; width:8.6rem}
+.cf-gap[data-g="0"]{height:.18rem}
+.cf-gap[data-g="1"]{height:1.5rem}
+.cf-gap[data-g="2"]{height:3.2rem}
+.cf-gap[data-g="1"]::after,.cf-gap[data-g="2"]::after{content:"여백"; position:absolute; inset:.2rem 0; display:flex; align-items:center; justify-content:center; font-size:.68rem; color:var(--ink-3); border-left:1px dashed var(--rule-hard); border-right:1px dashed var(--rule-hard)}
+.cf-dl{margin:0; font-size:.82rem; color:var(--ink-2); display:grid; grid-template-columns:auto 1fr; gap:.2rem .5rem}
+.cf-dl dt{font-weight:600; color:var(--ink-3); white-space:nowrap}
+.cf-dl dd{margin:0; min-width:0}
+.cf-dl a{color:var(--note)}
+.cf-act{display:flex; flex-wrap:wrap; gap:.4rem; align-items:center; margin-top:.6rem}
+.cf-act .cf-msg{font-size:.78rem; color:var(--ink-3)}
+.cf-src{margin-top:1.6rem; border-top:1px solid var(--rule); padding-top:.7rem; overflow-wrap:anywhere}
+.cf-src a{color:var(--note)}
+@media (max-width:640px){
+  #ctfx-root .cf-bar .cf-q{flex:1 1 100%; width:auto; font-size:16px}
+  .cf-card{padding:.55rem .6rem .7rem}
+  .cf-seq{grid-auto-columns:6.3rem}
+  .cf-seq.v .cf-cv{flex-basis:7.6rem; width:7.6rem}
+  .cf-gap{width:7.6rem}
+}
+/* [[/CSS:ctfx]] */
 /* [[CSS:bestcut]] */
 .cast-tabs{display:flex; gap:.2rem; margin:-.3rem 0 1.1rem; border-bottom:1px solid var(--rule-hard)}
 .cast-tab{font:inherit; font-size:.95rem; font-weight:600; letter-spacing:.01em; background:none; color:var(--ink-3); border:0; border-bottom:2px solid transparent; margin-bottom:-1px; padding:.45rem .9rem .5rem; cursor:pointer}
@@ -2259,6 +2311,11 @@ body.dk-drag, body.dk-drag *{user-select:none!important; -webkit-user-select:non
   <p class="small" id="ct-stat" role="status"></p>
   <p class="small">컷을 누르면 구도·앵글·화면·대사를 고칠 수 있다. 순서는 컷을 끌어 옮긴다(폰은 길게 눌러 끌기, 키보드는 Alt+화살표, 편집기의 ◀ ▶). 빨간 테두리는 넘김 훅, 「무음」은 대사 없는 컷이다. 그림은 Rough.js(MIT)로 그린다.</p>
   <div id="ct-board"></div>
+</section>
+
+<section class="blk" id="ctfx">
+  <h2 class="big">콘티 연출 색인</h2>
+  <div id="ctfx-root"></div>
 </section>
 
 
@@ -4732,6 +4789,7 @@ var PAGES=[
  {g:'도구',id:'ideacomp',t:'아이디어 구성기',d:'적어 둔 아이디어로 소재·클리셰·엔딩·주인공을 골라 구성안을 만든다.'},
  {g:'도구',id:'texts',t:'글 보관함',d:'구성기에서 쓴 줄거리·웹소설·컷별 콘티를 모아 둔다.'},
  {g:'도구',id:'conti',t:'콘티 구성기',d:'구성기의 이야기와 클리셰 컷 배정으로 컷마다 구도 그림과 글을 짠다.'},
+ {g:'도구',id:'ctfx',t:'콘티 연출 색인',d:'컷 여러 개를 잇는 연출 46가지. 반응 컷·교차 편집·넘김 훅·스크롤 여백을 그림 순서로 보고 콘티에 바로 넣는다.'},
  {g:'도구',id:'arc',t:'아크 점검표',d:'장편용. 네 칸을 채워 점검하고 장르별 예시 48개.'},
  {g:'도구',id:'epidx',t:'에피소드 소재 색인',d:'220개. 한 화를 채우는 작은 사건. 로맨스·개그·일상.'},
  {g:'도구',id:'ai',t:'AI 연결',d:'구글 제미나이 키를 넣고 비틀기·연관짓기·글쓰기를 쓴다.'},
@@ -13784,6 +13842,173 @@ window.__bcList=function(folder){ return bcAll().filter(function(m){ return !fol
 window.__bcRandom=function(r, mood, L){ return bcRandom(bcClean(r||{}), mood||'', L||{}, Math.random); };
 bcTabCount();
 // [[/MOD:bestcut]]
+// [[MOD:ctfx]] 콘티 연출 색인 페이지 — 컷 여러 개를 잇는 연출. 데이터 CONTI_FX, 그림은 콘티 구성기 창구(__ctCutData → __ctPortrait)
+// 창구 window.__ctFx = {list, byId(id), show(id), groups, spec(cut), insert(id)}. 넣기는 __ctInsertCuts(자리 이름 A·B는 빼고, 자세는 wp['#순번'])
+(function(){
+var root=document.getElementById('ctfx-root'); if(!root || typeof CONTI_FX==='undefined') return;
+var CF={grp:'', media:'', q:'', built:false, tries:0, io:null, hitT:0};
+var CF_SHOT={els:['ELS','익스트림 롱숏'],ls:['LS','롱숏'],fs:['FS','풀숏'],ms:['MS','미디엄숏'],bs:['BS','바스트숏'],cu:['CU','클로즈업'],ecu:['ECU','익스트림 클로즈업'],
+  two:['TWO','투숏'],ots:['OTS','어깨 너머'],stand:['STAND','대치'],frame:['FRAME','프레임 속 프레임'],bird:['BIRD','버즈아이'],
+  insert:['INSERT','인서트'],pov:['POV','시점 숏'],back:['BACK','뒷모습'],empty:['EMPTY','빈 배경'],crowd:['CROWD','군중']};
+var CF_ANG={high:'부감',low:'앙각',dutch:'더치'};
+var CF_MEDIA={both:'출판·웹툰',print:'출판',webtoon:'웹툰'};
+var CF_LOOK={A:{hair:'짧은', dark:true}, B:{hair:'긴'}};   // 그림에서 A·B를 가르는 기본 생김새
+var CF_GDESC={'전환':'장면과 장면을 잇는 법. 어디서 어디로 넘어왔는지 독자가 놓치지 않게 한다.',
+  '시간':'컷 수와 순서로 시간을 늘이고, 줄이고, 건너뛴다.',
+  '감정':'얼굴을 언제 보여 주고 언제 숨길지, 반응을 언제 줄지.',
+  '시선·공간':'카메라 자리와 인물의 좌우·시선으로 공간을 세운다.',
+  '정보':'무엇을 언제 보여 줄지. 독자가 아는 것과 인물이 아는 것의 차이를 다룬다.',
+  '리듬':'컷 크기·소리·반복·넘김으로 읽는 박자를 만든다.',
+  '웹툰 스크롤':'세로 스크롤에서 여백·간격·화면 끝이 하는 일. 그림은 위에서 아래로 늘어놓았다.'};
+var CF_GRAM=['','컷 크기는 시간이다','페이지 넘김이 최대 무기다','스프레드는 예산이다','무음 컷이 감정을 착지시킨다','시선은 Z자로 흐른다','컷당 대사는 짧게','반응 컷이 사건의 크기를 정한다','웹툰은 넘김 대신 여백을 쓴다'];
+var CF_SRC=[
+  ['Comics Cube 「Comic Book Glossary: Transitions」 1부 (스콧 맥클라우드 『Understanding Comics』의 컷 사이 넘어가기 정리)','https://www.comicscube.com/2010/12/comic-book-glossary-transitions-part-1.html'],
+  ['같은 글 2부','https://www.comicscube.com/2010/12/comic-book-glossary-transitions-part-2.html'],
+  ['CLIP STUDIO 「만화 구성 – 컷 분할 방법」','https://www.clipstudio.net/drawing/archives/161626'],
+  ['CLIP STUDIO 「웹툰이란? 세로 스크롤 만화를 그려 보자!」','https://www.clipstudio.net/drawing/archives/157017'],
+  ['CLIP STUDIO 「大今良時流、読者の心を掴む演出テクニック」','https://www.clipstudio.net/oekaki/archives/152311'],
+  ['CLIP STUDIO TIPS · Obliviousquill 「Webtoon Panelling Tips」','https://tips.clip-studio.com/en-us/articles/9341'],
+  ['Nicole Harris 「How to Panel Your Webtoon」','https://contentcurve.substack.com/p/introduction-to-webtoon-paneling'],
+  ['웹툰가이드 · 오혁진 「이토록 아름다운 스크롤의 미학」','https://www.webtoonguide.com/ko/board/column-list/14557'],
+  ['motoso 「コマ割り」 노트','https://scrapbox.io/motoso/%E3%82%B3%E3%83%9E%E5%89%B2%E3%82%8A'],
+  ['Yale Film Analysis 「Editing」','https://filmanalysis.yale.edu/editing/'],
+  ['Wikipedia 「180-degree rule」','https://en.wikipedia.org/wiki/180-degree_rule'],
+  ['Wikipedia 「Match cut」','https://en.wikipedia.org/wiki/Match_cut'],
+  ['Wikipedia 「Eyeline match」','https://en.wikipedia.org/wiki/Eyeline_match'],
+  ['Wikipedia 「Shot/reverse shot」','https://en.wikipedia.org/wiki/Shot/reverse_shot'],
+  ['How to Film School 「Kuleshov Effect」','https://howtofilmschool.com/dictionary/kuleshov-effect/'],
+  ['UC Berkeley 「Navigating Coppola’s Maze: Editing in The Godfather」','https://theseventies.berkeley.edu/godfather/2018/06/13/navigating-coppolas-maze-editing-in-the-godfather']
+];
+var BY={}; CONTI_FX.forEach(function(e){ BY[e.id]=e; });
+function esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function seedOf(t){ t=String(t||''); var h=0; for(var i=0;i<t.length;i++) h=(h*31+t.charCodeAt(i))%9973; return 500+h; }
+function byId(id){ return BY[id]||null; }
+function comp(c){ var s=(CF_SHOT[c.k]||CF_SHOT.ms)[0]; if(c.ang) s+='+'+CF_ANG[c.ang]; if(c.focus) s+='+집중선'; if(c.flash) s+='+회상'; return s; }
+function flags(c){ var t=[]; if(c.silent) t.push('무음'); if(c.hook) t.push('넘김'); if(c.dyn) t.push(c.dyn>1?'과장':'역동'); return t; }
+function whoList(c){ return (c.who||[]).slice(0,2).map(function(n){ var w=(c.wp&&c.wp[n])||{}, lk=Object.assign({}, CF_LOOK[n]||{}), o={name:n};
+  if(w.pose){ lk.pose=w.pose; o.pose=w.pose; } if(w.face){ lk.face=w.face; o.face=w.face; } o.look=lk; return o; }); }
+function asCut(c,i){ var o={n:i+1, k:c.k, ang:c.ang, scr:c.scr, line:c.line, who:[]};
+  ['focus','flash','silent','hook'].forEach(function(f){ if(c[f]) o[f]=1; }); if(c.dyn) o.dyn=c.dyn; return o; }
+// 콘티 구성기에 넣을 컷: 자리 이름(A·B)은 빼고 자세·방향은 순번 자리('#0'·'#1')로 남긴다
+function spec(c){ var o={k:c.k, ang:c.ang||'', focus:c.focus?1:0, flash:c.flash?1:0, silent:c.silent?1:0, hook:c.hook?1:0, who:[], scr:c.scr||'', line:c.line||''};
+  if(c.wp){ var wp={}; (c.who||[]).forEach(function(n,i){ if(c.wp[n]) wp['#'+i]=JSON.parse(JSON.stringify(c.wp[n])); }); if(Object.keys(wp).length) o.wp=wp; }
+  if(c.dyn) o.dyn=+c.dyn; return o; }
+function insert(id){ var e=byId(id); if(!e || !window.__ctInsertCuts) return null; return window.__ctInsertCuts(e.seq.map(spec), {label:e.name}); }
+// 그림 칸 data-*: 콘티 칸과 같은 풀이(__ctCutData)를 쓰고, 인물은 A·B 기본 생김새로 덮는다. 창구가 없으면 직접 적은 값 그대로
+function prep(cv, e, i){
+  var c=e.seq[i], wl=whoList(c);
+  if(window.__ctCutData){ try{ window.__ctCutData(cv, asCut(c,i)); }catch(x){} }
+  cv.dataset.k=c.k; cv.dataset.seed=String(seedOf(e.id)+i*7); delete cv.dataset.pos;
+  if(wl.length) cv.dataset.who=JSON.stringify(wl); else delete cv.dataset.who;
+}
+function cvHTML(e,c,i){
+  var a=' data-k="'+esc(c.k)+'" data-seed="'+(seedOf(e.id)+i*7)+'"';
+  if(c.ang) a+=' data-ang="'+c.ang+'"'; ['focus','flash','silent','hook'].forEach(function(f){ if(c[f]) a+=' data-'+f+'="1"'; });
+  if(c.dyn) a+=' data-dyn="'+c.dyn+'"'; if(c.scr) a+=' data-scr="'+esc(c.scr)+'"';
+  var wl=whoList(c); if(wl.length) a+=' data-who="'+esc(JSON.stringify(wl))+'"';
+  return '<canvas class="cf-cv"'+a+' role="img" aria-label="'+esc((i+1)+'번 컷 '+(CF_SHOT[c.k]||CF_SHOT.ms)[1]+(c.ang?' '+CF_ANG[c.ang]:'')+' — '+c.scr)+'"></canvas>';
+}
+function seqHTML(e){
+  var v=e.media==='webtoon', h='<div class="cf-seq'+(v?' v':'')+'" role="list" aria-label="'+esc(e.name)+' 컷 순서">';
+  e.seq.forEach(function(c,i){
+    if(v && i) h+='<div class="cf-gap" data-g="'+(c.gap==null?'':c.gap)+'" aria-hidden="true"></div>';
+    var fl=flags(c);
+    h+='<figure class="cf-cut" role="listitem" data-i="'+i+'">'+cvHTML(e,c,i)+'<figcaption class="cf-cap"><span class="cf-i">'+(i+1)+'</span><code>'+esc(comp(c))+'</code>'+
+      (fl.length?' <span class="small">· '+fl.join(' · ')+'</span>':'')+'<br>'+esc(c.scr)+(c.line?'<span class="cf-line">「'+esc(c.line)+'」</span>':'')+'</figcaption></figure>';
+  });
+  return h+'</div>';
+}
+function card(e){
+  return '<article class="cf-card" data-id="'+esc(e.id)+'" data-group="'+esc(e.group)+'" data-media="'+esc(e.media)+'">'+
+    '<h4>'+esc(e.name)+'</h4><div class="cf-tags"><span class="cf-tag">'+esc(e.group)+'</span><span class="cf-tag m">'+esc(CF_MEDIA[e.media]||'')+'</span><span class="cf-tag m">'+e.seq.length+'컷</span></div>'+
+    '<p class="cf-desc">'+esc(e.desc)+'</p>'+seqHTML(e)+
+    '<dl class="cf-dl"><dt>언제</dt><dd>'+esc(e.use)+'</dd><dt>남용하면</dt><dd>'+esc(e.risk)+'</dd><dt>콘티 요령</dt><dd>'+esc(e.tip)+'</dd>'+
+    (e.ex?'<dt>사례</dt><dd>'+esc(e.ex)+'</dd>':'')+
+    (e.gram?'<dt>원리</dt><dd><a href="#grammar">만화 연출 문법 '+e.gram+'. '+esc(CF_GRAM[e.gram]||'')+'</a></dd>':'')+'</dl>'+
+    '<div class="cf-act"><button class="chip cf-ins" type="button" data-ins="'+esc(e.id)+'"'+(window.__ctInsertCuts?'':' disabled title="콘티 구성기가 없는 화면이다"')+'>이 연출로 콘티에 넣기</button></div></article>';
+}
+function count(f){ return CONTI_FX.filter(f).length; }
+function build(){
+  var h='<p class="lede">한 컷을 어떻게 잡느냐는 <a href="#poses">만화 자세·구도</a>에, 컷 크기·넘김·무음 같은 기본 도구의 원리는 <a href="#grammar">만화 연출 문법</a>에 있다. 여기는 그 사이, <b>컷 여러 개를 어떤 순서로 잇느냐</b>를 모았다. 같은 다섯 컷도 순서와 크기를 바꾸면 놀람이 되기도 하고 여운이 되기도 한다.</p>'+
+    '<p class="small">카드마다 3~5컷짜리 짧은 순서를 콘티 그림으로 붙였다. 「이 연출로 콘티에 넣기」를 누르면 그 순서가 <a href="#conti">콘티 구성기</a>의 마지막으로 쓴 컷 뒤에 들어간다(인물 칸은 비워 두니 내 인물로 바꿔 쓴다). 영화 편집에서 온 것(축·매치컷·교차 편집)은 만화 컷에 맞게 고쳐 적었고, 사례는 확인한 것만 적었다.</p>'+
+    '<div class="filterbar cf-bar cf-gbar"><button class="chip" type="button" data-cg="" aria-pressed="true">전체</button>'+
+    CONTI_FX_GROUPS.map(function(g){ return '<button class="chip" type="button" data-cg="'+esc(g)+'" aria-pressed="false">'+esc(g)+' '+count(function(e){ return e.group===g; })+'</button>'; }).join('')+'</div>'+
+    '<div class="filterbar cf-bar cf-mbar"><span class="cf-lab">지면</span><button class="chip" type="button" data-cm="" aria-pressed="true">전체</button><button class="chip" type="button" data-cm="print" aria-pressed="false">출판</button><button class="chip" type="button" data-cm="webtoon" aria-pressed="false">웹툰</button>'+
+    '<input class="cf-q" type="search" placeholder="연출·구도 검색" aria-label="콘티 연출 검색"><span class="count cf-count"></span></div>'+
+    '<p class="cf-legend"><span>그림의 <b>A</b>는 짧은 검은 머리, <b>B</b>는 긴 머리</span><span><b>무음</b>·<b>넘김</b>·<b>회상</b>은 콘티 컷 표시와 같다</span><span>웹툰 카드는 위에서 아래로, <b>여백</b>은 칸 사이 빈 공간</span></p>';
+  CONTI_FX_GROUPS.forEach(function(g){
+    h+='<section class="cf-sec" data-group="'+esc(g)+'"><h3>'+esc(g)+' <span class="cf-n"></span></h3><p class="small">'+esc(CF_GDESC[g]||'')+'</p><div class="cf-grid">'+
+      CONTI_FX.filter(function(e){ return e.group===g; }).map(card).join('')+'</div></section>';
+  });
+  h+='<p class="cf-none small" hidden>맞는 연출이 없다.</p>';
+  h+='<p class="small cf-src"><b>출처</b> — '+CF_SRC.map(function(s){ return '<a href="'+s[1]+'" target="_blank" rel="noopener">'+esc(s[0])+'</a>'; }).join(' · ')+'. 설명·요령·예시 컷은 이 자료들을 참고해 새로 썼다.</p>';
+  root.innerHTML=h;
+  [].slice.call(root.querySelectorAll('.cf-card')).forEach(function(cd){ var e=byId(cd.getAttribute('data-id'));
+    [].slice.call(cd.querySelectorAll('.cf-cut')).forEach(function(f){ var cv=f.querySelector('canvas'); if(cv) prep(cv, e, +f.getAttribute('data-i')); }); });
+  root.addEventListener('click', function(ev){
+    var b=ev.target.closest('button'); if(!b || !root.contains(b)) return;
+    if(b.hasAttribute('data-cg')){ CF.grp=b.getAttribute('data-cg'); filter(); return; }
+    if(b.hasAttribute('data-cm')){ CF.media=b.getAttribute('data-cm'); filter(); return; }
+    if(b.hasAttribute('data-ins')){ var r=null; try{ r=insert(b.getAttribute('data-ins')); }catch(x){}
+      if(!r){ b.textContent='넣지 못했다 — 콘티 구성기를 열어 보자'; } }
+  });
+  var q=root.querySelector('.cf-q'); q.addEventListener('input', function(){ CF.q=q.value; filter(); });
+  if('IntersectionObserver' in window){
+    CF.io=new IntersectionObserver(function(es){ es.forEach(function(x){ if(x.isIntersecting) draw1(x.target); }); }, {rootMargin:'300px 200px'});
+    [].slice.call(root.querySelectorAll('canvas.cf-cv')).forEach(function(cv){ CF.io.observe(cv); });
+  }
+  CF.built=true; filter();
+}
+function text(e){ return [e.name,e.group,CF_MEDIA[e.media],e.desc,e.use,e.risk,e.tip,e.ex].concat(e.seq.map(function(c){ return c.scr+' '+c.line+' '+comp(c)+' '+(CF_SHOT[c.k]||[])[1]+' '+flags(c).join(' '); })).join(' ').toLowerCase(); }
+function filter(){
+  var q=String(CF.q||'').trim().toLowerCase().split(/\s+/).filter(Boolean), shown=0;
+  [].slice.call(root.querySelectorAll('button[data-cg]')).forEach(function(b){ b.setAttribute('aria-pressed', String(b.getAttribute('data-cg')===CF.grp)); });
+  [].slice.call(root.querySelectorAll('button[data-cm]')).forEach(function(b){ b.setAttribute('aria-pressed', String(b.getAttribute('data-cm')===CF.media)); });
+  [].slice.call(root.querySelectorAll('.cf-sec')).forEach(function(sec){
+    var n=0, g=sec.getAttribute('data-group'), off=CF.grp && CF.grp!==g;
+    [].slice.call(sec.querySelectorAll('.cf-card')).forEach(function(cd){ var e=byId(cd.getAttribute('data-id')), t=e?text(e):'';
+      var on=!off && (!CF.media || e.media==='both' || e.media===CF.media) && q.every(function(w){ return t.indexOf(w)>-1; });
+      cd.hidden=!on; if(on) n++; });
+    sec.hidden=!n; sec.querySelector('.cf-n').textContent=n+'개'; shown+=n;
+  });
+  root.querySelector('.cf-count').textContent=shown+'/'+CONTI_FX.length;
+  root.querySelector('.cf-none').hidden=!!shown;
+  draw();
+}
+function draw1(cv){
+  if(!window.__ctPortrait || !cv.isConnected) return;
+  var w=Math.round(cv.getBoundingClientRect().width); if(!w || String(w)===cv.getAttribute('data-dw')) return;
+  cv.setAttribute('data-dw', String(w)); try{ window.__ctPortrait(cv); }catch(e){}
+}
+function draw(){
+  if(!CF.built) return;
+  if(!window.__ctPortrait){ if(CF.tries++<40) setTimeout(draw, 250); return; }
+  CF.tries=0;
+  var cvs=[].slice.call(root.querySelectorAll('canvas.cf-cv'));
+  if(CF.io) return cvs.forEach(function(cv){ if(cv.hasAttribute('data-dw')) draw1(cv); else { CF.io.unobserve(cv); CF.io.observe(cv); } });
+  cvs.forEach(draw1);
+}
+function pageOn(){ if(!CF.built) build(); else draw(); }
+function show(id){
+  var e=id?byId(id):null;
+  if((location.hash||'')!=='#ctfx') location.hash='#ctfx';
+  pageOn();
+  if(!e) return !id;
+  var cd=root.querySelector('.cf-card[data-id="'+id+'"]'); if(!cd) return false;
+  if(cd.hidden){ CF.grp=''; CF.media=''; CF.q=''; var q=root.querySelector('.cf-q'); if(q) q.value=''; filter(); }
+  root.querySelectorAll('.cf-card.cf-hit').forEach(function(x){ x.classList.remove('cf-hit'); });
+  cd.classList.add('cf-hit'); clearTimeout(CF.hitT);
+  setTimeout(function(){ try{ cd.scrollIntoView({block:'center', behavior:'smooth'}); }catch(x){ try{ cd.scrollIntoView(); }catch(y){} } }, 90);
+  CF.hitT=setTimeout(function(){ cd.classList.remove('cf-hit'); }, 2600);
+  return true;
+}
+window.PAGE_ON=window.PAGE_ON||{};
+var prev=window.PAGE_ON.ctfx; window.PAGE_ON.ctfx=function(){ if(prev) try{ prev(); }catch(e){} pageOn(); };
+window.addEventListener('resize', function(){ clearTimeout(CF.rz); CF.rz=setTimeout(function(){ var s=document.getElementById('ctfx'); if(CF.built && s && s.classList.contains('page-on')) draw(); },200); });
+window.__ctFx={list:CONTI_FX, groups:CONTI_FX_GROUPS, byId:byId, show:show, spec:spec, insert:insert, comp:comp,
+  filter:function(g,m,q){ CF.grp=g||''; CF.media=m||''; CF.q=q||''; if(!CF.built) build(); else { var qi=root.querySelector('.cf-q'); if(qi) qi.value=CF.q; filter(); } }};
+})();
+// [[/MOD:ctfx]]
 aiBar(); favAiBar(); aiSlots(); if(typeof ideaWriteBar==='function') ideaWriteBar();
 if(window.__reSlots) window.__reSlots(); if(typeof renderFavs==='function') renderFavs();
 dataMigrate();
