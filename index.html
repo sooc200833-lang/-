@@ -1051,6 +1051,27 @@ body.dk-drag, body.dk-drag *{user-select:none!important; -webkit-user-select:non
 .ct-chk{display:flex; flex-wrap:wrap; gap:.2rem .6rem}
 .ct-chk label{display:flex; gap:.2rem; align-items:center}
 .ct-who{color:var(--note)}
+/* 콘티 컷 옮기기(끌기·길게 눌러 끌기·Alt+화살표)와 구간 다시 쓰기 */
+.ct-cut{position:relative; -webkit-touch-callout:none}
+.ct-cut > canvas,.ct-cut .ct-h{-webkit-user-select:none; user-select:none}
+.ct-cut .ct-h{position:relative; padding-right:1.6rem}
+.ct-grip{position:absolute; right:0; top:0; color:var(--ink-3); letter-spacing:-.18em; padding:.1rem .35rem .2rem .25rem; cursor:grab; font-size:.9rem; line-height:1; opacity:.6}
+.ct-cut:hover .ct-grip,.ct-cut:focus-visible .ct-grip{opacity:1; color:var(--note)}
+.ct-cut.dragging{opacity:.38}
+.ct-cut.dragging .ct-grip{cursor:grabbing}
+.ct-cut.ct-drop-a::before,.ct-cut.ct-drop-b::before{content:""; position:absolute; top:-4px; bottom:-4px; width:3px; background:var(--note); border-radius:2px; pointer-events:none; z-index:2}
+.ct-cut.ct-drop-a::before{left:-7px} .ct-cut.ct-drop-b::before{right:-7px}
+.ct-cut.ct-drop-a,.ct-cut.ct-drop-b{outline:1px dashed var(--rule-hard); outline-offset:2px}
+.ct-ghost{position:fixed; z-index:60; pointer-events:none; width:120px; padding:.25rem .4rem; background:var(--paper-2); border:1px solid var(--rule-hard); font-size:.78rem; color:var(--ink); box-shadow:0 4px 14px rgba(0,0,0,.18); transform:translate(-50%,-120%); white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+.ct-moved{animation:ctMoved 1.2s ease-out}
+@keyframes ctMoved{from{background:var(--paper-2)} to{background:transparent}}
+@media (prefers-reduced-motion:reduce){ .ct-moved{animation:none} }
+.ct-undo{display:inline-flex; flex-wrap:wrap; gap:.3rem; margin:-.4rem 0 .6rem}
+.ct-undo[hidden]{display:none}
+.ct-ed .ct-mv{align-items:center}
+.ct-ed .ct-redo-row{display:grid; gap:.3rem; justify-items:start}
+.ct-ed .ct-redo-row label{justify-self:stretch}
+.ct-ed .chip:disabled{opacity:.5; cursor:default}
 </style>
 <body>
 <div class="wrap">
@@ -2183,7 +2204,7 @@ body.dk-drag, body.dk-drag *{user-select:none!important; -webkit-user-select:non
   <h3>3. 콘티</h3>
   <div class="filterbar"><button class="chip" id="ct-skel" type="button">뼈대만 깔기</button><button class="chip" id="ct-write" type="button">AI로 콘티 쓰기</button><button class="chip" id="ct-resume" type="button" hidden>이어서 쓰기</button><button class="chip" id="ct-redraw" type="button">선 다시 긋기</button><button class="chip" id="ct-copy" type="button">글로 복사</button></div>
   <p class="small" id="ct-stat" role="status"></p>
-  <p class="small">컷을 누르면 구도·앵글·화면·대사를 고칠 수 있다. 빨간 테두리는 넘김 훅, 「무음」은 대사 없는 컷이다. 그림은 Rough.js(MIT)로 그린다.</p>
+  <p class="small">컷을 누르면 구도·앵글·화면·대사를 고칠 수 있다. 순서는 컷을 끌어 옮긴다(폰은 길게 눌러 끌기, 키보드는 Alt+화살표, 편집기의 ◀ ▶). 빨간 테두리는 넘김 훅, 「무음」은 대사 없는 컷이다. 그림은 Rough.js(MIT)로 그린다.</p>
   <div id="ct-board"></div>
 </section>
 
@@ -11599,7 +11620,7 @@ function renderPlan(){
 }
 function cardHTML(c){
   return '<figcaption><div class="ct-h"><b>'+c.n+'</b><span>'+cesc(shotName(c.k))+(c.ang?' · '+angName(c.ang):'')+'</span>'+
-    (c.focus?'<span>· 집중선</span>':'')+(c.flash?'<span>· 회상</span>':'')+(c.hook?'<i class="ct-hook">넘김</i>':'')+(function(){ var w=whoOf(c); return w.length?'<span class="ct-who">'+cesc(w.map(function(x){ return x.name; }).join(', '))+'</span>':''; })()+(c.cl?'<em>'+cesc(c.cl)+'</em>':'')+'</div>'+
+    (c.focus?'<span>· 집중선</span>':'')+(c.flash?'<span>· 회상</span>':'')+(c.hook?'<i class="ct-hook">넘김</i>':'')+(function(){ var w=whoOf(c); return w.length?'<span class="ct-who">'+cesc(w.map(function(x){ return x.name; }).join(', '))+'</span>':''; })()+'<span class="ct-grip" aria-hidden="true" title="끌어서 옮기기 (폰은 길게 눌러 끌기 · 키보드는 Alt+화살표)">⋮⋮</span>'+(c.cl?'<em>'+cesc(c.cl)+'</em>':'')+'</div>'+
     (c.scr?'<p class="ct-scr">'+cesc(c.scr)+'</p>':'<p class="ct-scr ct-empty">화면 미정</p>')+
     (c.line?'<p class="ct-line">'+cesc(c.line)+'</p>':'')+'</figcaption>';
 }
@@ -11613,7 +11634,8 @@ function renderBoard(){
     sec.innerHTML='<h4>'+cesc(b.name)+' <span>'+b.a+'–'+b.b+'번 컷</span></h4>';
     var g=document.createElement('div'); g.className='ct-grid';
     B.cuts.forEach(function(c){ if(c.n<b.a || c.n>b.b) return;
-      var f=document.createElement('figure'); f.className='ct-cut'+(c.cl?' has-cl':''); f.dataset.n=c.n; f.tabIndex=0;
+      var f=document.createElement('figure'); f.className='ct-cut'+(c.cl?' has-cl':''); f.dataset.n=c.n; f.tabIndex=0; f.draggable=true;
+      f.setAttribute('aria-keyshortcuts','Alt+ArrowLeft Alt+ArrowRight'); f.setAttribute('aria-roledescription','옮길 수 있는 컷');
       f.appendChild(cvFor(c)); f.insertAdjacentHTML('beforeend', cardHTML(c)); g.appendChild(f);
     });
     sec.appendChild(g); box.appendChild(sec);
@@ -11652,6 +11674,8 @@ function openEdit(f){
     '<label>화면 <textarea class="ct-s" rows="2"></textarea></label><label>대사 <input class="ct-l" type="text"></label>'+
     '<div class="filterbar"><button class="chip ct-ok" type="button">저장</button><button class="chip ct-x" type="button">닫기</button>'+
     '<button class="chip ct-add" type="button">뒤에 컷 추가</button><button class="chip ct-del" type="button">이 컷 지우기</button></div>'+
+    '<div class="filterbar ct-mv"><button class="chip ct-mvl" type="button"'+(n<=1?' disabled':'')+'>◀ 앞으로</button><button class="chip ct-mvr" type="button"'+(n>=B.cuts.length?' disabled':'')+'>뒤로 ▶</button></div>'+
+    '<div class="ct-redo-row"><label>요청(선택) <input class="ct-req" type="text" placeholder="예: 대사를 줄이고 표정 컷을 늘려 줘"></label><button class="chip ct-redo" type="button" title="'+cesc(redoRange(n).a+'–'+redoRange(n).b)+'번 컷을 AI로 다시 쓴다">이 구간 다시 쓰기</button></div>'+
     (window.__bcPick?'<div class="filterbar ct-bc"><button class="chip ct-bcin" type="button">베스트컷에서 넣기</button><button class="chip ct-bcout" type="button">이 컷을 베스트컷으로 저장</button></div><div class="ct-bcbox"></div>':'');
   ed.querySelector('.ct-s').value=c.scr||''; ed.querySelector('.ct-l').value=c.line||''; ed.querySelector('.ct-w').value=whoOf(c).map(function(x){ return x.name||'?'; }).join(', ');
   f.appendChild(ed);
@@ -11676,6 +11700,10 @@ function openEdit(f){
   }
   ed.querySelector('.ct-ok').addEventListener('click',function(){ apply(); save(); refreshCut(n); });
   ed.querySelector('.ct-add').addEventListener('click',function(){ insertCut(n); });
+  ed.querySelector('.ct-mvl').addEventListener('click',function(){ moveCut(n, n-1, 'edit'); });
+  ed.querySelector('.ct-mvr').addEventListener('click',function(){ moveCut(n, n+1, 'edit'); });
+  ed.querySelector('.ct-redo').addEventListener('click',function(){ redoScene(n, ed.querySelector('.ct-req').value, this); });
+  ed.querySelector('.ct-req').addEventListener('keydown',function(e){ if(e.key==='Enter'){ e.preventDefault(); ed.querySelector('.ct-redo').click(); } });
   var del=ed.querySelector('.ct-del');
   del.addEventListener('click',function(){ if(del.dataset.arm){ removeCut(n); } else { del.dataset.arm='1'; del.textContent='한 번 더 누르면 지움'; } });
   var bin=ed.querySelector('.ct-bcin'), bout=ed.querySelector('.ct-bcout');
@@ -11704,6 +11732,158 @@ function removeCut(n){
   B.cl.forEach(function(c){ if(c.b<c.a) c.b=c.a; });
   renumber(); save(); renderAll(); document.getElementById('ct-total').value=String(B.total);
 }
+
+/* ---------- 컷 옮기기 · 구간 다시 쓰기 ---------- */
+// 구간(band)·장면(scenes)·클리셰 칸(cl)은 컷 번호로 정한 자리라 그대로 두고, 컷 내용만 자리를 바꾼다.
+var UNDO=null;   // 마지막 옮기기 또는 다시 쓰기 하나 {kind, label, run}
+function undoBar(){
+  var u=document.getElementById('ct-undo');
+  if(!u){ var st=document.getElementById('ct-stat'); if(!st) return null;
+    u=document.createElement('div'); u.id='ct-undo'; u.className='ct-undo'; u.hidden=true; st.parentNode.insertBefore(u, st.nextSibling);
+    u.addEventListener('click',function(e){ var b=e.target.closest('button'); if(!b||!UNDO) return; var x=UNDO; UNDO=null; u.hidden=true; u.innerHTML=''; x.run(); }); }
+  return u;
+}
+function setUndo(kind,label,run){
+  UNDO=run?{kind:kind,label:label,run:run}:null; var u=undoBar(); if(!u) return;
+  if(!UNDO){ u.hidden=true; u.innerHTML=''; return; }
+  u.innerHTML='<button class="chip" type="button" data-undo="'+kind+'">'+cesc(label)+'</button>'; u.hidden=false;
+}
+function focusCut(n, flash){
+  var f=root.querySelector('.ct-cut[data-n="'+n+'"]'); if(!f) return null;
+  try{ f.focus({preventScroll:true}); }catch(e){ f.focus(); }
+  var r=f.getBoundingClientRect(); if(r.top<60 || r.bottom>innerHeight) f.scrollIntoView({block:'nearest'});
+  if(flash){ f.classList.remove('ct-moved'); void f.offsetWidth; f.classList.add('ct-moved'); }
+  return f;
+}
+// from번 컷을 to번 자리로. how: 'edit'이면 옮긴 컷의 편집기를 다시 연다
+function moveCut(from, to, how){
+  if(!B || !B.cuts || running) return false;
+  var N=B.cuts.length; from=+from; to=Math.max(1,Math.min(N,+to));
+  if(!(from>=1 && from<=N) || from===to) return false;
+  var before=B.cuts.slice(), item=B.cuts.splice(from-1,1)[0];
+  B.cuts.splice(to-1,0,item); renumber(); save(); renderBoard();
+  stat(from+'번 컷을 '+to+'번 자리로 옮겼다.');
+  setUndo('move','옮기기 되돌리기',function(){
+    var same=before.length===B.cuts.length && before.every(function(c){ return B.cuts.indexOf(c)>-1; });
+    if(!same){ stat('그 뒤로 컷이 늘거나 줄어서 옮기기를 되돌릴 수 없다.'); return; }
+    B.cuts=before; renumber(); save(); renderBoard(); stat(to+'번 자리로 옮긴 컷을 '+from+'번으로 되돌렸다.'); focusCut(from,true);
+  });
+  var f=focusCut(to,true);
+  if(how==='edit' && f){ openEdit(f); var b=f.querySelector(to<from?'.ct-mvl':'.ct-mvr'); if(b && !b.disabled) b.focus(); else { b=f.querySelector('.ct-mvl:not(:disabled),.ct-mvr:not(:disabled)'); if(b) b.focus(); } }
+  return true;
+}
+// 이 컷이 든 장면(검토 배정표) → 없으면 구간. 16컷이 넘으면 이 컷을 가운데로 16컷만
+function redoRange(n){
+  var r=null;
+  (B.scenes||[]).forEach(function(x){ if(!r && n>=x.a && n<=x.b) r={a:x.a,b:x.b}; });
+  var band=null; (B.band||[]).forEach(function(x){ if(!band && n>=x.a && n<=x.b) band=x; });
+  if(!r) r=band?{a:band.a,b:band.b}:{a:n,b:n};
+  r.b=Math.min(r.b, B.cuts.length); r.a=Math.max(1,Math.min(r.a,r.b));
+  if(r.b-r.a+1>16){ var a=Math.max(r.a, n-8), b=a+15; if(b>r.b){ b=r.b; a=b-15; } r={a:a,b:b}; }
+  r.name=band?band.name:''; return r;
+}
+var redoBusy=false;
+function redoScene(n, req, btn){
+  if(!B || redoBusy || running) return;
+  if(!aiReady()){ stat('AI 연결에서 키를 넣어야 쓸 수 있다.'); return; }
+  var ch=redoRange(n); req=String(req||'').trim();
+  var keep=B.cuts.slice(ch.a-1, ch.b), bak=keep.map(function(c){ return JSON.stringify(c); });
+  redoBusy=true; if(btn){ btn.disabled=true; btn.textContent='다시 쓰는 중…'; }
+  stat(ch.a+'–'+ch.b+'번 컷'+(ch.name?'('+ch.name+')':'')+'을 다시 쓰는 중…'+(req?' 요청: '+req.slice(0,40):''));
+  var user=cutPrompt({a:ch.a, b:ch.b, name:ch.name})+(req?'\n\n[작가 요청 — 이 구간에만 적용]\n'+req:'');
+  function done(){ redoBusy=false; if(btn && btn.isConnected){ btn.disabled=false; btn.textContent='이 구간 다시 쓰기'; } }
+  aiAsk(CSYS, user, Math.min(2600, 200+(ch.b-ch.a+1)*120), {temperature:0.65}).then(function(t){
+    done();
+    if(aiIsErr(t)){ stat('다시 쓰지 못했다. 컷은 그대로다. '+String(t).slice(0,80)); return; }
+    var still=keep.every(function(c,i){ return B.cuts[ch.a-1+i]===c; });
+    if(!still){ stat('다시 쓰는 동안 컷 순서가 바뀌어 결과를 넣지 않았다.'); return; }
+    var got=applyLines(aiClean?aiClean(t):t, {a:ch.a, b:ch.b, name:ch.name});
+    if(!got){ stat('답을 콘티 형식으로 읽지 못했다. 컷은 그대로다.'); return; }
+    save(); for(var k=ch.a;k<=ch.b;k++) refreshCut(k);
+    stat(ch.a+'–'+ch.b+'번 컷을 다시 썼다('+got+'컷).'+(req?' 요청을 반영했다.':''));
+    setUndo('redo','다시 쓰기 되돌리기',function(){
+      var ok=keep.every(function(c){ return B.cuts.indexOf(c)>-1; });
+      if(!ok){ stat('그 뒤로 컷이 지워져서 다시 쓰기를 되돌릴 수 없다.'); return; }
+      keep.forEach(function(c,i){ var o=JSON.parse(bak[i]), n0=c.n; Object.keys(c).forEach(function(k){ delete c[k]; }); Object.assign(c,o); c.n=n0; });
+      save(); keep.forEach(function(c){ refreshCut(c.n); });
+      stat(ch.a+'–'+ch.b+'번 컷을 다시 쓰기 전으로 되돌렸다.');
+    });
+  }, function(e){ done(); stat('다시 쓰지 못했다. 컷은 그대로다. '+String(e&&e.message||e).slice(0,80)); });
+}
+// 끌어 놓을 자리: 카드의 왼쪽 반이면 앞(a), 오른쪽 반이면 뒤(b). 한 줄에 한 장이면 위·아래 반
+function dropSide(f, x, y){
+  var r=f.getBoundingClientRect(), g=f.parentNode, one=g && g.getBoundingClientRect().width < r.width*1.6;
+  return one ? (y < r.top+r.height/2 ? 'a':'b') : (x < r.left+r.width/2 ? 'a':'b');
+}
+function dropTo(from, t, side){ return side==='a' ? (from<t ? t-1 : t) : (from<t ? t : t+1); }
+function clearDrop(){ root.querySelectorAll('.ct-drop-a,.ct-drop-b').forEach(function(x){ x.classList.remove('ct-drop-a','ct-drop-b'); }); }
+function markDrop(f, side){ if(f.classList.contains('ct-drop-'+side)) return; clearDrop(); f.classList.add('ct-drop-'+side); }
+var DRAG={from:0, noClick:0, down:null};
+(function(){
+  var board=document.getElementById('ct-board'); if(!board) return;
+  // 마우스: HTML5 끌어 놓기. 편집기 안에서 누르면 끌지 않는다(글자 고르기)
+  board.addEventListener('pointerdown',function(e){
+    var f=e.target.closest('.ct-cut'); if(!f) return;
+    f.draggable = e.pointerType==='mouse' && !e.target.closest('.ct-ed');
+    DRAG.down = f.draggable ? f : null;
+  });
+  board.addEventListener('dragstart',function(e){
+    var f=(DRAG.down && DRAG.down.isConnected) ? DRAG.down : (e.target.closest && e.target.closest('.ct-cut')); DRAG.down=null;
+    if(!f || !B || running || f.querySelector('.ct-ed')){ e.preventDefault(); return; }
+    DRAG.from=+f.dataset.n; f.classList.add('dragging');
+    try{ e.dataTransfer.effectAllowed='move'; e.dataTransfer.setData('text/plain', 'cut:'+DRAG.from); }catch(x){}
+  });
+  board.addEventListener('dragover',function(e){
+    if(!DRAG.from) return; var f=e.target.closest('.ct-cut'); e.preventDefault();
+    try{ e.dataTransfer.dropEffect='move'; }catch(x){}
+    if(!f || +f.dataset.n===DRAG.from){ clearDrop(); return; }
+    markDrop(f, dropSide(f, e.clientX, e.clientY));
+  });
+  board.addEventListener('drop',function(e){
+    if(!DRAG.from) return; e.preventDefault();
+    var f=e.target.closest('.ct-cut'), from=DRAG.from; DRAG.from=0; clearDrop();
+    if(f && +f.dataset.n!==from) moveCut(from, dropTo(from, +f.dataset.n, dropSide(f, e.clientX, e.clientY)));
+    else root.querySelectorAll('.ct-cut.dragging').forEach(function(x){ x.classList.remove('dragging'); });
+  });
+  board.addEventListener('dragend',function(){ DRAG.from=0; clearDrop(); DRAG.noClick=Date.now(); root.querySelectorAll('.ct-cut.dragging').forEach(function(x){ x.classList.remove('dragging'); }); });
+
+  // 터치·펜: 350ms 길게 누른 뒤에만 끌기(그 전에 움직이면 보통 스크롤)
+  var T=null;
+  function tEnd(drop){
+    if(!T) return; var t=T; T=null; clearTimeout(t.timer);
+    if(t.ghost) t.ghost.remove(); if(t.f) t.f.classList.remove('dragging');
+    if(!t.on) return;
+    DRAG.noClick=Date.now(); var tgt=t.tgt, side=t.side; clearDrop();
+    if(drop && tgt && tgt.isConnected && +tgt.dataset.n!==t.from) moveCut(t.from, dropTo(t.from, +tgt.dataset.n, side));
+    else stat('');
+  }
+  function tMove(x,y){
+    if(!T) return;
+    if(!T.on){ if(Math.abs(x-T.x)>8 || Math.abs(y-T.y)>8){ clearTimeout(T.timer); T=null; } return; }
+    T.ghost.style.left=x+'px'; T.ghost.style.top=y+'px';
+    var el=document.elementFromPoint(x,y), f=el && el.closest && el.closest('#ct-board .ct-cut');
+    if(f && +f.dataset.n!==T.from){ T.tgt=f; T.side=dropSide(f,x,y); markDrop(f,T.side); } else { T.tgt=null; clearDrop(); }
+    if(y<70) scrollBy({top:-14, behavior:'instant'}); else if(y>innerHeight-50) scrollBy({top:14, behavior:'instant'});
+  }
+  board.addEventListener('pointerdown',function(e){
+    if(e.pointerType==='mouse' || !B || running) return;
+    var f=e.target.closest('.ct-cut'); if(!f || e.target.closest('.ct-ed') || f.querySelector('.ct-ed')) return;
+    tEnd(false);
+    T={f:f, from:+f.dataset.n, x:e.clientX, y:e.clientY, id:e.pointerId, on:false};
+    T.timer=setTimeout(function(){ if(!T) return; T.on=true; f.classList.add('dragging');
+      var c=B.cuts[T.from-1]||{}, g=document.createElement('div'); g.className='ct-ghost'; g.textContent=T.from+' · '+String(c.scr||shotName(c.k)).slice(0,24);
+      document.body.appendChild(g); T.ghost=g; g.style.left=T.x+'px'; g.style.top=T.y+'px';
+      try{ navigator.vibrate && navigator.vibrate(15); }catch(x){}
+      stat(T.from+'번 컷을 끌고 있다. 놓을 컷 위에서 손을 뗀다.'); }, 350);
+  });
+  board.addEventListener('pointermove',function(e){ if(T && e.pointerId===T.id) tMove(e.clientX,e.clientY); });
+  board.addEventListener('pointerup',function(e){ if(T && e.pointerId===T.id) tEnd(true); });
+  board.addEventListener('pointercancel',function(){ if(T && !T.on){ clearTimeout(T.timer); T=null; } });  // 끄는 중의 cancel(길게 누름)은 touchend까지 기다린다
+  board.addEventListener('touchmove',function(e){ if(T && T.on){ e.preventDefault(); var p=e.touches[0]; if(p) tMove(p.clientX,p.clientY); } },{passive:false});
+  board.addEventListener('touchend',function(){ if(T && T.on) tEnd(true); });
+  board.addEventListener('touchcancel',function(){ tEnd(false); });
+  board.addEventListener('contextmenu',function(e){ if(T || Date.now()-DRAG.noClick<600) e.preventDefault(); });
+})();
 
 /* ---------- AI 콘티 쓰기 ---------- */
 var CSYS='당신은 한국 웹툰 콘티 작가다. 정해진 형식의 줄만 쓴다. 서론·설명·요약·마크다운 기호를 쓰지 않는다.';
@@ -11874,10 +12054,14 @@ document.getElementById('ct-copy').addEventListener('click', function(){
 });
 document.getElementById('ct-story').addEventListener('input', function(){ if(B){ B.story=this.value; save(); } });
 document.getElementById('ct-board').addEventListener('click', function(e){
+  if(Date.now()-DRAG.noClick<400) return;   // 끌기 직후의 클릭은 편집기를 열지 않는다
   var f=e.target.closest('.ct-cut'); if(f && B) openEdit(f);
 });
 document.getElementById('ct-board').addEventListener('keydown', function(e){
   if(e.key==='Enter' && e.target.classList.contains('ct-cut') && B) openEdit(e.target);
+  if(e.altKey && !e.ctrlKey && !e.metaKey && /^Arrow(Left|Right|Up|Down)$/.test(e.key) && e.target.classList.contains('ct-cut') && B){
+    e.preventDefault(); var n=+e.target.dataset.n; moveCut(n, n+(/Left|Up/.test(e.key)?-1:1));
+  }
 });
 try{ matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function(){ root.querySelectorAll('.ct-cut canvas').forEach(queue); }); }catch(e){}
 new MutationObserver(function(){ root.querySelectorAll('.ct-cut canvas').forEach(queue); }).observe(document.documentElement,{attributes:true, attributeFilter:['data-theme']});
