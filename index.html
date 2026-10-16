@@ -858,16 +858,16 @@ textarea.cast-in{resize:vertical; min-height:2.6em; overflow:hidden}
 .cf-desc{margin:0 0 .45rem; font-size:.9rem}
 .cf-seq{display:grid; grid-auto-flow:column; grid-auto-columns:minmax(6.6rem,1fr); gap:.45rem; overflow-x:auto; margin:.5rem 0 .6rem; padding:0 0 .25rem; overscroll-behavior-x:contain; max-width:100%}
 .cf-cut{margin:0; min-width:0}
-.cf-cv{display:block; width:100%; height:5.8rem; background:var(--paper)}
+.cf-cv{display:block; width:100%; height:auto; aspect-ratio:3/2; max-height:10rem; background:var(--paper)}
 .cf-cap{font-size:.72rem; line-height:1.38; margin:.25rem 0 0; color:var(--ink-2); overflow-wrap:anywhere}
 .cf-cap .cf-i{font-weight:700; color:var(--ink); margin-right:.2rem}
 .cf-cap code{font-family:"IBM Plex Mono",ui-monospace,monospace; color:var(--mark); font-size:.7rem}
 .cf-cap .cf-line{display:block; color:var(--note)}
 .cf-seq.v{grid-auto-flow:row; grid-template-columns:1fr; grid-auto-columns:auto; overflow:visible; gap:0}
 .cf-seq.v .cf-cut{display:flex; gap:.6rem; align-items:flex-start}
-.cf-seq.v .cf-cv{flex:0 0 8.6rem; width:8.6rem; height:5.4rem}
+.cf-seq.v .cf-cv{flex:0 0 10rem; width:10rem; height:6.6rem; aspect-ratio:auto}
 .cf-seq.v .cf-cap{margin:0; flex:1 1 auto; min-width:0}
-.cf-gap{position:relative; height:.55rem; width:8.6rem}
+.cf-gap{position:relative; height:.55rem; width:10rem}
 .cf-gap[data-g="0"]{height:.18rem}
 .cf-gap[data-g="1"]{height:1.5rem}
 .cf-gap[data-g="2"]{height:3.2rem}
@@ -883,9 +883,9 @@ textarea.cast-in{resize:vertical; min-height:2.6em; overflow:hidden}
 @media (max-width:640px){
   #ctfx-root .cf-bar .cf-q{flex:1 1 100%; width:auto; font-size:16px}
   .cf-card{padding:.55rem .6rem .7rem}
-  .cf-seq{grid-auto-columns:6.3rem}
-  .cf-seq.v .cf-cv{flex-basis:7.6rem; width:7.6rem}
-  .cf-gap{width:7.6rem}
+  .cf-seq{grid-auto-columns:8.2rem}
+  .cf-seq.v .cf-cv{flex-basis:8.4rem; width:8.4rem; height:5.6rem}
+  .cf-gap{width:8.4rem}
 }
 /* [[/CSS:ctfx]] */
 /* [[CSS:bestcut]] */
