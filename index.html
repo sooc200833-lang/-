@@ -756,6 +756,69 @@ textarea.cast-in{resize:vertical; min-height:2.6em; overflow:hidden}
 /* [[CSS:poseref]] */
 /* [[/CSS:poseref]] */
 /* [[CSS:bestcut]] */
+#cutlib-root .lede{margin-bottom:1.1rem}
+.bc-make{display:grid; grid-template-columns:minmax(0,1.15fr) minmax(0,1fr); gap:1rem 1.2rem; align-items:start; margin:0 0 1.6rem; padding:.8rem; background:var(--paper-2); border:1px solid var(--rule)}
+.bc-view{position:sticky; top:4.2rem; min-width:0}
+#bc-cv{display:block; width:100%; aspect-ratio:4/3; background:var(--paper)}
+.bc-cap{margin:.35rem 0 0; font-size:.78rem; color:var(--ink-3); line-height:1.45}
+.bc-form{display:grid; gap:.55rem; min-width:0; font-size:.84rem}
+.bc-form label{display:grid; gap:.15rem; min-width:0}
+.bc-form select,.bc-form input[type=text],.bc-form textarea{font:inherit; font-size:.84rem; background:var(--paper); color:var(--ink); border:1px solid var(--rule-hard); padding:.22rem .32rem; min-width:0; max-width:100%; box-sizing:border-box}
+.bc-form textarea{resize:vertical; line-height:1.5}
+.bc-row{display:flex; flex-wrap:wrap; gap:.45rem .7rem; align-items:end}
+.bc-row .bc-grow{flex:1 1 12rem}
+.bc-form label.bc-ck{display:inline-flex; gap:.25rem; align-items:center; padding-bottom:.2rem}
+.bc-refnote{margin:-.25rem 0 0; color:var(--ink-3)} .bc-refnote:empty{display:none}
+.bc-who{display:grid; gap:.35rem; border-top:1px dashed var(--rule-hard); border-bottom:1px dashed var(--rule-hard); padding:.45rem 0}
+.bc-wh{display:flex; gap:.6rem; align-items:center; justify-content:space-between}
+.bc-form .bc-wh label{display:inline-flex; gap:.3rem; align-items:center}
+.bc-c{display:flex; flex-wrap:wrap; gap:.3rem .4rem; align-items:center; padding:.3rem .35rem; border-left:3px solid transparent; background:var(--paper)}
+.bc-c.on{border-left-color:var(--note)}
+.bc-ci{font-variant-numeric:tabular-nums; color:var(--ink-3); font-size:.76rem; width:1rem}
+.bc-c select{flex:1 1 6.5rem}
+.bc-form .bc-c label.bc-cxl{display:inline-flex; gap:.3rem; align-items:center; flex:1 1 8rem; color:var(--ink-3); font-size:.76rem}
+.bc-cx{flex:1; min-width:4rem; accent-color:var(--note)}
+.bc-c .chip,.bc-who > .chip{font-size:.74rem; padding:.1rem .45rem; justify-self:start}
+.bc-acts{margin:0}
+.bc-acts .bc-ok{background:var(--ink); color:var(--paper); border-color:var(--ink)}
+.bc-msg{color:var(--green)}
+.bc-lh{font-family:"Hahmlet",serif; font-size:1.05rem; margin:0 0 .5rem; display:flex; align-items:baseline; gap:.5rem}
+.bc-lh .count{margin-left:0}
+.bc-fbar{margin:0 0 .6rem}
+.bc-fbar .chips{display:flex; flex-wrap:wrap; gap:.35rem; margin-bottom:.4rem}
+.bc-fbar .cn{color:var(--ink-3); font-size:.72rem}
+.bc-fbar .chip[aria-pressed="true"] .cn{color:inherit}
+.bc-fbar .cast-fact{display:flex; flex-wrap:wrap; gap:.35rem; align-items:center}
+.bc-fbar input{font:inherit; font-size:.8rem; padding:.18rem .35rem; border:1px solid var(--rule-hard); background:var(--paper); color:var(--ink); min-width:0; width:11rem; max-width:100%}
+.bc-top{margin:0 0 .8rem} #bc-q{font:inherit; font-size:.84rem; padding:.25rem .4rem; border:1px solid var(--rule-hard); background:var(--paper); color:var(--ink); width:18rem; max-width:100%; box-sizing:border-box}
+.bc-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(160px,1fr)); gap:14px 10px}
+.bc-card{margin:0; display:grid; gap:4px; align-content:start; min-width:0; cursor:pointer}
+.bc-card.on canvas{outline:2px solid var(--note); outline-offset:2px}
+.bc-card:focus-visible{outline:2px solid var(--note); outline-offset:3px}
+.bc-card canvas,.bc-pi canvas{display:block; width:100%; aspect-ratio:4/3; background:var(--paper)}
+.bc-card figcaption{display:grid; gap:.1rem; font-size:.8rem; min-width:0}
+.bc-card figcaption b{font-size:.86rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+.bc-cw{color:var(--note)!important; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+.bc-ca{display:flex; flex-wrap:wrap; gap:.25rem; margin-top:.15rem}
+.bc-ca .chip{font-size:.72rem; padding:.05rem .4rem}
+.bc-pick{border:1px solid var(--rule-hard); background:var(--paper); padding:.45rem; display:grid; gap:.45rem}
+.bc-pbar{display:flex; flex-wrap:wrap; gap:.35rem; align-items:center}
+.bc-pbar input{flex:1 1 7rem}
+.bc-pgrid{display:grid; grid-template-columns:repeat(auto-fill,minmax(104px,1fr)); gap:8px; max-height:340px; overflow:auto}
+.bc-pi{font:inherit; font-size:.74rem; text-align:left; background:none; border:1px solid var(--rule); padding:3px; color:var(--ink-2); cursor:pointer; display:grid; gap:2px; min-width:0}
+.bc-pi:hover,.bc-pi:focus-visible{border-color:var(--note)}
+.bc-pi span{overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+.ct-wp{display:grid; gap:.25rem} .ct-wp:empty{display:none}
+.ct-wr{display:flex; flex-wrap:wrap; gap:.25rem .35rem; align-items:center}
+.ct-wr b{font-size:.78rem; min-width:3.5rem}
+.ct-wr select{flex:1 1 5.5rem}
+.ct-bc{margin:0}
+.ct-bcbox:empty{display:none}
+@media (max-width:720px){
+  .bc-make{grid-template-columns:1fr; padding:.6rem}
+  .bc-view{position:static}
+  .bc-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
 /* [[/CSS:bestcut]] */
 .chx{font:inherit; font-size:.72rem; border:0; background:none; color:var(--ink-3); cursor:pointer; padding:0 .2rem; margin-left:.15rem}
 .chx-row td{background:var(--paper-2)}
@@ -7579,7 +7642,9 @@ var FIG_SEL=[
   ['hair','머리',['짧은','긴','단발','묶은','한쪽만 긴','각진','삐죽','민머리']],
   ['eyes','눈매',['치켜올라간','처진','반쯤 감긴','감은','작은 동공']],
   ['build','체격',['작음','보통','큼','마름','두꺼움']],
-  ['pose','자세',['구부정','곧은','팔짱','주머니에 손','뒷짐','무언가 안음','고개 기울임']],
+  ['pose','자세',['구부정','곧은','팔짱','주머니에 손','뒷짐','무언가 안음','고개 기울임',
+    '걷기','달리기','점프','앉기','무릎 꿇기','주저앉기','쓰러짐','주먹 지르기','발차기','검 겨누기','검 휘두르기','가리키기','손 내밀기','손 흔들기',
+    '뒤돌아보기','머리 감싸기','얼굴 가리기','하늘 보기','팔 벌리기','착지','마법 시전','활 쏘기','기대기','엄지 척']],
   ['outfit','옷',['교복','정장','큰 겉옷','긴 옷자락','교복+겉옷','로브','사제복','귀족 옷']],
   // 판타지 (FIG_FAN — 고르는 칸에서 「판타지」로 접는다)
   ['race','종족',['엘프','수인','마족','용인','드워프','천사','요정','언데드']],
@@ -7641,6 +7706,12 @@ var FIG_RULES=[
   ['pose','무언가 안음',/안고 있|품에 안|끌어안/],
   ['pose','고개 기울임',/고개를 (조금 )?기울|갸웃/],
   ['pose','곧은',/곧은 *자세|꼿꼿|반듯한 *자세|군인 *같은 *자세/],
+  ['pose','앉기',/휠체어|늘 *앉아 *있|걸터앉아 *있/],
+  ['pose','기대기',/(벽|기둥|난간)에 *기대/],
+  ['pose','엄지 척',/엄지를 *(척|치켜)|엄지 *척/],
+  ['pose','하늘 보기',/(늘|자주|멍하니) *하늘을 *(올려다|본)/],
+  ['pose','머리 감싸기',/머리를 *감싸/],
+  ['pose','얼굴 가리기',/(손으로|두 손으로) *얼굴을 *가리/],
   ['outfit','로브',/로브|마법사|마도사|마술사|위저드|법의/],
   ['outfit','사제복',/사제복|사제(?! *(관계|지간|간))|신부복|수녀|성직자|신관|성녀/],
   ['outfit','귀족 옷',/귀족|영애|영식|왕자|공주|백작|공작(?!새)|후작|자작|남작|연미복|프릴|드레스/],
@@ -8011,7 +8082,7 @@ function castCardHTML(m){
   return '<div class="cast-card'+(op?' open':'')+'" data-id="'+wsEsc(m.id)+'"><button class="cast-h" aria-expanded="'+(op?'true':'false')+'">'+castHeadHTML(m)+'</button>'+
     '<div class="cast-body"'+(op?'':' hidden')+'>'+castFieldsHTML(m)+
     ((m.motifs||[]).length?'<p class="small cast-mt">모티브 — '+m.motifs.map(wsEsc).join(' · ')+'</p>':'')+
-    '<div class="cast-acts"><span class="small">작품(폴더)</span>'+castFoldUI(m.folder||'기본')+'<button class="chip" data-fill="1" title="적은 칸은 두고 빈 칸만 AI가 채운다">빈 칸 채우기</button><button class="chip" data-del="1">삭제</button><span class="small cast-saved"></span></div><div class="cast-fillmsg"></div></div></div>';
+    '<div class="cast-acts"><span class="small">작품(폴더)</span>'+castFoldUI(m.folder||'기본')+'<button class="chip" data-fill="1" title="적은 칸은 두고 빈 칸만 AI가 채운다">빈 칸 채우기</button><button class="chip" data-bcut="1" title="이 인물로 자세·구도를 정해 컷을 만든다">베스트컷 만들기</button><button class="chip" data-del="1">삭제</button><span class="small cast-saved"></span></div><div class="cast-fillmsg"></div></div></div>';
 }
 function castCardBind(card){
   var id=card.getAttribute('data-id'), h=card.querySelector('.cast-h'), body=card.querySelector('.cast-body'), saved=card.querySelector('.cast-saved');
@@ -9056,6 +9127,13 @@ function weaponDraw(D,G,w,ph){
     var ex=E[0]-Bp[0], ey=E[1]-Bp[1], el=Math.hypot(ex,ey); D.rc.line(Bp[0]-ey/el*.045*u, Bp[1]+ex/el*.045*u, Bp[0]+ey/el*.045*u, Bp[1]-ex/el*.045*u, lineW(1.8));
     return;
   }
+  if((w==='창' || w==='지팡이') && G.J && hA){   // 새 자세: 손에 쥔 채 손을 따라간다
+    var tq=G.side?f*.18:.08, top2=[hA[0]+Math.sin(tq)*.55*u, hA[1]-Math.cos(tq)*.55*u], bot=[hA[0]-Math.sin(tq)*.38*u, hA[1]+Math.cos(tq)*.38*u];
+    D.rc.line(bot[0], bot[1], top2[0], top2[1], lineW(sil?2.2:1.5));
+    if(w==='창') D.rc.polygon([[top2[0]+Math.sin(tq)*.11*u, top2[1]-Math.cos(tq)*.11*u],[top2[0]+.024*u, top2[1]],[top2[0], top2[1]+.02*u],[top2[0]-.024*u, top2[1]]], D.ink(sil?G.body:{fill:D.c.ink3, fillStyle:'solid'}));
+    else D.rc.circle(top2[0], top2[1]-.03*u, .055*u, D.ink(sil?G.body:{fill:D.c.mark, fillStyle:'solid'}));
+    return;
+  }
   if(w==='창' || w==='지팡이'){
     var px=hA?hA[0]:(f?x+f*G.tsw*1.2:x+G.tsw*.85), tp=G.top-(w==='창'?.1:.03)*u;
     D.rc.line(px, tp, px+.008*u, G.footY, lineW(sil?2.2:1.5));
@@ -9157,16 +9235,162 @@ function beardDraw(D,G,lk,x,cy,r){
   D.rc.polygon(P, D.ink(Object.assign({strokeWidth:.9*D.sw}, st)));
   if(!f && !long && !G.sil && G.d>=22) D.rc.polygon([[x-r*.34,cy+r*.52],[x,cy+r*.42],[x+r*.34,cy+r*.52],[x+r*.2,cy+r*.58],[x,cy+r*.52],[x-r*.2,cy+r*.58]], D.ink(Object.assign({strokeWidth:.8*D.sw}, hf)));
 }
-function figBody(D,x,top,H,o){
+/* 자세 (2026-10 베스트컷). 옛 자세 7개는 figBody0 안의 옛 그림 그대로, 새 자세는 POSE_J가 관절 자리를 준다.
+   s: 옆모습(x는 앞쪽+), f: 정면·뒷모습(x는 바깥쪽+). a:[[팔꿈치x,y, 손x,y, 손을 몸 가운데 기준(1)], …] 어깨 기준, 0번=오른쪽(옆에서는 앞쪽 팔, 몸 앞에 그림), 1번=왼쪽(옆에서는 뒤쪽 팔, 몸 뒤)
+   l:[[무릎x,y, 발x,y], …] 엉덩이 기준(다리 길이 비율). lean 상체 기울기(옆), tilt/tiltW 정면 기울기(벽 쪽), drop 엉덩이 내림, sq 상체 줄임(정면에서 앞으로 숙임), lift 띄움, lie 눕힘
+   hm 손 모양(fist·open·point·thumb·big), hide 손 숨김, look 고개(up·down), fx 소품·효과, own 손에 쥐는 무기(그 무기는 원래 자리에 안 그린다), side 1이면 방향을 안 정했을 때 옆모습 */
+var POSE_SW=['허리에 검','등에 대검','단검','창'];
+var POSE_J={
+ '걷기':{side:1, s:{lean:.04, a:[[-.05,.15,-.08,.29],[.05,.15,.11,.28]], l:[[.08,.24,.15,.48],[-.05,.245,-.16,.47]]},
+   f:{a:[[.04,.15,.04,.3],[.035,.15,.08,.28]], l:[[.01,.25,.03,.5],[.03,.235,.02,.47]]}},
+ '달리기':{side:1, s:{lean:.3, drop:.07, a:[[.1,.12,.21,.03],[-.13,.09,-.07,.22]], l:[[.19,.17,.13,.41],[-.08,.23,-.3,.33]], hm:['fist','fist'], fx:'speed'},
+   f:{drop:.03, a:[[.07,.13,.03,.03],[.07,.14,.1,.25]], l:[[.03,.17,.04,.42],[.02,.25,.04,.5]], hm:['fist','fist']}},
+ '점프':{s:{lift:.28, a:[[.07,-.14,.1,-.29],[-.05,-.14,-.04,-.3]], l:[[.17,.18,.06,.39],[.06,.23,-.12,.4]], fx:'jump'},
+   f:{lift:.28, a:[[.09,-.13,.16,-.27],[.09,-.13,.16,-.27]], l:[[.1,.2,.06,.43],[.1,.2,.06,.43]], fx:'jump'}},
+ '앉기':{s:{drop:.22, a:[[.05,.15,.18,.27],[.04,.15,.16,.29]], l:[[.25,0,.27,.27],[.23,.02,.22,.28]], fx:'seat'},
+   f:{drop:.22, a:[[.03,.15,0,.3],[.03,.15,0,.3]], l:[[.07,.06,.09,.28],[.07,.06,.09,.28]], fx:'seat'}},
+ '무릎 꿇기':{s:{drop:.25, lean:.05, a:[[.06,.15,.17,.25],[.02,.16,.03,.3]], l:[[.2,.05,.22,.25],[0,.245,-.24,.25]]},
+   f:{drop:.25, a:[[.04,.15,.02,.29],[.035,.16,.05,.31]], l:[[.06,.12,.07,.25],[.02,.24,.03,.25]]}},
+ '주저앉기':{s:{drop:.42, lean:.35, look:'down', a:[[.06,.15,.12,.28],[.03,.15,.07,.29]], l:[[.2,-.1,.4,.07],[.22,-.06,.42,.07]]},
+   f:{drop:.42, sq:.75, look:'down', a:[[.05,.16,.09,.3],[.05,.16,.09,.3]], l:[[.08,.05,.2,.08],[.08,.05,.2,.08]]}},
+ '쓰러짐':{side:1, s:{lie:1, a:[[.06,-.15,.1,-.3],[-.02,.16,0,.31]], l:[[.03,.25,-.01,.5],[.07,.24,.12,.48]]},
+   f:{lie:1, a:[[.12,.1,.26,.14],[.1,.12,.2,.24]], l:[[.04,.25,.1,.49],[.02,.25,.05,.5]]}},
+ '주먹 지르기':{s:{lean:.08, drop:.06, a:[[.16,0,.31,-.01],[-.12,.1,-.02,.17]], l:[[.15,.2,.17,.44],[-.1,.22,-.2,.44]], hm:['fist','fist'], fx:'punch'},
+   f:{drop:.05, a:[[-.05,.08,.03,.12,1],[.06,.14,.05,.23]], l:[[.1,.22,.2,.45],[.1,.22,.2,.45]], hm:['big','fist'], fx:'punch'}},
+ '발차기':{side:1, s:{lean:-.15, a:[[.09,.1,.15,0],[-.08,.12,-.02,.04]], l:[[.24,-.06,.48,-.1],[0,.25,-.03,.5]], hm:['fist','fist'], fx:'kick'},
+   f:{tilt:-.15, a:[[.06,.1,.07,.02,1],[.06,.1,.07,.02,1]], l:[[.24,-.03,.48,-.05],[.02,.25,.05,.5]], hm:['fist','fist'], fx:'kick'}},
+ '검 겨누기':{s:{drop:.04, a:[[.08,.14,.17,.2],[.07,.15,.15,.21]], l:[[.12,.22,.16,.46],[-.08,.23,-.16,.46]], fx:'sword', own:POSE_SW},
+   f:{a:[[-.02,.15,.015,.21,1],[-.02,.15,.015,.21,1]], l:[[.06,.24,.13,.49],[.06,.24,.13,.49]], fx:'sword', own:POSE_SW}},
+ '검 휘두르기':{s:{lean:.12, drop:.05, a:[[.14,-.06,.27,-.05],[.13,-.05,.26,-.04]], l:[[.15,.2,.17,.45],[-.1,.22,-.2,.45]], fx:'swing', own:POSE_SW},
+   f:{a:[[.1,.06,.16,.02,1],[-.14,.08,-.16,.04,1]], l:[[.06,.24,.13,.49],[.06,.24,.13,.49]], fx:'swing', own:POSE_SW}},
+ '가리키기':{s:{a:[[.15,-.03,.3,-.07],[.02,.16,.03,.31]], l:[[.05,.25,.09,.5],[-.02,.25,-.04,.5]], hm:['point','']},
+   f:{a:[[.15,-.03,.3,-.07],[.035,.16,.055,.31]], hm:['point','']}},
+ '손 내밀기':{s:{lean:.05, a:[[.14,.07,.28,.08],[.02,.16,.03,.31]], l:[[.06,.25,.11,.5],[-.02,.25,-.04,.5]], hm:['open','']},
+   f:{a:[[.1,.11,.2,.18],[.035,.16,.055,.31]], hm:['open','']}},
+ '손 흔들기':{s:{a:[[.07,-.08,.1,-.2],[.02,.16,.03,.31]], hm:['open',''], fx:'wave'},
+   f:{a:[[.13,-.05,.16,-.2],[.035,.16,.055,.31]], hm:['open',''], fx:'wave'}},
+ '뒤돌아보기':{f:{a:[[.035,.16,.06,.31],[.035,.16,.05,.3]], l:[[.01,.25,.03,.5],[.03,.24,.05,.48]]}},
+ '머리 감싸기':{s:{look:'down', a:[[.12,-.04,.03,-.15,1],[.08,-.06,-.02,-.16,1]], fx:'worry'},
+   f:{look:'down', a:[[.12,-.06,.075,-.13,1],[.12,-.06,.075,-.13,1]], fx:'worry'}},
+ '얼굴 가리기':{s:{a:[[.12,.06,.11,-.1,1],[.1,.08,.09,-.09,1]], fx:'face'},
+   f:{a:[[-.03,.15,.04,-.1,1],[-.03,.15,.04,-.08,1]], fx:'face'}},
+ '하늘 보기':{s:{lean:-.1, look:'up', a:[[-.01,.16,-.04,.3],[0,.16,-.02,.31]]}, f:{look:'up'}},
+ '팔 벌리기':{s:{lean:-.06, look:'up', a:[[.12,-.09,.24,-.18],[-.12,-.09,-.24,-.18]], hm:['open','open']},
+   f:{a:[[.15,-.04,.3,-.1],[.15,-.04,.3,-.1]], l:[[.03,.25,.08,.5],[.03,.25,.08,.5]], hm:['open','open']}},
+ '착지':{s:{lean:.8, drop:.4, look:'up', a:[[.11,.11,.215,.21],[-.13,-.05,-.27,-.1]], l:[[.16,-.14,.3,.1],[-.2,.09,-.42,.1]], hm:['fist','open'], fx:'land'},
+   f:{drop:.4, sq:.6, a:[[.05,.15,.07,.3],[.13,-.02,.27,-.08]], l:[[.16,-.12,.2,.1],[.1,.09,.25,.1]], hm:['fist','open'], fx:'land'}},
+ '마법 시전':{s:{a:[[.14,-.02,.28,-.04],[.02,.15,-.02,.29]], l:[[.06,.25,.11,.5],[-.03,.25,-.06,.5]], hm:['open',''], fx:'magic', own:['지팡이','마법서']},
+   f:{a:[[.1,.06,.2,0],[.06,.14,.1,.27]], hm:['open',''], fx:'magic', own:['지팡이','마법서']}},
+ '활 쏘기':{side:1, s:{a:[[.16,-.02,.31,-.03],[-.14,-.02,.03,-.07]], l:[[.06,.25,.12,.5],[-.06,.25,-.12,.5]], hm:['fist','fist'], fx:'bow', own:['활']},
+   f:{a:[[.16,-.02,.31,-.03],[.14,-.02,.03,-.07,1]], hm:['fist','fist'], fx:'bow', own:['활']}},
+ '기대기':{s:{lean:-.16, a:[[.04,.15,.13,.13,1],[.05,.14,.14,.12,1]], l:[[.08,.24,.17,.48],[.06,.24,.12,.49]], hide:[1,1], fx:'wall'},
+   f:{tiltW:.12, a:[[.03,.15,-.08,.14,1],[.03,.15,-.08,.12,1]], l:[[0,.25,-.12,.49],[.03,.25,.08,.5]], hide:[1,1], fx:'wall', bar:1}},
+ '엄지 척':{s:{a:[[.08,.13,.2,.05],[.02,.16,.03,.31]], hm:['thumb',''], fx:'spark'},
+   f:{a:[[.1,.13,.16,0],[.035,.16,.055,.31]], hm:['thumb',''], fx:'spark'}}
+};
+// 방향 값: left·right·back·front(또는 한글). ''이면 구도가 정한 방향
+function faceKey(v){ v=String(v||'').trim(); return {left:'left',right:'right',back:'back',front:'front','왼쪽':'left','오른쪽':'right','뒤':'back','뒷모습':'back','정면':'front'}[v]||''; }
+function hull(P){ P=P.slice().sort(function(a,b){ return a[0]-b[0]||a[1]-b[1]; });
+  var cr=function(o,a,b){ return (a[0]-o[0])*(b[1]-o[1])-(a[1]-o[1])*(b[0]-o[0]); }, lo=[], up=[], i;
+  for(i=0;i<P.length;i++){ while(lo.length>=2 && cr(lo[lo.length-2],lo[lo.length-1],P[i])<=0) lo.pop(); lo.push(P[i]); }
+  for(i=P.length-1;i>=0;i--){ while(up.length>=2 && cr(up[up.length-2],up[up.length-1],P[i])<=0) up.pop(); up.push(P[i]); }
+  up.pop(); lo.pop(); return lo.concat(up); }
+// 손 모양: P는 팔 [어깨, 팔꿈치, 손]
+function handMark(D,G,P,t){
+  var u=G.u, h=P[2], a=Math.atan2(P[2][1]-P[1][1], P[2][0]-P[1][0]), rr=Math.max(2.4,.03*u), st=G.sil?G.body:{fill:D.c.paper, fillStyle:'solid'};
+  if(t==='fist') D.rc.circle(h[0], h[1], rr*2.3, D.ink(st));
+  else if(t==='open'){ var c=[h[0]+Math.cos(a)*rr*.7, h[1]+Math.sin(a)*rr*.7]; D.rc.polygon(ovalPts(c[0],c[1],rr*1.35,rr*1,a,10), D.ink(st));
+    if(G.det) [-.5,0,.5].forEach(function(k){ var b=a+k*.5; D.rc.line(c[0]+Math.cos(b)*rr*1.1, c[1]+Math.sin(b)*rr*1.1, c[0]+Math.cos(b)*rr*2.1, c[1]+Math.sin(b)*rr*2.1, D.ink({strokeWidth:1*D.sw})); }); }
+  else if(t==='point'){ D.rc.circle(h[0], h[1], rr*2, D.ink(st)); D.rc.line(h[0]+Math.cos(a)*rr*.8, h[1]+Math.sin(a)*rr*.8, h[0]+Math.cos(a)*rr*3.2, h[1]+Math.sin(a)*rr*3.2, D.ink({strokeWidth:1.5*D.sw})); }
+  else if(t==='thumb'){ D.rc.circle(h[0], h[1], rr*2.3, D.ink(st)); D.rc.line(h[0], h[1]-rr*.8, h[0]+rr*.2, h[1]-rr*2.8, D.ink({strokeWidth:2*D.sw})); }
+  else if(t==='big'){ var R=.15*u; D.rc.circle(h[0], h[1], R, D.ink(Object.assign({strokeWidth:1.6*D.sw}, st)));
+    if(G.det) [-1,0,1].forEach(function(k){ D.rc.line(h[0]+k*R*.22, h[1]-R*.38, h[0]+k*R*.22, h[1]-R*.12, D.ink({strokeWidth:.9*D.sw})); }); }
+}
+// 손에 쥔 칼날: g 손잡이 자리, v 방향(단위), kind 무기 이름
+function bladeDraw(D,G,g,v,kind){
+  var u=G.u, n=[-v[1],v[0]], P=function(p,k){ return [g[0]+v[0]*k*u, g[1]+v[1]*k*u]; }, st=G.sil?G.body:{fill:D.c.paper, fillStyle:'solid'}, lw=function(k){ return D.ink({strokeWidth:k*D.sw}); };
+  if(kind==='창'){ var a0=P(0,-.42), a1=P(0,.62); D.rc.line(a0[0],a0[1],a1[0],a1[1], lw(G.sil?2.4:1.6));
+    var t=P(0,.75), b=P(0,.6); D.rc.polygon([t,[b[0]+n[0]*.028*u,b[1]+n[1]*.028*u],P(0,.63),[b[0]-n[0]*.028*u,b[1]-n[1]*.028*u]], D.ink(G.sil?G.body:{fill:D.c.ink3, fillStyle:'solid'})); return; }
+  var len=kind==='등에 대검'?.62:(kind==='단검'?.22:.46), w=(kind==='등에 대검'?.042:(kind==='단검'?.02:.024))*u;
+  var g0=P(0,.035), t0=P(0,len-.05), tip=P(0,len);
+  D.rc.polygon([[g0[0]+n[0]*w,g0[1]+n[1]*w],[t0[0]+n[0]*w,t0[1]+n[1]*w],tip,[t0[0]-n[0]*w,t0[1]-n[1]*w],[g0[0]-n[0]*w,g0[1]-n[1]*w]], D.ink(st));
+  if(G.det && kind!=='단검') D.rc.line(P(0,.07)[0],P(0,.07)[1],t0[0],t0[1], D.ink({stroke:D.c.ink3, strokeWidth:.8}));
+  var e=P(0,-.07); D.rc.line(e[0],e[1],g0[0],g0[1], lw(2.4));
+  D.rc.line(g0[0]+n[0]*.06*u, g0[1]+n[1]*.06*u, g0[0]-n[0]*.06*u, g0[1]-n[1]*.06*u, lw(2));
+  return tip;
+}
+// 자세 소품·효과. ph: pre(몸 뒤, 기울기 전) · mid(팔 다음) · post(머리 다음)
+function poseFx(D,G,J,ph,lk){
+  var fx=J.fx; if(!fx) return;
+  var u=G.u, x=G.x, f=G.f, m=G.side?f:1, H=G.hands, A=G.arms||{}, ink3=function(e){ return D.ink(Object.assign({stroke:D.c.ink3, strokeWidth:.9}, e||{})); };
+  var both=function(){ var a=H[1], b=H[-1]; return a&&b?[(a[0]+b[0])/2,(a[1]+b[1])/2]:(a||b); };
+  var mk=function(e){ return D.ink(Object.assign({stroke:D.c.mark, strokeWidth:1.3*D.sw}, e||{})); };
+  if(ph==='pre'){
+    if(fx==='seat'){ var y0=G.hipY+.025*u, sx0=G.side?x-f*.16*u:x-.22*u, sx1=G.side?x+f*.12*u:x+.22*u;
+      D.rc.rectangle(Math.min(sx0,sx1), y0, Math.abs(sx1-sx0), G.footY-y0, D.ink({stroke:D.c.ink2, strokeWidth:1.1*D.sw, fill:D.c.paper, fillStyle:'solid'}));
+      if(!G.side) D.rc.line(x-.22*u, y0+.05*u, x+.22*u, y0+.05*u, ink3()); }
+    if(fx==='wall'){ var ws=G.side?-f:G.ws, wx=G.side?x+ws*.14*u:x+ws*(G.tsw*.5+.05*u), wy=G.top-.25*u;
+      D.rc.rectangle(Math.min(wx,wx+ws*.14*u), wy, .14*u, G.footY-wy, D.ink({stroke:D.c.ink2, strokeWidth:1.1*D.sw, fill:D.c.ink3, fillStyle:'hachure', hachureGap:Math.max(3,u*.03), fillWeight:.6})); }
+    if(fx==='speed' && G.side) for(var i=0;i<4;i++){ var yy=G.shY+(i*.1)*u; D.rc.line(x-f*(.24+.04*i)*u, yy, x-f*(.52+.07*i)*u, yy, ink3({strokeWidth:1})); }
+    if(fx==='land'){ var gy=G.footY;
+      D.rc.line(x-.5*u, gy, x+.5*u, gy, D.ink({stroke:D.c.ink2, strokeWidth:1}));
+      [-1,1].forEach(function(k){ D.rc.linearPath([[x+m*.1*u+k*.04*u, gy],[x+m*.1*u+k*.16*u, gy+.025*u],[x+m*.1*u+k*.26*u, gy+.01*u]], D.ink({strokeWidth:1.1*D.sw}));
+        D.rc.arc(x+m*.1*u+k*.34*u, gy-.03*u, .12*u, .07*u, Math.PI, Math.PI*2, false, ink3()); }); }
+    if(fx==='kick'){ var hy=G.hipY; D.rc.path('M '+(x+m*.08*u)+' '+(hy+.36*u)+' Q '+(x+m*.46*u)+' '+(hy+.32*u)+' '+(x+m*.52*u)+' '+(hy-.0*u), ink3({strokeLineDash:[5,4], strokeWidth:1.1})); }
+    return;
+  }
+  if(ph==='mid'){
+    if(fx==='sword' && both()){ bladeDraw(D,G,both(), G.side?[f*Math.cos(.6),-Math.sin(.6)]:[Math.sin(.12),-Math.cos(.12)], lk.weapon); }
+    if(fx==='swing' && both()){ var g=both(), v=G.side?[f*Math.cos(.35),Math.sin(.35)]:[.8,-.6], tip=bladeDraw(D,G,g,v,lk.weapon)||[g[0]+v[0]*.46*u, g[1]+v[1]*.46*u];
+      var c=G.side?[x-f*.15*u, G.top-.2*u]:[x+.62*u, G.hipY], e=G.side?[x-f*.3*u, G.shY]:[x-.25*u, G.hipY+.2*u];
+      [0,1].forEach(function(k){ D.rc.path('M '+(tip[0]+k*.03*u)+' '+(tip[1]+k*.03*u)+' Q '+c[0]+' '+c[1]+' '+(e[0]+k*.03*u)+' '+(e[1]-k*.04*u), ink3({strokeWidth:k?.7:1.1})); }); }
+    if(fx==='bow' && H[1] && H[-1]){ var b=H[1], dh=H[-1], T1=[b[0]-m*.03*u, b[1]-.28*u], T2=[b[0]-m*.03*u, b[1]+.28*u];
+      D.rc.path('M '+T1[0]+' '+T1[1]+' Q '+(b[0]+m*.17*u)+' '+b[1]+' '+T2[0]+' '+T2[1], D.ink({strokeWidth:(G.sil?2.6:1.8)*D.sw}));
+      D.rc.linearPath([T1,dh,T2], D.ink({strokeWidth:.7}));
+      var at=[b[0]+m*.1*u, b[1]+(dh[1]-b[1])*.1]; D.rc.line(dh[0]-m*.03*u, dh[1], at[0], at[1], D.ink({strokeWidth:1.1*D.sw}));
+      D.rc.polygon([[at[0]+m*.045*u, at[1]],[at[0], at[1]-.018*u],[at[0], at[1]+.018*u]], D.ink({fill:D.c.ink, fillStyle:'solid'})); }
+    if(fx==='magic' && H[1]){ var h=H[1];
+      if(G.side){ var cx=h[0]+f*.06*u; D.rc.ellipse(cx, h[1], .07*u, .34*u, mk({strokeWidth:1.5*D.sw})); D.rc.ellipse(cx+f*.012*u, h[1], .04*u, .2*u, mk({strokeWidth:.9*D.sw}));
+        [-.13,-.06,.06,.13].forEach(function(k){ D.rc.line(cx-.01*u, h[1]+k*u, cx+.01*u, h[1]+k*u, mk({strokeWidth:.9})); }); }
+      else { D.rc.circle(h[0], h[1], .34*u, mk({strokeWidth:1.5*D.sw})); D.rc.circle(h[0], h[1], .22*u, mk({strokeWidth:.9*D.sw}));
+        [0,1].forEach(function(k){ var p=[]; for(var i=0;i<3;i++){ var a=-Math.PI/2+k*Math.PI+i*Math.PI*2/3; p.push([h[0]+Math.cos(a)*.11*u, h[1]+Math.sin(a)*.11*u]); } D.rc.polygon(p, mk({strokeWidth:.8})); }); }
+      var hf=H[-1];
+      if(hf && lk.weapon==='지팡이'){ D.rc.line(hf[0], hf[1]-.5*u, hf[0]+.01*u, hf[1]+.34*u, D.ink({strokeWidth:(G.sil?2.2:1.5)*D.sw})); D.rc.circle(hf[0], hf[1]-.53*u, .06*u, D.ink(G.sil?G.body:{fill:D.c.mark, fillStyle:'solid'})); }
+      if(hf && lk.weapon==='마법서') D.rc.rectangle(hf[0]-.05*u, hf[1]-.1*u, .1*u, .12*u, D.ink(G.sil?G.body:{fill:D.c.ink2, fillStyle:'solid'})); }
+    if(fx==='punch' && H[1]){ var p=H[1];
+      if(G.side) [-1,0,1].forEach(function(k){ D.rc.line(p[0]+f*.06*u, p[1]+k*.035*u, p[0]+f*.17*u, p[1]+k*.06*u, D.ink({strokeWidth:1*D.sw})); });
+      else for(var j=0;j<10;j++){ var a2=j/10*Math.PI*2; D.rc.line(p[0]+Math.cos(a2)*.11*u, p[1]+Math.sin(a2)*.11*u, p[0]+Math.cos(a2)*.19*u, p[1]+Math.sin(a2)*.19*u, D.ink({strokeWidth:.9*D.sw})); } }
+    if(fx==='jump') [-1,0,1].forEach(function(k){ D.rc.line(x+k*.07*u, G.footY-.03*u, x+k*.07*u, G.footY+.08*u, ink3()); });
+    return;
+  }
+  // post
+  var hc=G.headC||[x,G.top];
+  if(fx==='face' || fx==='worry'){ [1,-1].forEach(function(s){ var P=A[s]; if(!P||!H[s]) return; D.rc.linearPath([P[1],P[2]], D.ink());
+    if(fx==='face'){ D.rc.polygon(ovalPts(P[2][0], P[2][1], .045*u, .06*u, -.3*s, 12), D.ink(G.sil?G.body:{fill:D.c.paper, fillStyle:'solid'}));
+      if(G.det) [-1,0,1].forEach(function(k){ D.rc.line(P[2][0]+k*.017*u, P[2][1]-.05*u, P[2][0]+k*.02*u, P[2][1]-.015*u, D.ink({strokeWidth:.8})); }); }
+    else D.rc.circle(P[2][0], P[2][1], Math.max(3,.06*u), D.ink(G.sil?G.body:{fill:D.c.paper, fillStyle:'solid'})); }); }
+  if(fx==='worry') [-1,0,1].forEach(function(k){ var bx=hc[0]+k*.06*u, by=hc[1]-G.d*.62-.03*u; D.rc.linearPath([[bx,by],[bx+.012*u,by-.025*u],[bx-.012*u,by-.05*u],[bx+.008*u,by-.075*u]], D.ink({stroke:D.c.ink2, strokeWidth:1})); });
+  if(fx==='wave' && H[1]){ var w0=H[1]; [-1,1].forEach(function(k){ D.rc.arc(w0[0], w0[1]+.02*u, .2*u, .2*u, k<0?Math.PI*1.08:Math.PI*1.68, k<0?Math.PI*1.32:Math.PI*1.92, false, ink3({strokeWidth:1.1})); }); }
+  if(fx==='spark' && H[1]){ var s0=[H[1][0]+m*.08*u, H[1][1]-.08*u], q=.035*u; D.rc.line(s0[0]-q,s0[1],s0[0]+q,s0[1], mk()); D.rc.line(s0[0],s0[1]-q,s0[0],s0[1]+q, mk()); }
+}
+function figBody(D,x,top,H,o){ var ctx=D.ctx; ctx.save(); try{ figBody0(D,x,top,H,o); } finally{ ctx.restore(); } }
+function figBody0(D,x,top,H,o){
   o = o||{}; var lk=figLook(o.look);
   if(lk.build==='작음'){ top+=H*.14; H*=.86; }   // 작은 키는 실제로 작게
   if(lk._tiny){ top+=H*.1; H*=.9; }
+  var pose=lk.pose||'', out=lk.outfit||'', PJ=POSE_J[pose]||null, fc=faceKey(lk.face), turn=pose==='뒤돌아보기', headF=0;
+  if(fc){ o=Object.assign({},o); if(fc==='back'){ o.back=true; o.face=0; } else { o.back=false; o.face=fc==='left'?-1:(fc==='right'?1:0); } }   // 인물마다 정한 방향이 구도의 방향보다 먼저
+  else if(PJ && PJ.side && !o.back && !o.face) o=Object.assign({},o,{face:x>D.w*.62?-1:1});
+  if(turn){ headF=o.face||(x>D.w*.62?-1:1); o=Object.assign({},o,{back:true, face:0}); }   // 뒤돌아보기: 몸은 뒷모습, 고개만 옆
   var hs=o.hs||1, ls=o.ls||1, f=o.face||0;
   var g = geo(H,hs,ls), u=g.u, d=g.d, r=d/2;
-  var pose=lk.pose||'', out=lk.outfit||'';
-  var hx0 = x + (pose==='구부정'?(f||0)*.05*u:0) + (pose==='고개 기울임'?.03*u*(f||1):0);   // 머리 위치
+  var J=PJ?((f && PJ.s)?PJ.s:(PJ.f||PJ.s)):null, side=!!(J && f && J===PJ.s);
+  var hx0 = x + (pose==='구부정'?(f||0)*.05*u:0) + (pose==='고개 기울임'?.03*u*(f||1):0) + (turn?headF*.015*u:0);   // 머리 위치
   var cy = top+d/2 + (pose==='구부정'?.04*u:0);
-  var shY = top+d+.04*u, hipY = shY+.31*u, footY = top+H, kneeY = hipY+(footY-hipY)*.5;
+  var shY = top+d+.04*u, hipY = shY+.31*u, footY = top+H, kneeY = hipY+(footY-hipY)*.5, lu=(footY-hipY)/(.5*u);
+  if(J && footY>D.h*1.05 && !J.lie) J=Object.assign({}, J, {drop:0, sq:0, lift:0, lean:clamp(J.lean||0,-.25,.25)});   // 허리 위만 보이는 구도: 앉기·띄우기는 빼고 기울기만 조금
+  if(J){ var dr=(J.drop||0)*lu*u; top+=dr; cy+=dr; shY+=dr; hipY+=dr; kneeY+=dr;
+    if(J.sq){ var dq=.31*u*(1-J.sq); top+=dq; cy+=dq; shY+=dq; } }
   var sw = (f?.13:.25)*u, hw = (f?.1:.17)*u;
   var bkS = {작음:.82, 큼:1.3, 마름:.74, 두꺼움:1.5}[lk.build]||1, bkH = {작음:.82, 큼:1.3, 마름:.78, 두꺼움:1.08}[lk.build]||1;
   if(lk._broad){ bkS*=1.4; bkH*=1.2; }
@@ -9179,12 +9403,25 @@ function figBody(D,x,top,H,o){
   var markP = function(e){ return D.ink(Object.assign({stroke:D.c.mark, strokeWidth:1.2*D.sw}, e||{})); };
   var hairF = lk.hair==='민머리' ? {fill:D.c.paper, fillStyle:'solid'} : (lk.dark ? {fill:D.c.ink2, fillStyle:'solid'} : {fill:D.c.ink3, fillStyle:'hachure', hachureGap:Math.max(2.2,d/12), hachureAngle:-40});
   var G = {x:x, top:top, u:u, d:d, f:f, back:!!o.back, sil:!!o.sil, det:det, body:body, hairF:hairF, shY:shY, hipY:hipY, hem:hem, kneeY:kneeY, footY:footY, tsw:tsw, thw:thw, hands:{}};
+  var ctx=D.ctx, T0=null, hr=false, own=!!(J && J.own && lk.weapon && J.own.indexOf(lk.weapon)>-1), wpn=own?'':lk.weapon;
+  if(J){ G.J=J; G.side=side; G.ws=x>D.w*.55?1:-1;
+    if(J.lie){   // 눕힘: 몸 전체를 90도 돌려 바닥에 눕힌다. 머리는 옆모습이면 보는 쪽, 정면이면 왼쪽
+      var hd=side?f:-1, pcy=(top+footY)/2, gy=Math.min(footY, D.h*.9), reach=pcy-cy, want=Math.min(reach, D.w*.32);
+      ctx.translate(hd*(want-reach), gy-.14*u-pcy); ctx.translate(x,pcy); ctx.rotate(hd*Math.PI/2); ctx.translate(-x,-pcy); }
+    if(J.lift){ var lp=J.lift*lu*u, kz=Math.min(1, (footY-D.h*.1)/(footY-top+lp+.2*u));   // 띄운 몸이 칸 안에 들게 줄인다
+      if(kz<1){ ctx.translate(x,footY); ctx.scale(kz,kz); ctx.translate(-x,-footY); }
+      D.rc.ellipse(x, footY, .36*u, .07*u, D.ink({stroke:'none', fill:o.sil?D.c.ink:D.c.ink3, fillStyle:o.sil?'solid':'hachure', hachureGap:Math.max(2.5,u*.02)})); ctx.translate(0, -lp); }
+    poseFx(D,G,J,'pre',lk);
+    if(ctx.getTransform) T0=ctx.getTransform();
+    var th=side?f*(J.lean||0):(J.tilt||0)+(J.tiltW||0)*G.ws;   // 상체는 엉덩이를 축으로 기울인다(다리는 T0에서 그림)
+    if(th){ ctx.translate(x,hipY); ctx.rotate(th); ctx.translate(-x,-hipY); }
+  }
   // 몸 뒤 (앞·옆에서 볼 때): 날개·망토·꼬리·등에 진 무기
   if(!o.back){
     if(lk.wings) (f?[-f]:[-1,1]).forEach(function(s){ wingDraw(D,G,s,lk.wings); });
     if(lk.cape) capeDraw(D,G,false);
     if(lk.tail) tailDraw(D,G,lk.tail);
-    if(lk.weapon) weaponDraw(D,G,lk.weapon,'back');
+    if(wpn) weaponDraw(D,G,wpn,'back');
   }
   // 등에 진 짐 (몸 뒤)
   if(lk.pack && !o.sil){
@@ -9192,15 +9429,28 @@ function figBody(D,x,top,H,o){
     D.rc.rectangle(px, shY-.09*u, sw*(f?.7:.62), .3*u, D.ink({fill:D.c.paper, fillStyle:'solid'}));
     if(o.back) D.rc.line(px+sw*.1, shY+.02*u, px+sw*.74, shY+.02*u, D.ink());
   }
-  // 다리·발
+  // 다리·발 (기울인 자세에서도 다리는 바닥 기준 T0)
+  var legs={}; G.legs=legs;
+  if(T0){ ctx.save(); ctx.setTransform(T0); }
   [-1,1].forEach(function(s){
-    var lx=x+s*hw*.28, kx=x+s*hw*.32, fx=x+s*hw*.42, dir=(f||s);
-    D.rc.linearPath([[lx,hipY],[kx,kneeY],[fx,footY]], D.ink());
-    if(lk.bigshoes) D.rc.ellipse(fx+dir*.05*u, footY-.012*u, .15*u, .045*u, D.ink(body));
-    else if(lk.barefoot){ D.rc.line(fx, footY, fx+dir*.045*u, footY, D.ink()); if(det) [0,1,2].forEach(function(k){ D.rc.circle(fx+dir*(.05+.012*k)*u, footY-.006*u, Math.max(1.5,.012*u), D.ink({roughness:.3})); }); }
-    else D.rc.line(fx, footY, fx+dir*.06*u, footY, D.ink());
+    var lx=x+s*hw*.28, kx=x+s*hw*.32, fx=x+s*hw*.42, dir=(f||s), P;
+    if(J && J.l){ var L=J.l[s===1?0:1], mm=side?f:s, hx=x+s*hw*(side?.15:.28), k=lu*u;
+      P=[[hx,hipY],[hx+mm*L[0]*k, hipY+L[1]*k],[hx+mm*L[2]*k, hipY+L[3]*k]]; }
+    else P=[[lx,hipY],[kx,kneeY],[fx,footY]];
+    legs[s]=P; fx=P[2][0]; var fy=P[2][1];
+    D.rc.linearPath(P, D.ink());
+    if(lk.bigshoes) D.rc.ellipse(fx+dir*.05*u, fy-.012*u, .15*u, .045*u, D.ink(body));
+    else if(lk.barefoot){ D.rc.line(fx, fy, fx+dir*.045*u, fy, D.ink()); if(det) [0,1,2].forEach(function(k){ D.rc.circle(fx+dir*(.05+.012*k)*u, fy-.006*u, Math.max(1.5,.012*u), D.ink({roughness:.3})); }); }
+    else D.rc.line(fx, fy, fx+dir*.06*u, fy, D.ink());
   });
   // 긴 옷자락·로브·사제복·귀족 옷 자락
+  if(J && J.l && (robe || out==='긴 옷자락' || out==='귀족 옷')){   // 새 자세: 엉덩이·무릎(·발)을 감싸는 자락
+    var sk=[[x-thw*.55,hipY-.03*u],[x+thw*.55,hipY-.03*u]];
+    [-1,1].forEach(function(s){ var P=legs[s];
+      if(P[1][1]<hipY+.12*u){ var mm=side?f:s; sk.push([P[0][0]+mm*.1*u, hipY+(robe?.42:.22)*lu*u]); return; }   // 높이 든 다리(발차기 등)는 자락이 따라가지 않고 늘어진다
+      sk.push(robe?[P[1][0],P[1][1]]:[P[0][0]+(P[1][0]-P[0][0])*.8, P[0][1]+(P[1][1]-P[0][1])*.8]); if(robe) sk.push([P[2][0], P[2][1]-.025*u]); });
+    D.rc.polygon(hull(sk), D.ink(body));
+  } else {
   if(out==='긴 옷자락') D.rc.polygon([[x-thw*.55,hipY-.03*u],[x+thw*.55,hipY-.03*u],[x+thw*(f?1:1.25),kneeY+.08*u],[x-thw*(f?.9:1.25),kneeY+.1*u]], D.ink(body));
   if(robe){ var fl=out==='로브'?.06*u:.025*u, ft=footY-.025*u;
     D.rc.polygon(f?[[x-thw*.55,hipY-.03*u],[x+thw*.55,hipY-.03*u],[x+f*(thw*.6+fl*.5),ft],[x-f*(thw*.7+fl*1.2),ft]]:[[x-thw*.55,hipY-.03*u],[x+thw*.55,hipY-.03*u],[x+thw*.6+fl,ft],[x-thw*.6-fl,ft]], D.ink(body));
@@ -9209,10 +9459,16 @@ function figBody(D,x,top,H,o){
     (f?[[[x,hem-.02*u],[x-f*thw*.55,hem-.02*u],[x-f*(thw*.6+.07*u),kneeY+.04*u],[x-f*thw*.15,kneeY]]]:[-1,1].map(function(s){ return [[x+s*thw*.08,hem-.02*u],[x+s*thw*.55,hem-.03*u],[x+s*(thw*.6+.03*u),kneeY+.03*u],[x+s*thw*.25,kneeY-.02*u]]; }))
       .forEach(function(P){ D.rc.polygon(P, D.ink(body)); });
   }
+  }
+  if(T0) ctx.restore();
   // 팔 모양
-  var arms={}, hands=G.hands;
+  var arms={}, hands=G.hands; G.arms=arms;
   [-1,1].forEach(function(s){
     var sx = x+s*(f? tsw*.3 : tsw/2), ex = sx+s*.035*u+f*.03*u, hx = sx+s*.02*u+f*.05*u, P;
+    if(J && J.a){ var A=J.a[s===1?0:1], mm=side?f:s, sx2=side?x+s*tsw*.12:sx, Hd=A[4]?[x+mm*A[2]*u, shY+A[3]*u]:[sx2+mm*A[2]*u, shY+A[3]*u];
+      arms[s]=[[sx2,shY],[sx2+mm*A[0]*u, shY+A[1]*u], Hd];
+      if(!(J.hide && J.hide[s===1?0:1]) && !(lk.emptysleeve && s===-1)) hands[s]=Hd;
+      return; }
     if(f){
       if(pose==='팔짱' || pose==='무언가 안음') P=[[sx,shY],[sx+s*.01*u,shY+.15*u],[x+f*.16*u,shY+.14*u]];
       else if(pose==='주머니에 손') P=[[sx,shY],[ex,shY+.15*u],[x+s*.02*u+f*.02*u,hipY-.01*u]];
@@ -9231,8 +9487,10 @@ function figBody(D,x,top,H,o){
   var drawArm=function(s){
     if(lk.emptysleeve && s===-1){ var P=arms[s]; D.rc.linearPath([P[0],[P[0][0]+s*.02*u,P[0][1]+.12*u],[P[0][0]+s*.015*u,P[0][1]+.22*u]], D.ink({strokeLineDash:[4,3]})); return; }
     D.rc.linearPath(arms[s], D.ink());
+    if(J && J.hm && hands[s] && J.hm[s===1?0:1]) handMark(D,G,arms[s],J.hm[s===1?0:1]);
   };
-  if(pose==='뒷짐' && !f){ drawArm(-1); drawArm(1); }
+  var armPre=(pose==='뒷짐' && !f)?[-1,1]:(side?[-1]:[]);   // 옆모습 새 자세: 뒤쪽 팔은 몸 뒤
+  armPre.forEach(drawArm);
   // 몸통
   D.rc.polygon([[x-tsw/2,shY],[x+tsw/2,shY],[x+thw/2,hem],[x-thw/2,hem]], D.ink(body));
   if(lk.armor && lk.armor!=='어깨 갑옷') armorDraw(D,G,lk.armor);
@@ -9256,8 +9514,8 @@ function figBody(D,x,top,H,o){
   // 무언가 안고 있음
   if(pose==='무언가 안음' && !o.back){ var bx=f?x+f*.12*u:x-tsw*.3; D.rc.rectangle(bx, shY+.1*u, f?.12*u:tsw*.6, .15*u, D.ink({fill:D.c.paper, fillStyle:'solid'})); }
   // 팔
-  if(!(pose==='뒷짐' && !f)){ drawArm(-1); drawArm(1); }
-  if(pose==='팔짱' && !f){ D.rc.rectangle(x-tsw*.36, shY+.11*u, tsw*.72, .055*u, D.ink(body)); }
+  [-1,1].forEach(function(s){ if(armPre.indexOf(s)<0) drawArm(s); });
+  if((pose==='팔짱' || (J && J.bar)) && !f){ D.rc.rectangle(x-tsw*.36, shY+.11*u, tsw*.72, .055*u, D.ink(body)); }
   // 넓은 소매 (로브)
   if(out==='로브') [-1,1].forEach(function(s){ var h=hands[s], P=arms[s]; if(!h) return;
     var a=[P[1][0]+(P[2][0]-P[1][0])*.3, P[1][1]+(P[2][1]-P[1][1])*.3], dx=h[0]-P[1][0], dy=h[1]-P[1][1], l=Math.hypot(dx,dy)||1, nx=-dy/l, ny=dx/l, e=[h[0]-dx/l*.02*u, h[1]-dy/l*.02*u];
@@ -9272,7 +9530,7 @@ function figBody(D,x,top,H,o){
       D.rc.linearPath([[t0[0]-.02*u,t0[1]],[t0[0]-.01*u,t0[1]-.015*u],[t0[0],t0[1]],[t0[0]+.01*u,t0[1]-.015*u],[t0[0]+.02*u,t0[1]]], markP()); }
     if(lk.scales && !(lk.emptysleeve) && pose!=='팔짱'){ [.35,.6].forEach(function(t){ var p=mid(A0,t); D.rc.arc(p[0], p[1], .03*u, .022*u, 0, Math.PI, false, D.ink({stroke:D.c.ink3, strokeWidth:.9})); }); }
     if(lk.gloves) [-1,1].forEach(function(s){ var h=hands[s]; if(h) D.rc.circle(h[0], h[1], Math.max(3,.045*u), D.ink({fill:D.c.ink2, fillStyle:'solid'})); });
-    var h1=hands[1]||hands[-1], wpH=lk.weapon && /창|지팡이|마법서|단검/.test(lk.weapon) && hands[1];
+    var h1=hands[1]||hands[-1], wpH=(lk.weapon && /창|지팡이|마법서|단검/.test(lk.weapon) && hands[1]) || (J && /sword|swing|bow|magic/.test(J.fx||''));
     if(lk.umbrella && h1 && !wpH){ var ux=h1[0]+.01*u;
       D.rc.line(ux, h1[1]-.05*u, ux+.02*u, footY, D.ink({strokeWidth:1.2*D.sw}));
       D.rc.polygon([[ux+.005*u,h1[1]+.04*u],[ux+.045*u,h1[1]+.22*u],[ux+.02*u,h1[1]+.25*u]], D.ink({fill:D.c.ink3, fillStyle:'solid'}));
@@ -9284,13 +9542,14 @@ function figBody(D,x,top,H,o){
     if(lk.crest && !o.back){ var kx=f?x+f*tsw*.12:x-tsw*.22, ky=shY+.1*u, kr=.075*u;
       D.rc.circle(kx, ky, kr, markP({strokeWidth:1.1*D.sw})); D.rc.polygon([[kx,ky-kr*.4],[kx+kr*.36,ky+kr*.22],[kx-kr*.36,ky+kr*.22]], markP({strokeWidth:.9*D.sw})); }
   }
-  if(lk.weapon) weaponDraw(D,G,lk.weapon,'front');
+  if(wpn) weaponDraw(D,G,wpn,'front');
+  if(J) poseFx(D,G,J,'mid',lk);
   // 등 위 (뒷모습): 꼬리·망토·날개·등에 진 무기
   if(o.back){
     if(lk.tail) tailDraw(D,G,lk.tail);
     if(lk.cape) capeDraw(D,G,true);
     if(lk.wings) [-1,1].forEach(function(s){ wingDraw(D,G,s,lk.wings); });
-    if(lk.weapon) weaponDraw(D,G,lk.weapon,'over');
+    if(wpn) weaponDraw(D,G,wpn,'over');
   }
   // 목
   D.rc.line(hx0, cy+d*.45, x, shY, D.ink());
@@ -9303,6 +9562,10 @@ function figBody(D,x,top,H,o){
     if(!f) [-1,1].forEach(function(s){ D.rc.circle(x+s*.03*u, shY+.004*u, Math.max(2.5,.02*u), D.ink({fill:D.c.mark, fillStyle:'solid'})); }); }
   if(det && lk.scarf){ D.rc.rectangle(x-(f?.06:.08)*u, shY-.04*u, (f?.12:.16)*u, .06*u, D.ink({fill:D.c.ink3, fillStyle:'hachure', hachureGap:Math.max(2,d/14)}));
     var tx=x+(f?-f*.04:.04)*u; D.rc.polygon([[tx,shY+.01*u],[tx+.035*u,shY+.01*u],[tx+.05*u,shY+.15*u],[tx+.015*u,shY+.15*u]], D.ink({fill:D.c.ink3, fillStyle:'hachure', hachureGap:Math.max(2,d/14)})); }
+  G.headC=[hx0,cy]; G.d=d;
+  var fin=function(){ if(hr){ ctx.restore(); hr=false; } if(J) poseFx(D,G,J,'post',lk); };
+  if(J && J.look && f){ ctx.save(); hr=true; ctx.translate(hx0,cy); ctx.rotate((J.look==='up'?-1:1)*f*.45); ctx.translate(-hx0,-cy); }   // 옆모습 고개 들기·숙이기
+  var fy0=(J && J.look && !f)?(J.look==='up'?-.13*d:.1*d):0;   // 정면: 얼굴을 위·아래로
   // 후드 (머리 뒤)
   if(lk.hood) D.rc.circle(hx0, cy-r*.08, d*1.32, D.ink({fill:D.c.paper, fillStyle:'solid'}));
   // 뾰족귀 (앞·뒤에서는 머리 뒤에서 옆으로 나온다)
@@ -9310,8 +9573,7 @@ function figBody(D,x,top,H,o){
   if(lk.ears==='뾰족귀' && !f) [-1,1].forEach(function(s){ D.rc.polygon(earP(s,hx0), D.ink(body)); if(det && d>=22 && front) D.rc.line(hx0+s*r*1.0, cy+r*.12, hx0+s*r*1.5, cy-r*.45, D.ink({strokeWidth:.8})); });
   // 머리
   D.rc.circle(hx0, cy, d, D.ink(body));
-  G.d=d;
-  if(o.back){
+  if(o.back && !turn){
     if(lk.helmet) helmetDraw(D,G,hx0,cy,r);
     else {
       if(lk.hood){ D.rc.circle(hx0, cy, d*1.05, D.ink({fill:D.c.paper, fillStyle:'solid'})); }
@@ -9320,19 +9582,22 @@ function figBody(D,x,top,H,o){
     }
     headTop(D,G,lk,hx0,cy,r);
     if(lk.collar) D.rc.rectangle(x-.08*u, shY-.05*u, .16*u, .06*u, D.ink(body));
-    return;
+    fin(); return;
   }
+  if(turn){ f=headF; G.f=headF; G.back=false;   // 뒤돌아보기: 얼굴은 옆모습, 뒤통수 머리카락과 등줄기
+    if(det) D.rc.line(G.x, shY+.04*u, G.x, hem-.04*u, D.ink({stroke:D.c.ink3, strokeWidth:.9}));
+    if(!o.sil && lk.hair!=='민머리' && !lk.hood && !lk.helmet) D.rc.path('M '+hx0+' '+(cy-r*.98)+' A '+r+' '+r+' 0 0 '+(headF>0?0:1)+' '+hx0+' '+(cy+r*.98)+' Q '+(hx0-headF*r*.25)+' '+cy+' '+hx0+' '+(cy-r*.98)+' Z', D.ink(Object.assign({strokeWidth:.9*D.sw}, hairF))); }
   if(o.sil || d < 9){   // 실루엣·아주 작은 그림: 큰 모양만
     if(lk.ears==='뾰족귀' && f) D.rc.polygon(earP(0,hx0), D.ink(body));
     if(lk.helmet) helmetDraw(D,G,hx0,cy,r);
     if(lk.beard==='긴 수염') beardDraw(D,G,lk,hx0,cy,r);
     headTop(D,G,lk,hx0,cy,r);
-    return;
+    fin(); return;
   }
   x=hx0;   // 얼굴은 머리 위치 기준
   if(!lk.hood && !lk.helmet) hairDraw(D,x,cy,r,lk,f);
   if(lk.ears==='뾰족귀' && f){ D.rc.polygon(earP(0,x), D.ink(body)); if(d>=22) D.rc.line(x-f*r*.2, cy+r*.12, x-f*r*.85, cy-r*.55, D.ink({strokeWidth:.8})); }
-  var ey = cy+.05*d, ew=lk.eyes||'', glow=!!lk.glow, und=!!lk._undead;
+  var ey = cy+.05*d+fy0, ew=lk.eyes||'', glow=!!lk.glow, und=!!lk._undead;
   var dot = function(px, col){ D.rc.circle(px, ey, Math.max(2,d*.07), D.ink({fill:col||D.c.ink, fillStyle:'solid', roughness:.3})); };
   var eyeSides = f ? [0] : [-1,1];
   eyeSides.forEach(function(s){
@@ -9366,10 +9631,11 @@ function figBody(D,x,top,H,o){
     if(glow && ew!=='감은') [-1,1].forEach(function(k){ D.rc.line(ex+k*.1*d, ey-.05*d, ex+k*.17*d, ey-.1*d, markP({strokeWidth:.9})); });
     if(lk.bags){ D.rc.arc(ex, ey+.07*d, .14*d, .05*d, 0, Math.PI, false, D.ink({stroke:D.c.ink3, strokeWidth:.9*D.sw})); }
   });
-  var mY=cy+.29*d;
+  var mY=cy+.29*d+fy0;
+  if(fy0<0 && !f && d>=22) D.rc.arc(x, cy+.36*d, .52*d, .18*d, Math.PI*.1, Math.PI*.9, false, D.ink({stroke:D.c.ink3, strokeWidth:.9*D.sw}));   // 올려다볼 때 턱 아래
   if(!f){
     if(d >= 22){
-      if(o.shock) D.rc.ellipse(x, cy+.3*d, .1*d, .12*d, D.ink());
+      if(o.shock) D.rc.ellipse(x, cy+.3*d+fy0, .1*d, .12*d, D.ink());
       else D.rc.line(x-.08*d, mY, x+.08*d, mY, D.ink());
       if(lk.fangs) [-1,1].forEach(function(s){ var fx=x+s*.055*d; D.rc.polygon([[fx-.02*d,mY+.005*d],[fx+.02*d,mY+.005*d],[fx,mY+.075*d]], D.ink({fill:D.c.paper, fillStyle:'solid', strokeWidth:.8})); });
       if(und) [-1,0,1].forEach(function(k){ D.rc.line(x+k*.045*d, mY-.03*d, x+k*.045*d, mY+.03*d, D.ink({strokeWidth:.8})); });
@@ -9409,6 +9675,7 @@ function figBody(D,x,top,H,o){
   if(lk.helmet) helmetDraw(D,G,x,cy,r);
   headTop(D,G,lk,x,cy,r);
   if(det && lk.collar){ D.rc.polygon([[x-.06*u,shY+.01*u],[x-.05*u,cy+d*.4],[x+.05*u,cy+d*.4],[x+.06*u,shY+.01*u]], D.ink(body)); }
+  fin();
 }
 function hairDraw(D,x,cy,r,lk,f){
   var hair=lk.hair||'짧은', d=2*r;
@@ -9449,20 +9716,30 @@ function nameTag(D,x,y,t,al){
 }
 function castNext(D){ return (D.cast && D.castI < D.cast.length) ? D.cast[D.castI++] : null; }
 function figure(D,x,top,H,o){
-  o=o||{}; var who=o.noCast?null:castNext(D);
-  figBody(D,x,top,H,Object.assign({},o,{look:(who&&who.look)||o.look||{}}));
+  o=o||{}; var who=o.noCast?null:castNext(D), lk=(who&&who.look)||o.look||{};
+  if(who && (who.pose || who.face)){ lk=Object.assign({}, lk); if(who.pose) lk.pose=who.pose; if(who.face) lk.face=who.face; }
+  figBody(D,x,top,H,Object.assign({},o,{look:lk}));
   if(!who || !who.name || D.opt.nolabel) return;
-  var d=geo(H,o.hs||1,o.ls||1).d, cy=top+d/2;
+  var g0=geo(H,o.hs||1,o.ls||1), d=g0.d, cy=top+d/2, PJ=POSE_J[lk.pose];
+  if(PJ){ var J0=PJ.s||PJ.f;   // 이름표는 자세가 옮긴 머리 근처에
+    if(J0.lie){ nameTag(D, x, Math.min(top+H, D.h*.9)-g0.u*.34, who.name, 'center'); return; }
+    if(J0.lift) top-=J0.lift*g0.u; else if(J0.drop) top+=J0.drop*g0.u*.9; cy=top+d/2; }
   if(top-6 > 16) nameTag(D, x, top-8, who.name, 'center');
   else if(x+d/2+50 < D.w) nameTag(D, x+d/2+6, cy, who.name, 'left');
   else nameTag(D, x-d/2-6, cy, who.name, 'right');
 }
 
 /* ---------- 구도 ---------- */
+// 인물 자리(베스트컷): data-pos=[x비율, …]가 있으면 그 수만큼 그 자리에. 없으면 구도의 기본 자리 defs=[[x,top,H,o],…]
+function posOf(D){ var p=null; try{ p=D.opt.pos?JSON.parse(D.opt.pos):null; }catch(e){} return (Array.isArray(p) && p.length)?p.slice(0,4).map(function(v){ v=+v; return clamp(isFinite(v)?v:.5,.04,.96); }):null; }
+function place(D,defs){
+  var P=posOf(D); if(!P){ defs.forEach(function(d){ figure(D, d[0], d[1], d[2], d[3]); }); return; }
+  P.forEach(function(px,i){ var d=defs[Math.min(i,defs.length-1)], o=Object.assign({}, d[3]||{}); if(o.face) o.face=px<=.5?1:-1; delete o.noCast; figure(D, D.w*px, d[1], d[2], o); });
+}
 function crop(frac,topR){ return function(D){
   var x = D.w*(+D.opt.x||.5), top = D.h*topR, H = D.h*(1-topR-.02)/frac, g = geo(H);
   horizon(D, top+g.eye);
-  figure(D, x, top, H, {shock: !!D.opt.shock, sil: !!D.opt.sil, hs: +D.opt.hs||1});
+  place(D, [[x, top, H, {shock: !!D.opt.shock, sil: !!D.opt.sil, hs: +D.opt.hs||1}]]);
   if(D.opt.ang==='high') label(D, 10, D.h-10, '부감', D.c.mark);
   if(D.opt.ang==='low') label(D, 10, D.h-10, '앙각', D.c.mark);
 }; }
@@ -9506,7 +9783,7 @@ var K = {
   pov:{n:'시점 숏', e:'POV', u:'인물의 눈으로 본 화면. 앞에 손이 걸린다.', draw:function(D){
     var w=D.w, h=D.h, H=h*.72/.37, top=h*.16;
     horizon(D, top+geo(H).eye);
-    figure(D, w*.5, top, H, {shock: !!D.opt.shock});
+    place(D, [[w*.5, top, H, {shock: !!D.opt.shock}]]);
     var s=Math.min(w,h)*.42; hand(D, w*.12, h*.86, s, -1); hand(D, w*.88, h*.86, s, 1);
     label(D, 12, 20, '시점', D.c.mark);
   }},
@@ -9514,7 +9791,7 @@ var K = {
     var w=D.w, h=D.h, H=h*.62, foot=h*.9, top=foot-H, ey=top+geo(H).eye;
     D.rc.line(w*.5, ey, -w*.1, h, D.guide({strokeWidth:.8})); D.rc.line(w*.5, ey, w*1.1, h, D.guide({strokeWidth:.8}));
     horizon(D, ey);
-    figure(D, w*.5, top, H, {back:true});
+    place(D, [[w*.5, top, H, {back:true}]]);
   }},
   empty:{n:'빈 배경', e:'EMPTY', u:'사람 없는 공간. 여운·시간 경과·무음.', draw:function(D){
     var w=D.w, h=D.h, scr=D.opt.scr||'';
@@ -9549,16 +9826,18 @@ var K = {
   els:{n:'익스트림 롱숏', e:'ELS', u:'장소와 분위기를 먼저 깔 때. 인물은 점처럼 작게.', draw:function(D){
     var w=D.w, h=D.h, hy=h*.6; horizon(D,hy);
     D.rc.linearPath([[-5,hy],[w*.12,hy-h*.16],[w*.24,hy-h*.05],[w*.38,hy-h*.27],[w*.52,hy-h*.08],[w*.7,hy-h*.21],[w*.86,hy-h*.04],[w+5,hy-h*.13]], D.ink({strokeWidth:1.1*D.sw}));
-    var H=h*.12, fx=w*.66, who0=D.cast&&D.cast[0]; figure(D, fx, h*.84-H, H, {noCast:true});
+    var H=h*.12, fx=w*.66, who0=D.cast&&D.cast[0];
+    if(posOf(D)){ place(D, [[fx, h*.84-H, H, {}]]); return; }
+    figure(D, fx, h*.84-H, H, {noCast:true, look:(who0&&who0.look)||{}});
     if(who0&&who0.name) nameTag(D, fx+10, h*.84-H-2, who0.name, 'left'); else label(D, fx+10, h*.84-H-2, '인물', D.c.mark);
   }},
   ls:{n:'롱숏', e:'LS', u:'인물과 주변을 함께. 상황 설명용.', draw:function(D){
     var H=D.h*.46, foot=D.h*.88, top=foot-H, ey=top+geo(H).eye;
-    floor(D, D.w*.5, ey, 9); horizon(D, ey, '눈높이'); figure(D, D.w*(+D.opt.x||.5), top, H);
+    floor(D, D.w*.5, ey, 9); horizon(D, ey, '눈높이'); place(D, [[D.w*(+D.opt.x||.5), top, H]]);
   }},
   fs:{n:'풀숏', e:'FS', u:'머리부터 발끝까지. 옷차림과 자세를 보여 준다.', draw:function(D){
     var H=D.h*.84, top=D.h*.08, ey=top+geo(H).eye;
-    floor(D, D.w*.5, ey, 9); horizon(D, ey, '눈높이'); figure(D, D.w*.5, top, H);
+    floor(D, D.w*.5, ey, 9); horizon(D, ey, '눈높이'); place(D, [[D.w*.5, top, H]]);
   }},
   ms:{n:'미디엄숏', e:'MS', u:'허리 위. 대화와 손짓이 같이 읽힌다.', draw:crop(.55,.1)},
   bs:{n:'바스트숏', e:'BS', u:'가슴 위. 표정 중심의 대화 컷.', draw:crop(.37,.1)},
@@ -9578,7 +9857,7 @@ var K = {
   }},
   eye:{n:'아이 레벨', e:'Eye level', u:'관객과 같은 높이. 가장 중립적인 시선.', draw:function(D){
     var H=D.h*.62, foot=D.h*.9, top=foot-H, ey=top+geo(H).eye;
-    floor(D, D.w*.5, ey, 9); horizon(D, ey, '지평선 = 눈높이'); figure(D, D.w*.5, top, H);
+    floor(D, D.w*.5, ey, 9); horizon(D, ey, '지평선 = 눈높이'); place(D, [[D.w*.5, top, H]]);
   }},
   high:{n:'하이 앵글 (부감)', e:'High angle', u:'위에서 내려다본다. 인물이 작고 약해 보인다.', draw:function(D){
     var w=D.w, h=D.h, vx=w*.5, vy=-h*.6;
@@ -9586,7 +9865,7 @@ var K = {
     [.3,.47,.67,.92].forEach(function(t){ D.rc.line(-5, h*t, w+5, h*t, D.guide({strokeWidth:.6})); });
     var H=h*.58, top=h*.26;
     D.rc.ellipse(w*.5, top+H, h*.26, h*.06, D.ink({stroke:D.c.ink3, strokeWidth:1}));
-    figure(D, w*.5, top, H, {hs:1.35, ls:.6});
+    place(D, [[w*.5, top, H, {hs:1.35, ls:.6}]]);
     label(D, 12, h*.14, '카메라가 위', D.c.mark);
   }},
   low:{n:'로우 앵글 (앙각)', e:'Low angle', u:'아래에서 올려다본다. 크고 위압적으로.', draw:function(D){
@@ -9598,7 +9877,7 @@ var K = {
       for(var i=1;i<5;i++){ var y=h*(1-i*.2), t=(h-y)/(h-vy); D.rc.line(x1+(vx-x1)*t, y, x2+(vx-x2)*t, y, D.guide({strokeWidth:.6})); }
     });
     horizon(D, hy, '지평선');
-    figure(D, w*.5, h*.06, h*.9, {hs:.7, ls:1.45});
+    place(D, [[w*.5, h*.06, h*.9, {hs:.7, ls:1.45}]]);
     label(D, 12, h*.96, '카메라가 아래', D.c.mark);
   }},
   bird:{n:'버즈아이 뷰', e:"Bird's-eye", u:'바로 위에서. 지도처럼 상황 전체를 정리할 때.', draw:function(D){
@@ -9617,12 +9896,12 @@ var K = {
     var w=D.w, h=D.h; tilt(D, -.24);
     [[.04,.22],[.78,.96]].forEach(function(b){ D.rc.rectangle(w*b[0], -h*.2, w*(b[1]-b[0]), h*1.4, D.ink({stroke:D.c.ink2, strokeWidth:1})); });
     var H=h*.7, top=h*.16, ey=top+geo(H).eye;
-    horizon(D, ey); figure(D, w*.5, top, H, {face:1});
+    horizon(D, ey); place(D, [[w*.5, top, H, {face:1}]]);
   }},
   two:{n:'투숏', e:'Two-shot', u:'두 사람을 한 칸에. 관계와 거리감.', draw:function(D){
     var H=D.h*.86/.42, top=D.h*.14, ey=top+geo(H).eye;
     horizon(D, ey);
-    figure(D, D.w*.26, top, H, {face:1}); figure(D, D.w*.74, top+D.h*.03, H, {face:-1});
+    place(D, [[D.w*.26, top, H, {face:1}], [D.w*.74, top+D.h*.03, H, {face:-1}]]);
   }},
   ots:{n:'어깨 너머 숏', e:'OTS', u:'듣는 사람 등 뒤에서. 대화에 끼어든 느낌.', draw:function(D){
     var w=D.w, h=D.h, H=h*.86/.37, top=h*.12;
@@ -9637,7 +9916,7 @@ var K = {
   stand:{n:'대치', e:'Standoff', u:'좌우로 마주 선다. 180도 선을 넘지 않는다.', draw:function(D){
     var w=D.w, h=D.h, H=h*.56, foot=h*.88, top=foot-H, ey=top+geo(H).eye;
     horizon(D, ey);
-    figure(D, w*.2, top, H, {face:1}); figure(D, w*.8, top, H, {face:-1});
+    place(D, [[w*.2, top, H, {face:1}], [w*.8, top, H, {face:-1}]]);
     D.rc.line(w*.2+h*.07, ey, w*.8-h*.07, ey, D.mk({strokeLineDash:[7,5]}));
     label(D, w*.5, ey-8, '180도 선', D.c.mark, 'center');
   }},
@@ -9646,7 +9925,7 @@ var K = {
     [[0,.22],[.78,1]].forEach(function(b){ D.rc.rectangle(w*b[0]-4, -4, w*(b[1]-b[0])+8, h+8, D.ink({fill:D.c.ink3, fillStyle:'hachure', hachureGap:4, stroke:D.c.ink2})); });
     D.rc.rectangle(w*.34, h*.12, w*.32, h*.8, D.ink());
     D.rc.line(w*.22, h*.92, w*.78, h*.92, D.ink({stroke:D.c.ink2}));
-    var H=h*.5; figure(D, w*.5, h*.9-H, H, {sil: !!D.opt.sil});
+    var H=h*.5; place(D, [[w*.5, h*.9-H, H, {sil: !!D.opt.sil}]]);
     label(D, w*.5, h*.09, '문틀이 액자', D.c.mark, 'center');
   }}
 };
@@ -9697,8 +9976,13 @@ function whoOf(c){
   var names=(c.who&&c.who.length)?c.who:[];
   if(!names.length && c.scr){ var hit=[]; allChars().forEach(function(ch){ var i=c.scr.indexOf(ch.name); if(ch.name && i>=0) hit.push([i,ch.name]); });
     hit.sort(function(a,b){ return a[0]-b[0]; }); names=hit.slice(0,2).map(function(x){ return x[1]; }); }
-  return names.map(function(n){ var ch=charOf(n); return {name:n, look:ch?ch.look:{}}; });
+  return names.map(function(n,i){ var ch=charOf(n), lk=(ch&&ch.look)||{}, w=wpOf(c,n,i), o={name:n};
+    if(w && (w.pose || w.face)){ lk=Object.assign({}, lk); if(w.pose) lk.pose=w.pose; if(w.face) lk.face=w.face; }
+    o.look=lk; if(w){ if(w.pose) o.pose=w.pose; if(w.face) o.face=w.face; if(w.x!=null && isFinite(+w.x)) o.x=+w.x; }
+    return o; });
 }
+// 컷마다 인물 자세·방향·자리 c.wp={이름:{pose,face,x}} (이름 없는 인물은 '#순번')
+function wpOf(c,n,i){ var W=c&&c.wp; if(!W || typeof W!=='object') return null; return (n && W[n]) || W['#'+i] || null; }
 function lookTags(lk){ return figTags(lk).map(function(x){ return '<span'+(x[1]?' class="un"':'')+'>'+cesc(x[0])+'</span>'; }).join(''); }
 function renderChars(){
   var box=document.getElementById('ct-chars'); if(!box) return;
@@ -9872,7 +10156,7 @@ function drawCv(cv){
   var kind=k;
   if(o.ang==='high' && /^(fs|ls|els)$/.test(k)) kind='high';
   if(o.ang==='low' && /^(fs|ls|els)$/.test(k)) kind='low';
-  try{ (K[kind]||K.ms).draw(D); }catch(e){}
+  try{ (K[kind]||K.ms).draw(D); }catch(e){ window.__ctErr=(window.__ctErr||[]).concat(String(e&&e.stack||e).slice(0,300)).slice(-20); }   // 그림 오류는 숨기되 시험에서 볼 수 있게
   if(o.focus) focusLines(D);
   if(o.flash){ ctx.save(); ctx.globalAlpha=.09; ctx.fillStyle=D.c.ink; ctx.fillRect(0,0,w,h); ctx.restore(); }
   ctx.restore();
@@ -9884,20 +10168,26 @@ var pend=new Set(), raf=0;
 function queue(cv){ pend.add(cv); if(!raf) raf=requestAnimationFrame(function(){ raf=0; var p=pend; pend=new Set(); needRough(function(){ p.forEach(function(cv){ if(cv.isConnected) drawCv(cv); }); }); }); }
 var ro=('ResizeObserver' in window)?new ResizeObserver(function(es){ es.forEach(function(e){ queue(e.target); }); }):null;
 function cvFor(c){
-  var cv=document.createElement('canvas');
-  cv.dataset.k=c.k; cv.dataset.seed=c.n; cv.dataset.x=(c.k==='cu'||c.k==='ms'||c.k==='bs')?(c.n%2?'.42':'.58'):'.5';
+  var cv=document.createElement('canvas'); cutData(cv,c);
+  cv.setAttribute('role','img'); cv.setAttribute('aria-label', c.n+'번 컷 '+shotName(c.k)+' 구도');
+  if(ro) ro.observe(cv); else setTimeout(function(){ queue(cv); },0);
+  return cv;
+}
+// 컷 → 그림 칸 data-* (콘티 칸·베스트컷이 같이 쓴다). 인물마다 자리 x가 다 있으면 data-pos
+function cutData(cv,c){
+  Object.keys(cv.dataset).forEach(function(k){ if(k!=='nolabel') delete cv.dataset[k]; });
+  cv.dataset.k=c.k||'ms'; cv.dataset.seed=c.n||1; cv.dataset.x=(c.k==='cu'||c.k==='ms'||c.k==='bs')?((c.n||1)%2?'.42':'.58'):'.5';
   if(c.ang) cv.dataset.ang=c.ang;
   if(c.ang==='high' && /^(ms|bs|cu)$/.test(c.k)) cv.dataset.hs='1.25';
   if(c.ang==='low' && /^(ms|bs|cu)$/.test(c.k)) cv.dataset.hs='.82';
-  if(/놀라|충격|경악|얼어붙|굳어|소스라/.test(c.scr)) cv.dataset.shock='1';
-  if(/실루엣|그림자만|역광/.test(c.scr)) cv.dataset.sil='1';
+  if(/놀라|충격|경악|얼어붙|굳어|소스라/.test(c.scr||'')) cv.dataset.shock='1';
+  if(/실루엣|그림자만|역광/.test(c.scr||'')) cv.dataset.sil='1';
   if(c.silent) cv.dataset.silent='1';
   if(c.hook) cv.dataset.hook='1';
   if(c.focus) cv.dataset.focus='1'; if(c.flash) cv.dataset.flash='1';
   if(c.scr) cv.dataset.scr=c.scr;
   var wl=whoOf(c); if(wl.length) cv.dataset.who=JSON.stringify(wl);
-  cv.setAttribute('role','img'); cv.setAttribute('aria-label', c.n+'번 컷 '+shotName(c.k)+' 구도');
-  if(ro) ro.observe(cv); else setTimeout(function(){ queue(cv); },0);
+  if(wl.length && wl.every(function(w){ return w.x!=null; })) cv.dataset.pos=JSON.stringify(wl.map(function(w){ return w.x; }));
   return cv;
 }
 
@@ -9944,29 +10234,59 @@ function refreshCut(n){
 function renderAll(){ renderPlan(); renderChars(); renderBoard(); }
 
 /* ---------- 컷 고치기 ---------- */
+var WP_FACE=[['','구도대로'],['front','정면'],['left','왼쪽'],['right','오른쪽'],['back','뒤']];
+function wpPoses(){ var p=[]; FIG_SEL.forEach(function(s){ if(s[0]==='pose') p=s[2]; }); return p; }
+function wpNames(v){ return String(v||'').split(/[,，、]/).map(function(x){ return x.trim(); }).filter(Boolean).slice(0,3).map(function(x){ return x==='?'?'':x; }); }
+// 베스트컷 → 콘티 컷: 구도·앵글·효과·화면·대사·인물(자세·방향·자리)
+function applyBest(c, rec){
+  if(!c || !rec) return c;
+  c.k=rec.k||'ms'; c.ang=rec.ang||''; c.focus=rec.focus?1:0; c.flash=rec.flash?1:0;
+  if(rec.scr) c.scr=String(rec.scr); if(rec.line) c.line=String(rec.line);
+  var ch=(rec.chars||[]).slice(0,3); c.who=ch.map(function(x){ return String(x.name||''); }); c.wp={};
+  ch.forEach(function(x,i){ var w={}; if(x.pose) w.pose=x.pose; if(x.face) w.face=x.face; if(x.x!=null && isFinite(+x.x)) w.x=+x.x; c.wp[x.name||('#'+i)]=w; });
+  if(rec.id) c.bc=rec.id;
+  return c;
+}
 function openEdit(f){
   var n=+f.dataset.n, c=B.cuts[n-1]; if(!c || f.querySelector('.ct-ed')) return;
-  var ed=document.createElement('div'); ed.className='ct-ed';
+  var ed=document.createElement('div'), P=wpPoses(); ed.className='ct-ed';
   ed.innerHTML='<label>구도 <select class="ct-k">'+SHOTS.map(function(s){ return '<option value="'+s[0]+'"'+(s[0]===c.k?' selected':'')+'>'+s[2]+'</option>'; }).join('')+'</select></label>'+
     '<label>앵글 <select class="ct-a">'+ANGS.map(function(a){ return '<option value="'+a[0]+'"'+(a[0]===(c.ang||'')?' selected':'')+'>'+a[2]+'</option>'; }).join('')+'</select></label>'+
     '<div class="ct-chk"><label><input type="checkbox" class="ct-f"'+(c.focus?' checked':'')+'>집중선</label><label><input type="checkbox" class="ct-fl"'+(c.flash?' checked':'')+'>회상 테두리</label></div>'+
-    '<label>인물 (왼쪽부터, 쉼표) <input class="ct-w" type="text"></label>'+
+    '<label>인물 (왼쪽부터, 쉼표 · 이름 없으면 ?) <input class="ct-w" type="text"></label><div class="ct-wp"></div>'+
     '<label>화면 <textarea class="ct-s" rows="2"></textarea></label><label>대사 <input class="ct-l" type="text"></label>'+
     '<div class="filterbar"><button class="chip ct-ok" type="button">저장</button><button class="chip ct-x" type="button">닫기</button>'+
-    '<button class="chip ct-add" type="button">뒤에 컷 추가</button><button class="chip ct-del" type="button">이 컷 지우기</button></div>';
-  ed.querySelector('.ct-s').value=c.scr||''; ed.querySelector('.ct-l').value=c.line||''; ed.querySelector('.ct-w').value=whoOf(c).map(function(x){ return x.name; }).join(', ');
+    '<button class="chip ct-add" type="button">뒤에 컷 추가</button><button class="chip ct-del" type="button">이 컷 지우기</button></div>'+
+    (window.__bcPick?'<div class="filterbar ct-bc"><button class="chip ct-bcin" type="button">베스트컷에서 넣기</button><button class="chip ct-bcout" type="button">이 컷을 베스트컷으로 저장</button></div><div class="ct-bcbox"></div>':'');
+  ed.querySelector('.ct-s').value=c.scr||''; ed.querySelector('.ct-l').value=c.line||''; ed.querySelector('.ct-w').value=whoOf(c).map(function(x){ return x.name||'?'; }).join(', ');
   f.appendChild(ed);
+  var wpBox=ed.querySelector('.ct-wp'), wpCur={};
+  Object.keys(c.wp||{}).forEach(function(k){ wpCur[k]=Object.assign({}, c.wp[k]); });
+  function wpRead(){ [].slice.call(wpBox.querySelectorAll('.ct-wr')).forEach(function(r){ var k=r.getAttribute('data-k'), w=wpCur[k]||(wpCur[k]={});
+    w.pose=r.querySelector('.ct-wpp').value; w.face=r.querySelector('.ct-wpf').value; }); }
+  function wpRows(){ wpRead(); var ns=wpNames(ed.querySelector('.ct-w').value);
+    wpBox.innerHTML=ns.map(function(nm,i){ var k=nm||('#'+i), w=wpCur[k]||{};
+      return '<div class="ct-wr" data-k="'+cesc(k)+'"><b>'+cesc(nm||'(이름 없음)')+'</b><select class="ct-wpp" aria-label="자세"><option value="">자세 그대로</option>'+P.map(function(p){ return '<option'+(w.pose===p?' selected':'')+'>'+p+'</option>'; }).join('')+'</select>'+
+        '<select class="ct-wpf" aria-label="방향">'+WP_FACE.map(function(o){ return '<option value="'+o[0]+'"'+((w.face||'')===o[0]?' selected':'')+'>'+o[1]+'</option>'; }).join('')+'</select></div>'; }).join(''); }
+  wpRows();
+  var wpT=0; ed.querySelector('.ct-w').addEventListener('input',function(){ clearTimeout(wpT); wpT=setTimeout(wpRows,250); });
   ed.addEventListener('click',function(e){ e.stopPropagation(); });
   ed.querySelector('.ct-x').addEventListener('click',function(){ ed.remove(); });
-  ed.querySelector('.ct-ok').addEventListener('click',function(){
+  function apply(){
     c.k=ed.querySelector('.ct-k').value; c.ang=ed.querySelector('.ct-a').value||''; c.focus=ed.querySelector('.ct-f').checked?1:0; c.flash=ed.querySelector('.ct-fl').checked?1:0;
     c.scr=ed.querySelector('.ct-s').value.trim(); c.line=ed.querySelector('.ct-l').value.trim();
-    c.who=ed.querySelector('.ct-w').value.split(/[,，、]/).map(function(x){ return x.trim(); }).filter(Boolean).slice(0,3);
-    save(); refreshCut(n);
-  });
+    wpRead(); c.who=wpNames(ed.querySelector('.ct-w').value);
+    var wp={}; c.who.forEach(function(nm,i){ var k=nm||('#'+i), w=wpCur[k]; if(!w) return; var o={}; if(w.pose) o.pose=w.pose; if(w.face) o.face=w.face; if(w.x!=null) o.x=w.x; if(Object.keys(o).length) wp[k]=o; });
+    if(Object.keys(wp).length) c.wp=wp; else delete c.wp;
+  }
+  ed.querySelector('.ct-ok').addEventListener('click',function(){ apply(); save(); refreshCut(n); });
   ed.querySelector('.ct-add').addEventListener('click',function(){ insertCut(n); });
   var del=ed.querySelector('.ct-del');
   del.addEventListener('click',function(){ if(del.dataset.arm){ removeCut(n); } else { del.dataset.arm='1'; del.textContent='한 번 더 누르면 지움'; } });
+  var bin=ed.querySelector('.ct-bcin'), bout=ed.querySelector('.ct-bcout');
+  if(bin) bin.addEventListener('click',function(){ window.__bcPick(ed.querySelector('.ct-bcbox'), function(rec){ applyBest(c, rec); save(); refreshCut(n); stat(n+'번 컷에 베스트컷 「'+(rec.title||'')+'」을 넣었다.'); }); });
+  if(bout) bout.addEventListener('click',function(){ apply(); save(); var r=window.__bcFromConti?window.__bcFromConti(c, whoOf(c)):null;
+    if(r){ bout.textContent='베스트컷에 저장됨 · '+(r.folder||'기본'); refreshCut(n); stat(n+'번 컷을 베스트컷 「'+r.title+'」로 저장했다.'); } });
 }
 function renumber(){
   B.cuts.forEach(function(c,i){ c.n=i+1; });
@@ -10101,6 +10421,9 @@ function fromCast(){
 }
 document.getElementById('ct-fromcast').addEventListener('click', fromCast);
 window.__ctPortrait=function(cv){ needRough(function(){ try{ if(cv.isConnected) drawCv(cv); }catch(e){} }); };
+// 베스트컷이 쓰는 창구: 구도·앵글 목록, 컷 → 그림 칸, 인물 풀이, 베스트컷 → 콘티 컷
+window.__ctSHOTS=SHOTS; window.__ctANGS=ANGS; window.__ctShotName=shotName; window.__ctAngName=angName; window.__ctPoseJ=POSE_J;
+window.__ctCutData=function(cv,c){ return cutData(cv,c); }; window.__ctWhoOf=function(c){ return whoOf(c); }; window.__ctApplyBest=applyBest;
 document.getElementById('ct-addch').addEventListener('click', function(){ ensureB(); B.chars.push({name:'인물 '+(B.chars.length+1), role:'', look:{}, note:''}); save(); renderChars(); editChar(B.chars.length-1); });
 document.getElementById('ct-chars').addEventListener('click', function(e){
   var t=e.target.closest('button'); if(!t||!B) return;
@@ -10165,6 +10488,263 @@ window.__contiShow=function(){
 })();
 
 // [[MOD:bestcut]] 베스트컷 (콘티 모듈 뒤)
+// 기록 mangaCuts(동기화): 컷 {id,title,folder,k,ang,focus,flash,chars:[{name,pose,face,x}],scr,line,made,at}, 컷 폴더 {id:'bf_'+이름, kind:'folder', name, made}
+// 그림은 콘티 구성기 창구(__ctCutData → __ctPortrait)로 그려서 콘티 칸과 같은 그림이 된다. 넣을 때는 __ctApplyBest
+var BC_KEY='mangaCuts';
+var BC={cur:null, dirty:false, armF:0, act:0, pend:null, tm:0, cf:'', mounted:false};
+var BC_FACE=[['','구도대로'],['front','정면'],['left','왼쪽'],['right','오른쪽'],['back','뒤']];
+function bcEsc(t){ return wsEsc(t); }
+function bcAll(){ return recList(BC_KEY).filter(function(x){ return x && !x.kind; }); }
+function bcFolders(){
+  var seen={'기본':1}, out=['기본'];
+  recList(BC_KEY).filter(function(x){ return x && x.kind==='folder' && x.name; }).sort(function(a,b){ return (a.made||a.at||0)-(b.made||b.at||0); })
+    .forEach(function(f){ if(!seen[f.name]){ seen[f.name]=1; out.push(f.name); } });
+  bcAll().forEach(function(m){ var f=m.folder||'기본'; if(!seen[f]){ seen[f]=1; out.push(f); } });
+  return out;
+}
+function bcFolderMake(name){ name=String(name||'').replace(/\s+/g,' ').trim().slice(0,40); if(!name) return '';
+  if(name!=='기본' && !recLoad(BC_KEY).items['bf_'+name]) recPut(BC_KEY,{id:'bf_'+name, kind:'folder', name:name, made:Date.now()}); return name; }
+function bcView(){ var v=castLs('cutView')||''; return (v && bcFolders().indexOf(v)<0)?'':v; }
+function bcPoses(){ var p=[]; FIG_SEL.forEach(function(s){ if(s[0]==='pose') p=s[2]; }); return p; }
+function bcShots(){ return window.__ctSHOTS||[['fs','FS','풀숏']]; }
+function bcAngs(){ return window.__ctANGS||[['','','앵글 보통']]; }
+function bcShotName(k){ return window.__ctShotName?window.__ctShotName(k):k; }
+function bcAutoX(n,k){ if(n<=1) return [.5]; if(n===2) return k==='two'?[.26,.74]:(k==='stand'?[.2,.8]:[.3,.7]); return [.2,.5,.8]; }
+function bcFaceKey(v){ v=String(v||'').trim(); return {left:'left',right:'right',back:'back',front:'front','왼쪽':'left','오른쪽':'right','뒤':'back','뒷모습':'back','정면':'front'}[v]||''; }
+function bcAngKey(v){ v=String(v||'').trim(); return {high:'high',low:'low',dutch:'dutch','부감':'high','앙각':'low','더치':'dutch'}[v]||''; }
+function bcShotKey(v){ v=String(v||'').trim(); var L=v.toLowerCase(), hit=''; bcShots().forEach(function(s){ if(s[0]===L || s[1].toLowerCase()===L || s[2]===v) hit=s[0]; }); return hit; }
+function bcClean(r){ r=r||{}; var P=bcPoses(), k=bcShotKey(r.k)||'fs';
+  var ch=(Array.isArray(r.chars)?r.chars:[]).slice(0,3).map(function(c,i,a){ c=c||{}; var x=+c.x; return {name:String(c.name||'').trim(), pose:P.indexOf(c.pose)>-1?c.pose:'', face:bcFaceKey(c.face), x:(c.x!=null && c.x!=='' && isFinite(x))?Math.max(0,Math.min(1,x)):bcAutoX(a.length,k)[i]}; });
+  return {id:r.id||'', title:String(r.title||'').trim().slice(0,60), folder:String(r.folder||'기본').trim()||'기본', k:k, ang:bcAngKey(r.ang), focus:r.focus?1:0, flash:r.flash?1:0,
+    chars:ch, scr:String(r.scr||'').trim(), line:String(r.line||'').trim(), made:r.made||0}; }
+function bcSeed(t){ t=String(t||''); var h=0; for(var i=0;i<t.length;i++) h=(h*31+t.charCodeAt(i))%9973; return 300+h; }
+function bcToCut(r){ var c=window.__ctApplyBest?window.__ctApplyBest({}, r):{k:r.k}; c.n=bcSeed(r.id||r.made||r.title); c.scr=r.scr||''; c.line=r.line||''; return c; }
+function bcAutoTitle(r){ var ns=r.chars.map(function(c){ return c.name; }).filter(Boolean), ps=r.chars.map(function(c){ return c.pose; }).filter(Boolean);
+  return (ns.length?ns.join('·'):'인물')+' · '+bcShotName(r.k)+(ps.length?' · '+ps[0]:''); }
+function bcMeta(r){ var a=window.__ctAngName?window.__ctAngName(r.ang):''; return bcShotName(r.k)+(a?' · '+a:'')+(r.focus?' · 집중선':'')+(r.flash?' · 회상':''); }
+function bcWho(r){ return r.chars.map(function(c){ return (c.name||'(이름 없음)')+(c.pose?' '+c.pose:''); }).join(', '); }
+// 그림 칸에 그리기 (콘티 그림 그대로)
+function bcDraw(cv, r){ if(!cv || !window.__ctCutData || !window.__ctPortrait) return; r=bcClean(r);
+  window.__ctCutData(cv, bcToCut(r)); cv.setAttribute('role','img'); cv.setAttribute('aria-label', (r.title||bcAutoTitle(r))+' 컷 그림'); window.__ctPortrait(cv); }
+function bcDrawAll(root){ if(!root) return; [].slice.call(root.querySelectorAll('canvas[data-bc]')).forEach(function(cv){ var r=recLoad(BC_KEY).items[cv.getAttribute('data-bc')]; if(r) bcDraw(cv, r); }); }
+function bcBlank(o){ var b={id:'', title:'', folder:bcView()||'기본', k:'fs', ang:'', focus:0, flash:0, chars:[{name:'', pose:'', face:'', x:.5}], scr:'', line:'', made:0, autoX:true};
+  if(o) Object.keys(o).forEach(function(k){ b[k]=o[k]; }); return b; }
+
+// ----- 페이지 -----
+function bcOn(){ var s=document.getElementById('cutlib'); return !!(s && s.classList.contains('page-on')); }
+function bcMount(){
+  var root=document.getElementById('cutlib-root'); if(!root) return;
+  if(BC.pend){ var p=BC.pend; BC.pend=null; BC.cur=bcBlank({chars:[{name:p.name||'', pose:'', face:'', x:.5}], title:''}); if(p.folder) BC.cf=p.folder; BC.dirty=false; }
+  if(!BC.cur) BC.cur=bcBlank();
+  if(!document.getElementById('bc-cv')){
+    var ref=(typeof POSE_REF!=='undefined' && Array.isArray(POSE_REF) && POSE_REF.length);
+    root.innerHTML='<p class="lede">등장인물에게 자세와 방향을 주고 구도를 골라 컷 한 칸을 만든다. 폴더에 모아 두고, 콘티 구성기의 컷 고치기에서 「베스트컷에서 넣기」로 꺼내 쓴다.</p>'+
+      '<div class="bc-make" id="bc-make"><div class="bc-view"><canvas id="bc-cv"></canvas><p class="bc-cap" id="bc-cap"></p></div>'+
+      '<div class="bc-form">'+
+        '<div class="bc-row"><label class="bc-grow">제목 <input id="bc-title" type="text" maxlength="60" placeholder="비우면 자동"></label><label>폴더 <select id="bc-folder"></select></label></div>'+
+        (ref?'<label>유명 자세·구도에서 <select id="bc-ref"></select></label><p class="small bc-refnote" id="bc-refnote"></p>':'')+
+        '<div class="bc-who"><div class="bc-wh"><b>인물</b><label class="small">작품 <select id="bc-cfold"></select></label></div><div id="bc-chars"></div>'+
+          '<button class="chip" id="bc-addc" type="button">＋ 인물</button></div>'+
+        '<div class="bc-row"><label>구도 <select id="bc-k"></select></label><label>앵글 <select id="bc-a"></select></label>'+
+          '<label class="bc-ck"><input type="checkbox" id="bc-f">집중선</label><label class="bc-ck"><input type="checkbox" id="bc-fl">회상</label></div>'+
+        '<label>화면 <textarea id="bc-scr" rows="2" placeholder="예: 비 오는 옥상, 역광"></textarea></label>'+
+        '<label>대사 <input id="bc-line" type="text"></label>'+
+        '<div class="filterbar bc-acts"><button class="chip bc-ok" id="bc-save" type="button">저장</button><button class="chip" id="bc-asnew" type="button" hidden>새 컷으로 저장</button>'+
+          '<button class="chip" id="bc-new" type="button">새 컷</button><span class="small bc-msg" id="bc-msg"></span></div>'+
+      '</div></div>'+
+      '<h3 class="bc-lh">모아 둔 컷 <span class="count" id="bc-count"></span></h3>'+
+      '<div class="bc-fbar" id="bc-fbar"></div>'+
+      '<div class="filterbar bc-top"><input id="bc-q" type="search" placeholder="제목·인물·자세·화면 검색" aria-label="베스트컷 검색"></div>'+
+      '<div class="bc-grid" id="bc-grid"></div>';
+    bcBind(); BC.mounted=true;
+  }
+  bcForm(); bcList();
+}
+function bcCastOpts(sel){
+  var all=castAll(), fs=castFolders(), v=BC.cf, h='<option value="">(이름 없음)</option>', have=!sel;
+  fs.forEach(function(f){ if(v && f!==v) return; var ms=all.filter(function(m){ return (m.folder||'기본')===f && m.name; }); if(!ms.length) return;
+    h+='<optgroup label="'+bcEsc(f)+'">'+ms.map(function(m){ if(m.name===sel) have=true; return '<option'+(m.name===sel?' selected':'')+' value="'+bcEsc(m.name)+'">'+bcEsc(m.name)+'</option>'; }).join('')+'</optgroup>'; });
+  if(!have) h+='<option selected value="'+bcEsc(sel)+'">'+bcEsc(sel)+'</option>';
+  return h;
+}
+function bcCharsHTML(){
+  var P=bcPoses(), r=BC.cur;
+  return r.chars.map(function(c,i){
+    var own=c.name&&castFind(c.name), op=own?(castFigOf(own).pose||''):'';
+    return '<div class="bc-c'+(i===BC.act?' on':'')+'" data-i="'+i+'"><span class="bc-ci">'+(i+1)+'</span>'+
+      '<select class="bc-cn" aria-label="인물 '+(i+1)+'">'+bcCastOpts(c.name)+'</select>'+
+      '<select class="bc-cp" aria-label="자세"><option value="">'+(op?'기본('+bcEsc(op)+')':'기본 자세')+'</option>'+P.map(function(p){ return '<option'+(c.pose===p?' selected':'')+'>'+p+'</option>'; }).join('')+'</select>'+
+      '<select class="bc-cf" aria-label="방향">'+BC_FACE.map(function(o){ return '<option value="'+o[0]+'"'+((c.face||'')===o[0]?' selected':'')+'>'+o[1]+'</option>'; }).join('')+'</select>'+
+      '<label class="bc-cxl">자리 <input type="range" class="bc-cx" min="0" max="100" step="5" value="'+Math.round((c.x==null?.5:c.x)*100)+'" aria-label="왼쪽에서 자리"></label>'+
+      (r.chars.length>1?'<button class="chip bc-cd" type="button">빼기</button>':'')+'</div>';
+  }).join('');
+}
+function bcForm(){
+  var r=BC.cur, $=function(id){ return document.getElementById(id); }; if(!$('bc-cv')) return;
+  var fs=bcFolders(); if(fs.indexOf(r.folder)<0) fs.push(r.folder);
+  $('bc-folder').innerHTML=fs.map(function(f){ return '<option'+(f===r.folder?' selected':'')+' value="'+bcEsc(f)+'">'+bcEsc(f)+'</option>'; }).join('');
+  var cfs=castFolders(); if(BC.cf && cfs.indexOf(BC.cf)<0) BC.cf='';
+  $('bc-cfold').innerHTML='<option value="">전체</option>'+cfs.map(function(f){ return '<option'+(f===BC.cf?' selected':'')+' value="'+bcEsc(f)+'">'+bcEsc(f)+'</option>'; }).join('');
+  $('bc-k').innerHTML=bcShots().map(function(s){ return '<option value="'+s[0]+'"'+(s[0]===r.k?' selected':'')+'>'+s[2]+'</option>'; }).join('');
+  $('bc-a').innerHTML=bcAngs().map(function(a){ return '<option value="'+a[0]+'"'+(a[0]===(r.ang||'')?' selected':'')+'>'+a[2]+'</option>'; }).join('');
+  $('bc-f').checked=!!r.focus; $('bc-fl').checked=!!r.flash;
+  $('bc-title').value=r.title||''; $('bc-scr').value=r.scr||''; $('bc-line').value=r.line||'';
+  $('bc-chars').innerHTML=bcCharsHTML(); $('bc-addc').hidden=r.chars.length>=3;
+  $('bc-asnew').hidden=!r.id; $('bc-save').textContent=r.id?'고친 것 저장':'저장';
+  var rf=$('bc-ref'); if(rf && !rf.options.length){
+    var G={}; POSE_REF.forEach(function(p,i){ var g=p.kind||'기타'; (G[g]=G[g]||[]).push('<option value="'+i+'">'+bcEsc(p.name||p.id||('#'+i))+'</option>'); });
+    rf.innerHTML='<option value="">고르면 자세·구도를 채운다</option>'+Object.keys(G).map(function(g){ return '<optgroup label="'+bcEsc(g)+'">'+G[g].join('')+'</optgroup>'; }).join(''); }
+  bcPreview();
+}
+function bcPreview(){
+  clearTimeout(BC.tm); BC.tm=setTimeout(function(){ var cv=document.getElementById('bc-cv'); if(!cv || !bcOn()) return; var r=bcClean(BC.cur); bcDraw(cv, r);
+    var cap=document.getElementById('bc-cap'); if(cap) cap.textContent=bcMeta(r)+' — '+bcWho(r)+(r.line?' · “'+r.line+'”':''); }, 60);
+}
+function bcMsg(t){ var m=document.getElementById('bc-msg'); if(!m) return; m.textContent=t||''; if(t) setTimeout(function(){ if(m.textContent===t) m.textContent=''; },3500); }
+function bcRead(){   // 폼 → BC.cur
+  var r=BC.cur, $=function(id){ return document.getElementById(id); };
+  r.title=$('bc-title').value; r.folder=$('bc-folder').value||'기본'; r.k=$('bc-k').value; r.ang=$('bc-a').value||''; r.focus=$('bc-f').checked?1:0; r.flash=$('bc-fl').checked?1:0;
+  r.scr=$('bc-scr').value; r.line=$('bc-line').value;
+  [].slice.call(document.querySelectorAll('#bc-chars .bc-c')).forEach(function(row){ var c=r.chars[+row.getAttribute('data-i')]; if(!c) return;
+    c.name=row.querySelector('.bc-cn').value; c.pose=row.querySelector('.bc-cp').value; c.face=row.querySelector('.bc-cf').value; c.x=(+row.querySelector('.bc-cx').value)/100; });
+  BC.dirty=true;
+}
+function bcRelayout(){ var r=BC.cur; if(!r.autoX) return; var X=bcAutoX(r.chars.length, r.k); r.chars.forEach(function(c,i){ c.x=X[i]; }); }
+function bcSave(asNew){
+  bcRead(); var r=bcClean(BC.cur); if(asNew){ r.id=''; r.made=0; }
+  if(!r.chars.length && r.k!=='empty'){ bcMsg('인물을 하나 넣는다.'); return null; }
+  var rec={id:r.id||recId(), title:r.title||bcAutoTitle(r), folder:bcFolderMake(r.folder)||'기본', k:r.k, ang:r.ang, focus:r.focus, flash:r.flash, chars:r.chars, scr:r.scr, line:r.line, made:r.made||Date.now()};
+  recPut(BC_KEY, rec);
+  BC.cur=bcBlank(JSON.parse(JSON.stringify(rec))); BC.cur.autoX=false; BC.dirty=false;
+  bcForm(); bcList(); bcMsg(asNew?'새 컷으로 저장했다.':'저장했다 · '+rec.folder);
+  return rec;
+}
+function bcEdit(id){ var r=recLoad(BC_KEY).items[id]; if(!r) return; BC.cur=bcBlank(JSON.parse(JSON.stringify(bcClean(r)))); BC.cur.autoX=false; BC.act=0; BC.dirty=false;
+  bcForm(); bcList(); var mk=document.getElementById('bc-make'); if(mk) try{ mk.scrollIntoView({block:'start', behavior:'smooth'}); }catch(e){} bcMsg('「'+(r.title||'')+'」 고치는 중'); }
+function bcApplyRef(i){
+  var p=POSE_REF[+i]; if(!p) return; bcRead(); var r=BC.cur, P=bcPoses(), k=bcShotKey(p.k);
+  if(k){ r.k=k; if(/^(two|stand|ots)$/.test(k) && r.chars.length<2) r.chars.push({name:'', pose:'', face:'', x:.7}); }
+  if(p.ang!=null && (bcAngKey(p.ang) || p.ang==='')) r.ang=bcAngKey(p.ang);
+  if(p.focus!=null) r.focus=p.focus?1:0; if(p.flash!=null) r.flash=p.flash?1:0;
+  var c=r.chars[Math.min(BC.act, r.chars.length-1)];
+  if(c){ if(P.indexOf(p.pose)>-1) c.pose=p.pose; if(p.face!=null) c.face=bcFaceKey(p.face); }
+  if(!r.title) r.title=String(p.name||'');
+  bcRelayout(); bcForm();
+  var nt=document.getElementById('bc-refnote'); if(nt) nt.textContent=[p.desc,p.use?'쓰는 곳: '+p.use:''].filter(Boolean).join(' · ');
+}
+function bcBind(){
+  var $=function(id){ return document.getElementById(id); }, ch=$('bc-chars');
+  ['bc-title','bc-scr','bc-line'].forEach(function(id){ $(id).addEventListener('input',function(){ bcRead(); bcPreview(); }); });
+  ['bc-folder','bc-f','bc-fl','bc-a'].forEach(function(id){ $(id).addEventListener('change',function(){ bcRead(); bcPreview(); }); });
+  $('bc-k').addEventListener('change',function(){ bcRead(); bcRelayout(); bcForm(); });
+  $('bc-cfold').addEventListener('change',function(){ bcRead(); BC.cf=this.value; $('bc-chars').innerHTML=bcCharsHTML(); });
+  ch.addEventListener('change',function(e){ var row=e.target.closest('.bc-c'); if(row) BC.act=+row.getAttribute('data-i');
+    bcRead(); if(e.target.classList.contains('bc-cn')){ $('bc-chars').innerHTML=bcCharsHTML(); } bcPreview(); });
+  ch.addEventListener('input',function(e){ if(!e.target.classList.contains('bc-cx')) return; BC.cur.autoX=false; bcRead(); bcPreview(); });
+  ch.addEventListener('focusin',function(e){ var row=e.target.closest('.bc-c'); if(!row) return; BC.act=+row.getAttribute('data-i');
+    [].slice.call(ch.querySelectorAll('.bc-c')).forEach(function(x){ x.classList.toggle('on', x===row); }); });
+  ch.addEventListener('click',function(e){ var b=e.target.closest('.bc-cd'); if(!b) return; bcRead(); var i=+b.closest('.bc-c').getAttribute('data-i');
+    BC.cur.chars.splice(i,1); BC.act=0; bcRelayout(); bcForm(); });
+  $('bc-addc').addEventListener('click',function(){ bcRead(); if(BC.cur.chars.length>=3) return; BC.cur.chars.push({name:'', pose:'', face:'', x:.5}); BC.act=BC.cur.chars.length-1;
+    if(!BC.cur.autoX){ BC.cur.chars[BC.act].x=BC.act===1?.7:.85; } bcRelayout(); bcForm(); });
+  var rf=$('bc-ref'); if(rf) rf.addEventListener('change',function(){ if(rf.value!=='') bcApplyRef(rf.value); rf.value=''; });
+  $('bc-save').addEventListener('click',function(){ bcSave(false); });
+  $('bc-asnew').addEventListener('click',function(){ bcSave(true); });
+  $('bc-new').addEventListener('click',function(){ BC.cur=bcBlank(); BC.act=0; BC.dirty=false; bcForm(); bcList(); bcMsg('새 컷'); });
+  $('bc-q').addEventListener('input',function(){ bcList(); });
+  // 목록
+  $('bc-grid').addEventListener('click',function(e){
+    var card=e.target.closest('.bc-card'); if(!card) return; var id=card.getAttribute('data-id'), b=e.target.closest('button[data-act]');
+    if(!b){ bcEdit(id); return; }
+    var a=b.getAttribute('data-act'), r=recLoad(BC_KEY).items[id]; if(!r) return;
+    if(a==='edit') bcEdit(id);
+    if(a==='dup'){ var c=JSON.parse(JSON.stringify(r)); c.id=recId(); c.title=(r.title||'')+' (사본)'; c.made=Date.now(); recPut(BC_KEY,c); bcList(); bcMsg('복제했다.'); }
+    if(a==='del'){ if(b.getAttribute('data-arm')!=='1'){ b.setAttribute('data-arm','1'); b.textContent='한 번 더 누르면 삭제';
+        setTimeout(function(){ if(b.getAttribute('data-arm')==='1'){ b.setAttribute('data-arm',''); b.textContent='삭제'; } },4000); return; }
+      recDel(BC_KEY,id); if(BC.cur && BC.cur.id===id){ BC.cur=bcBlank(); bcForm(); } bcList(); }
+  });
+  $('bc-grid').addEventListener('keydown',function(e){ if(e.key==='Enter' && e.target.classList.contains('bc-card')) bcEdit(e.target.getAttribute('data-id')); });
+  try{ if('ResizeObserver' in window){ var lw=0; new ResizeObserver(function(){ var cv=$('bc-cv'); if(!cv) return; var w=cv.getBoundingClientRect().width; if(w && Math.abs(w-lw)>2){ lw=w; bcPreview(); } }).observe($('bc-cv')); } }catch(e){}
+}
+function bcList(){
+  var grid=document.getElementById('bc-grid'); if(!grid) return;
+  var fs=bcFolders(), all=bcAll(), v=bcView(), cnt={};
+  all.forEach(function(m){ var f=m.folder||'기본'; cnt[f]=(cnt[f]||0)+1; });
+  var fb=document.getElementById('bc-fbar');
+  if(fb){
+    fb.innerHTML='<div class="chips">'+[''].concat(fs).map(function(f){ return '<button class="chip" data-v="'+bcEsc(f)+'" aria-pressed="'+(f===v?'true':'false')+'">'+(f?bcEsc(f):'전체')+' <span class="cn">'+(f?(cnt[f]||0):all.length)+'</span></button>'; }).join('')+'</div>'+
+      '<div class="cast-fact">'+(v&&v!=='기본'?'<button class="chip" data-fa="ren">이름 바꾸기</button><button class="chip" data-fa="del">폴더 삭제</button>':'')+
+      '<input id="bc-fname" placeholder="새 폴더 이름" aria-label="폴더 이름"><button class="chip" data-fa="add">폴더 만들기</button><span class="small" id="bc-fmsg"></span></div>';
+    [].slice.call(fb.querySelectorAll('button[data-v]')).forEach(function(b){ b.addEventListener('click',function(){ castLs('cutView',b.getAttribute('data-v')); BC.armF=0;
+      if(BC.cur && !BC.cur.id && !BC.dirty) BC.cur.folder=b.getAttribute('data-v')||'기본'; bcList(); bcForm(); }); });
+    var fmsg=document.getElementById('bc-fmsg'), say=function(t){ if(fmsg){ fmsg.textContent=t; setTimeout(function(){ if(fmsg.textContent===t) fmsg.textContent=''; },3500); } };
+    [].slice.call(fb.querySelectorAll('button[data-fa]')).forEach(function(b){ b.addEventListener('click',function(){
+      var a=b.getAttribute('data-fa'), inp=document.getElementById('bc-fname'), nv=String(inp.value||'').replace(/\s+/g,' ').trim().slice(0,40);
+      if(a==='add'){ if(!nv){ say('폴더 이름을 적는다.'); return; } if(fs.indexOf(nv)>-1){ say('이미 있는 폴더다.'); return; }
+        bcFolderMake(nv); castLs('cutView',nv); if(BC.cur && !BC.cur.id) BC.cur.folder=nv; bcList(); bcForm(); return; }
+      if(a==='ren'){ if(!nv){ say('위 칸에 새 이름을 적고 누른다.'); try{ inp.focus(); }catch(e){} return; } if(fs.indexOf(nv)>-1){ say('이미 있는 폴더다.'); return; }
+        bcFolderMake(nv); all.forEach(function(m){ if((m.folder||'기본')===v){ m.folder=nv; recPut(BC_KEY,m); } }); recDel(BC_KEY,'bf_'+v);
+        if(BC.cur && BC.cur.folder===v) BC.cur.folder=nv; castLs('cutView',nv); bcList(); bcForm(); return; }
+      if(a==='del'){ var n=cnt[v]||0;
+        if(n && BC.armF!==1){ BC.armF=1; b.textContent='한 번 더 누르면 폴더와 컷 '+n+'개 삭제'; b.setAttribute('data-arm','1');
+          setTimeout(function(){ if(b.getAttribute('data-arm')==='1'){ BC.armF=0; b.setAttribute('data-arm',''); b.textContent='폴더 삭제'; } },4000); return; }
+        BC.armF=0; all.forEach(function(m){ if((m.folder||'기본')===v) recDel(BC_KEY,m.id); }); recDel(BC_KEY,'bf_'+v); if(typeof gdIntent==='function') gdIntent();
+        if(BC.cur && BC.cur.folder===v){ if(BC.cur.id && !recLoad(BC_KEY).items[BC.cur.id]) BC.cur=bcBlank(); BC.cur.folder='기본'; }
+        castLs('cutView',''); bcList(); bcForm(); say('「'+v+'」를 지웠다.'); }
+    }); });
+  }
+  var q=String((document.getElementById('bc-q')||{}).value||'').trim().toLowerCase();
+  var ms=all.filter(function(m){ return !v || (m.folder||'기본')===v; });
+  if(q) ms=ms.filter(function(m){ return [m.title, m.scr, m.line, bcShotName(m.k), (m.chars||[]).map(function(c){ return c.name+' '+c.pose; }).join(' ')].join(' ').toLowerCase().indexOf(q)>-1; });
+  ms.sort(function(a,b){ return (b.at||0)-(a.at||0); });
+  var c=document.getElementById('bc-count'); if(c) c.textContent=(q||v?ms.length+' / ':'')+all.length+'컷';
+  if(!ms.length){ grid.innerHTML='<p class="small cast-empty">'+(q?'검색에 맞는 컷이 없다.':(all.length?'이 폴더에 컷이 없다.':'아직 모아 둔 컷이 없다. 위에서 만들고 「저장」을 누른다.'))+'</p>'; return; }
+  var cur=BC.cur&&BC.cur.id;
+  grid.innerHTML=ms.map(function(m){ var r=bcClean(m);
+    return '<figure class="bc-card'+(m.id===cur?' on':'')+'" data-id="'+bcEsc(m.id)+'" tabindex="0"><canvas data-bc="'+bcEsc(m.id)+'"></canvas><figcaption><b>'+bcEsc(m.title||bcAutoTitle(r))+'</b>'+
+      '<span class="small">'+bcEsc(bcMeta(r))+(v?'':' · '+bcEsc(m.folder||'기본'))+'</span><span class="small bc-cw">'+bcEsc(bcWho(r))+'</span>'+
+      '<span class="bc-ca"><button class="chip" type="button" data-act="edit">고치기</button><button class="chip" type="button" data-act="dup">복제</button><button class="chip" type="button" data-act="del">삭제</button></span></figcaption></figure>'; }).join('');
+  setTimeout(function(){ bcDrawAll(grid); },0);
+}
+window.PAGE_ON=window.PAGE_ON||{};
+(function(){ var pb=window.PAGE_ON.cutlib; window.PAGE_ON.cutlib=function(){ if(pb) try{ pb(); }catch(e){} bcMount(); }; })();
+window.addEventListener('storage',function(e){ if(e.key===BC_KEY && bcOn()) bcList(); });
+// 등장인물 카드 「베스트컷 만들기」 → 그 인물을 넣고 베스트컷 페이지로
+window.__bcStart=function(o){ BC.pend=o||{}; if((location.hash||'')==='#cutlib') bcMount(); else location.hash='#cutlib'; };
+document.addEventListener('click',function(e){
+  var b=e.target && e.target.closest && e.target.closest('[data-bcut]'); if(!b) return;
+  var card=b.closest('.cast-card'), id=card&&card.getAttribute('data-id'), m=id?(recLoad(CAST_KEY).items[id] || (CP.draft&&CP.draft.id===id?CP.draft:null)):null;
+  if(!m || !m.name){ b.textContent='이름부터 적는다'; setTimeout(function(){ b.textContent='베스트컷 만들기'; },1800); return; }
+  window.__bcStart({name:m.name, folder:m.folder||'기본'});
+});
+// 콘티 구성기: 고르기 창(host 안에 폴더·검색·그림). 누르면 cb(기록)
+window.__bcPick=function(host, cb){
+  if(!host) return; if(host.firstChild){ host.innerHTML=''; return; }
+  var fs=bcFolders(), v=bcView();
+  host.innerHTML='<div class="bc-pick"><div class="bc-pbar"><select class="bc-pf" aria-label="베스트컷 폴더"><option value="">전체</option>'+fs.map(function(f){ return '<option'+(f===v?' selected':'')+' value="'+bcEsc(f)+'">'+bcEsc(f)+'</option>'; }).join('')+'</select>'+
+    '<input class="bc-pq" type="search" placeholder="검색" aria-label="베스트컷 검색"><button class="chip bc-px" type="button">닫기</button></div><div class="bc-pgrid"></div></div>';
+  var pf=host.querySelector('.bc-pf'), pq=host.querySelector('.bc-pq'), g=host.querySelector('.bc-pgrid');
+  function draw(){ var f=pf.value, q=String(pq.value||'').trim().toLowerCase();
+    var ms=bcAll().filter(function(m){ return !f || (m.folder||'기본')===f; });
+    if(q) ms=ms.filter(function(m){ return [m.title, m.scr, m.line, (m.chars||[]).map(function(c){ return c.name+' '+c.pose; }).join(' ')].join(' ').toLowerCase().indexOf(q)>-1; });
+    ms.sort(function(a,b){ return (b.at||0)-(a.at||0); });
+    if(!ms.length){ g.innerHTML='<p class="small">'+(bcAll().length?'맞는 컷이 없다.':'베스트컷이 없다. <a href="#cutlib">베스트컷</a>에서 만든다.')+'</p>'; return; }
+    g.innerHTML=ms.slice(0,60).map(function(m){ return '<button type="button" class="bc-pi" data-id="'+bcEsc(m.id)+'"><canvas data-bc="'+bcEsc(m.id)+'"></canvas><span>'+bcEsc(m.title||bcAutoTitle(bcClean(m)))+'</span></button>'; }).join('');
+    setTimeout(function(){ bcDrawAll(g); },0); }
+  pf.addEventListener('change',draw); pq.addEventListener('input',draw);
+  host.querySelector('.bc-px').addEventListener('click',function(){ host.innerHTML=''; });
+  g.addEventListener('click',function(e){ var b=e.target.closest('.bc-pi'); if(!b) return; var r=recLoad(BC_KEY).items[b.getAttribute('data-id')]; if(!r) return; host.innerHTML=''; cb(bcClean(r)); });
+  draw();
+};
+// 콘티 컷 → 베스트컷 기록 (지금 보는 폴더에)
+window.__bcFromConti=function(c, who){
+  if(!c) return null; who=who||[]; var k=bcShotKey(c.k)||'ms', X=bcAutoX(Math.min(3,who.length), k);
+  var r=bcClean({k:k, ang:c.ang, focus:c.focus, flash:c.flash, scr:c.scr, line:c.line, folder:bcView()||'기본',
+    chars:who.slice(0,3).map(function(w,i){ return {name:w.name||'', pose:w.pose||'', face:w.face||'', x:w.x!=null?w.x:X[i]}; })});
+  var rec={id:recId(), title:(c.scr?String(c.scr).slice(0,24):(c.n?c.n+'번 컷':'콘티 컷')), folder:bcFolderMake(r.folder)||'기본', k:r.k, ang:r.ang, focus:r.focus, flash:r.flash, chars:r.chars, scr:r.scr, line:r.line, made:Date.now(), from:'conti'};
+  recPut(BC_KEY, rec); if(bcOn()) bcList(); return rec;
+};
+window.__bcList=function(folder){ return bcAll().filter(function(m){ return !folder || (m.folder||'기본')===folder; }).map(bcClean); };
 // [[/MOD:bestcut]]
 aiBar(); favAiBar(); aiSlots(); if(typeof ideaWriteBar==='function') ideaWriteBar();
 if(window.__reSlots) window.__reSlots(); if(typeof renderFavs==='function') renderFavs();
