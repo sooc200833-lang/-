@@ -5183,7 +5183,10 @@ function aiCall(system, user, onText, maxTok, _retry, opts){
   if(contents.length && contents[0].role==='model') contents.unshift({role:'user', parts:[{text:'(이전 대화)'}]});
   if(contents.length && contents[contents.length-1].role==='user') contents[contents.length-1].parts[0].text+='\n\n'+user;
   else contents.push({role:'user', parts:[{text:user}]});
+  // 이미지: opts.images=[{mime, data(base64, 접두어 없이)}] → 마지막 user 차례에 글 다음으로 붙인다 (REST 문서 형식 inline_data·mime_type)
+  (opts.images||[]).forEach(function(im){ if(im && im.data) contents[contents.length-1].parts.push({inline_data:{mime_type:String(im.mime||'image/jpeg'), data:String(im.data)}}); });
   var gc={maxOutputTokens:(opts._cap||((maxTok||900)+2500)), temperature:(typeof opts.temperature==='number'?opts.temperature:0.9)};
+  if(opts.json) gc.responseMimeType='application/json';
   var th=opts._noThink?null:gmThink(model); if(th) gc.thinkingConfig=th;
   var body={systemInstruction:{parts:[{text:system}]}, contents:contents, generationConfig:gc,
     safetySettings:['HARM_CATEGORY_HARASSMENT','HARM_CATEGORY_HATE_SPEECH','HARM_CATEGORY_SEXUALLY_EXPLICIT','HARM_CATEGORY_DANGEROUS_CONTENT'].map(function(c){ return {category:c, threshold:'BLOCK_ONLY_HIGH'}; })};
