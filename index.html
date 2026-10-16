@@ -14060,7 +14060,8 @@ function npApply(){
   });
 })();
 window.__ctNar={ask:npAsk, apply:npApply, render:npRender, state:NP, parseNar:function(t){ return npParseNar(t); }, parseLine:function(t){ return npParseLine(t); },
-  narPrompt:function(o){ return narPrompt(o); }, linePrompt:function(){ return linePrompt(); }, row:function(c){ return cutRow(c); }, lineParse:lineParse, balloons:balloonsParse, nar:narParse};
+  narPrompt:function(o){ return narPrompt(o); }, linePrompt:function(){ return linePrompt(); }, row:function(c){ return cutRow(c); }, lineParse:lineParse, balloons:balloonsParse, nar:narParse,
+  applyLines:function(t,ch){ return applyLines(t,ch); }, board:function(){ return B; }};
 
 /* ---------- 연결 ---------- */
 var tsel=document.getElementById('ct-total');
