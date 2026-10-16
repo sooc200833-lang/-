@@ -1096,6 +1096,16 @@ body.dk-drag, body.dk-drag *{user-select:none!important; -webkit-user-select:non
 .ct-flowbox{border:1px solid var(--mark); background:var(--paper); padding:.35rem .5rem; font-size:.8rem; cursor:auto}
 .ct-flowbox p{margin:0 0 .25rem}
 .ct-cut.ct-flowhi{box-shadow:0 0 0 3px var(--mark)}
+.ct-scene{grid-column:1/-1; display:flex; flex-wrap:wrap; align-items:baseline; gap:.15rem .6rem; border-top:2px solid var(--ink-2); padding:.3rem 0 .1rem; margin-top:.4rem; font-size:.82rem}
+.ct-scene.cut{border-top-color:var(--note)}
+.ct-scene b{font-family:"Hahmlet",serif}
+.ct-scene .r{color:var(--ink-3); font-size:.74rem; font-variant-numeric:tabular-nums}
+.ct-scene .pl{font-weight:600}
+.ct-scene .sm{color:var(--ink-2)}
+.ct-scene em{font-style:normal; font-size:.72rem; color:var(--paper); background:var(--note); padding:0 .35rem; border-radius:2px}
+.ct-scenebar{display:flex; flex-wrap:wrap; gap:.25rem .35rem; align-items:center; margin:.35rem 0 .2rem}
+.ct-scenebar button{font:inherit; font-size:.76rem; border:1px solid var(--rule-hard); background:var(--paper); padding:.05rem .4rem; cursor:pointer; color:var(--ink)}
+.ct-scenebar button b{color:var(--note)}
 .ct-cut > canvas,.ct-cut .ct-h{-webkit-user-select:none; user-select:none}
 .ct-cut .ct-h{position:relative; padding-right:1.6rem}
 .ct-grip{position:absolute; right:0; top:0; color:var(--ink-3); letter-spacing:-.18em; padding:.1rem .35rem .2rem .25rem; cursor:grab; font-size:.9rem; line-height:1; opacity:.6}
@@ -12551,7 +12561,20 @@ var FLOW_WIDE=['els','ls','empty','bird','crowd','fs'];
 var FLOW_IN=/들어|나타|다가|등장|와서|온다|뛰어|달려|도착|문을 열|돌아|나온|내려|올라|불쑥|갑자기|뒤에서|목소리|부른다|부르|합류/;
 function flowSig(c){ return c ? String(c.scr||'')+'|'+String(c.line||'') : ''; }
 function flowAuto(){ try{ return localStorage.getItem('ctFlowAuto')!=='0'; }catch(e){ return true; } }
-function flowScenes(){ return (B && B.scenes || []).filter(function(x){ return x && x.a>=1 && x.b>=x.a; }); }
+function flowScenes(){
+  if(!B) return [];
+  var fs=(B.flow && B.flow.scenes) || [];
+  if(fs.length){
+    // 컷을 옮기거나 넣었으면 장면 첫 컷의 내용(sig)으로 자리를 다시 찾는다
+    var out=fs.map(function(x){ var c=B.cuts[x.a-1], d=0;
+      if(x.sig && (!c || flowSig(c)!==x.sig)){ for(var k=0;k<B.cuts.length;k++) if(flowSig(B.cuts[k])===x.sig){ d=(k+1)-x.a; break; } }
+      return Object.assign({}, x, {a:x.a+d, b:x.b+d}); });
+    out.sort(function(p,q){ return p.a-q.a; });
+    out.forEach(function(x,i){ var nx=out[i+1]; x.a=Math.max(1,x.a); x.b=Math.min(B.cuts.length, nx?nx.a-1:Math.max(x.b,x.a)); });
+    return out.filter(function(x){ return x.b>=x.a; });
+  }
+  return (B.scenes || []).filter(function(x){ return x && x.a>=1 && x.b>=x.a; }).map(function(x){ return {a:x.a, b:x.b, sum:x.sum||'', place:'', tr:'', plan:1}; });
+}
 function flowSceneOf(n){ var r=null; flowScenes().forEach(function(x){ if(!r && n>=x.a && n<=x.b) r=x; }); return r; }
 function flowNames(c){ try{ return whoOf(c).map(function(x){ return x.name; }).filter(Boolean); }catch(e){ return []; } }
 // 규칙 점검 — 컷 내용만 보고 바로 판단한다
@@ -12615,8 +12638,22 @@ function flowPrompt(){
   L.push('독자가 「어? 왜?」「언제?」「여기 어디?」「이 사람은 누구?」「무슨 감정이지?」 하고 멈칫할 컷만 고른다. 구도 취향이나 문장 다듬기는 짚지 않는다.\n'+
     '종류(하나): '+Object.keys(FLOW_KIND).filter(function(k){ return k!=='빈칸'; }).map(function(k){ return k+'('+FLOW_KIND[k]+')'; }).join(', ')+'\n'+
     '형식: 번호|종류|무엇이 끊기나(30자 안쪽)|고치는 법(40자 안쪽, 어떤 컷을 넣거나 바꿀지 구체적으로)\n'+
-    '번호는 끊김을 느끼는 컷이다(그 앞 컷과의 사이가 끊긴다). 많아야 10줄, 중요한 것부터. 끊기는 곳이 없으면 「없음」 한 줄만.');
+    '번호는 끊김을 느끼는 컷이다(그 앞 컷과의 사이가 끊긴다). 많아야 10줄, 중요한 것부터. 끊기는 곳이 없으면 「없음」 한 줄.\n\n'+
+    '그다음에 실제로 쓴 컷을 장면으로 나눈다. 장소나 시간이 바뀌거나 회상이 시작·끝나는 곳에서 새 장면이다. 끊김이 없어도 장면 줄은 쓴다.\n'+
+    '형식: 장면|시작번호-끝번호|장소·시간(15자 안쪽)|장면 요약(20자 안쪽)|앞 장면에서 넘어오는 방식\n'+
+    '넘어오는 방식은 하나: 시작(첫 장면)·장소 이동·시간 경과·회상·회상 끝·시점 바뀜·교차 편집·이어짐');
   return L.join('\n\n');
+}
+var FLOW_TR=['시작','장소 이동','시간 경과','회상','회상 끝','시점 바뀜','교차 편집','이어짐'];
+function flowParseScenes(t){
+  var out=[]; String(t||'').split('\n').forEach(function(l){
+    var m=l.replace(/^[\s\-*·•]+/,'').match(/^장면\s*\|\s*(\d+)\s*[-~–]\s*(\d+)\s*\|\s*([^|]*?)\s*\|\s*([^|]*?)\s*(?:\|\s*(.*))?$/); if(!m) return;
+    var a=+m[1], b=+m[2]; if(!(a>=1 && b>=a && a<=B.cuts.length)) return;
+    var tr=String(m[5]||'').trim(); if(FLOW_TR.indexOf(tr)<0){ tr=FLOW_TR.filter(function(x){ return tr.indexOf(x)>-1; })[0]||(out.length?'장소 이동':'시작'); }
+    out.push({a:a, b:Math.min(b,B.cuts.length), place:m[3].slice(0,24), sum:m[4].slice(0,30), tr:tr, sig:flowSig(B.cuts[a-1])});
+  });
+  out.sort(function(p,q){ return p.a-q.a; });
+  return out.filter(function(x,i){ return !i || x.a>out[i-1].a; }).slice(0,40);
 }
 function flowParse(t){
   var out=[]; String(t||'').split('\n').forEach(function(l){
@@ -12637,8 +12674,8 @@ function flowCheck(btn, quiet){
   aiAsk(FSYS, flowPrompt(), 900, {temperature:0.3, model:(typeof strongModel==='function'?strongModel():undefined)}).then(function(t){
     flowBusy=false; if(btn && btn.isConnected){ btn.disabled=false; btn.textContent='흐름 점검'; }
     if(aiIsErr(t)){ FLOW_MSG='AI 점검을 못 했다: '+String(t).slice(0,80); flowDecorate(); return; }
-    var items=/^\s*없음/.test(String(t).trim())?[]:flowParse(aiClean?aiClean(t):t);
-    B.flow={at:Date.now(), items:items}; save(); FLOW_MSG=''; flowDecorate();
+    var tt=aiClean?aiClean(t):t, items=/^\s*없음/.test(String(tt).trim())?[]:flowParse(tt), scs=flowParseScenes(tt);
+    B.flow={at:Date.now(), items:items, scenes:scs.length?scs:((B.flow&&B.flow.scenes)||[])}; save(); FLOW_MSG=''; flowDecorate();
   }, function(e){ flowBusy=false; FLOW_MSG='AI 점검 실패: '+String(e&&e.message||e).slice(0,60); flowDecorate(); });
 }
 function flowBar(){
@@ -12648,6 +12685,8 @@ function flowBar(){
     bar.addEventListener('click',function(e){
       var b=e.target.closest('button'); if(!b) return;
       if(b.id==='ct-flowgo'){ flowCheck(b); return; }
+      if(b.id==='ct-flowall'){ flowFixAll(b); return; }
+      if(b.dataset.sa){ var sd=root.querySelector('#ct-board .ct-scene[data-a="'+b.dataset.sa+'"]')||root.querySelector('.ct-cut[data-n="'+b.dataset.sa+'"]'); if(sd) try{ sd.scrollIntoView({block:'start'}); }catch(er){} return; }
       if(b.dataset.fn){ var f=root.querySelector('.ct-cut[data-n="'+b.dataset.fn+'"]'); if(f){ try{ f.scrollIntoView({block:'center'}); }catch(er){} f.classList.add('ct-flowhi'); setTimeout(function(){ f.classList.remove('ct-flowhi'); },1600); flowOpen(f,+b.dataset.fi); } }
     });
     bar.addEventListener('change',function(e){ if(e.target.id==='ct-flowauto') try{ localStorage.setItem('ctFlowAuto', e.target.checked?'1':'0'); }catch(er){} });
@@ -12655,10 +12694,15 @@ function flowBar(){
   return bar;
 }
 var FLOW_CUR=[];
+function flowSceneBar(){
+  var scs=flowScenes(); if(!scs.length) return '<p class="small">장면 나눔은 AI 흐름 점검 때 함께 표시된다.</p>';
+  return '<div class="ct-scenebar"><span class="small">장면 '+scs.length+'개</span>'+scs.map(function(x,i){
+    return '<button type="button" data-sa="'+x.a+'"'+(x.tr&&x.tr!=='시작'?' title="'+cesc(x.tr)+'"':'')+'><b>'+(i+1)+'</b> '+cesc(x.place||x.sum||(x.a+'–'+x.b))+'</button>'; }).join('')+'</div>';
+}
 function flowDecorate(){
   if(!B || !B.cuts) return;
   var bar=flowBar(); if(!bar) return;
-  [].slice.call(root.querySelectorAll('#ct-board .ct-flowtag, #ct-board .ct-flowbox')).forEach(function(x){ x.remove(); });
+  [].slice.call(root.querySelectorAll('#ct-board .ct-flowtag, #ct-board .ct-flowbox, #ct-board .ct-scene')).forEach(function(x){ x.remove(); });
   [].slice.call(root.querySelectorAll('#ct-board .ct-flowbad')).forEach(function(x){ x.classList.remove('ct-flowbad'); });
   var items=FLOW_CUR=flowAll(), written=B.cuts.some(function(c){ return c.scr; });
   var nAI=items.filter(function(x){ return x.src==='ai'; }).length, when=B.flow&&B.flow.at?new Date(B.flow.at):null;
@@ -12666,11 +12710,20 @@ function flowDecorate(){
   bar.innerHTML='<div class="ct-flowh"><b>흐름 점검</b> <span class="small">'+(items.length?'끊기는 곳 '+items.length+'개':'끊기는 곳 없음')+
     (when?' · AI '+(when.getMonth()+1)+'/'+when.getDate()+' '+when.getHours()+':'+('0'+when.getMinutes()).slice(-2)+(nAI?'':' 끊김 없음'):' · AI 점검 전')+'</span>'+
     '<button class="chip" id="ct-flowgo" type="button"'+(flowBusy?' disabled':'')+'>'+(flowBusy?'점검하는 중…':'흐름 점검')+'</button>'+
+    (items.length?'<button class="chip" id="ct-flowall" type="button"'+(FLOW_FIXING?' disabled':'')+' title="짚은 곳을 하나씩 다시 쓰고 다시 점검한다">'+(FLOW_FIXING?'고치는 중…':'모두 고치기')+'</button>':'')+
     '<label class="small"><input type="checkbox" id="ct-flowauto"'+(flowAuto()?' checked':'')+'> 다 쓴 뒤 자동으로</label></div>'+
     '<p class="small" id="ct-flowmsg">'+cesc(FLOW_MSG)+'</p>'+
+    flowSceneBar()+
     (items.length?'<ol class="ct-flowlist">'+items.map(function(it,i){ return '<li><button type="button" data-fn="'+it.n+'" data-fi="'+i+'"><b>'+it.n+'번</b> <em class="k">'+cesc(it.kind)+'</em> '+cesc(it.why)+
       (it.src==='rule'?' <span class="small">(규칙)</span>':'')+'</button></li>'; }).join('')+'</ol>'
       :'<p class="small">'+(when?'독자가 멈칫할 곳이 보이지 않는다.':'규칙으로 본 끊김은 없다. 「흐름 점검」을 누르면 AI가 이야기 흐름(인과·시간·감정 등)을 읽어 본다.')+'</p>');
+  flowScenes().forEach(function(x,i){
+    var f=root.querySelector('#ct-board .ct-cut[data-n="'+x.a+'"]'); if(!f) return;
+    var d=document.createElement('div'); d.className='ct-scene'+(x.tr&&x.tr!=='시작'&&x.tr!=='이어짐'?' cut':''); d.dataset.a=x.a;
+    d.innerHTML='<b>장면 '+(i+1)+'</b><span class="r">'+x.a+'–'+x.b+'번</span>'+(x.place?'<span class="pl">'+cesc(x.place)+'</span>':'')+(x.sum?'<span class="sm">'+cesc(x.sum)+'</span>':'')+
+      (x.tr&&x.tr!=='시작'?'<em>'+cesc(x.tr)+'</em>':'')+(x.plan?'<span class="small">배정표</span>':'');
+    f.parentNode.insertBefore(d, f);
+  });
   items.forEach(function(it,i){
     var f=root.querySelector('#ct-board .ct-cut[data-n="'+it.n+'"]'); if(!f) return;
     f.classList.add('ct-flowbad');
@@ -12695,16 +12748,52 @@ document.getElementById('ct-board').addEventListener('click', function(e){
   if(t.classList.contains('ct-flowtag')){ flowOpen(f, +t.dataset.fi); return; }
   var b=e.target.closest('button'); if(!b) return; var it=FLOW_CUR[+t.dataset.fi]; if(!it) return;
   if(b.classList.contains('ct-flowign')){ B.flowIgn=B.flowIgn||{}; B.flowIgn[it.kind+'|'+flowSig(B.cuts[it.n-1])+'|'+it.why]=1; save(); flowDecorate(); return; }
-  if(b.classList.contains('ct-flowredo')){
-    // 끊긴 자리 앞 컷부터 고친다: 그 장면(또는 구간)을 다시 쓰되 요청으로 끊김과 고치는 법을 넘긴다
-    redoScene(Math.max(1,it.n-1), '흐름이 끊긴다 — '+it.n+'번 컷('+it.kind+'): '+it.why+'. 고치는 법: '+it.fix+'. 앞뒤 컷이 이어지게 쓴다.', b);
-  }
+  if(b.classList.contains('ct-flowredo')) flowFix([it], b, function(){ if(flowAuto()) flowCheck(null, true); });
 }, true);
+var FLOW_FIXING=false;
+function flowNeedsInsert(it){ return it.kind!=='빈칸' && it.kind!=='리듬' && it.kind!=='시선' && /넣|추가|끼워|사이에/.test(String(it.fix||'')); }
+function flowShiftScenes(n){   // n번 자리에 컷 하나가 새로 들어왔다
+  var f=function(x){ if(x.a>n) x.a++; if(x.b>=n) x.b++; };
+  (B.scenes||[]).forEach(f); if(B.flow && B.flow.scenes) B.flow.scenes.forEach(function(x){ if(!x.sig) f(x); });
+}
+// its: 같은 구간에서 고칠 것들. 그 구간을 한 번 다시 쓴다(넣을 컷이 있으면 먼저 빈 컷을 넣는다)
+function flowFix(its, btn, done){
+  if(!its.length || !B){ if(done) done(); return; }
+  if(!aiReady()){ stat('AI 연결에서 키를 넣어야 고칠 수 있다.'); return; }
+  if(redoBusy || running){ stat('다른 쓰기가 끝난 뒤 다시 누른다.'); return; }
+  its=its.slice().sort(function(p,q){ return p.n-q.n; });
+  var n=its[0].n, ins=its.filter(flowNeedsInsert)[0], note='';
+  if(ins && ins.n>1){ insertCut(ins.n-1); flowShiftScenes(ins.n); n=ins.n; note=' '+ins.n+'번에 새로 넣은 빈 컷을 채워 앞뒤를 잇는다. 그 뒤 번호는 하나씩 밀렸다.'; save(); }
+  var req='흐름 점검에서 짚은 곳을 고친다 — '+its.map(function(x){ return x.n+'번 컷('+x.kind+'): '+x.why+' → '+x.fix; }).join(' / ')+'.'+note+' 이야기는 바꾸지 않고 앞뒤 컷이 이어지게만 고친다.';
+  redoScene(n, req, btn);
+  var t0=Date.now(), iv=setInterval(function(){ if(redoBusy && Date.now()-t0<120000) return; clearInterval(iv); if(done) done(); }, 300);
+}
+function flowFixAll(btn){
+  if(FLOW_FIXING || !B) return;
+  var its=flowAll(); if(!its.length) return;
+  // 다시 쓰는 구간별로 묶고 뒤에서부터 고친다(앞 번호가 밀리지 않게)
+  var groups={}, keys=[]; its.forEach(function(x){ var r=redoRange(x.n), k=r.a+'-'+r.b; if(!groups[k]){ groups[k]={a:r.a, its:[]}; keys.push(k); } groups[k].its.push(x); });
+  var list=keys.map(function(k){ return groups[k]; }).sort(function(p,q){ return q.a-p.a; }), i=0;
+  FLOW_FIXING=true; flowDecorate();
+  (function step(){
+    if(i>=list.length){ FLOW_FIXING=false; stat('짚은 곳 '+its.length+'개를 '+list.length+'번에 나눠 고쳤다. 다시 점검한다.'); flowCheck(null, true); return; }
+    var g=list[i++]; stat('흐름 고치는 중 '+i+'/'+list.length+' · '+g.its.map(function(x){ return x.n+'번'; }).join(', '));
+    flowFix(g.its, null, step);
+  })();
+}
+// 다시 쓸 때 지난 점검에서 짚은 곳을 프롬프트에 붙인다(AI로 콘티 쓰기 다시·이 구간 다시 쓰기·모두 고치기)
+var _flowCP=cutPrompt; cutPrompt=function(ch){
+  var t=_flowCP.apply(this, arguments);
+  try{ var its=((B && B.flowPrev) || flowAll()).filter(function(x){ return x.n>=ch.a && x.n<=ch.b && x.kind!=='빈칸'; });
+    if(its.length) t+='\n\n[지난 흐름 점검에서 짚은 곳 — 이번에는 고쳐서 쓴다]\n'+its.map(function(x){ return x.n+'번 '+x.kind+': '+x.why+' → '+x.fix; }).join('\n'); }catch(e){}
+  return t;
+};
+var _flowWA=writeAll; writeAll=function(fromN){ try{ if(B && !running && !fromN) B.flowPrev=flowAll(); }catch(e){} return _flowWA.apply(this, arguments); };
 // 판을 다시 그리거나 컷 하나를 고치면 표시도 다시 붙인다
 var _flowRB=renderBoard; renderBoard=function(){ _flowRB.apply(this, arguments); try{ flowDecorate(); }catch(e){} };
 var _flowRC=refreshCut; refreshCut=function(){ _flowRC.apply(this, arguments); clearTimeout(flowDecorate._t); flowDecorate._t=setTimeout(function(){ try{ flowDecorate(); }catch(e){} },30); };
 // 다 쓰고 다듬은 뒤 자동으로 AI 흐름 점검
-var _flowPA=polishAll; polishAll=function(done){ return _flowPA(function(){ var a=arguments; try{ done.apply(null, a); }catch(e){}
+var _flowPA=polishAll; polishAll=function(done){ return _flowPA(function(){ var a=arguments; try{ done.apply(null, a); }catch(e){} if(B && B.flowPrev){ delete B.flowPrev; save(); }
   if(flowAuto()) setTimeout(function(){ flowCheck(null, true); }, 50); else flowDecorate(); }); };
 window.__ctFlow={rules:flowRules, all:flowAll, check:flowCheck, parse:function(t){ return flowParse(t); }, decorate:flowDecorate};
 
