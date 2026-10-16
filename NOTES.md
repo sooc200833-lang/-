@@ -167,3 +167,5 @@ arcForm, deviceId, folderMemo, gdBase, gdLast, gdLinked, ideaText, mangaDataVer,
 - 옛 판(구성기에서 가져온 것, `B.v`가 2가 아님)은 페이지를 열 때 클리셰를 지우고 `bandFor`로 다섯 구간을 다시 나눈다. 새 판은 `v:2`
 - **참고 글 (2026-10-16)**: 콘티 구성기 「글 보관함에서 함께 볼 글」에서 줄거리·웹소설·컷별 콘티를 하나씩 고른다(`renderRefs`, 기기별 localStorage `contiRefs` {plot,novel,cuts: mangaTexts id}). 하나를 고르면 `refChain`(parent로 이어진 글)으로 빈 갈래를 채운다. 대강 이야기는 비워도 된다
 - 「AI로 콘티 쓰기」는 참고 글이 있으면 먼저 **검토 호출**(`reviewPrompt`, `RSYS`)로 장면 배정표 「a-b|요약|꼭 보여 줄 것」 + 「검토|어긋남」을 받아 `B.scenes`·`B.scenesNote`에 저장하고(`parseScenes`, 재료가 같으면 `srcKey`로 다시 부르지 않음), 묶음마다 겹치는 장면만 붙여 쓴다(`scenesFor`). 우선순위: 대강 이야기 → 컷별 콘티 → 웹소설 → 줄거리. 검토 실패 시 「이어서 쓰기」는 처음부터(`dataset.n=0`)
+- **다 쓴 뒤 다듬기(`polishAll`, `PSYS`, 2026-10-16)**: `writeAll`이 마지막 묶음까지 쓰면 전체 컷(+장면 배정표·등장인물)을 한 번 더 보내 180도 선·반복 대사/화면·같은 샷 연속·배정표 어긋남·이어지지 않는 행동·20자 넘는 대사를 **고칠 줄만** 받아 조용히 바꾼다(「없음」이면 그대로, 최대 컷 수의 25%, 80컷 넘으면 5컷 겹쳐 두 번). 점수·평가·보고는 없다 — 삭제한 「콘티 점검」을 되살린 것이 아니다. 실패하면 「다듬기는 건너뛰었다」만 붙이고 끝낸다
+- 바꾼 컷은 `B.prePolish`(옛 값)·`B.postPolish`에 남기고 `ct-resume` 옆에 「다듬기 되돌리기」(`ct-unpolish`, `unpolishBtn`)를 띄운다. 다듬은 뒤 손으로 고친 컷은 되돌리지 않는다

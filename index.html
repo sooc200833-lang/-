@@ -11785,6 +11785,98 @@ function applyLines(t, ch){
   return got;
 }
 var running=false;
+// 다 쓴 콘티를 한 번 조용히 다듬는다(점수·평가·보고 없음. 「콘티 점검」은 사용자 요청으로 삭제됨)
+var PSYS='당신은 한국 웹툰 콘티 교정자다. 이미 쓴 콘티에서 고칠 줄만 같은 형식으로 다시 쓴다. 평가·점수·설명·서론·마크다운 기호를 쓰지 않는다. 고칠 것이 없으면 「없음」만 쓴다.';
+function polishAll(done){
+  var finish=function(n,note){ try{ done(n||0, note||''); }catch(e){} };
+  if(!B || !B.cuts || !B.cuts.length || !aiReady()){ finish(0); return; }
+  var T=B.cuts.length, written=B.cuts.filter(function(c){ return c.scr; }).length;
+  if(written<3){ finish(0); return; }
+  var cap=Math.max(1, Math.round(T*0.25));
+  function fld(s){ return String(s==null?'':s).replace(/[|｜\n]/g,' ').trim(); }
+  function row(c){ return c.n+'|'+compText(c)+'|'+whoOf(c).map(function(x){ return x.name; }).join(',')+'|'+fld(c.scr)+'|'+fld(c.line); }
+  function prompt(a,b){
+    var L=['[다듬을 콘티] 전체 '+T+'컷 중 '+a+'–'+b+'번. 형식: 번호|구도|인물|화면|대사'];
+    var rows=[]; for(var n=a;n<=b;n++){ var c=B.cuts[n-1]; if(c) rows.push(row(c)); }
+    L.push(rows.join('\n'));
+    if(B.scenes && B.scenes.length) L.push('[장면 배정표]\n'+B.scenes.map(function(x){ return x.a+'–'+x.b+' '+x.sum+(x.show?' · 꼭 보여 줄 것: '+x.show:''); }).join('\n'));
+    if(chars().length) L.push('[등장인물]\n'+chars().map(function(x){ return x.name+(x.role?' — '+x.role:''); }).join('\n'));
+    L.push('고칠 것\n'+
+      '- 한 장면 안에서 인물의 좌우 자리가 뒤바뀐 컷(180도 선을 넘음). 인물 칸은 화면 왼쪽부터 적는다.\n'+
+      '- 같은 대사나 같은 화면이 되풀이되는 컷\n'+
+      '- 같은 샷이 세 번 넘게 잇달아 나오는 곳(구도를 바꾼다)\n'+
+      '- 장면 배정표와 어긋난 컷\n'+
+      '- 앞뒤 컷과 이어지지 않는 행동·소품\n'+
+      '- 20자가 넘는 대사(뜻은 그대로 두고 줄인다)\n'+
+      '규칙\n'+
+      '- 고친 줄만 번호|구도|인물|화면|대사 형식으로 쓴다. 고치지 않은 줄은 쓰지 않는다.\n'+
+      '- 새 사건·새 인물·새 설정을 만들지 않는다. 있는 내용만 바로잡는다.\n'+
+      '- '+a+'–'+b+'번 밖의 번호는 쓰지 않는다. 많아야 '+cap+'줄.\n'+
+      '- 고칠 것이 없으면 「없음」만 쓴다.');
+    return L.join('\n\n');
+  }
+  function parse(t, a, b, out){
+    String(t).split(/\n/).forEach(function(line){
+      var parts=line.replace(/[*#]/g,'').split(/[|｜]/);
+      if(parts.length<4) return; var mn=/^\s*(\d+)\s*[.)]?\s*$/.exec(parts[0]); if(!mn) return;
+      var n=+mn[1]; if(n<a || n>b || n<1 || n>T || out.some(function(x){ return x.n===n; })) return;
+      var who, scr, ln;
+      if(parts.length>=5){ who=parts[2]; scr=parts[3]; ln=parts.slice(4).join(' '); } else { who=''; scr=parts[2]; ln=parts.slice(3).join(' '); }
+      scr=String(scr).trim(); if(!scr) return;
+      ln=String(ln||'').trim().replace(/^[「“"']|[」”"']$/g,''); if(/^[-—–(없음)]*$/.test(ln)) ln='';
+      out.push({n:n, comp:parts[1], who:String(who).split(/[,，、]/).map(function(x){ return x.trim(); }).filter(function(x){ return x && !/^(없음|-|—)$/.test(x); }).slice(0,3), scr:scr, line:ln});
+    });
+  }
+  var parts=T>80 ? [[1, Math.ceil(T/2)], [Math.max(1, Math.ceil(T/2)-4), T]] : [[1, T]];
+  var got=[], k=0, SKIP=' 다듬기는 건너뛰었다.';
+  stat('다 쓴 콘티를 한 번 다듬는 중…');
+  function step(){
+    if(k>=parts.length){ apply(); return; }
+    var a=parts[k][0], b=parts[k][1], p;
+    try{ p=aiAsk(PSYS, prompt(a,b), 1800, {temperature:0.4}); }catch(e){ finish(0,SKIP); return; }
+    p.then(function(t){
+      try{
+        if(aiIsErr(t)){ if(got.length) apply(); else finish(0,SKIP); return; }
+        t=aiClean?aiClean(t):t;
+        if(!/^\s*[「"']?없음[」"']?\s*\.?\s*$/.test(String(t))) parse(t, a, b, got);
+        k++; step();
+      }catch(e){ finish(0,SKIP); }
+    }, function(){ finish(0,SKIP); });
+  }
+  function apply(){
+    var back=[], aft=[];
+    got.slice(0,cap).forEach(function(x){
+      var c=B.cuts[x.n-1]; if(!c) return;
+      var old={n:c.n, k:c.k, ang:c.ang, focus:c.focus, flash:c.flash, who:(c.who||[]).slice(), scr:c.scr, line:c.line};
+      var pc=parseComp(x.comp), nw={k:pc.k, ang:pc.ang, focus:pc.focus?1:0, flash:pc.flash?1:0, who:x.who, scr:x.scr, line:x.line};
+      if(nw.k===old.k && nw.ang===old.ang && nw.focus===(old.focus?1:0) && nw.flash===(old.flash?1:0) && nw.scr===old.scr && nw.line===(old.line||'') && nw.who.join(',')===old.who.join(',')) return;
+      c.k=nw.k; c.ang=nw.ang; c.focus=nw.focus; c.flash=nw.flash; c.who=nw.who; c.scr=nw.scr; c.line=nw.line;
+      back.push(old); aft.push({n:c.n, scr:c.scr, line:c.line});
+    });
+    if(back.length){ B.prePolish=back; B.postPolish=aft; save(); back.forEach(function(o){ refreshCut(o.n); }); unpolishBtn(true); }
+    finish(back.length);
+  }
+  unpolishBtn(false);
+  step();
+}
+function unpolishBtn(show){
+  var b=document.getElementById('ct-unpolish');
+  if(!b){ if(!show) return; var r=document.getElementById('ct-resume'); if(!r||!r.parentNode) return;
+    b=document.createElement('button'); b.className='chip'; b.id='ct-unpolish'; b.type='button'; b.textContent='다듬기 되돌리기';
+    r.parentNode.insertBefore(b, r.nextSibling);
+    b.addEventListener('click', function(){
+      if(running) return;
+      if(!B || !B.prePolish){ unpolishBtn(false); return; }
+      var post={}, back=0; (B.postPolish||[]).forEach(function(x){ post[x.n]=x; });
+      B.prePolish.forEach(function(o){ var c=B.cuts[o.n-1], p=post[o.n]; if(!c) return;
+        if(p && (c.scr!==p.scr || (c.line||'')!==(p.line||''))) return; // 다듬은 뒤 손으로 고친 컷은 그대로 둔다
+        c.k=o.k; c.ang=o.ang; c.focus=o.focus; c.flash=o.flash; c.who=o.who; c.scr=o.scr; c.line=o.line; refreshCut(o.n); back++; });
+      B.prePolish=null; B.postPolish=null; save(); unpolishBtn(false);
+      stat('다듬기 전으로 되돌렸다. '+back+'컷.');
+    });
+  }
+  b.hidden=!show;
+}
 function writeAll(fromN){
   if(running) return;
   if(!aiReady()){ stat('AI 연결에서 키를 넣어야 쓸 수 있다.'); return; }
@@ -11808,7 +11900,7 @@ function writeAll(fromN){
     });
   }
   function next(){
-    if(i>=list.length){ running=false; setBusy(false); stat('다 썼다. '+B.cuts.filter(function(c){return c.scr;}).length+'/'+B.cuts.length+'컷.'); save(); return; }
+    if(i>=list.length){ polishAll(function(pn,pnote){ running=false; setBusy(false); stat('다 썼다. '+B.cuts.filter(function(c){return c.scr;}).length+'/'+B.cuts.length+'컷.'+(pn>0?' 다듬은 컷 '+pn+'개.':'')+(pnote||'')); save(); }); return; }
     var ch=list[i];
     stat((i+1)+'/'+list.length+' · '+ch.a+'–'+ch.b+'번 컷('+ch.name+') 쓰는 중…');
     aiAsk(CSYS, cutPrompt(ch), Math.min(2600, 200+(ch.b-ch.a+1)*120)).then(function(t){
