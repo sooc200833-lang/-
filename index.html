@@ -754,6 +754,32 @@ textarea.cast-in{resize:vertical; min-height:2.6em; overflow:hidden}
 /* [[CSS:stat]] */
 /* [[/CSS:stat]] */
 /* [[CSS:poseref]] */
+#poses-root .pr-bar .pr-q{font:inherit; font-size:.85rem; padding:.22rem .5rem; border:1px solid var(--rule-hard); background:var(--paper); color:var(--ink); width:12rem; max-width:100%}
+#poses-root [hidden]{display:none!important}
+.pr-sec{margin:0 0 1.6rem}
+.pr-sec > h3{margin:.4rem 0 .1rem}
+.pr-sec > h3 .pr-n{font-size:.8rem; font-weight:400; color:var(--ink-3)}
+.pr-sec > .small{margin:.1rem 0 .7rem}
+.pr-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(15.5rem,1fr)); gap:.7rem}
+.pr-card{display:flex; flex-direction:column; border:1px solid var(--rule); border-top:3px solid var(--note); background:var(--paper-2); min-width:0}
+.pr-card[data-kind="구도"]{border-top-color:var(--mark)}
+.pr-cv{display:block; width:100%; height:10.5rem; background:var(--paper); border-bottom:1px solid var(--rule)}
+.pr-body{padding:.55rem .7rem .7rem}
+.pr-body h4{margin:0 0 .25rem; font-size:1rem}
+.pr-tags{display:flex; flex-wrap:wrap; gap:.3rem; margin:0 0 .4rem; font-size:.74rem}
+.pr-comp{font-family:"IBM Plex Mono",ui-monospace,monospace; color:var(--mark); border:1px solid var(--rule-hard); padding:0 .3rem; background:var(--paper)}
+.pr-pose{color:var(--ink-3); border:1px dashed var(--rule-hard); padding:0 .3rem}
+.pr-desc{margin:0 0 .45rem; font-size:.9rem}
+.pr-dl{margin:0; font-size:.82rem; color:var(--ink-2); display:grid; grid-template-columns:auto 1fr; gap:.2rem .5rem}
+.pr-dl dt{font-weight:600; color:var(--ink-3); white-space:nowrap}
+.pr-dl dd{margin:0; min-width:0}
+.pr-src{margin-top:1.6rem; border-top:1px solid var(--rule); padding-top:.7rem; overflow-wrap:anywhere}
+.pr-src a{color:var(--note)}
+@media (max-width:640px){
+  #poses-root .pr-bar .pr-q{flex:1 1 100%; width:auto; font-size:16px}
+  .pr-grid{grid-template-columns:1fr}
+  .pr-cv{height:9.5rem}
+}
 /* [[/CSS:poseref]] */
 /* [[CSS:bestcut]] */
 #cutlib-root .lede{margin-bottom:1.1rem}
@@ -3058,6 +3084,241 @@ var CHAR_FIG={
 // [[DATA:stat]] 흔함 정도
 // [[/DATA:stat]]
 // [[DATA:poseref]] 만화에서 유명한 자세·구도
+// 자세: pose·face는 등장인물 그림 부품 말(FIG_SEL pose), k·ang은 콘티 구성기 구도 코드. 그림 말에 없는 손 모양은 가까운 것으로 대신하고 tip에 적는다
+// pose2·face2·sil은 있어도 되고 없어도 되는 칸(두 번째 인물의 자세, 실루엣)
+var POSE_REF=[
+ {id:'gendo', name:'겐도 포즈', kind:'자세', pose:'팔짱', face:'', k:'bs', ang:'', focus:false, flash:false,
+  desc:'책상에 팔꿈치를 대고 깍지 낀 두 손으로 입을 가린다. 표정의 절반이 지워져서, 속을 보이지 않고 판을 쥐고 있는 사람이 된다.',
+  use:'보고를 듣는 사령관·흑막·결정권자가 처음 무게를 잡을 때 · 높은 사람마다 같은 손을 하면 패러디로 읽힌다.',
+  tip:'정면에서 잡고 눈이나 안경만 빛나게 한다. 입은 손 뒤에 묻고 대사는 짧게. 미리보기 그림은 팔짱으로 대신했다.',
+  ex:'이카리 겐도 「신세기 에반게리온」'},
+ {id:'jojo', name:'죠죠 서기', kind:'자세', pose:'고개 기울임', face:'', k:'fs', ang:'low', focus:false, flash:false,
+  desc:'싸우다 말고 몸을 비틀어 멈춘다. 동작의 이어짐을 버리고 자세 하나의 인상을 남긴다.',
+  use:'작품 전체가 이 리듬을 공유할 때 · 한 컷만 이러면 실수로 보인다.',
+  tip:'허리와 어깨를 서로 반대로 꺾고 손을 얼굴·턱 가까이 둔다. 작가는 바로크 조각과 패션지 모델 사진에서 자세를 가져왔다고 밝혔다.',
+  ex:'아라키 히로히코 「죠죠의 기묘한 모험」'},
+ {id:'hero-landing', name:'히어로 착지 (3점 착지)', kind:'자세', pose:'착지', face:'', k:'fs', ang:'low', focus:false, flash:false,
+  desc:'높은 데서 떨어져 구르지 않고 한 무릎·한 손·두 발로 받아 낸다. 떨어져도 끄떡없다는 몸의 증명이다.',
+  use:'참전·등장 순간 한 번 · 영화에서 인물이 직접 놀릴 만큼 닳은 자세라, 반복하면 웃음이 된다.',
+  tip:'착지 컷에서는 고개를 숙이고, 다음 컷에서 든다. 바닥 금과 먼지로 무게를 보이고, 악역은 서서 착지시키면 더 위압적이다.',
+  ex:'쿠사나기 모토코 「공각기동대」(1995 극장판)'},
+ {id:'back-to-back', name:'등 맞대기', kind:'자세', pose:'검 겨누기', face:'left', pose2:'검 겨누기', face2:'right', k:'two', ang:'', focus:false, flash:false,
+  desc:'포위된 두 사람이 서로 등을 맡긴다. 등을 맡긴다는 것은 믿는다는 뜻이다.',
+  use:'앙숙·라이벌이 처음으로 같은 편에 설 때 가장 세다 · 이미 친한 동료끼리 매번 하면 그냥 포즈가 된다.',
+  tip:'둘 다 바깥을 보게 하고 적은 화면 가장자리에 빙 둘러 작게 둔다. 대사는 등 너머로 한 줄씩.',
+  ex:''},
+ {id:'look-back', name:'어깨 너머 돌아보기', kind:'자세', pose:'뒤돌아보기', face:'back', k:'ms', ang:'', focus:false, flash:false,
+  desc:'몸은 떠나는데 얼굴만 남는다. 미련·작별·유혹이 한 컷에 담긴다.',
+  use:'이별, 퇴장, 첫 만남의 여운 · 매 화 끝에 돌아보면 미련이 아니라 버릇이 된다.',
+  tip:'몸은 화면 밖으로, 얼굴은 4분의 3만 보인다. 시선은 독자가 아니라 남겨진 사람에게 두고, 머리카락·옷자락을 날린다.',
+  ex:'히시카와 모로노부 「뒤돌아보는 미인」(見返り美人図)'},
+ {id:'fist-foreshort', name:'주먹 원근 과장', kind:'자세', pose:'주먹 지르기', face:'', k:'ms', ang:'', focus:true, flash:false,
+  desc:'앞으로 뻗은 주먹만 두세 배로 키운다. 타격이 지면을 뚫고 독자 쪽으로 날아온다.',
+  use:'결정타 한 방 · 모든 펀치에 쓰면 거리감이 사라지고 화면이 시끄러워진다.',
+  tip:'몸은 작게, 주먹은 크게. 소실점과 집중선의 중심을 주먹 뒤에 둔다. 맞는 쪽 반응 컷을 바로 붙인다.',
+  ex:'키시모토 마사시 「나루토」'},
+ {id:'sword-point', name:'검 끝 겨누기', kind:'자세', pose:'검 겨누기', face:'', k:'ms', ang:'low', focus:false, flash:false,
+  desc:'칼끝이 상대를 향해 멈춘다. 다음 말은 협상이 아니라는 선언이다.',
+  use:'결투 직전, 선전포고 · 겨누기만 하고 휘두르지 않으면 김이 빠진다.',
+  tip:'칼끝·눈·상대가 한 직선에 오게 잡는다. 칼끝을 카메라 쪽으로 돌리면 독자가 겨눠진다.',
+  ex:''},
+ {id:'skyward-scream', name:'무릎 꿇고 하늘에 절규', kind:'자세', pose:'무릎 꿇기', face:'', k:'fs', ang:'high', focus:false, flash:false,
+  desc:'감당할 수 없는 상실 앞에서 무너져 하늘을 향해 운다. 위에서 내려다보는 카메라가 세상이 그를 버린 듯 보이게 한다.',
+  use:'이야기 전체에서 한 번, 가장 큰 상실에 · 자주 쓰면 「안 돼!」 패러디가 된다.',
+  tip:'바로 위에서 내려다보고, 다음 컷에서 더 높이 빠진다(버즈아이). 비명 글자보다 이름 하나를 외치게 한다. 그림은 무릎 꿇기로 대신했다.',
+  ex:''},
+ {id:'arms-rain', name:'비 속에서 팔 벌리기', kind:'자세', pose:'팔 벌리기', face:'', k:'fs', ang:'low', focus:false, flash:false,
+  desc:'얼굴을 하늘로 들고 팔을 벌려 비를 맞는다. 해방과 씻김이다.',
+  use:'탈출·해방·오래 참은 일이 끝난 직후 · 감정이 쌓이지 않은 장면에 쓰면 과장으로 보인다.',
+  tip:'빗줄기를 굵게, 대사 없는 컷으로. 바로 앞에 갇혀 있던 좁은 공간을 보여 줘야 열린다.',
+  ex:'앤디 듀프레인 「쇼생크 탈출」'},
+ {id:'rain-stand', name:'비 맞으며 서 있기', kind:'자세', pose:'구부정', face:'', k:'ls', ang:'', focus:false, flash:false,
+  desc:'우산도 없이 비를 맞고 서 있다. 스스로를 내버려 둔 상태다.',
+  use:'실연·패배·거절 직후 · 슬플 때마다 비가 오면 날씨가 감정 해설자가 된다.',
+  tip:'다음 컷에 우산을 든 누군가가 다가오는 컷과 짝짓는다. 소리는 빗소리 의성어만 남긴다.',
+  ex:''},
+ {id:'hug-knees', name:'무릎에 고개 묻기', kind:'자세', pose:'주저앉기', face:'', k:'fs', ang:'high', focus:false, flash:false,
+  desc:'무릎을 끌어안고 얼굴을 묻는다. 세상을 닫는 아이 같은 웅크림이다.',
+  use:'혼자 남은 밤, 자책 · 위로하러 오는 사람의 등장 신호로만 쓰면 뻔하다.',
+  tip:'방 구석·벽 모퉁이·계단 아래에 두고 부감으로 작게 잡는다. 그림은 주저앉기로 대신했다.',
+  ex:''},
+ {id:'thumbs-up', name:'엄지 척', kind:'자세', pose:'엄지 척', face:'', k:'ms', ang:'', focus:false, flash:false,
+  desc:'말 대신 엄지 하나로 괜찮다, 맡겨라를 전한다.',
+  use:'희생 직전의 작별에서 가장 세다 · 반짝이는 이빨과 붙이면 개그 쪽으로 기운다.',
+  tip:'몸이 가라앉거나 멀어지고 엄지만 마지막까지 남는 순서로 컷을 나눈다.',
+  ex:'T-800 「터미네이터 2」'},
+ {id:'hand-offer', name:'쓰러진 이에게 손 내밀기', kind:'자세', pose:'손 내밀기', face:'', k:'pov', ang:'low', focus:false, flash:false,
+  desc:'쓰러진 쪽 눈높이에서 내밀린 손을 본다. 관계가 시작되는 순간이다.',
+  use:'동료가 되는 순간, 화해 · 아무 대가 없이 내밀면 가벼워진다.',
+  tip:'올려다보는 시점으로 손과 역광 얼굴을 잡고, 손을 잡는 컷은 따로 뗀다. 망설이는 한 컷을 사이에 넣으면 무게가 생긴다.',
+  ex:''},
+ {id:'point', name:'지목하기', kind:'자세', pose:'가리키기', face:'', k:'ms', ang:'', focus:true, flash:false,
+  desc:'손가락 하나로 진실을 들이민다. 판이 뒤집히는 신호다.',
+  use:'추리의 반전, 범인 지목 · 매번 집중선과 함께 지목하면 무게가 없다.',
+  tip:'손가락을 카메라 쪽으로 원근 과장하고, 지목당한 쪽의 굳은 얼굴을 바로 붙인다.',
+  ex:'나루호도 류이치 「역전재판」'},
+ {id:'arms-crossed', name:'팔짱 끼고 관전', kind:'자세', pose:'팔짱', face:'right', k:'bs', ang:'', focus:false, flash:false,
+  desc:'이미 다 안다는 실력자의 여유. 싸움 밖에서 판을 읽는 자리다.',
+  use:'시합 관전석, 시험 감독, 스승 · 해설만 하고 싸우지 않는 인물로 굳기 쉽다.',
+  tip:'구경꾼보다 조금 높은 곳(난간·지붕)에 세우고 표정은 거의 움직이지 않는다. 한마디 할 때만 눈을 뜬다.',
+  ex:''},
+ {id:'lean-wall', name:'벽에 기대 기다리기', kind:'자세', pose:'기대기', face:'left', k:'fs', ang:'', focus:false, flash:false,
+  desc:'무리에 끼지 않는 거리, 혹은 기다리고 있었다는 고백.',
+  use:'첫 등장, 복도 끝의 기다림 · 외톨이 인물의 기본값이 되면 개성이 사라진다.',
+  tip:'한쪽 발을 벽에 대고 눈은 반쯤 감는다. 상대가 지나칠 때 한마디로 멈춰 세운다.',
+  ex:''},
+ {id:'kabedon', name:'벽쿵', kind:'자세', pose:'손 내밀기', face:'right', face2:'left', k:'two', ang:'', focus:false, flash:false,
+  desc:'한 손으로 벽을 짚어 퇴로를 막고 거리를 없앤다.',
+  use:'순정물의 고백·긴장 장면 · 지금은 동의 없는 위압으로도 읽히므로 관계와 맥락을 먼저 깔아 둔다.',
+  tip:'벽 짚는 소리 의성어 하나, 내려다보는 쪽과 올려다보는 쪽 앵글을 번갈아 잡는다. 그림은 손 내밀기로 대신했다.',
+  ex:''},
+ {id:'princess-carry', name:'공주님 안기', kind:'자세', pose:'무언가 안음', face:'', k:'fs', ang:'', focus:false, flash:false,
+  desc:'두 팔로 사람을 안아 든다. 안긴 쪽의 무력함과 안은 쪽의 확신이 한 그림에 있다.',
+  use:'구출 직후, 다친 사람을 데리고 나올 때 · 늘 같은 성별 배치면 뻔하니 뒤집어 보는 것도 방법이다.',
+  tip:'안은 쪽은 정면으로 걸어 나오고 뒤는 불길·폐허로 대비한다.',
+  ex:''},
+ {id:'head-hands', name:'머리 감싸기', kind:'자세', pose:'머리 감싸기', face:'', k:'bs', ang:'high', focus:false, flash:false,
+  desc:'감당할 수 없는 사실 앞에서 머리를 쥔다.',
+  use:'깨달음·실수 직후 · 개그에서는 과장된 절규로 쓰인다.',
+  tip:'손가락 사이로 눈 하나만 보이게 하고 위에서 내려다본다.',
+  ex:''},
+ {id:'face-laugh', name:'얼굴 가리고 웃기', kind:'자세', pose:'얼굴 가리기', face:'', k:'bs', ang:'low', focus:false, flash:false,
+  desc:'손바닥으로 얼굴을 덮고 웃는다. 가면이 벗겨지는 순간, 광기의 시작.',
+  use:'흑막 정체 공개 · 웃음소리만 크고 이유가 없으면 공허하다.',
+  tip:'손가락 사이로 한쪽 눈, 아래에서 올려 본다. 웃음 의성어가 칸 밖으로 넘치게 한다.',
+  ex:''},
+ {id:'burnt-white', name:'하얗게 불탄 코너', kind:'자세', pose:'앉기', face:'', k:'fs', ang:'', focus:false, flash:false,
+  desc:'다 쏟아 낸 뒤 코너 의자에 앉아 멈춘다. 승패보다 완전 연소가 남는다.',
+  use:'마지막 화의 마지막 컷급 · 중간에 쓰면 다음 화가 성립하지 않는다.',
+  tip:'허리를 편 채 앉아 잔잔한 미소. 배경과 톤을 날려 하얗게 비운다. 연재분에는 대사가 없었고 단행본에서 한 줄이 붙었다.',
+  ex:'야부키 죠 「내일의 죠」'},
+ {id:'stand-death', name:'선 채로 맞는 최후', kind:'자세', pose:'곧은', face:'', k:'fs', ang:'low', focus:false, flash:false,
+  desc:'쓰러지지 않는 것이 마지막 의지다.',
+  use:'거물·숙적의 퇴장 · 보스마다 선 채로 죽으면 의미가 닳는다.',
+  tip:'올려다보는 앵글, 등 뒤 빛. 주변 인물이 먼저 무릎을 꿇거나 고개를 숙이게 해서 대비를 만든다.',
+  ex:'라오우 「북두의 권」'},
+ {id:'charge-blast', name:'손 모아 기술 쏘기', kind:'자세', pose:'마법 시전', face:'', k:'fs', ang:'', focus:true, flash:false,
+  desc:'두 손에 힘을 모았다가 내지른다. 모으는 시간 자체가 연출이다.',
+  use:'필살기 · 매 싸움마다 쓰면 「모으는 동안 기다려 주는 적」이 눈에 띈다.',
+  tip:'모으기(손 사이 빛) → 내지르기 두 컷으로 나누고, 집중선 중심은 손에 둔다.',
+  ex:'손오공 「드래곤볼」'},
+ {id:'ninja-run', name:'팔 젖히고 달리기', kind:'자세', pose:'달리기', face:'right', k:'fs', ang:'', focus:false, flash:false,
+  desc:'상체를 숙이고 두 팔을 뒤로 젖혀 달린다. 사람 같지 않은 속도.',
+  use:'추격, 급한 이동 · 너무 유명해져서 진지한 장면에서도 밈으로 읽힐 수 있다.',
+  tip:'몸을 거의 수평으로 숙이고 팔은 뒤로 일자. 속도선은 몸 뒤쪽에만.',
+  ex:'우즈마키 나루토 「나루토」'},
+ {id:'walk-away', name:'폭발을 등지고 걷기', kind:'자세', pose:'걷기', face:'', k:'fs', ang:'low', focus:false, flash:false, sil:true,
+  desc:'뒤에서 터지는데 돌아보지 않는다. 일이 끝났다는 확신.',
+  use:'작전 성공의 마무리 · 패러디가 많아 진지하게 쓰려면 한 번 비틀어야 한다.',
+  tip:'인물은 카메라 쪽으로 걸어오고 뒤 폭발광이 역광이 되게 한다. 얼굴은 반쯤 그림자.',
+  ex:''},
+ {id:'iai-pass', name:'엇갈려 베고 서기', kind:'자세', pose:'검 휘두르기', face:'left', pose2:'검 휘두르기', face2:'right', k:'two', ang:'', focus:false, flash:false,
+  desc:'두 검객이 한 번 엇갈리고 등진 채 멈춘다. 승부는 한 번, 결과는 한 박자 뒤.',
+  use:'검객의 결전 · 앞에서 실력을 쌓아 두지 않으면 허무하게 끝난 것처럼 보인다.',
+  tip:'정지 컷 다음에 한쪽이 쓰러지거나 칼집에 넣는 소리 하나. 누가 이겼는지 바로 말하지 않는다.',
+  ex:''},
+ {id:'lie-down', name:'싸운 뒤 대자로 눕기', kind:'자세', pose:'쓰러짐', face:'', k:'ls', ang:'high', focus:false, flash:false,
+  desc:'주먹다짐 끝에 둘이 나란히 누워 하늘을 본다. 승패가 지워지고 둘만 남는다.',
+  use:'라이벌이 친구가 되는 순간 · 모든 갈등을 이걸로 풀면 갈등이 가벼워진다.',
+  tip:'바로 위에서 둘을 함께 잡고, 웃음이나 한마디로 끝낸다. 그림은 한 사람만 보인다.',
+  ex:''},
+ {id:'sky-look', name:'하늘 올려다보기', kind:'자세', pose:'하늘 보기', face:'', k:'ms', ang:'low', focus:false, flash:false,
+  desc:'떠난 사람을 떠올리거나, 다음으로 나아갈 다짐을 한다.',
+  use:'장의 마무리 · 화마다 하늘로 끝나면 상투적인 마침표가 된다.',
+  tip:'다음 컷을 사람 없는 하늘(빈 배경)로 잇는다. 구름·새 하나로 시간을 흘린다.',
+  ex:''},
+ {id:'face-down-orz', name:'무릎 꿇고 땅 짚기', kind:'자세', pose:'무릎 꿇기', face:'left', k:'fs', ang:'', focus:false, flash:false,
+  desc:'완전한 패배와 좌절. 등이 무너진 선 하나로 말한다.',
+  use:'패배·실패 직후 · 반복하면 개그 문법(orz)으로 굳는다.',
+  tip:'옆에서 잡아 등 곡선을 보이고, 땅에 떨어지는 땀이나 눈물 한 방울을 인서트로.',
+  ex:''},
+
+ {id:'low-hero', name:'앙각 히어로 숏', kind:'구도', pose:'곧은', face:'', k:'fs', ang:'low', focus:false, flash:false,
+  desc:'아래에서 올려다본다. 인물은 크고 강해 보이고 독자는 작아진다.',
+  use:'등장·각성·결의, 악역이면 위협 · 모든 컷을 앙각으로 잡으면 아무도 커 보이지 않는다.',
+  tip:'카메라를 무릎 높이 아래로 내리고 머리 위에 하늘·천장 여백을 둔다. 발치가 크게 나온다.',
+  ex:''},
+ {id:'high-isolate', name:'부감 고립 숏', kind:'구도', pose:'구부정', face:'', k:'ls', ang:'high', focus:false, flash:false,
+  desc:'위에서 내려다본다. 인물은 작고 약하고 혼자다.',
+  use:'소외·패배·길을 잃음 · 매번 쓰면 연민이 동정 강요가 된다.',
+  tip:'인물을 화면 아래 구석에 두고 주변을 비운다. 그림자를 길게 늘이면 더 외롭다.',
+  ex:''},
+ {id:'dutch', name:'더치 앵글', kind:'구도', pose:'', face:'', k:'ms', ang:'dutch', focus:false, flash:false,
+  desc:'화면을 기울인다. 세계가 어긋났다는 신호 — 불안, 광기, 이상.',
+  use:'정체 폭로, 환각, 무언가 잘못된 장소 · 남발하면 어지럽고 정작 강조할 장면이 묻힌다.',
+  tip:'한 장면 안에서 기울기를 점점 키우고, 수평으로 돌아오는 컷으로 안도를 준다.',
+  ex:''},
+ {id:'standoff', name:'투숏 대치', kind:'구도', pose:'', face:'', k:'stand', ang:'', focus:false, flash:false,
+  desc:'두 사람이 좌우 끝에서 마주 선다. 둘 사이 거리가 곧 긴장이다.',
+  use:'결투 직전, 협상 · 대치만 몇 쪽씩 끌면 지루하다.',
+  tip:'가운데를 비우고 바람·낙엽 하나만 지나가게 한다. 180도 선을 넘지 않아야 누가 어느 쪽인지 안 헷갈린다.',
+  ex:''},
+ {id:'ots', name:'어깨 너머 숏', kind:'구도', pose:'', face:'', k:'ots', ang:'', focus:false, flash:false,
+  desc:'듣는 사람 어깨 너머로 말하는 사람을 잡는다. 상대의 존재가 화면에 남아 관계가 보인다.',
+  use:'대화·심문·고백 · 대화 내내 같은 쌍만 왕복하면 단조롭다.',
+  tip:'앞 어깨는 크고 어둡게, 보여 줄 얼굴은 화면 3분의 2 쪽에. 반대편에서 같은 구도(리버스)로 받아친다.',
+  ex:''},
+ {id:'eyes-ecu', name:'눈만 클로즈업', kind:'구도', pose:'', face:'', k:'ecu', ang:'', focus:false, flash:false,
+  desc:'얼굴의 나머지를 지우고 눈만 남긴다. 결의·살의·공포 중 하나만 읽힌다.',
+  use:'결정 직전, 각성, 결투의 마지막 순간 · 자주 쓰면 무게가 없다.',
+  tip:'가로로 긴 칸에 두 눈만. 동공 크기와 하이라이트로 감정을 정한다. 대치와 번갈아 점점 짧게 끊는다.',
+  ex:'세르조 레오네 「석양의 무법자」'},
+ {id:'silhouette', name:'실루엣 역광', kind:'구도', pose:'', face:'', k:'fs', ang:'low', focus:false, flash:false, sil:true,
+  desc:'뒤에서 빛이 들어와 형태만 남는다. 정체를 숨긴 신비와 위압.',
+  use:'정체 공개 전, 흑막의 첫 등장 · 다음 공개 컷이 시시하면 배신감이 든다.',
+  tip:'문틀·창·석양을 뒤에 두고 윤곽만 그린다. 눈만 하얗게 남기는 변형도 있다.',
+  ex:''},
+ {id:'frame-in', name:'프레임 속 프레임', kind:'구도', pose:'', face:'', k:'frame', ang:'', focus:false, flash:false,
+  desc:'문틀·창·거울로 인물을 한 번 더 가둔다. 갇힘, 엿봄, 거리.',
+  use:'엿보는 시점, 벗어날 수 없는 처지 · 장식으로만 쓰면 의미 없이 답답하다.',
+  tip:'틀 바깥을 어둡게 눌러 시선을 안으로 모은다. 틀을 넘어 나오는 컷으로 해방을 보인다.',
+  ex:''},
+ {id:'crowd-one', name:'군중 속 한 명', kind:'구도', pose:'', face:'', k:'crowd', ang:'', focus:false, flash:false,
+  desc:'많은 사람 가운데 한 사람만 다르다. 고독이거나, 발견이다.',
+  use:'혼자인 주인공, 군중 속에서 찾은 그 사람 · 매번 주인공만 선명하면 세계가 배경판이 된다.',
+  tip:'군중은 톤과 단순한 선으로 누르고 한 명만 선명하게, 또는 혼자 반대 방향을 보게 한다.',
+  ex:''},
+ {id:'empty-bg', name:'빈 배경 여백', kind:'구도', pose:'', face:'', k:'empty', ang:'', focus:false, flash:false,
+  desc:'사람이 없는 컷. 시간과 여운을 맡는다.',
+  use:'장면 전환, 사건 뒤의 침묵 · 이유 없이 넣으면 분량 늘리기로 읽힌다.',
+  tip:'앞에서 인물이 있던 자리를 같은 구도로 비워 떠났음을 말한다. 웹툰에서는 여백의 길이가 뜸이다.',
+  ex:''},
+ {id:'focus-entrance', name:'집중선 등장', kind:'구도', pose:'곧은', face:'', k:'fs', ang:'low', focus:true, flash:false,
+  desc:'모든 선이 한 사람에게 모인다. 지금 이 사람을 보라는 명령.',
+  use:'첫 등장, 반전 등장 · 너무 자주 쓰면 개그 효과로 굳는다.',
+  tip:'집중선 중심을 얼굴 바로 위에 두고, 앞 컷에 주변 인물이 고개를 돌리는 반응을 놓는다.',
+  ex:''},
+ {id:'flashback', name:'회상 테두리', kind:'구도', pose:'', face:'', k:'ms', ang:'', focus:false, flash:true,
+  desc:'칸 밖을 검게 칠하거나 톤을 옅게 해서 지금이 아님을 알린다.',
+  use:'회상의 시작과 끝 · 회상이 길어지면 현재의 긴장이 끊긴다.',
+  tip:'회상 첫 컷과 현재로 돌아온 첫 컷을 같은 구도로 맞추면 대비가 생긴다.',
+  ex:''},
+ {id:'birds-eye', name:'버즈아이 (바로 위에서)', kind:'구도', pose:'', face:'', k:'bird', ang:'', focus:false, flash:false,
+  desc:'바로 위에서 내려다본다. 배치와 규모가 한눈에 보이고, 인물은 지도 위 점이 된다.',
+  use:'추락·낙하의 아찔함, 전장 배치, 미로 · 감정 장면에 쓰면 거리가 멀어져 차갑다.',
+  tip:'그림자를 길게 늘이고, 아래로 갈수록 작아지는 원근으로 높이를 보인다.',
+  ex:''},
+ {id:'els-scale', name:'거대한 것 앞의 작은 인물', kind:'구도', pose:'', face:'', k:'els', ang:'', focus:false, flash:false,
+  desc:'크기는 대상이 아니라 대비가 만든다. 인물을 아주 작게 두면 장소와 적이 커진다.',
+  use:'새 장소 도착, 거대한 적의 첫 등장 · 너무 자주 쓰면 인물이 화면에서 사라진다.',
+  tip:'인물을 화면 구석 손톱만 하게 두고, 같은 페이지에 그 인물의 얼굴 컷을 붙여 감정을 잇는다.',
+  ex:''},
+ {id:'insert', name:'인서트 (손·물건)', kind:'구도', pose:'', face:'', k:'insert', ang:'', focus:false, flash:false,
+  desc:'손이나 물건만 크게 잡는다. 말하지 않은 단서와 감정이 물건에 실린다.',
+  use:'떨리는 손, 문자 화면, 반지, 단서 · 무엇을 봐야 할지 모르는 인서트는 흐름만 끊는다.',
+  tip:'앞 컷 인물의 시선 끝에 놓으면 누가 보고 있는지 저절로 읽힌다.',
+  ex:''},
+ {id:'back-shot', name:'떠나는 뒷모습', kind:'구도', pose:'', face:'', k:'back', ang:'', focus:false, flash:false,
+  desc:'얼굴을 보여 주지 않으면 독자가 표정을 채운다.',
+  use:'이별, 결의, 퇴장 · 감정이 쌓이지 않았는데 쓰면 그냥 걷는 컷이다.',
+  tip:'표정 대신 어깨 높이, 쥔 주먹, 흔들리는 옷자락으로 감정을 말한다.',
+  ex:''},
+ {id:'reaction', name:'반응 컷', kind:'구도', pose:'', face:'', k:'bs', ang:'', focus:false, flash:false,
+  desc:'사건보다 보는 사람의 얼굴이 사건의 크기를 정한다.',
+  use:'실력 공개, 등장, 반전 직후 · 반응하는 사람마다 같은 놀란 얼굴이면 하나 마나다.',
+  tip:'사건 컷보다 반응 컷을 크게 잡아 본다. 반응하는 사람이 누구냐가 의미를 바꾼다.',
+  ex:''}
+];
 // [[/DATA:poseref]]
 var WEIRD=[["모든 게 꿈이었다","사건 전체가 한 인물의 꿈으로 처리된다","가장 미움받는 결말. 쓰려면 꿈에서 깬 뒤 남은 상처 하나를 반드시 남긴다","위험"],["모든 게 연극이었다","작중 사건이 누군가 꾸민 무대였다","무대 뒤를 보여 주는 컷을 마지막 한 장만","위험"],["전부 창작물 속 이야기였다","작중 인물이 쓰던 글이나 그림이었다","1화부터 그 창작물을 배경에 깔아 둔다","주의"],["독자가 등장인물이었다","읽는 사람이 이야기 안에 있었다","시선 방향을 독자 쪽으로 두는 컷을 미리 심는다","위험"],["작가가 개입해 끝낸다","작화자가 화면에 나타나 마무리","작품당 한 번. 개그 톤이 아니면 위험하다","위험"],["아무 설명 없이 끝난다","해결도 정리도 하지 않는다","마지막 3컷을 일상으로. 설명 대사를 전부 지운다","주의"],["마지막 컷이 백지","그림이 없는 페이지로 닫는다","앞 쪽을 밀도 높게 그려야 공백이 읽힌다","주의"],["첫 화로 되돌아간다","마지막 컷이 1화 1컷과 동일","완전히 같은 그림. 한 요소만 다르게","주의"],["같은 컷이 반복되며 끝","동일한 컷이 여러 번 이어진다","3회 이상 반복해야 의도로 읽힌다","주의"],["시간이 거꾸로 흐른다","결말에서 시작으로 역주행","각 컷에 시간 표식을 심어 둔다","위험"],["다른 작품으로 이어진다","이 이야기가 남의 이야기의 일부였다","연결 고리를 소품 하나로만","위험"],["등장인물이 이야기를 그만둔다","인물이 진행을 거부한다","말풍선을 컷 밖으로 빼낸다","위험"],["결말이 두 개 제시된다","어느 쪽이 진짜인지 밝히지 않는다","두 컷의 구도를 완전히 동일하게","주의"],["독자에게 선택을 넘긴다","마지막에 질문만 남긴다","질문을 대사가 아니라 그림으로","주의"],["주인공이 사라진 채 끝","존재가 화면에서 지워진다","앞 컷들에서 조금씩 작게 그려 온다","주의"],["모두가 주인공을 모른다","아무도 그를 기억하지 못한다","군중 컷에서 시선이 스쳐 지나가게","주의"],["세계가 이야기임을 안다","인물이 자기가 그림임을 인지","선화나 톤을 노출시킨다","위험"],["페이지 바깥으로 걸어 나간다","프레임을 벗어나며 끝","컷 테두리를 무너뜨린다","위험"],["죽은 사람의 시점이었다","화자가 처음부터 없었다","타인과의 접촉 컷을 피해 왔어야 한다","주의"],["같은 사람이 여럿이었다","여러 인물이 한 사람이었다","둘을 한 컷에 넣은 적이 없어야 한다","주의"],["기억이 전부 조작이었다","회상 자체가 가짜","같은 회상을 미세하게 다르게 두 번","주의"],["아무도 죽지 않았고 아무 일도 없었다","사건 자체가 성립하지 않는다","사건 컷을 뒤에서 다시, 다르게","위험"],["결말이 검열된 것처럼 가려진다","마지막이 지워진 형태","가림 처리를 앞에서 한 번 예고한다","위험"],["문장이 중간에 끊긴다","마지막 대사가 미완","말풍선 꼬리를 화면 밖으로","주의"],["독자만 답을 모른다","인물들은 알고 있으나 보여 주지 않는다","인물의 표정만 반복해서 보여 준다","주의"],["모두 같은 표정이 된다","개별성이 사라진다","얼굴 형태를 점점 단순화해 온다","위험"],["이야기가 처음부터 다시 시작된다","완결 대신 재시작","마지막 쪽을 1쪽과 동일하게 배치","주의"],["세계가 접힌다","공간 자체가 사라진다","배경을 컷 단위로 지워 나간다","위험"],["마지막에 장르가 바뀐다","전혀 다른 이야기로 전환","톤과 그림체를 통째로 교체","위험"],["등장인물이 독자를 걱정한다","화면 밖을 향한 말","작품당 한 번. 마지막에만","위험"],["모든 인물이 같은 말을 한다","합창처럼 반복되는 대사","말풍선을 겹쳐 배치","주의"],["사건의 원인이 끝까지 안 밝혀진다","설명을 거부한다","단서를 세 개 심되 답을 주지 않는다","주의"],["시점이 사물로 옮겨간다","마지막을 물건이 본다","시선 높이를 바닥으로 내린다","주의"],["이야기가 기록으로만 남는다","인물은 사라지고 문서만","마지막 쪽을 글자만으로","주의"],["결말이 앞부분에 이미 있었다","1화가 사실 마지막 장면","같은 컷을 앞뒤로 배치","주의"],["주인공이 관객석에 앉아 있다","보는 쪽으로 자리를 옮긴다","무대와 객석을 같은 구도로","위험"],["모든 대사가 사라진다","마지막 회차에 말이 없다","앞 회차를 대사로 채워 왔어야 한다","주의"],["같은 결말이 인물 수만큼 반복된다","각자의 마지막이 나열된다","구도를 통일하고 표정만 바꾼다","주의"],["독자가 읽는 행위가 사건이 된다","읽는 것 자체가 이야기의 일부","책이나 화면을 컷 안에 그린다","위험"],["아무도 이야기를 기억하지 못한다","작중 세계에서 사건이 지워진다","기록 컷을 백지로","주의"],["끝났다는 표시가 없다","완결 표기 없이 멈춘다","마지막 컷을 진행형 동작으로","위험"],["설명이 다음 작품으로 미뤄진다","이 작품 안에서 답하지 않는다","예고 없이. 암시만 남긴다","위험"]];
 var EPOOL={"주체":["주인공","적","동료","스승","남겨진 사람","떠난 사람","아무도","다음 세대","독자만","목격자","배신한 사람","구해 준 사람","한때 적이었던 사람","이름을 모르는 누군가","끝까지 남은 사람","가장 먼저 떠난 사람","살아남은 한 사람","기록을 남긴 사람","아이","후계자","모두","둘 다","그 자리에 있던 사람","아무 상관 없던 사람"],"동작":["떠났다","남았다","돌아왔다","돌아오지 못했다","잊었다","기억했다","돌려주지 못했다","알아채지 못했다","끝내 말하지 못했다","다시 시작했다","대신 치렀다","물려주었다","버렸다","되찾았다","용서했다","용서받지 못했다","약속을 지켰다","약속을 어겼다","처음으로 인정했다","끝까지 부정했다","같은 자리에 앉았다","그대로 두었다","불태웠다","묻었다","들고 갔다","남기고 갔다","반복했다","멈추었다"],"대상":["약속","이름","자리","빚","습관","상처","규칙","첫 장면의 그 물건","남겨진 편지","물려받은 도구","같은 실수","서로의 얼굴","해야 했던 말","버린 것","지키려던 것","되찾은 것","자기 몫의 벌","잃어버린 시간","처음의 이유","남의 기억","끝나지 않은 싸움","아직 못 준 대답","같은 길","빈자리"],"선행":["이겼는데","졌는데","모든 것을 되찾았는데","아무것도 못 지켰는데","진실을 밝혔는데","끝까지 숨겼는데","약속을 지켰는데","배신했는데","살아남았는데","먼저 손을 내밀었는데","복수를 끝냈는데","용서했는데","세계를 구했는데","다 알고 있었는데","아무도 다치지 않았는데","처음으로 이겼는데","자리를 물려줬는데","돌아왔는데"]};
@@ -8331,6 +8592,107 @@ window.addEventListener('storage',function(e){ if(e.key===TXK && txOn()) txList(
 // [[MOD:stat]] 흔함 정도
 // [[/MOD:stat]]
 // [[MOD:poseref]] 만화 자세·구도 페이지
+(function(){
+var root=document.getElementById('poses-root'); if(!root || typeof POSE_REF==='undefined') return;
+var PR={kind:'', q:'', built:false, tries:0, io:null};
+var PR_SHOT={els:['ELS','익스트림 롱숏'],ls:['LS','롱숏'],fs:['FS','풀숏'],ms:['MS','미디엄숏'],bs:['BS','바스트숏'],cu:['CU','클로즈업'],ecu:['ECU','익스트림 클로즈업'],
+  two:['TWO','투숏'],ots:['OTS','어깨 너머'],stand:['STAND','대치'],frame:['FRAME','프레임 속 프레임'],bird:['BIRD','버즈아이'],
+  insert:['INSERT','인서트'],pov:['POV','시점 숏'],back:['BACK','뒷모습'],empty:['EMPTY','빈 배경'],crowd:['CROWD','군중']};
+var PR_ANG={high:'부감',low:'앙각',dutch:'더치'};
+var PR_SRC=[
+  ['나무위키 「겐도 포즈」','https://namu.wiki/w/%EA%B2%90%EB%8F%84%20%ED%8F%AC%EC%A6%88'],
+  ['나무위키 「죠죠서기」','https://namu.wiki/w/%EC%A3%A0%EC%A3%A0%EC%84%9C%EA%B8%B0'],
+  ['나무위키 「슈퍼히어로 랜딩」','https://namu.wiki/w/%ED%9E%88%EC%96%B4%EB%A1%9C%20%EB%9E%9C%EB%94%A9'],
+  ['나무위키 「더치 앵글」','https://namu.wiki/w/%EB%8D%94%EC%B9%98%20%EC%95%B5%EA%B8%80'],
+  ['나무위키 「영화 기법」','https://namu.wiki/w/%EC%98%81%ED%99%94%20%EA%B8%B0%EB%B2%95'],
+  ['나무위키 「새하얗게 불태워 버렸어」','https://namu.wiki/w/%EC%83%88%ED%95%98%EC%96%97%EA%B2%8C%20%EB%B6%88%ED%83%9C%EC%9B%8C%20%EB%B2%84%EB%A0%B8%EC%96%B4'],
+  ['나무위키 「내 생애에 한 점의 후회도 없다」','https://namu.wiki/w/%EB%82%B4%20%EC%83%9D%EC%95%A0%EC%97%90%20%ED%95%9C%20%EC%A0%90%EC%9D%98%20%ED%9B%84%ED%9A%8C%EB%8F%84%20%EC%97%86%EB%8B%A4'],
+  ['나무위키 「계획대로」','https://namu.wiki/w/%EA%B3%84%ED%9A%8D%EB%8C%80%EB%A1%9C'],
+  ['CLIP STUDIO 「アオリ・フカン」 구도 해설','https://www.clipstudio.net/oekaki/archives/151863'],
+  ['CLIP STUDIO 만화·웹툰 연출 팁','https://www.clipstudio.net/kr/comics-manga/design-tips/'],
+  ['GlobalComix 「Camera angles to make panels more dynamic」','https://globalcomix.com/news/details/220/creator-tips-and-tricks-camera-angles-to-make-panels-more-dynamic'],
+  ['TV Tropes 「Skyward Scream」 (트로프 이름만 참고)','https://tvtropes.org/pmwiki/pmwiki.php/Main/SkywardScream']
+];
+function prEsc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function prSeed(t){ t=String(t||''); var h=0; for(var i=0;i<t.length;i++) h=(h*31+t.charCodeAt(i))%9973; return 300+h; }
+function prComp(e){ var s=(PR_SHOT[e.k]||PR_SHOT.ms)[0]; if(e.ang) s+='+'+PR_ANG[e.ang]; if(e.focus) s+='+집중선'; if(e.flash) s+='+회상'; return s; }
+function prLook(p,f){ var l={}; if(p) l.pose=p; if(f) l.face=f; return l; }
+function prWho(e){
+  var w=[{name:'', look:prLook(e.pose,e.face)}];
+  if(/^(two|stand|ots)$/.test(e.k) || e.pose2 || e.face2) w.push({name:'', look:prLook(e.pose2||'', e.face2||'')});
+  return w;
+}
+function prCv(e){
+  var a=' data-k="'+prEsc(e.k)+'" data-x=".5" data-nolabel="1" data-seed="'+prSeed(e.id)+'"';
+  if(e.ang) a+=' data-ang="'+e.ang+'"';
+  if(e.ang==='high' && /^(ms|bs|cu)$/.test(e.k)) a+=' data-hs="1.25"';
+  if(e.ang==='low' && /^(ms|bs|cu)$/.test(e.k)) a+=' data-hs=".82"';
+  if(e.focus) a+=' data-focus="1"'; if(e.flash) a+=' data-flash="1"'; if(e.sil) a+=' data-sil="1"';
+  a+=' data-who="'+prEsc(JSON.stringify(prWho(e)))+'"';
+  return '<canvas class="pr-cv"'+a+' role="img" aria-label="'+prEsc(e.name+' — '+(PR_SHOT[e.k]||PR_SHOT.ms)[1]+(e.ang?' '+PR_ANG[e.ang]:'')+' 그림')+'"></canvas>';
+}
+function prCard(e){
+  var tag='<code class="pr-comp" title="콘티 구성기 구도 칸에 그대로 넣을 수 있다">'+prEsc(prComp(e))+'</code>'+(e.pose?'<span class="pr-pose">'+prEsc(e.pose)+'</span>':'');
+  return '<article class="pr-card" data-id="'+prEsc(e.id)+'" data-kind="'+prEsc(e.kind)+'">'+prCv(e)+
+    '<div class="pr-body"><h4>'+prEsc(e.name)+'</h4><div class="pr-tags">'+tag+'</div>'+
+    '<p class="pr-desc">'+prEsc(e.desc)+'</p>'+
+    '<dl class="pr-dl"><dt>쓰임</dt><dd>'+prEsc(e.use)+'</dd><dt>연출</dt><dd>'+prEsc(e.tip)+'</dd>'+
+    (e.ex?'<dt>사례</dt><dd>'+prEsc(e.ex)+'</dd>':'')+'</dl></div></article>';
+}
+function prBuild(){
+  var n1=POSE_REF.filter(function(e){ return e.kind==='자세'; }), n2=POSE_REF.filter(function(e){ return e.kind==='구도'; });
+  var h='<p class="lede"><b>자세</b>는 인물이 무엇을 하는지, <b>구도</b>는 카메라가 어디에 있는지다. 같은 장면도 이 둘을 어떻게 고르느냐에 따라 전하는 것이 바뀐다. 아래는 만화에서 널리 알려진 자세와 구도를 모은 목록이다. 카드마다 무엇을 전하는지, 언제 쓰고 언제 싸구려가 되는지, 바로 써먹을 연출 팁을 적었다.</p>'+
+    '<p class="small">그림 아래 <code>FS+앙각</code> 같은 글자는 콘티 구성기의 구도 칸에 그대로 넣을 수 있는 구도 코드다. 그림은 구성기의 선 그림으로 대강 잡은 것이라, 손 모양처럼 그림 부품에 없는 것은 가까운 자세로 대신하고 팁에 적었다. 사례는 확인한 것만 적었다.</p>'+
+    '<div class="filterbar pr-bar"><button class="chip" type="button" data-pk="" aria-pressed="true">전체</button><button class="chip" type="button" data-pk="자세" aria-pressed="false">자세 '+n1.length+'</button><button class="chip" type="button" data-pk="구도" aria-pressed="false">구도 '+n2.length+'</button>'+
+    '<input class="pr-q" type="search" placeholder="자세·구도 검색" aria-label="자세·구도 검색"><span class="count pr-count"></span></div>';
+  [['자세',n1,'인물의 몸이 말하는 것. 유명한 만큼 패러디도 많으니, 쓰기 전에 장면이 그 무게를 감당하는지 본다.'],
+   ['구도',n2,'카메라의 높이·거리·기울기가 말하는 것. 표정을 고치기 전에 카메라부터 옮겨 본다.']].forEach(function(s){
+    h+='<section class="pr-sec" data-kind="'+s[0]+'"><h3>'+s[0]+' <span class="pr-n"></span></h3><p class="small">'+s[2]+'</p><div class="pr-grid">'+s[1].map(prCard).join('')+'</div></section>';
+  });
+  h+='<p class="pr-none small" hidden>맞는 항목이 없다.</p>';
+  h+='<p class="small pr-src"><b>출처</b> — '+PR_SRC.map(function(s){ return '<a href="'+s[1]+'" target="_blank" rel="noopener">'+prEsc(s[0])+'</a>'; }).join(' · ')+'. 설명과 팁은 이 자료들을 참고해 새로 썼다.</p>';
+  root.innerHTML=h;
+  root.querySelector('.pr-bar').addEventListener('click', function(ev){ var b=ev.target.closest('button[data-pk]'); if(!b) return; PR.kind=b.getAttribute('data-pk'); prFilter(); });
+  var q=root.querySelector('.pr-q'); q.addEventListener('input', function(){ PR.q=q.value; prFilter(); });
+  if('IntersectionObserver' in window){
+    PR.io=new IntersectionObserver(function(es){ es.forEach(function(x){ if(x.isIntersecting) prDraw1(x.target); }); }, {rootMargin:'300px 0px'});
+    [].slice.call(root.querySelectorAll('canvas.pr-cv')).forEach(function(cv){ PR.io.observe(cv); });
+  }
+  PR.built=true; prFilter();
+}
+function prText(e){ return [e.name,e.kind,e.pose,e.desc,e.use,e.tip,e.ex,prComp(e),(PR_SHOT[e.k]||[])[1],PR_ANG[e.ang]||''].join(' ').toLowerCase(); }
+function prFilter(){
+  var q=String(PR.q||'').trim().toLowerCase().split(/\s+/).filter(Boolean), shown=0;
+  [].slice.call(root.querySelectorAll('.pr-bar button[data-pk]')).forEach(function(b){ b.setAttribute('aria-pressed', String(b.getAttribute('data-pk')===PR.kind)); });
+  var by={}; POSE_REF.forEach(function(e){ by[e.id]=e; });
+  [].slice.call(root.querySelectorAll('.pr-sec')).forEach(function(sec){
+    var n=0, k=sec.getAttribute('data-kind'), off=PR.kind && PR.kind!==k;
+    [].slice.call(sec.querySelectorAll('.pr-card')).forEach(function(c){ var e=by[c.getAttribute('data-id')], t=e?prText(e):'';
+      var on=!off && q.every(function(w){ return t.indexOf(w)>-1; }); c.hidden=!on; if(on) n++; });
+    sec.hidden=!n; sec.querySelector('.pr-n').textContent=n+'개'; shown+=n;
+  });
+  root.querySelector('.pr-count').textContent=shown+'/'+POSE_REF.length;
+  root.querySelector('.pr-none').hidden=!!shown;
+  prDraw();
+}
+function prDraw1(cv){
+  if(!window.__ctPortrait || !cv.isConnected) return;
+  var w=Math.round(cv.getBoundingClientRect().width); if(!w || String(w)===cv.dataset.dw) return;
+  cv.dataset.dw=String(w); try{ window.__ctPortrait(cv); }catch(e){}
+}
+function prDraw(){
+  if(!PR.built) return;
+  if(!window.__ctPortrait){ if(PR.tries++<40) setTimeout(prDraw, 250); return; }
+  PR.tries=0;
+  if(PR.io) return [].slice.call(root.querySelectorAll('canvas.pr-cv')).forEach(function(cv){ if(cv.dataset.dw){ prDraw1(cv); } else { PR.io.unobserve(cv); PR.io.observe(cv); } });
+  [].slice.call(root.querySelectorAll('canvas.pr-cv')).forEach(prDraw1);
+}
+function prShow(){ if(!PR.built) prBuild(); else prDraw(); }
+window.PAGE_ON=window.PAGE_ON||{};
+var prev=window.PAGE_ON.poses; window.PAGE_ON.poses=function(){ if(prev) try{ prev(); }catch(e){} prShow(); };
+window.addEventListener('resize', function(){ clearTimeout(PR.rz); PR.rz=setTimeout(function(){ var s=document.getElementById('poses'); if(PR.built && s && s.classList.contains('page-on')) prDraw(); },200); });
+window.__poseRef={list:function(){ return POSE_REF; }, comp:prComp, who:prWho, show:prShow, filter:function(k,q){ PR.kind=k||''; PR.q=q||''; if(!PR.built) prBuild(); else prFilter(); }};
+})();
 // [[/MOD:poseref]]
 // [[MOD:desk]] 홈 바탕화면
 // 아이콘 자리는 localStorage.deskLayout {v:1, at, pos:{"f:폴더"|"s:favs"|"s:cast"|"s:texts"|"s:trash": [열, 줄]}}
