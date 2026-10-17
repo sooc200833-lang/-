@@ -12880,6 +12880,29 @@ function loneMap(){
   B.cuts.forEach(function(c){ if(br[c.n]) flush(); if(cutSize0(c)==='wide'){ flush(); return; } run.push(c); }); flush();
   return LONE;
 }
+var BAND_ORDER=['도입','전개','전환','절정','마지막 훅'], BAND_CUM=[.1,.44,.58,.9,1];
+function bandRole(x, i, n, N){
+  if(x.band){ var k=skBandKey(x.band); if(BAND_ORDER.indexOf(k)>-1 && (k!=='전개' || /전개/.test(x.band))) return k; }
+  var t=x.type||'';
+  if(i===0) return '도입';
+  if(i===n-1 && n>=3) return '마지막 훅';
+  if(t==='hook' && i>=n-2) return '마지막 훅';
+  var mid=((x.a+x.b)/2)/Math.max(1,N), pos=0; while(pos<BAND_CUM.length-1 && mid>BAND_CUM[pos]) pos++;
+  if((t==='open'||t==='cold') && pos>1) pos=1;
+  if((t==='time'||t==='flash') && pos>=1 && pos<=3) pos=2;
+  if((t==='clash'||t==='confess') && mid>.5) pos=3;
+  return BAND_ORDER[Math.min(pos,3)];
+}
+// 장면 목록 → B.band (뒤로 갈수록 구간이 앞으로 돌아가지 않게, 같은 구간이 이어지면 하나로)
+function bandsFromScenes(list){
+  if(!B || !B.cuts || !list || !list.length || (B.cl && B.cl.length)) return false;
+  var N=B.cuts.length, sc=list.filter(function(x){ return x && x.a>=1 && x.a<=N; }).slice().sort(function(p,q){ return p.a-q.a; }); if(!sc.length) return false;
+  var roles=sc.map(function(x,i){ return bandRole(x,i,sc.length,N); }), mx=0;
+  roles=roles.map(function(r){ var k=BAND_ORDER.indexOf(r); if(k<mx) k=mx; mx=k; return BAND_ORDER[k]; });
+  var out=[]; sc.forEach(function(x,i){ var last=out[out.length-1]; if(last && last.name===roles[i]) return; if(last) last.b=x.a-1; out.push({name:roles[i], a:x.a, b:N}); });
+  out[0].a=1; out[out.length-1].b=N; out=out.filter(function(b){ return b.b>=b.a; });
+  B.band=out; return true;
+}
 function snapBands(){   // 구간 경계를 가장 가까운 장면 시작으로(만화는 구간마다 판이 새 줄이라 장면 가운데서 끊기지 않게)
   var st=[]; try{ st=sceneList().map(function(x){ return x.a; }); }catch(e){} if(st.length<2 || !B.band) return;
   var prev=1; B.band.forEach(function(b,i){ if(!i){ b.a=1; return; } var best=b.a, d=1e9; st.forEach(function(a){ var e=Math.abs(a-b.a); if(a>prev && e<d){ d=e; best=a; } }); if(d<=Math.max(3, (b.b-b.a+1)*.5)) b.a=best; prev=b.a; });
@@ -12887,7 +12910,7 @@ function snapBands(){   // 구간 경계를 가장 가까운 장면 시작으로
 }
 function evenFix(maxD){
   if(!B || !B.cuts || boardMode()!=='manga') return 0; maxD=maxD==null?5:maxD;
-  snapBands();
+  if(!bandsFromScenes(B.scenes) && !bandsFromScenes(B.skScenes)) snapBands();
   var target=B.target||B.total, net=B.cuts.length-target, changed=0;
   var objs=function(list){ return (list||[]).map(function(x){ return {o:x, f:B.cuts[x.a-1], l:B.cuts[Math.min(x.b,B.cuts.length)-1]}; }); };
   var SC=objs(B.scenes), SK=objs(B.skScenes), BD=objs(B.band), CL=objs(B.cl), FL=objs(B.flow&&B.flow.scenes);
@@ -13143,6 +13166,11 @@ function storyOffer(){
   });
 }
 var BAND_SPEC=[['도입',10],['전개',34],['전환',14],['절정',32],['마지막 훅',10]];
+function bandForVar(total){
+  var w=BAND_SPEC.map(function(b){ return b[1]*(.7+Math.random()*.6); }), sum=w.reduce(function(s,x){ return s+x; },0), acc=0, out=[];
+  BAND_SPEC.forEach(function(b,i){ var n=(i===BAND_SPEC.length-1)?(total-acc):Math.max(2,Math.round(total*w[i]/sum)); out.push({name:b[0], a:acc+1, b:acc+n}); acc+=n; });
+  return out.filter(function(b){ return b.b>=b.a; });
+}
 function bandFor(total){
   var sum=0, acc=0, out=[]; BAND_SPEC.forEach(function(b){ sum+=b[1]; });
   BAND_SPEC.forEach(function(b,i){ var n=(i===BAND_SPEC.length-1)?(total-acc):Math.max(1,Math.round(total*b[1]/sum)); out.push({name:b[0], a:acc+1, b:acc+n}); acc+=n; });
@@ -13151,7 +13179,7 @@ function bandFor(total){
 // 대강 이야기만으로 판을 새로 깐다 (구성기 재료는 쓰지 않는다)
 function fresh(){
   var total=+document.getElementById('ct-total').value||70, story=document.getElementById('ct-story').value;
-  var keepCh=(B&&B.chars)||[], src=srcGet(), band=bandFor(total);
+  var keepCh=(B&&B.chars)||[], src=srcGet(), band=bandForVar(total);
   var md=(B&&B.mode)||modeDef(); SK_MODE=md;
   var keepSid=(B&&B.sid)||null, oldT=(B&&B.total)||total, keepSk=((B&&B.skScenes)||[]).filter(function(x){ return x.ed; }), keepPl=((B&&B.scenes)||[]).some(function(x){ return x.ed; })?B.scenes:null;
   B={v:2, scenes:null, chars:keepCh, total:total, target:total, band:band, cl:[], drawn:'', story:story, srcAt:(B&&B.srcAt)||0, cuts:skeleton(total, band, []), mode:md};
@@ -13330,7 +13358,7 @@ function skeleton(total, band, cl, seed){
       var last=(n+L-1)>=total, type=last && key!=='마지막 훅' && L>=3 && R()<.5 ? 'hook' : skType(key, R, prev, n===1);
       var cs=skScene(type, L, R, key);
       cs.forEach(function(c,i){ c.n=n+i; c.scr=''; c.line=''; cuts.push(c); });
-      scenes.push({a:n, b:n+L-1, type:type, name:SK_TYPES[type].name, desc:SK_TYPES[type].desc});
+      scenes.push({a:n, b:n+L-1, type:type, name:SK_TYPES[type].name, desc:SK_TYPES[type].desc, band:key});
       prev=type; n+=L;
     });
   }
@@ -13919,6 +13947,7 @@ function scaleScenes(list, oldT, newT){
 // 배정표 장면마다 종류를 정하고(작가·AI가 정한 것이 먼저) 글이 없는 컷의 구도를 그 종류로 다시 깐다
 function layScenes(){
   if(!B || !B.scenes || !B.scenes.length) return 0;
+  bandsFromScenes(B.scenes);
   var R=skRng((Date.now()^Math.floor(Math.random()*1e9))>>>0), sc=B.scenes.slice().sort(function(p,q){ return p.a-q.a; }), n=0; SK_MODE=boardMode();
   sc.forEach(function(x,i){
     if(!x.type || !SK_TYPES[x.type]) x.type=guessType(x, i, sc.length);
@@ -13950,7 +13979,7 @@ function planScenes(btn, then){
   aiAsk(RSYS, reviewPrompt(), 1800, {temperature:0.5, model:strongModel()}).then(function(t){
     planBusy=false; running=false; setBusy(false);
     if(aiIsErr(t)){ stat('장면을 나누지 못했다. '+String(t).slice(0,80)); return; }
-    var r=parseScenes(aiClean?aiClean(t):t);
+    var r=parseScenes(aiClean?aiClean(t):t); tileScenes(r.scenes);
     if(!r.scenes.length){ stat('답을 장면 배정표로 읽지 못했다. 다시 눌러 본다.'); return; }
     B.scenes=r.scenes; B.scenesNote=r.note; B.scenesTot=r.total; B.scenesKey=srcKey(); B.flow=null; layScenes(); syncCast(); save(); renderAll();
     stat('장면 '+r.scenes.length+'개로 나누고 장면마다 구도를 깔았다. 장면 「설명」으로 고친 뒤 「AI로 콘티 쓰기」를 누른다.'+(r.total&&Math.abs(r.total.n-B.total)>=Math.max(4,B.total*.15)?' AI 추천 분량은 '+r.total.n+'컷이다.':''));
@@ -14367,7 +14396,7 @@ function chunks(){
 }
 var RSYS='당신은 한국 웹툰 콘티 감독이다. 원고들을 함께 검토해 컷 배정표를 만든다. 정해진 형식의 줄만 쓴다. 서론·마크다운 기호를 쓰지 않는다.';
 function reviewPrompt(){
-  var cs=chars(); return srcAll()+(cs.length?'\n\n[등장인물]\n'+cs.map(function(x){ return x.name+(x.role?' — '+x.role:''); }).join('\n'):'')+'\n\n[전체 분량] '+B.total+'컷\n[구간] '+B.band.map(function(b){ return b.name+' '+b.a+'–'+b.b; }).join(' · ')+'\n\n'+
+  var cs=chars(); return srcAll()+(cs.length?'\n\n[등장인물]\n'+cs.map(function(x){ return x.name+(x.role?' — '+x.role:''); }).join('\n'):'')+'\n\n[전체 분량] '+B.total+'컷 (5컷 안팎은 달라도 된다)\n[구간] 도입 → 전개 → 전환 → 절정 → 마지막 훅 순서. 구간마다 몇 컷인지는 정해져 있지 않다 — 이야기에 맞게 장면 단위로 나눈다.\n\n'+
     '위 글들을 함께 검토해 '+B.total+'컷 콘티의 장면 배정표를 만든다.\n'+
     '- 사건 순서와 결말은 줄거리를, 장면의 행동·대사·분위기는 웹소설을, 컷 나눔과 구도는 컷별 콘티를 주로 참고한다.\n'+
     '- 글끼리 내용이 다르면 대강 이야기를 가장 우선하고, 그다음 컷별 콘티 → 웹소설 → 줄거리 순으로 따른다.\n'+
@@ -14375,9 +14404,15 @@ function reviewPrompt(){
     '- 장소나 시간이 바뀌거나 회상이 시작·끝나는 곳에서 새 장면이다. 1번부터 '+B.total+'번까지 빈틈없이 장면으로 나눈다. 장면 하나는 2~8컷.\n'+
     '- 컷은 이야기 무게대로 나눈다: 결정적 장면(고백·대결·폭로·결말)에 컷을 많이, 이동·설명 장면은 짧게. 구간 이름에 이야기를 억지로 맞추지 않는다.\n'+
     '- 장면 종류(하나): '+Object.keys(SK_TYPES).map(function(k){ return SK_TYPES[k].name.replace(/ 장면$/,''); }).join('·')+'\n'+
-    '형식(한 줄에 장면 하나): 시작번호-끝번호|장면 요약 25자 안쪽|이 장면에서 꼭 보여 줄 것(대사·행동·사물) 40자 안쪽|장소·시간 15자 안쪽|장면 종류\n'+
+    '형식(한 줄에 장면 하나): 시작번호-끝번호|장면 요약 25자 안쪽|이 장면에서 꼭 보여 줄 것(대사·행동·사물) 40자 안쪽|장소·시간 15자 안쪽|장면 종류|구간(도입·전개·전환·절정·마지막 훅)\n'+
     '이야기에 비해 '+B.total+'컷이 너무 많거나(늘어짐) 적으면(욱여넣음) 「분량|알맞은 컷 수|이유 20자」 한 줄을 더 쓴다.\n'+
     '마지막 줄에 「검토|」로 시작해 글끼리 어긋난 점과 어떻게 정리했는지 한 줄로 적는다. 어긋남이 없으면 「검토|어긋남 없음」.';
+}
+// AI 배정표의 빈틈·겹침을 메워 1번부터 끝까지 이어지게(구간을 장면에서 만들 수 있게)
+function tileScenes(sc){
+  if(!sc || !sc.length) return sc; sc.sort(function(p,q){ return p.a-q.a; });
+  var out=[]; sc.forEach(function(x){ var pv=out[out.length-1]; if(pv && x.a<=pv.a) return; if(pv) pv.b=x.a-1; out.push(x); });
+  out[0].a=1; out[out.length-1].b=B.total; sc.length=0; out.filter(function(x){ return x.b>=x.a; }).forEach(function(x){ sc.push(x); }); return sc;
 }
 function parseScenes(t){
   var sc=[], note='', tot=null;
@@ -14385,7 +14420,8 @@ function parseScenes(t){
     line=line.replace(/[*#]/g,'').trim();
     var m=/^(\d+)\s*[-~–]\s*(\d+)\s*[|｜]\s*([^|｜]+)(?:[|｜](.*))?$/.exec(line);
     if(m){ var a=+m[1], b=+m[2], F=String(m[4]||'').split(/[|｜]/).map(function(x){ return x.trim(); });
-      if(a>=1 && b>=a && a<=B.total){ var o={a:a, b:Math.min(b,B.total), sum:m[3].trim(), show:F[0]||''}; if(F[1]) o.place=F[1].slice(0,30); var ty=skTypeOf(F[2]); if(ty) o.type=ty; sc.push(o); } return; }
+      if(a>=1 && b>=a && a<=B.total){ var o={a:a, b:Math.min(b,B.total), sum:m[3].trim(), show:F[0]||''}; if(F[1]) o.place=F[1].slice(0,30); var ty=skTypeOf(F[2]); if(ty) o.type=ty;
+        if(F[3] && /도입|전개|전환|절정|훅/.test(F[3])) o.band=F[3].replace(/\s+/g,' ').trim().slice(0,8); sc.push(o); } return; }
     var q=/^분량\s*[|｜]\s*(\d+)\s*(?:[|｜]\s*(.*))?$/.exec(line); if(q){ tot={n:+q[1], why:String(q[2]||'').trim().slice(0,40)}; return; }
     var n=/^검토\s*[|｜]\s*(.*)$/.exec(line); if(n) note=n[1].trim();
   });
@@ -14618,7 +14654,7 @@ function writeAll(fromN){
     aiAsk(RSYS, reviewPrompt(), 1800, {temperature:0.5, model:strongModel()}).then(function(t){
       if(aiIsErr(t)){ if(/한도|limit|429|quota|키|key|401|403/i.test(String(t))){ fail({a:0,name:'검토'}, String(t)); return; }
         stat('장면을 나누지 못해 구간대로 쓴다. '+String(t).slice(0,60)); plan(); next(); return; }   // 장면 나누기가 빈 답이면 막히지 않고 구간대로
-      var r=parseScenes(aiClean?aiClean(t):t);
+      var r=parseScenes(aiClean?aiClean(t):t); tileScenes(r.scenes);
       if(r.scenes.length){ B.scenes=r.scenes; B.scenesNote=r.note; B.scenesTot=r.total; B.scenesKey=srcKey(); layScenes(); save(); renderPlan(); renderBoard(); }
       plan(); next();
     });
@@ -14779,7 +14815,8 @@ function flowCheck(btn, quiet){
     var tt=aiClean?aiClean(t):t, items=/^\s*없음/.test(String(tt).trim())?[]:flowParse(tt), scs=flowParseScenes(tt);
     var oldS=(B.flow&&B.flow.scenes)||[];
     scs.forEach(function(x){ oldS.forEach(function(o){ if(o.ed && o.a===x.a){ SC_F.forEach(function(k){ if(o[k]) x[k]=o[k]; }); x.ed=1; } }); });
-    B.flow={at:Date.now(), items:items, scenes:scs.length?scs:oldS}; save(); FLOW_MSG=''; flowDecorate();
+    B.flow={at:Date.now(), items:items, scenes:scs.length?scs:oldS}; FLOW_MSG='';
+    if(scs.length && bandsFromScenes(flowScenes())){ save(); renderPlan(); renderBoard(); } else { save(); flowDecorate(); }
   }, function(e){ flowBusy=false; FLOW_MSG='AI 점검 실패: '+String(e&&e.message||e).slice(0,60); flowDecorate(); });
 }
 function flowBar(){
@@ -14976,7 +15013,7 @@ window.__ctScene={list:sceneList, skeleton:function(t,bd,cl,seed){ return skelet
   parseScenes:function(t){ return flowParseScenes(t); }, balloons:function(t){ return balloonsParse(t); }, size:cutSize, comp:parseComp, prompt:function(a,b){ return cutPrompt({a:a,b:b,name:''}); }, board:function(){ return B; }, mode:function(m){ SK_MODE=m; },
   scale:scaleScenes, lay:layScenes, parsePlan:function(t){ return parseScenes(t); }, rules:function(a,b){ return contiRules({a:a,b:b,name:''}, false); }, sys:function(){ return csys(); },
   pages:function(){ pageMap(); return {turn:PG_TURN, start:PG_START, n:PG_N}; }, png:function(){ return boardPng(); }, undos:function(){ return UNDOS.length; }, typeOf:skTypeOf,
-  poses:autoPoses, poseText:poseFromText, whoParse:whoParse, lone:function(){ return loneMap(); }, even:function(m){ return evenFix(m); }, runs:function(){ var br=rowBreaks(), R=[], run=[]; B.cuts.forEach(function(c){ if(br[c.n]){ if(run.length) R.push(run.length); run=[]; } if(cutSize(c)==='wide'){ if(run.length) R.push(run.length); run=[]; return; } run.push(c); }); if(run.length) R.push(run.length); return R; }};
+  poses:autoPoses, poseText:poseFromText, bandsFrom:function(l){ return bandsFromScenes(l); }, tile:function(l){ return tileScenes(l); }, review:function(){ return reviewPrompt(); }, whoParse:whoParse, lone:function(){ return loneMap(); }, even:function(m){ return evenFix(m); }, runs:function(){ var br=rowBreaks(), R=[], run=[]; B.cuts.forEach(function(c){ if(br[c.n]){ if(run.length) R.push(run.length); run=[]; } if(cutSize(c)==='wide'){ if(run.length) R.push(run.length); run=[]; return; } run.push(c); }); if(run.length) R.push(run.length); return R; }};
 function flowOpen(f, i){
   var it=FLOW_CUR[i]; if(!f || !it) return;
   var old=f.querySelector('.ct-flowbox'); if(old){ old.remove(); if(+old.dataset.fi===i) return; }
