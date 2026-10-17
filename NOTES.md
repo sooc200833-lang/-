@@ -3,10 +3,10 @@
 새 대화에서 이 파일을 먼저 읽고 이어서 작업한다. **사이트 전체를 화면에 펼치지 않는다.** 필요한 부분만 검색해서 고친다.
 
 ## 기본
-- 저장소 `sooc200833-lang/-` · 브랜치 `main` · 사이트는 루트의 **`index.html` 한 파일**(약 650KB)
+- 저장소 `sooc200833-lang/-` · 브랜치 `main` · 사이트는 루트의 **`index.html` 한 파일**(약 1.7MB, 압축 전송 약 510KB, 2026-10-17 기준)
 - 주소 https://sooc200833-lang.github.io/-/ · 올리면 1~2분 뒤 반영
 - 서버 없음. 전부 브라우저에서 돈다. 데이터는 `localStorage` + 구글 드라이브 동기화
-- 클로드 아티팩트 미리보기에서는 외부 호출(OpenRouter, 구글)이 막힌다. **깃허브 주소에서만** AI·동기화가 된다
+- 클로드 아티팩트 미리보기에서는 외부 호출(제미나이, 구글)이 막힌다. **깃허브 주소에서만** AI·동기화가 된다
 - 구글 OAuth 클라이언트 ID는 파일 안 `GD.cid`. 앱은 테스트 상태이며 테스트 사용자로 등록된 본인 구글 계정만 로그인된다
 
 ## 작업 방법
@@ -49,11 +49,11 @@ aiBar, favAiBar, twistAsk, writePrompt, wfmtHTML, aiAsk, aiCall, aiResult, ideaB
 - 세계관·인물 자동 생성, 콘티 점검 등은 **사용자 요청으로 삭제**했다. 다시 넣지 않는다
 
 ## AI 모델
-- **모델 이름을 코드에 박지 않는다.** `ormLoad`가 `https://openrouter.ai/api/v1/models`에서 지금 쓸 수 있는 목록을 받아(12시간 캐시 `orModels`) 「추천」을 계열별 최신으로 고른다(`ormPickRec`)
+- **모델 이름을 코드에 박지 않는다.** `ormLoad`가 제미나이 `models` 목록을 받아(12시간 캐시 `gmModels`) 「추천」을 계열별 최신으로 고른다(`ormPickRec`). (옛 OpenRouter 시절엔 `orModels`)
 - 저장된 모델이 목록에 없으면 추천 첫 번째로 바꾼다. 호출 중 404·유효하지 않은 모델이면 `ormFallback`으로 한 번 자동 재시도
 - 2026-06-01 gemini-2.0-flash-001 종료로 AI가 전부 실패했던 적이 있다
 
-- 모든 호출에 `reasoning:{effort:'low',exclude:true}`를 보낸다. 빼면 모델의 속생각이 답에 섞이고, 속생각이 분량 한도를 먹어 답이 잘린다. `max_tokens`는 요청값+1500
+- (옛 OpenRouter) 모든 호출에 `reasoning:{effort:'low',exclude:true}`를 보냈다. 지금은 `gmThink` 참고. 빼면 모델의 속생각이 답에 섞이고, 속생각이 분량 한도를 먹어 답이 잘린다. `max_tokens`는 요청값+1500
 - `aiClean`이 `<think>` 블록과 앞쪽 영어 속생각 줄을 걷어낸다
 - 🔎 채팅창에서 작품 이야기(영화·만화 등 + 25자 이상)를 하면 `pbAnalyze`로 분석하고 새 장치는 **자동 추가**(`pbCommit`), 줄마다 「빼기」(`pbUndo`). 작품 분석 페이지는 체크 후 추가 방식 유지
 
@@ -64,7 +64,7 @@ aiBar, favAiBar, twistAsk, writePrompt, wfmtHTML, aiAsk, aiCall, aiResult, ideaB
 
 - 🔎 채팅창은 자유 대화. 최근 12개 메시지를 `opts.history`로 보내고, 대화는 **여러 개**를 localStorage `ixChats`(`{cur, list:[{id,title,at,hist}]}`, 대화마다 최근 40개, 최대 20개, 동기화 안 함)에 남긴다. 옛 `ixChat`은 첫 대화로 옮기고 지운다. 위쪽 줄에서 고르기·＋ 새 대화·이름·삭제. 답이 오는 중에 다른 대화로 옮겨도 보낸 대화(`TT`/`H`)에 저장된다. 사전 검색 결과·피노 설정·지금 뽑힌 구성·아이디어를 말에 따라 붙인다(`ctxFor`). 작품 분석은 《제목》+분석 의도가 있을 때만(`isWork`)
 
-- 503·500·502·504·「high demand」는 1.5초·3초 간격으로 두 번 재시도, 429는 `retryDelay`가 12초 이하면 기다렸다 한 번. 그래도 안 되면 `aiAlt`로 가벼운 모델을 골라 **이번 호출만** 대신 부른다(저장된 모델은 바꾸지 않음)
+- **다시 부르기 (2026-10-17)**: 503 등 붐빔은 2초 뒤 1번, 429 분당 한도는 구글 `retryDelay`(최소 6초, 최대 60초)만큼 기다렸다 최대 2번. 그래도 안 되면 `aiAlt` 모델로 **1번만**(`_alt`면 더 다시 부르지 않음). 한 요청이 많아야 3~4번 호출. 예전엔 503 한 번에 8번까지 불러 무료 한도를 스스로 소진했다
 
 - **동기화 빈 기기 규칙은 `!base`(한 번도 동기화 안 한 기기)일 때만.** 예전엔 일부러 비운 것도 빈 기기로 보고 드라이브 것을 되살렸다
 - 정리 버튼(비우기·삭제·✕·빼기)은 `gdIntent()`를 찍어 10분간 급감 경고를 건너뛴다
@@ -199,3 +199,9 @@ arcForm, deviceId, folderMemo, gdBase, gdLast, gdLinked, ideaText, mangaDataVer,
   - 쪽·간격: 만화 `pageMap` 한 쪽 6칸(가로 컷 2칸, 구간 바뀌면 새 줄), 짝수 쪽 마지막 컷 `PG_TURN` 「쪽 넘김 자리」(배지·AI 컷 배정표), `.ct-page` 구분선. 웹툰 `c.gap` 0~3(`+붙임`·`+여백`·`+긴 여백`, `parseComp`/`compText`, 편집기 「앞 컷과 간격」, 자동: 장면 첫 컷 2·컷 사이 나레이션·회상 경계 3) → `.gp-N` 여백. `insertCuts`가 gap·size·use를 옮긴다.
   - 화면: 늘 보이는 줄 `.ct-main`(AI로 콘티 쓰기·이어서·이야기로 장면 나누기·나레이션 배치·판형), 나머지는 `details.ct-more`(뼈대만 깔기 (무작위)·선 다시 긋기·글로 복사·그림으로 저장·말풍선·판 보관). 장면 구분선은 「설명」 + ⋯ 메뉴(`.ct-scm`). 판 보관 `#ct-saved`(recPut contiSaved {name,total,mode,board}), 그림으로 저장 `boardPng`(판 화면 그대로 PNG, 15000px마다 나눔). 시험 `p28test.js`, 화면 `pw_p28.js`.
 - **콘티 저장소 (2026-10-17)**: 페이지 `#contis`(`[[MOD:ctstore]]`, PAGES 도구), 바탕화면 바로 가기 `s:contis`(콘티 페이지가 있을 때만 `req:'conti'`, 누르면 최근 10편 → `ctgo`로 열기, 길게 누르면 자동 저장 `ctauto`). 기록 묶음 `contiSaved` 항목 {id,name,folder,created,at,total,mode,scenes,written,story,chars,board(판 JSON)}(`stMeta`). 콘티 모듈의 잇기: 저장소에서 열면 `B.sid`, 그 뒤 `save()` → `stTouch`가 2초 뒤 그 항목을 고친다(항목이 지워졌으면 잇기를 푼다, `stKeep`은 save를 거치지 않고 판에만 적음). 「뼈대만 깔기」는 잇기를 풀고, 분량 바꾸기·쓰기 전 새 판(fresh)은 지킨다. AI로 다 쓰면(`ctAutoStore`, 기본 켬) 이어진 콘티를 고치거나 새로 저장(`stSave`). 콘티 구성기 「더 보기」에 저장소에 저장/새 콘티로 복제/저장소 열기, 늘 보이는 줄에 이어진 이름(`#ct-stlink`). 저장소 페이지: 찾기·판형·폴더 거르기, 카드마다 앞 4컷 그림 띠(`__ctCutData`+`__ctPortrait`, 저장한 판의 인물 생김새), 전체 미리 보기(번호·화면·대사), 열기·이름 바꾸기·복제·폴더(새 폴더)·글로 복사·지우기(한 번 더). 창구 `window.__ctStore`. 시험 `storetest.js`, 화면 `pw_store.js`.
+
+## 검토 반영 (2026-10-17)
+- **HTML 거르기**: 이름에 `<>"\``를 빼는 `safeNm`, 글 칸에 `<>`를 빼는 `safeTx`, 행 단위 `safeRow`, 출력용 `hx`(본 스크립트 앞부분, userAdds 로더 위). 사전 추가 항목은 불러올 때와 `pbCommit`에서, 폴더 이름은 불러올 때·`foldMake`·`foldSave`(`foldClean`)에서 거른다. 폴더 선택 상자는 `hx`로 찍는다. AI가 만든 이름이 화면에 그대로 들어가 코드가 실행되던 구멍(채팅 <<등록>>·작품 분석 추가·폴더 이름)이었다. **새 기능에서 저장된 이름·AI 글을 innerHTML에 넣을 때는 반드시 거른다**
+- **저장 실패 알림**: 본 스크립트 맨 앞에서 `Storage.prototype.setItem`을 감싸 저장 공간 부족이면 `#quota-warn` 알림(무엇이 공간을 쓰는지, 지워도 되는 캐시 지우기)을 띄우고 오류는 그대로 던진다. 스스로 정리하는 저장(이미지 분석 기록 `histSave`)은 `window.__quietQuota`로 조용히
+- **페이지 여는 위치**: `show()` 끝의 `pageTop(id)`가 홈은 맨 위, 나머지는 섹션 제목이 위 고정 줄 바로 아래에 오게 즉시 이동을 몇 번 다시 한다(주소 #이름으로 브라우저가 부드럽게 스크롤하는 것과 부딪쳐 위치가 들쭉날쭉하고 폰에서 제목이 가려졌다)
+- 내용 고침: 「드래곤 보이」(1983, 15+21쪽), 토리야마 액션 표현(처음 만든 게 아니라 다듬어 퍼뜨림), 데스노트 파일럿, 출처 없는 「도쿄 만화 학교」 인용 삭제. 작품 분석 웹 검색 비용 문구를 제미나이 기준으로

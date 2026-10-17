@@ -159,6 +159,9 @@ blockquote{margin:1rem 0; padding:.1rem 0 .1rem 1rem; border-left:3px solid var(
 .idx .g3{display:flex; gap:.5rem; white-space:nowrap}
 tr[hidden]{display:none}
 #ix-box[hidden], #ix-open[hidden]{display:none!important}
+#quota-warn{position:fixed; left:max(12px, env(safe-area-inset-left, 0px)); right:max(12px, env(safe-area-inset-right, 0px)); bottom:calc(12px + env(safe-area-inset-bottom, 0px)); z-index:9999; max-width:560px; margin:0 auto; background:var(--paper); color:var(--ink); border:2px solid var(--mark); padding:.8rem 1rem; font-size:.86rem; line-height:1.55; box-shadow:0 6px 24px var(--shadow)}
+#quota-warn[hidden]{display:none}
+#quota-warn ul{margin:.3rem 0 .5rem; padding-left:1.1rem}
 .count{font-size:.8rem; color:var(--ink-3); margin-left:auto}
 footer{border-top:2px solid var(--ink); padding:2rem 0 4rem; font-size:.85rem; color:var(--ink-2)}
 </style>
@@ -1455,7 +1458,7 @@ body.dk-drag, body.dk-drag *{user-select:none!important; -webkit-user-select:non
 
 <section class="blk" id="length">
   <h2 class="big">첫 작품을 너무 길게 잡는 문제</h2>
-  <p class="lede">초보 만화가가 가장 많이 하는 실수는 그림도 구성도 아니다. <b>첫 작품의 분량을 감당할 수 없게 잡는 것</b>이다. 도쿄의 만화 학교에서 수백 명을 가르친 현직 만화가들이 반복해서 지적하는 지점이고, 실제로 대부분이 여기서 멈춘다.</p>
+  <p class="lede">초보 만화가가 가장 많이 하는 실수는 그림도 구성도 아니다. <b>첫 작품의 분량을 감당할 수 없게 잡는 것</b>이다. 만화 강의와 작법서에서 되풀이해 나오는 경고이고, 실제로 많은 지망생이 여기서 멈춘다.</p>
 
   <h3>왜 이런 일이 생기는가</h3>
   <p>지망생은 유명 작품에 감동받아 시작한다. 나루토, 원피스, 원펀맨, 죠죠, 귀멸의 칼날. 이 작품들의 공통점은 <b>엄청나게 길다</b>는 것이다. 완결까지 몇 년이 걸린다. 그걸 보고 자란 사람은 자연히 자기 작품도 그 규모로 상상한다.</p>
@@ -1478,8 +1481,8 @@ body.dk-drag, body.dk-drag *{user-select:none!important; -webkit-user-select:non
 
   <h3>유명 작품도 단편에서 시작했다</h3>
   <ul>
-    <li><b>드래곤볼</b> 이전에 「드래곤 보이」가 있었다. 토리야마 아키라가 홍콩 무협 영화를 좋아해서 만든 45쪽짜리 모험 단편이다. 연재가 결정된 뒤 이것을 다시 개발한 것이 드래곤볼이다. 주인공 이름도 지금과 달랐다.</li>
-    <li><b>데스노트</b> 이전에는 2003년 주간 소년 점프에 실린 파일럿판 단편이 있었다. 작가도 큰 기대를 하지 않았는데 독자 반응이 좋았고, 넉 달 뒤 연재가 시작됐다.</li>
+    <li><b>드래곤볼</b> 이전에 「드래곤 보이」가 있었다. 1983년 두 편(15쪽·21쪽, 합쳐 36쪽)으로 실린 토리야마 아키라의 모험 단편이다. 이 작품과 단편 「통푸의 대모험」이 드래곤볼의 직접적인 바탕이 됐다. 주인공 이름도 지금과 달랐다.</li>
+    <li><b>데스노트</b> 이전에는 2003년 주간 소년 점프에 실린 파일럿판 단편이 있었다. 작가도 연재까지 이어질 줄 몰랐다고 했지만 독자 반응이 좋았고, 그해 12월 연재가 시작됐다.</li>
   </ul>
 
   <h3>출판사가 단편을 원하는 이유</h3>
@@ -1580,7 +1583,7 @@ body.dk-drag, body.dk-drag *{user-select:none!important; -webkit-user-select:non
   <p class="small"><b>가져갈 것</b> — 감정 장면에서 표정을 고치기 전에 카메라 높이를 먼저 바꿔 본다. 시선 높이 하나로 위계가 정해진다.</p>
 
   <h3>가독성 — 토리야마 아키라 「드래곤볼」</h3>
-  <p>스피드 라인, 잔상, 궤적선 같은 지금은 당연해진 액션 표현의 상당수를 실질적으로 정립했다. 핵심은 화려함이 아니라 <b>지금 누가 어디서 무슨 동작을 하는지 한눈에 읽힌다</b>는 점이다. 변신이나 에너지파처럼 스케일이 커지는 순간에도 구도가 무너지지 않는다. 이후 거의 모든 소년 배틀물이 이 문법을 기본값으로 삼았다.</p>
+  <p>스피드 라인, 잔상, 궤적선 같은 액션 표현을 처음 만든 것은 아니지만, 이를 누구나 읽을 수 있는 액션 문법으로 다듬어 널리 퍼뜨렸다. 핵심은 화려함이 아니라 <b>지금 누가 어디서 무슨 동작을 하는지 한눈에 읽힌다</b>는 점이다. 변신이나 에너지파처럼 스케일이 커지는 순간에도 구도가 무너지지 않는다. 이후 거의 모든 소년 배틀물이 이 문법을 기본값으로 삼았다.</p>
   <p class="small"><b>가져갈 것</b> — 액션 컷을 그린 뒤 3초만 보고 덮어 본다. 누가 무엇을 했는지 말할 수 없으면 다시 그린다.</p>
 
   <h3>정밀 — 오토모 가쓰히로 「아키라」</h3>
@@ -2805,7 +2808,7 @@ body.dk-drag, body.dk-drag *{user-select:none!important; -webkit-user-select:non
   <h2 class="big">작품 분석</h2>
   <div class="cast-tabs pb-tabs" role="tablist" aria-label="작품 분석 갈래"><button class="cast-tab" type="button" role="tab" id="pb-tab-s" data-pbt="s" aria-controls="pb-story" aria-selected="true">줄거리 분석</button><button class="cast-tab" type="button" role="tab" id="pb-tab-i" data-pbt="i" aria-controls="imgfx-root" aria-selected="false" tabindex="-1">이미지 연출 분석</button></div>
   <div id="pb-story" role="tabpanel" aria-labelledby="pb-tab-s">
-  <p class="lede">본 만화·영화·드라마의 이야기를 적으면, 그 안에 쓰인 <b>클리셰와 소재</b>를 색인에서 찾아 준다. 줄거리가 기억나지 않으면 작품 이름만 적고 <b>🌐 웹에서 줄거리 찾기</b>를 누른다(한 번에 약 10~30원). 색인에 없는 새 장치가 있으면 후보로 보여 주고, 고른 것만 <b>색인에 추가</b>한다.</p>
+  <p class="lede">본 만화·영화·드라마의 이야기를 적으면, 그 안에 쓰인 <b>클리셰와 소재</b>를 색인에서 찾아 준다. 줄거리가 기억나지 않으면 작품 이름만 적고 <b>🌐 웹에서 줄거리 찾기</b>를 누른다(구글 검색 연결을 쓰므로 무료 키는 하루 횟수 제한이 있고, 결제를 켠 키는 검색마다 요금이 붙는다). 색인에 없는 새 장치가 있으면 후보로 보여 주고, 고른 것만 <b>색인에 추가</b>한다.</p>
   <div class="arcform">
     <label><span>작품 이름</span><input id="pb-title" type="text" placeholder="예) 기생충"></label>
     <label><span>매체</span><select id="pb-media"><option>만화</option><option>웹툰</option><option selected>영화</option><option>드라마</option><option>애니</option><option>소설</option></select></label>
@@ -3388,6 +3391,40 @@ body.dk-drag, body.dk-drag *{user-select:none!important; -webkit-user-select:non
 
 </div>
 <script>
+/* 저장 공간이 차서 저장이 안 되면 알린다. 예전에는 저장 함수들이 실패를 조용히 넘겨서 별표·글이 새로고침하면 사라졌다 */
+(function(){
+  try{
+    var SP=Storage.prototype, orig=SP.setItem, last=0;
+    var NAMES={ixChats:'🔎 채팅 기록',imgFxHist:'이미지 연출 분석 기록',mangaTexts:'글 보관함',contiBoard:'콘티 판',contiBoards:'콘티 판 보관',contiHist:'콘티 되돌리기 기록',mangaCuts:'베스트컷',mangaCast:'등장인물',mangaFav:'즐겨찾기',mangaFolders:'즐겨찾기 폴더',folderMemo:'폴더 메모',userAdds:'내가 추가한 사전 항목',gmModels:'모델 목록(지워도 됨)',aiLastRaw:'AI 오류 원문(지워도 됨)',sfChain:'랜덤 구성기 글',idwChain:'아이디어 구성기 글',favChain:'즐겨찾기 글',pinoMemo:'피노 메모'};
+    function usage(){ var a=[]; try{ for(var i=0;i<localStorage.length;i++){ var k=localStorage.key(i), v=localStorage.getItem(k)||''; a.push([k,(k.length+v.length)]); } }catch(e){} a.sort(function(x,y){ return y[1]-x[1]; }); return a; }
+    function kb(n){ return n>1048576?(n/1048576).toFixed(1)+'MB':Math.round(n/1024)+'KB'; }
+    function show(key){
+      if(Date.now()-last<20000) return; last=Date.now();
+      var go=function(){
+        var u=usage(), tot=u.reduce(function(a,b){ return a+b[1]; },0), box=document.getElementById('quota-warn');
+        if(!box){ box=document.createElement('div'); box.id='quota-warn'; box.setAttribute('role','alert'); document.body.appendChild(box); }
+        box.innerHTML='<b>저장 공간이 가득 차서 방금 바뀐 내용('+hxq(NAMES[key]||key)+')이 저장되지 않았다.</b> 새로고침하면 사라진다. 브라우저가 이 사이트에 주는 공간(보통 5MB) 중 '+kb(tot)+'를 쓰고 있다. 큰 것부터:'+
+          '<ul>'+u.slice(0,6).map(function(x){ return '<li>'+hxq(NAMES[x[0]]||x[0])+' — '+kb(x[1])+'</li>'; }).join('')+'</ul>'+
+          '<button type="button" class="chip" data-q="cache">지워도 되는 것 지우기</button> <button type="button" class="chip" data-q="x">닫기</button>'+
+          '<p class="small">채팅 기록은 🔎 창에서, 이미지 분석 기록은 작품 분석 페이지에서 오래된 것을 지운다. 드라이브 동기화를 켜 두었다면 글 보관함·등장인물은 드라이브에도 있다.</p>';
+        box.hidden=false;
+        box.onclick=function(e){ var q=e.target.getAttribute&&e.target.getAttribute('data-q'); if(!q) return;
+          if(q==='cache'){ ['gmModels','orModels','aiLastRaw','aiLastErr'].forEach(function(k){ try{ localStorage.removeItem(k); }catch(_){} }); e.target.textContent='지웠다. 다시 저장해 본다'; }
+          else box.hidden=true; };
+      };
+      if(document.body) go(); else document.addEventListener('DOMContentLoaded', go);
+    }
+    function hxq(s){ return String(s).replace(/[&<>"]/g,function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
+    SP.setItem=function(k,v){
+      try{ return orig.call(this,k,v); }
+      catch(e){
+        var q=e && (e.name==='QuotaExceededError'||e.name==='NS_ERROR_DOM_QUOTA_REACHED'||e.code===22||e.code===1014);
+        if(q && this===window.localStorage && !window.__quietQuota) show(k);
+        throw e;
+      }
+    };
+  }catch(e){}
+})();
 var MOTIFS=["시간이 화폐로 거래됨","기억을 사고팔 수 있음","꿈에 들어갈 수 있음","이름을 빼앗기면 자신을 잃음","이름을 적으면 죽음","죽는 날짜가 통보됨","거짓말이 물리적으로 불가능함","감정이 수치로 표시됨","감정을 느끼는 것이 금지됨","AI가 범죄를 예측해 처벌함","능력이 등급으로 매겨짐","성인이 되면 적성이 배정됨","유전자로 신분이 정해짐","죽으면 시간이 되감김","같은 하루가 반복됨","괴물과 인간이 공존함","죽은 자와 대화할 수 있음","신이 실제로 응답함","소리를 내면 죽음","특정 나이에 죽는 것이 정해짐","몸을 바꿔 살 수 있음","계약으로만 관계가 성립함","혈통이 능력을 결정함","봉인이 서서히 풀리는 중","예언이 공개적으로 발표됨","한 사람만 진실을 알고 있음","세계가 게임 시스템으로 작동함","죽으면 다른 세계에서 깨어남","모두에게 초능력이 있고 없는 쪽이 소수","특정 시각 이후 밖에 나갈 수 없음","나이를 거꾸로 먹음","고통을 남에게 옮길 수 있음","국가 대신 기업이 통치함","계급이 층으로 나뉘어 있음","생존을 걸고 게임에 참가함","도박으로 인생이 결정됨","복수가 합법인 제도","시험 성적이 신분을 정함","기록이 조직적으로 조작됨","책과 기록이 금지됨","외부인 출입이 금지된 구역","이주민만 사는 지역","한 세대만 남은 종족","아이가 태어나지 않음","모두가 감시받는 도시","직업이 세습됨","결혼이 국가에 의해 배정됨","빚이 대물림됨","얼굴을 드러내면 안 됨","한 사람만 도시를 떠날 수 있음","모두가 같은 얼굴로 성형함","특정 언어를 쓰면 처벌받음","전쟁이 막 끝난 직후","역병 이후의 격리 사회","재해로 반쯤 무너진 도시","문명이 붕괴한 뒤","기술이 퇴보한 미래","왕조가 바뀌는 시기","개항 직후의 항구","혁명 전야","통금이 있는 도시","탄광이 문 닫은 지방 도시","재개발 예정인 동네","마지막 해를 앞둔 우주 정거장","던전이 관광지가 된 세계","영웅이 은퇴한 시대","마왕이 이미 죽은 뒤","이민이 유일한 출구인 나라","축제 준비 기간","졸업을 앞둔 마지막 학기","회사가 인수합병되는 중","장마가 끝나지 않는 여름","지구를 떠나기 직전","괴수가 물러간 다음 날","팀이 해체되기 직전","가게가 폐업을 앞둔 시점","대회 예선에서 탈락한 뒤","정체를 숨기고 입학한 상태","계약 만료 한 달 전","은퇴를 번복한 직후","무명으로 보낸 십 년","전학 첫날","조직에서 쫓겨난 직후","스승을 잃은 해","첫 제자를 받은 날","경쟁자가 먼저 성공한 뒤","빚을 떠안은 상태","이름을 바꾸고 사는 중","가짜 신분으로 일하는 중","전 직장 사람과 재회","병을 숨기고 일하는 중","가족을 대신해 나선 상태","남의 자리를 물려받음","죽은 사람 행세를 하는 중","기억의 일부만 남아 있음","돌아갈 곳이 사라짐","한 번 살려 준 상대와 재회","적의 아이를 맡게 됨","약속이 하나 남아 있음","돌려주지 못한 것이 있음","같은 날을 두 번 겪음","한 번만 되돌릴 수 있음","서로를 알아보면 안 됨","진실을 말하면 지는 게임","이기면 잃는 조건","도움을 청할 수 없는 상황","모두가 알면서 침묵함","기록에 남지 않는 일","증명할 방법이 없음","시간이 얼마 없음","두 번은 쓸 수 없는 능력","말하면 사라지는 비밀","만지면 안 되는 상대","밤에만 만날 수 있음","뒤를 돌아보면 안 됨","이름을 부르면 안 됨","떠나면 돌아올 수 없음","한 사람만 데려갈 수 있음","대가를 먼저 치러야 함","같은 실수를 반복하게 됨"];
 var POOL={"사물":["가로등","가발","가방","가야금","가위","간판","개스킷","거문고","거울","건전지","걸레","경첩","계란","계량기","계약서","계전기","고무줄","고지서","고추장","골무","공","광석","교과서","구두","구슬","국수","국자","귀걸이","그물","글러브","기념비","기차","기타","김밥","김치","깁스","깃발","꽹과리","꿀","나사","나침반","낚싯대","낫","냄비","냉장고","너트","넥타이","노","노즐","노트","녹차","눈사람","다리미","단추","달력","닻","대본","도르래","도마","도시락통","도자기파편","도장","도화지","동전","돛","된장","두꺼비집","드라이버","드럼","딱지","떡","뗏목","뚜껑","라면","라이터","라켓","렌치","로켓","리모컨","리어카","마스크","마우스","마이크","막걸리","만년필","만두","만화책","망원경","망치","매트리스","맥주","머리끈","메트로놈","명함","모니터","모자","목걸이","목도리","목발","못","무대","무릎담요","무릎보호대","문고리","물감","바늘","바이올린","반지","반창고","받침대","발판","밥","방석","방송탑","배","배낭","배양접시","배터리","배트","백미러","밸브","버스","베개","베어링","벤치","벨트","벨트풀리","변압기","보석","보온병","보청기","볼트","볼펜","봉투","부적","부표","북","분수","분장","분필","붓","붕대","브레이크","브로치","비커","비행기","빗자루","빨래집게","사다리","사이다","사전","산소통","산호","삼각대","삽","삿대","상장","색소폰","서랍","석쇠","선반","설탕","성냥","성적표","소금","소금결정","소주","소파","소품","손목보호대","손수건","손수레","손잡이","손전등","손톱깎이","숟가락","스위치","스캐너","스케치북","스테이플러","스티커","스피커","슬라이드","슬리퍼","습도계","시계","시계줄","시험지","식초","신문","신분증","신호등","실","실내화","실험관","악보","안경","안약","안전벨트","안테나","알람","알약","알코올램프","압력계","압정","앞치마","액자","액정","앨범","양동이","양말","얼음","여권","연필","열쇠","엽서","영수증","영장","오토바이","온도계","옷걸이","옷장","옷핀","와이퍼","와인","용수철","우비","우산","우유","우주복","우표","운동화","원석","위성","유리조각","유모차","유서","의자","이불","이어폰","일기장","자동차","자물쇠","자석","자전거","잡지","장갑","장구","장화","재봉틀","저울","전구","전단지","전선","접시","젓가락","조각상","조명","졸업장","종","종이비행기","주걱","주사기","줄넘기","지갑","지게차","지도","지우개","지우개털","지퍼","지폐","지하철","지휘봉","진단서","진주","참기름","채반","책","책상","책장","처방전","청구서","청동거울","청진기","체온계","체인","초","충전기","칠판","카드","카메라","카펫","칼","캐리어","커튼","커튼콜","커피","컨베이어","컨테이너","컴퓨터","컵","콘센트","콘택트렌즈","크레용","크레인","클립","키보드","타이어","탐사선","태엽","텀블러","테이프","톱","톱니바퀴","통장","트럭","트럼펫","티켓","파레트","파스","파스텔","팔레트","팔찌","팽이","펌프","편지","표","표본","표지판","풍선","퓨즈","프라이팬","프린터","피리","피아노","필름","필터","하모니카","핸들","향","헤어핀","헬기","헬멧","현미경","현수막","현판","형광등","호미","호스","화단","화병","화분","화석","확대경","확성기","후추","훌라후프","휠체어"],"행위":["간호","감시","강의","거래","거짓말","걷기","격려","결혼","계산","고백","공격","교환","구조","귀가","그림","글쓰기","기도","낚시","노래","농사","다림질","달리기","도박","도주","등교","등산","매복","맹세","면접","명상","목축","미행","밀수","발표","방어","배달","배신","배웅","번역","복수","분해","빨래","사과","사냥","사진","상담","설거지","소문","수리","수사","수술","수영","수집","시험","암기","약속","여행","연주","요리","용서","운전","위로","위조","은닉","응원","이별","이사","잠복","잠수","잠입","장례","재판","절도","정리","정전","제사","조각","조립","조약","진료","참회","채집","청소","추격","추리","출근","춤","취조","칭찬","탈출","퇴근","투표","포장","하교","항복","험담","협상","화해","회의","훈련"],"직업":["가수","간호사","감독","검사","경비원","경찰","고고학자","공무원","광대","광부","교사","교수","기상관측원","기자","농부","대장장이","도예가","등대지기","디자이너","마술사","만화가","목수","무당","무용수","물리치료사","물리학자","미용사","바리스타","배관공","배우","번역가","벌목꾼","변호사","보험설계사","부동산중개인","사냥꾼","사서","사육사","사진가","사회복지사","산불감시원","생물학자","서커스단원","선장","성우","성직자","세무사","세탁소주인","소믈리에","소방관","수렵감시원","수의사","승무원","시인","심리상담사","심판","아나운서","약사","어부","연주자","외교관","요리사","용접공","운동선수","운전기사","은행원","의사","이발사","작가","잠수부","장의사","재단사","전기공","점술가","정비공","정육점주인","제빵사","조각가","조련사","조산사","조종사","지휘자","집배원","천문학자","청소부","촬영기사","측량사","코치","큐레이터","택배기사","통역사","트레이너","판사","편집자","프로그래머","항해사","해커","형사","화가","회계사"],"감정":["각성","경멸","고마움","공포","권태","그리움","기쁨","긴장","놀람","답답함","동정","만족","몰입","무감각","무기력","미련","미안함","민망함","반가움","배신감","부러움","분노","불안","뿌듯함","사랑","서글픔","서운함","설렘","수치","슬픔","쓸쓸함","아쉬움","안도","애착","어색함","억울함","연민","열등감","외로움","우월감","자부심","절망","조바심","존경","죄책감","증오","지루함","질투","집착","체념","초조","평온","향수","허무","혐오","홀가분함","후회","흥분","희망"],"동물":["갈매기","개","개구리","개미","거미","거북","거위","게","고래","고릴라","고슴도치","고양이","곰","귀뚜라미","기린","까마귀","까치","나비","낙타","너구리","누에","늑대","다람쥐","달팽이","닭","닭둘기","당나귀","도롱뇽","도마뱀","독수리","돌고래","돼지","두꺼비","두더지","딱따구리","말","매","매미","메뚜기","멧돼지","모기","무당벌레","문어","물총새","바퀴벌레","박쥐","반딧불이","백조","뱀","벌","부엉이","불가사리","비둘기","뻐꾸기","사마귀","사슴","사자","상어","새우","소","수달","악어","양","여우","염소","오리","오리너구리","오소리","오징어","올빼미","원숭이","잠자리","제비","조개","쥐","지렁이","참새","코끼리","코뿔소","토끼","파리","판다","펭귄","표범","하마","학","해파리","호랑이"],"신체":["간","귀","그림자","근육","눈","눈물","등","땀","맥박","머리카락","목","목소리","무릎","발","발목","발자국","발톱","배","보조개","뼈","손","손목","손톱","숨","심장","어깨","위","이빨","입","점","주근깨","지문","침","코","팔꿈치","폐","피","허리","혀","흉터"],"자연":["강","개울","계곡","구름","꽃","나무","나이테","낙엽","노을","눈","늪","달","동굴","모래","무지개","바다","바람","바위","반도","밤","번개","별","비","빙하","사막","산","새벽","서리","섬","숲","씨앗","안개","언덕","연못","열매","우박","은하","이끼","이슬","자갈","절벽","정글","정오","조수","지진","천둥","초원","태풍","파도","폭포","풀","해","호수","화산","황혼","흙"],"장소":["감옥","강당","경기장","경찰서","골목","공원","공장","공항","과수원","관공서","광산","광장","교도소","교실","교회","궁전","극장","기숙사","노점","놀이공원","놀이터","농장","다락","다리","도서관","동물원","등대","등산로","마트","매점","목욕탕","미술관","박물관","반지하","백화점","법원","별장","병원","복도","부두","사찰","상가","성","성당","세탁소","소방서","수술실","수영장","수족관","술집","스키장","시장","식당","신전","아파트","약국","여관","역","영화관","옥상","옥탑방","온실","요새","우체국","운동장","은행","응급실","이발소","전망대","정거장","주택","지하도","지하실","창고","창고방","체육관","축사","카페","캠핑장","탑","터널","터미널","편의점","폐가","폐공장","폐교","하숙집","학교","해수욕장","호텔"],"개념":["거리","거짓말","경계","계급","계약","관성","국경","규칙","균형","그림자","금지","기록","기억","기한","깊이","꿈","나이","냄새","넓이","높이","담보","대기표","등급","마감","마찰","맛","메아리","면허","목소리","무게","반사","밝기","방향","번호","벌금","법","보증","비밀","빚","사면","상금","세금","소리","소문","속도","순서","순위","시간","시간표","신분","신용","약속","예언","온도","우연","운명","위약금","유산","유예","이름","이자","자격","잔상","잠","저주","점수","조항","좌표","중력","지도","진실","차례","촉감","축복","침묵","통계","평판","허가","형벌","확률"]};
 var MOTIFDATA=[["시간이 화폐로 거래됨","세계 규칙","영화","인 타임"],["기억을 사고팔 수 있음","세계 규칙","영화","토탈 리콜"],["꿈에 들어갈 수 있음","세계 규칙","영화","인셉션 · 파프리카"],["이름을 빼앗기면 자신을 잃음","세계 규칙","영화","센과 치히로의 행방불명"],["이름을 적으면 죽음","세계 규칙","만화","데스노트"],["죽는 날짜가 통보됨","세계 규칙","",""],["거짓말이 물리적으로 불가능함","세계 규칙","",""],["감정이 수치로 표시됨","세계 규칙","",""],["감정을 느끼는 것이 금지됨","세계 규칙","영화","이퀄리브리엄"],["AI가 범죄를 예측해 처벌함","세계 규칙","영화","마이너리티 리포트 · 사이코패스"],["능력이 등급으로 매겨짐","세계 규칙","",""],["성인이 되면 적성이 배정됨","세계 규칙","영화","다이버전트"],["유전자로 신분이 정해짐","세계 규칙","영화","가타카"],["죽으면 시간이 되감김","세계 규칙","영화","엣지 오브 투모로우"],["같은 하루가 반복됨","세계 규칙","영화","사랑의 블랙홀"],["괴물과 인간이 공존함","세계 규칙","",""],["죽은 자와 대화할 수 있음","세계 규칙","",""],["신이 실제로 응답함","세계 규칙","",""],["소리를 내면 죽음","세계 규칙","영화","콰이어트 플레이스"],["특정 나이에 죽는 것이 정해짐","세계 규칙","영화","로건의 탈출"],["몸을 바꿔 살 수 있음","세계 규칙","",""],["계약으로만 관계가 성립함","세계 규칙","",""],["혈통이 능력을 결정함","세계 규칙","",""],["봉인이 서서히 풀리는 중","세계 규칙","",""],["예언이 공개적으로 발표됨","세계 규칙","",""],["한 사람만 진실을 알고 있음","세계 규칙","영화","트루먼 쇼"],["세계가 게임 시스템으로 작동함","세계 규칙","",""],["죽으면 다른 세계에서 깨어남","세계 규칙","",""],["모두에게 초능력이 있고 없는 쪽이 소수","세계 규칙","만화","마이 히어로 아카데미아"],["특정 시각 이후 밖에 나갈 수 없음","세계 규칙","",""],["나이를 거꾸로 먹음","세계 규칙","영화","벤자민 버튼의 시간은 거꾸로 간다"],["고통을 남에게 옮길 수 있음","세계 규칙","",""],["국가 대신 기업이 통치함","사회 조건","영화","블레이드 러너"],["계급이 층으로 나뉘어 있음","사회 조건","영화","설국열차 · 기생충"],["생존을 걸고 게임에 참가함","사회 조건","드라마","오징어 게임 · 헝거게임"],["도박으로 인생이 결정됨","사회 조건","만화","카이지"],["복수가 합법인 제도","사회 조건","",""],["시험 성적이 신분을 정함","사회 조건","",""],["기록이 조직적으로 조작됨","사회 조건","영화","1984"],["책과 기록이 금지됨","사회 조건","영화","화씨 451"],["외부인 출입이 금지된 구역","사회 조건","",""],["이주민만 사는 지역","사회 조건","",""],["한 세대만 남은 종족","사회 조건","",""],["아이가 태어나지 않음","사회 조건","영화","칠드런 오브 맨"],["모두가 감시받는 도시","사회 조건","",""],["직업이 세습됨","사회 조건","",""],["결혼이 국가에 의해 배정됨","사회 조건","",""],["빚이 대물림됨","사회 조건","",""],["얼굴을 드러내면 안 됨","사회 조건","",""],["한 사람만 도시를 떠날 수 있음","사회 조건","",""],["모두가 같은 얼굴로 성형함","사회 조건","",""],["특정 언어를 쓰면 처벌받음","사회 조건","",""],["전쟁이 막 끝난 직후","시대·상황","",""],["역병 이후의 격리 사회","시대·상황","",""],["재해로 반쯤 무너진 도시","시대·상황","",""],["문명이 붕괴한 뒤","시대·상황","영화","매드 맥스 · 더 로드"],["기술이 퇴보한 미래","시대·상황","",""],["왕조가 바뀌는 시기","시대·상황","",""],["개항 직후의 항구","시대·상황","",""],["혁명 전야","시대·상황","",""],["통금이 있는 도시","시대·상황","",""],["탄광이 문 닫은 지방 도시","시대·상황","",""],["재개발 예정인 동네","시대·상황","",""],["마지막 해를 앞둔 우주 정거장","시대·상황","",""],["던전이 관광지가 된 세계","시대·상황","",""],["영웅이 은퇴한 시대","시대·상황","",""],["마왕이 이미 죽은 뒤","시대·상황","",""],["이민이 유일한 출구인 나라","시대·상황","",""],["축제 준비 기간","시대·상황","",""],["졸업을 앞둔 마지막 학기","시대·상황","",""],["회사가 인수합병되는 중","시대·상황","",""],["장마가 끝나지 않는 여름","시대·상황","",""],["지구를 떠나기 직전","시대·상황","영화","인터스텔라"],["괴수가 물러간 다음 날","시대·상황","",""],["팀이 해체되기 직전","인물 처지","",""],["가게가 폐업을 앞둔 시점","인물 처지","",""],["대회 예선에서 탈락한 뒤","인물 처지","",""],["정체를 숨기고 입학한 상태","인물 처지","",""],["계약 만료 한 달 전","인물 처지","",""],["은퇴를 번복한 직후","인물 처지","",""],["무명으로 보낸 십 년","인물 처지","",""],["전학 첫날","인물 처지","",""],["조직에서 쫓겨난 직후","인물 처지","",""],["스승을 잃은 해","인물 처지","",""],["첫 제자를 받은 날","인물 처지","",""],["경쟁자가 먼저 성공한 뒤","인물 처지","",""],["빚을 떠안은 상태","인물 처지","",""],["이름을 바꾸고 사는 중","인물 처지","",""],["가짜 신분으로 일하는 중","인물 처지","",""],["전 직장 사람과 재회","인물 처지","",""],["병을 숨기고 일하는 중","인물 처지","",""],["가족을 대신해 나선 상태","인물 처지","",""],["남의 자리를 물려받음","인물 처지","",""],["죽은 사람 행세를 하는 중","인물 처지","",""],["기억의 일부만 남아 있음","인물 처지","",""],["돌아갈 곳이 사라짐","인물 처지","",""],["한 번 살려 준 상대와 재회","인물 처지","",""],["적의 아이를 맡게 됨","인물 처지","",""],["약속이 하나 남아 있음","제약 조건","",""],["돌려주지 못한 것이 있음","제약 조건","",""],["같은 날을 두 번 겪음","제약 조건","",""],["한 번만 되돌릴 수 있음","제약 조건","",""],["서로를 알아보면 안 됨","제약 조건","",""],["진실을 말하면 지는 게임","제약 조건","",""],["이기면 잃는 조건","제약 조건","",""],["도움을 청할 수 없는 상황","제약 조건","",""],["모두가 알면서 침묵함","제약 조건","",""],["기록에 남지 않는 일","제약 조건","",""],["증명할 방법이 없음","제약 조건","",""],["시간이 얼마 없음","제약 조건","",""],["두 번은 쓸 수 없는 능력","제약 조건","",""],["말하면 사라지는 비밀","제약 조건","",""],["만지면 안 되는 상대","제약 조건","",""],["밤에만 만날 수 있음","제약 조건","",""],["뒤를 돌아보면 안 됨","제약 조건","",""],["이름을 부르면 안 됨","제약 조건","",""],["떠나면 돌아올 수 없음","제약 조건","",""],["한 사람만 데려갈 수 있음","제약 조건","",""],["대가를 먼저 치러야 함","제약 조건","",""],["같은 실수를 반복하게 됨","제약 조건","",""],["죽은 자를 그대로 흉내 내는 존재가 있음","세계 규칙","",""],["먹은 대상의 기억을 갖게 됨","세계 규칙","",""],["복제된 것과 원본을 구별할 수 없음","세계 규칙","",""],["안전한 구역 안에만 사람이 산다","사회 조건","",""],["자신이 무엇인지 모르는 채로 살아감","인물 처지","",""],["유언이 여정의 지도가 됨","인물 처지","",""],["바깥에도 사람이 살고 있음","사회 조건","",""],["한 사람의 기억이 여럿에게 나뉘어 있음","세계 규칙","",""],["물이 배급되는 사회","사회 조건","",""],["바깥은 갈 수 없는 곳으로 표시됨","사회 조건","",""],["전기가 하루 한 시간만 들어옴","사회 조건","",""],["아이가 옛 세계를 모름","시대·상황","",""],["보급로가 끊긴 정착지","시대·상황","",""],["사람인지 확인하는 절차가 있음","세계 규칙","",""],["떠난 사람은 돌아오지 않는다","제약 조건","",""],["무리를 벗어나면 살 수 없음","제약 조건","",""],["옛 문명의 물건을 쓰는 법을 잊음","시대·상황","",""],["정착지마다 규칙이 다름","사회 조건","",""]];
@@ -4935,9 +4972,16 @@ function tvtLink(nm){
   return ' · <a class="tvt" href="'+i.url+'" target="_blank" rel="noopener" title="'+(i.loose?'비슷한 트로프 검색: ':'대응 트로프: ')+i.title.replace(/"/g,'&quot;')+'">'+(i.loose?'≈ ':'')+i.title.replace(/</g,'&lt;')+' ↗</a>';
 }
 function tvtTitle(nm){ var i=tvtInfo(nm); return i?i.title:''; }
+/* 이름·사용자 글에서 HTML이 될 글자를 뺀다. 사전 추가 항목·폴더 이름은 AI가 만들 수 있어서 화면에 넣기 전에 거른다 */
+function safeNm(s){ return String(s==null?'':s).replace(/[<>"`]/g,'').trim(); }
+function safeTx(s){ return String(s==null?'':s).replace(/[<>]/g,''); }
+function safeRow(r){ return (r||[]).map(function(x,i){ return typeof x==='string' ? (i===0?safeNm(x):safeTx(x)) : x; }); }
+function hx(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 /* 사용자가 작품 분석으로 추가한 항목 (localStorage 'userAdds') */
 (function(){
-  try{ var u=JSON.parse(localStorage.getItem('userAdds')||'{}')||{};
+  try{ var u=JSON.parse(localStorage.getItem('userAdds')||'{}')||{}, raw=JSON.stringify(u);
+    u.c=(u.c||[]).map(safeRow).filter(function(r){ return r[0]; }); u.m=(u.m||[]).map(safeRow).filter(function(r){ return r[0]; });
+    if(JSON.stringify(u)!==raw) try{ localStorage.setItem('userAdds', JSON.stringify(u)); }catch(e){}
     (u.c||[]).forEach(function(r){ if(r&&r.length>=12&&!ROWS.some(function(x){return x[0]===r[0];})) ROWS.push(r); });
     (u.m||[]).forEach(function(r){ if(r&&r.length>=4&&!MOTIFDATA.some(function(x){return x[0]===r[0];})) MOTIFDATA.push(r); });
   }catch(e){}
@@ -5106,7 +5150,18 @@ function show(id){
   if(id==='favs') renderFavs();
   if(window.PAGE_ON && PAGE_ON[id]) try{ PAGE_ON[id](); }catch(e){}
   if(id==='conti' && window.__contiShow) window.__contiShow();
-  try{ window.scrollTo(0,0); }catch(e){}
+  pageTop(id);
+}
+// 페이지를 열면 늘 같은 자리: 홈은 맨 위, 나머지는 제목이 위 고정 줄 바로 아래.
+// 주소의 #이름 때문에 브라우저가 그 구역으로 부드럽게 스크롤하는 것과 부딪쳐 위치가 들쭉날쭉하고 폰에서 제목이 가려졌다 → 즉시 이동을 몇 번 다시 한다
+function pageTop(id){
+  function go(){
+    var y=0;
+    if(id!=='home'){ var el=document.getElementById(id), tb=document.querySelector('.topbar');
+      if(el && el.offsetParent!==null){ var off=tb?tb.getBoundingClientRect().height:0; y=Math.max(0, el.getBoundingClientRect().top+window.pageYOffset-off-10); } }
+    try{ window.scrollTo({top:y, left:0, behavior:'instant'}); }catch(e){ try{ window.scrollTo(0,y); }catch(e2){} }
+  }
+  go(); try{ requestAnimationFrame(go); }catch(e){} setTimeout(go,80); setTimeout(go,260);
 }
 window.addEventListener('hashchange',function(){ show((location.hash||'#home').slice(1)); });
 // 이전/다음
@@ -5123,12 +5178,18 @@ pages.forEach(function(el){
 
 var FOLDERS=['기본'], CURFOLDER='기본', FAVDIR={}, FGONE={}, FMADE={};
 try{ var fr=localStorage.getItem('mangaFolders'); if(fr){ var o=JSON.parse(fr); FOLDERS=o.list||['기본']; CURFOLDER=o.cur||'기본'; FAVDIR=o.dir||{}; FGONE=o.gone||{}; FMADE=o.made||{}; } }catch(e){}
+function foldClean(){
+  FOLDERS=(FOLDERS||[]).map(safeNm).filter(Boolean); CURFOLDER=safeNm(CURFOLDER)||'기본';
+  Object.keys(FAVDIR).forEach(function(k){ FAVDIR[k]=safeNm(FAVDIR[k])||'기본'; });
+}
+foldClean();
 // 지운 폴더는 「언제 지웠는지」를 남긴다. 다른 기기·다른 탭·드라이브에 남은 옛 목록이 되살리지 못하게 한다.
 function foldDead(x,g,m){ return x!=='기본' && !!(g&&g[x]) && g[x]>((m&&m[x])||0); }
 function foldMax(a,b){ if(b) Object.keys(b).forEach(function(k){ if(!(a[k]>=b[k])) a[k]=b[k]; }); return a; }
 FOLDERS=FOLDERS.filter(function(x){ return !foldDead(x,FGONE,FMADE); });
 if(FOLDERS.indexOf(CURFOLDER)<0) CURFOLDER='기본';
 function foldSave(){
+  foldClean();
   try{ var so=JSON.parse(localStorage.getItem('mangaFolders')||'{}')||{}; foldMax(FGONE,so.gone); foldMax(FMADE,so.made); }catch(e){}
   var dropped=false;
   Object.keys(FAVDIR).forEach(function(k){ if(foldDead(FAVDIR[k],FGONE,FMADE)){ delete FAVDIR[k]; if(typeof FAV!=='undefined'){ delete FAV[k]; delete FAVMETA[k]; dropped=true; } } });
@@ -5140,7 +5201,7 @@ function foldSave(){
   keepSave('mangaFolders',o);
   if(dropped && typeof favSave==='function') favSave();
 }
-function foldMake(v){ FMADE[v]=Date.now(); if(FOLDERS.indexOf(v)<0) FOLDERS.push(v); }
+function foldMake(v){ v=safeNm(v); if(!v) return v; FMADE[v]=Date.now(); if(FOLDERS.indexOf(v)<0) FOLDERS.push(v); return v; }
 function foldKill(f){ if(f==='기본') return; FGONE[f]=Date.now(); FOLDERS=FOLDERS.filter(function(x){ return x!==f; }); if(CURFOLDER===f) CURFOLDER='기본'; }
 function updateFavCount(){
   var n=document.getElementById('topfavn'); if(n) n.textContent=Object.keys(FAV).length;
@@ -5148,12 +5209,12 @@ function updateFavCount(){
 function fillFolderSelects(){
   if(typeof fmRender==='function') setTimeout(fmRender,0);
   var t=document.getElementById('topfolder');
-  if(t){ t.innerHTML=FOLDERS.map(function(f){return '<option'+(f===CURFOLDER?' selected':'')+'>'+f+'</option>';}).join('')
+  if(t){ t.innerHTML=FOLDERS.map(function(f){return '<option'+(f===CURFOLDER?' selected':'')+'>'+hx(f)+'</option>';}).join('')
       +'<option value="__new">+ 새 폴더…</option>'; }
   var a=document.getElementById('fav-cur'), b=document.getElementById('fav-view');
-  if(a){ a.innerHTML=FOLDERS.map(function(f){return '<option'+(f===CURFOLDER?' selected':'')+'>'+f+'</option>';}).join(''); }
+  if(a){ a.innerHTML=FOLDERS.map(function(f){return '<option'+(f===CURFOLDER?' selected':'')+'>'+hx(f)+'</option>';}).join(''); }
   if(b){ var v=b.value||'*';
-    b.innerHTML='<option value="*">전체</option>'+FOLDERS.map(function(f){return '<option>'+f+'</option>';}).join('');
+    b.innerHTML='<option value="*">전체</option>'+FOLDERS.map(function(f){return '<option>'+hx(f)+'</option>';}).join('');
     b.value=FOLDERS.indexOf(v)>-1||v==='*'?v:'*'; }
 }
 
@@ -5258,7 +5319,7 @@ function renderFavs(){
       if(t==='x') memo='사전에서 빠지거나 이름이 바뀐 항목. 별표는 남겨 두었다.'+(memo?' — '+memo:'');
       html+='<li><button class="fav" data-k="'+k+'" aria-pressed="true">★</button><div class="body"><b>'+nm+'</b>'+(memo?'<span>'+memo+'</span>':'')+'</div>'+(t==='c'&&aiReady()?'<button class="twbtn" data-fw="'+encodeURIComponent(nm)+'">비틀기</button>':'')+
         '<button class="favdel" data-fd="'+encodeURIComponent(k)+'" title="빼기">✕</button>'+
-        '<select class="favmove" data-k="'+k+'">'+FOLDERS.map(function(f){return '<option'+(f===dir?' selected':'')+'>'+f+'</option>';}).join('')+'</select></li>';
+        '<select class="favmove" data-k="'+k+'">'+FOLDERS.map(function(f){return '<option'+(f===dir?' selected':'')+'>'+hx(f)+'</option>';}).join('')+'</select></li>';
     });
     html+='</ul></div>';
   });
@@ -5872,7 +5933,7 @@ function aiRefresh(){
     return new Promise(function(res){
       aiCall('한 단어로만 답한다.','연결 확인. "정상"이라고만 답하라.',function(t){
         if(t==='생각하는 중…') return;
-        var bad=aiIsErr(t), free=/무료 모델/.test(t);
+        var bad=aiIsErr(t), free=false;
         set(bad?'안 됨':(free?'무료':'✓'), bad?'warn':'ok', (bad?'AI 연결 문제: ':'AI 정상 · ')+aiShort(AIMODEL)+(bad?' — '+String(t).slice(0,120):(free?' (잔액이 없어 무료 모델로 동작)':'')));
         var msg=document.getElementById('ai-msg'); if(msg) msg.textContent=(bad?'':'정상 · ')+String(t).slice(0,160);
         setTimeout(function(){ if(st && st.textContent!=='…') set('AI',''); },8000);
@@ -5882,16 +5943,11 @@ function aiRefresh(){
   });
 }
 (function(){ var b=document.getElementById('ai-refresh'); if(b) b.addEventListener('click',function(){ aiRefresh(); }); })();
-// ----- 잔액 없음 → 무료 모델 자동 전환 -----
+// ----- (옛 OpenRouter 잔액·무료 모델 전환은 제미나이로 바꾸며 없앴다. 다른 코드가 부르므로 빈 함수만 남긴다) -----
 function aiAutoFree(){ return false; }
 function aiNoCredit(){ return false; }
 function aiNoCreditMark(on){ aiCreditUI(); }
-function aiCreditUI(){
-  var el=document.getElementById('ai-credit'); if(!el) return;
-  if(aiNoCredit()){ el.innerHTML='지금 상태: <b>잔액 없음 → 무료 모델로 부르는 중</b> (6시간 동안 유지). 충전했다면 <button class="chip" id="ai-credit-clear">충전했다 — 원래 모델로</button>';
-    var b=document.getElementById('ai-credit-clear'); if(b) b.addEventListener('click',function(){ aiNoCreditMark(false); });
-  } else el.textContent='';
-}
+function aiCreditUI(){ var el=document.getElementById('ai-credit'); if(el) el.textContent=''; }
 function aiFreeList(except){ return []; }
 // ----- 제미나이 호출 (구글 Gemini API 직접) -----
 var GM_BASE='https://generativelanguage.googleapis.com/v1beta/';
@@ -5967,14 +6023,17 @@ function aiCall(system, user, onText, maxTok, _retry, opts){
      if(m==='NO_WEB'){ opts.web=false; aiCall(system,user,function(t){ onText((t==='생각하는 중…'||aiIsErr(t))?t:t+'\n\n(이 모델은 웹 검색을 못 해서 빼고 불렀다)'); },maxTok,_retry,opts); return; }
      if(m==='ZERO'||m==='RETRY'){
        var n=opts._n||0, cur=model;
-       if(m==='RETRY' && (e.kind==='busy'||e.kind==='quota') && n<3){
-         var wait=e.kind==='quota' ? Math.min(Math.max(e.wait||0, 5000*(n+1)), 65000) : 2000*(n+1);
-         opts._n=n+1; if(e.kind==='quota') onText('생각하는 중…');
+       // 다시 부르기는 아껴 쓴다. 예전엔 503 한 번에 같은 모델 3번 + 다른 모델 3번까지 불러 무료 한도를 스스로 소진했다.
+       // 붐빔(503): 2초 뒤 1번 → 다른 모델 1번(그 모델은 다시 부르지 않음). 분당 한도(429): 구글이 알려 준 시간만큼 기다렸다 최대 2번(기다리는 건 한도를 쓰지 않는다) → 다른 모델 1번
+       var cap=(e.kind==='quota')?2:1;
+       if(m==='RETRY' && (e.kind==='busy'||e.kind==='quota') && n<cap && !opts._alt){
+         var wait=e.kind==='quota' ? Math.min(Math.max(e.wait||0, 6000*(n+1)), 60000) : 2000;
+         opts._n=n+1; onText('생각하는 중…');
          setTimeout(function(){ aiCall(system,user,onText,maxTok,_retry,opts); }, wait); return;
        }
        if(!opts._alt){
          var alt=aiAlt(cur, e.kind);
-         if(alt && alt!==cur){ var o2=Object.assign({},opts,{model:alt,_alt:true,_n:0,_noThink:false});
+         if(alt && alt!==cur){ var o2=Object.assign({},opts,{model:alt,_alt:true,_n:9,_noThink:false});
            aiCall(system,user,function(t){ onText((t==='생각하는 중…'||aiIsErr(t))?t:t+'\n\n(「'+cur+'」이 '+(m==='ZERO'?'무료 등급에서 안 돼서':(e.kind==='day'?'오늘 한도를 다 써서':(e.kind==='quota'?'한도에 걸려':'붐벼서')))+' 이번만 「'+alt+'」로 대신 불렀다)'); },maxTok,_retry,o2);
            return; }
        }
@@ -6855,6 +6914,7 @@ function pbAnalyze(title, media, text){
 function pbCommit(list){
   var u=pbUser(); u.c=u.c||[]; u.m=u.m||[]; var added=[];
   list.forEach(function(it){
+    it.row=safeRow(it.row); if(!it.row[0]) return;
     if(it.t==='클리셰'){ if(!ROWS.some(function(x){return x[0]===it.row[0];})){ ROWS.push(it.row); u.c.push(it.row); added.push(it); } }
     else { if(!MOTIFDATA.some(function(x){return x[0]===it.row[0];})){ MOTIFDATA.push(it.row); u.m.push(it.row); added.push(it); } }
   });
@@ -6898,7 +6958,7 @@ function pbRun(){
   if(text.length<20){ out.innerHTML='<p class="small">줄거리를 조금 더 적는다. 장면 두세 개면 충분하다.</p>'; return; }
   aiBusy(out,'찾는 중');
   pbAnalyze(title, media, text).then(function(res){
-    if(res.error){ aiResult(out,'해석하지 못했다 — 다시 누른다',res.error); return; }
+    if(res.error){ aiResult(out,(aiIsErr(res.error)?'AI를 부르지 못했다':'답을 읽지 못했다')+' — 다시 누른다',res.error); return; }
     var news=res.news, html=(res.summary?'<p>'+pbEsc(res.summary)+'</p>':'')+pbFoundHTML(title,res.found);
     if(news.length){
       html+='<div class="pbsec"><h4>색인에 없는 새 장치 — '+news.length+'개</h4><p class="small">추가할 것만 체크한다. 추가하면 색인·랜덤 구성기·🔎 창에서 바로 쓰인다.</p>';
@@ -7276,7 +7336,7 @@ function favAiBar(){
           return w.text+'\n\n[사용자가 말한 내용]\n'+t; }))
       : Promise.resolve(t);
     step.then(function(src){ aiBusy(slot,'《'+title+'》 분석 중'); return pbAnalyze(title, media, src); }).then(function(res){
-      if(res.error){ aiResult(slot,'해석하지 못했다 — 다시 보낸다',res.error); return; }
+      if(res.error){ aiResult(slot,(aiIsErr(res.error)?'AI를 부르지 못했다':'답을 읽지 못했다')+' — 다시 보낸다',res.error); return; }
       var added=pbCommit(res.news);
       var html=plotHTML+(res.summary?'<p>'+pbEsc(res.summary)+'</p>':'')+pbFoundHTML(title,res.found);
       if(added.length){
@@ -8038,7 +8098,7 @@ function trBlock(kind){
       }
       render(); renderEnd();
       if(MC && window.__czPut) window.__czPut(MC, (j&&j.motifs)||[], bad?(err||'응답을 못 읽음'):'');
-      if(bad) aiStat('<b class="warn">AI 검토 실패</b> — '+hEsc(err||'응답을 읽지 못했다')+'. 칸마다 '+(pre?'연관어 점수 1등':'첫 후보')+'을 그대로 두었다. <button class="chip" id="sf-aire">다시 검토</button> <span class="small">(무료 모델이면 자주 실패한다. AI 연결에서 다른 모델을 고르거나 「바로 (AI 없음)」을 쓴다)</span>', function(){ var b=document.getElementById('sf-aire'); if(b) b.addEventListener('click',function(){ aiReview(slotIdx, !!EC, !!MC, pre); }); });
+      if(bad) aiStat('<b class="warn">AI 검토 실패</b> — '+hEsc(err||'응답을 읽지 못했다')+'. 칸마다 '+(pre?'연관어 점수 1등':'첫 후보')+'을 그대로 두었다. <button class="chip" id="sf-aire">다시 검토</button> <span class="small">(무료 키면 한도 때문에 자주 실패한다. AI 연결에서 Flash-Lite 같은 다른 모델을 고르거나 「바로 (AI 없음)」을 쓴다)</span>', function(){ var b=document.getElementById('sf-aire'); if(b) b.addEventListener('click',function(){ aiReview(slotIdx, !!EC, !!MC, pre); }); });
       else aiStat('<b>AI 검토 완료</b> — '+(pre&&pre.seed?seedLine(pre.seed)+' → ':'')+parts.join(' · ')+' 중에서 골랐다.'+(j.flow?'<br>흐름: '+hEsc(j.flow):'')+(j.check?'<br><span class="warn">⚠ '+hEsc(j.check)+'</span>':'')+'<br><span class="small">칸 아래 「후보였던 것」에 비교 대상이 있다. 마음에 안 드는 칸은 ↻로 그 칸만 다시 검토한다.</span>');
     });
   }
@@ -10529,7 +10589,9 @@ function ifDate(t){ var d=new Date(t||Date.now()); function p(n){ return (n<10?'
 function histLoad(){ try{ var a=JSON.parse(localStorage.getItem(IF_KEY)||'[]'); return Array.isArray(a)?a.filter(function(x){ return x && x.id && x.result; }):[]; }catch(e){ return []; } }
 function isQuota(e){ return e && (e.name==='QuotaExceededError' || e.name==='NS_ERROR_DOM_QUOTA_REACHED' || e.code===22 || e.code===1014 || /quota/i.test(e.message||'')); }
 function histSave(a){
-  a=a.slice(0,IF_MAX);
+  a=a.slice(0,IF_MAX); window.__quietQuota=true; try{ return histSave0(a); } finally{ window.__quietQuota=false; }
+}
+function histSave0(a){
   for(var guard=0; guard<IF_MAX+3; guard++){
     try{ localStorage.setItem(IF_KEY, JSON.stringify(a)); return a; }
     catch(e){ if(!isQuota(e)) return a;
