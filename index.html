@@ -1317,6 +1317,18 @@ body.dk-drag, body.dk-drag *{user-select:none!important; -webkit-user-select:non
 .ct-grid.m-webtoon .ct-cut.gp-3{margin-top:96px}
 .ct-grid.m-webtoon .ct-cut.gp-3::before{content:"긴 여백"; position:absolute; top:-58px; left:50%; transform:translateX(-50%); font-size:.7rem; color:var(--ink-3); letter-spacing:.2em}
 .ct-saved{margin:.3rem 0}
+.ct-sglist{display:grid; gap:.5rem}
+.ct-sglist li{display:block; border-bottom:1px dotted var(--rule); padding:.3rem 0}
+.ct-sglist li.off{opacity:.55}
+.ct-sgh{display:flex; flex-wrap:wrap; gap:.2rem .6rem; align-items:baseline}
+.ct-sgsrc{margin:.1rem 0; color:var(--ink-3)}
+.ct-sgf{display:grid; grid-template-columns:minmax(0,1.3fr) minmax(0,1fr); gap:.3rem .6rem; margin-top:.2rem}
+.ct-sgf label{display:grid; gap:.1rem}
+.ct-sgf textarea,.ct-sgf input,.ct-sgf select{font:inherit; font-size:.82rem; padding:.15rem .3rem; border:1px solid var(--rule-hard); background:var(--paper); color:var(--ink); min-width:0; width:100%; box-sizing:border-box}
+.ct-sgnr{display:flex; gap:.25rem}
+.ct-sgnr select{width:auto; flex:0 0 auto}
+.ct-sgm{margin:.1rem 0 0; color:var(--note)}
+@media (max-width:520px){ .ct-sgf{grid-template-columns:1fr} }
 .ct-stlink{color:var(--note); text-decoration:none; margin-left:.2rem}
 .ct-stlink:empty{display:none}
 #contis .st-f input[type=search]{font:inherit; font-size:.85rem; padding:.2rem .4rem; border:1px solid var(--rule-hard); background:var(--paper); color:var(--ink); min-width:0; flex:1 1 10rem}
@@ -13731,7 +13743,7 @@ function cardHTML(c){
   return '<figcaption><div class="ct-h"><b>'+c.n+'</b><span>'+cesc(shotName(c.k))+(c.ang?' · '+angName(c.ang):'')+'</span>'+
     (c.focus?'<span>· 집중선</span>':'')+(c.flash?'<span>· 회상</span>':'')+(function(){ var z=cutSize(c), u=useOf(autoUse(c,z)); return z?'<span class="ct-szt">· '+SIZE_NM[z]+(u?' · '+u[2]:'')+'</span>':''; })()+(c.hook?'<i class="ct-hook">넘김</i>':'')+(function(){ var w=whoOf(c); return w.length?'<span class="ct-who">'+cesc(w.map(function(x){ return x.name; }).join(', '))+'</span>':''; })()+'<span class="ct-grip" aria-hidden="true" title="끌어서 옮기기 (폰은 길게 눌러 끌기 · 키보드는 Alt+화살표)">⋮⋮</span>'+(c.cl?'<em>'+cesc(c.cl)+'</em>':'')+'</div>'+
     (c.scr?'<p class="ct-scr">'+cesc(c.scr)+'</p>':'<p class="ct-scr ct-empty">화면 미정'+(c.hint?' · <span class="ct-hintr">'+cesc(c.hint)+'</span>':'')+'</p>')+
-    (c.line?'<p class="ct-line">'+cesc(c.line).replace(/\n/g,'<br>')+'</p>':'')+
+    (c.line?'<p class="ct-line">'+cesc(c.line).replace(/\n/g,'<br>')+'</p>':'')+(c.sg?'<p class="ct-sgm small" title="「대사·나레이션 추천」에서 고쳐 올린다">추천: '+cesc(oneLn([c.sg.line?balloonsField(c.sg.line):'', c.sg.nar?'나레이션 '+c.sg.nar:''].filter(Boolean).join(' · ')).slice(0,46))+'</p>':'')+
     (c.nar && !(c.narPos==='between' && balloonsOn())?'<p class="ct-nar">'+(c.narPos==='between'?'<span class="small">컷 사이 · </span>':'')+cesc(c.nar).replace(/\n/g,'<br>')+'</p>':'')+'</figcaption>';
 }
 // 판 카드: 컷 사이 나레이션은 그림 위 띠로 (웹툰에서 앞 컷과 이 컷 사이에 놓이는 글)
@@ -13757,6 +13769,7 @@ function renderBoard(){
   });
   var done=B.cuts.filter(function(c){ return c.scr; }).length;
   if(!document.getElementById('ct-stat').textContent) stat(done?done+'/'+B.cuts.length+'컷 작성됨':'');
+  try{ npActs(); }catch(e){}
 }
 function refreshCut(n){
   var f=root.querySelector('.ct-cut[data-n="'+n+'"]'), c=B.cuts[n-1]; if(!f||!c) return;
@@ -14318,8 +14331,10 @@ function contiRules(ch, hasScenes){
     '인물 칸에는 그 컷에 보이는 인물 이름을 화면 왼쪽부터 쉼표로 적는다(많아야 2명). 등장인물 목록의 이름을 그대로 쓴다. 인물이 없으면 비운다. 몸짓이 이야기에 중요한 컷은 이름 뒤 괄호에 자세·방향을 적는다. 예: 서윤(달리기), 도현(팔짱·왼쪽 45도). '+
       '자세: '+Object.keys(POSE_INFO).join('·')+'. 방향: 정면·왼쪽 45도·오른쪽 45도·왼쪽·오른쪽·뒤. 서서 말만 하는 컷은 괄호 없이 둔다.',
     '화면 칸은 누가 어디서 무엇을 하는지 40자 안쪽.',
+    srcOnly() ? '대사 칸에는 원고(대강 이야기·웹소설·컷별 콘티)에 적힌 대사만 글자 그대로 옮긴다. 줄이거나 바꾸거나 새로 만들지 않는다 — 원고에 그 장면의 말이 없으면 대사 칸을 비운다(더할 대사는 작가가 따로 고른다). 같은 말을 여러 컷에 나누지 않는다. 여러 개면 「 / 」로 잇고, 인물 칸에 두 사람이 있으면 말풍선마다 앞에 「이름: 」을 붙인다(그 컷 인물 칸의 이름). 속마음은 (괄호).' :
     '대사 칸은 이야기를 앞으로 움직이는 말만 쓴다 — 새 정보, 결심·선택, 갈등, 관계가 바뀌는 말. 감탄사(어?·헉)·맞장구(응·그래)·「…」만 있는 풍선, 그림으로 보이는 것·앞 컷 말의 되풀이는 쓰지 않는다. 대화 장면 밖의 표정·반응·풍경·인서트·움직임 컷과 무음 컷은 대사를 비우고, 대사 있는 컷은 전체의 절반을 넘지 않는다. '+
       '말풍선은 한 컷에 하나가 기본, 둘은 두 사람이 주고받을 때만(셋은 쓰지 않는다). 한 풍선은 한 문장 25자 안쪽, 여러 개면 「 / 」로 잇는다. 인물 칸에 두 사람이 있으면 말풍선마다 앞에 「이름: 」을 붙인다(그 컷 인물 칸의 이름). 속마음은 (괄호), 외침은 !로 끝낸다.',
+    srcOnly() ? '나레이션 칸은 비운다(나레이션은 따로 추천받아 작가가 고른다). 원고가 「사흘 뒤」처럼 시간·장소를 적어 둔 곳은 화면 칸에 그 장소·시간이 보이게 쓴다.' :
     '나레이션 칸은 비우는 것이 기본이다. 장면을 여는 컷, 시간·장소가 건너뛰는 곳(「사흘 뒤.」「그날 밤, 옥상.」), 대사 없는 컷의 속마음 독백에만, 3~4컷에 하나를 넘지 않게 25자 안쪽으로 쓴다. 그림·대사가 이미 말하는 것은 쓰지 않고, 웹소설이 있으면 그 서술을 줄여 쓴다. '+
       '앞에 자리를 적는다: 위:(컷 위쪽 자막) · 아래:(컷 아래쪽) · 사이:(앞 컷과 이 컷 사이 여백, 시간이 건너뛸 때). 적지 않으면 위.',
     (hasScenes ? '장면 배정표의 컷 범위를 그대로 지키고, 장면의 대사·행동은 웹소설에서, 컷 나눔은 컷별 콘티에서 살린다.'
@@ -14516,6 +14531,7 @@ function lineParse(line){
   var W=whoParse(who);
   return {n:+mn[1], comp:parts[1], scr:String(scr).trim(), line:bs.join('\n'), nar:nar, who:W.who, wp:W.wp};
 }
+var SPLIT_N=0;
 function applyLines(t, ch){
   var got=0;
   String(t).split(/\n/).forEach(function(line){
@@ -14523,8 +14539,9 @@ function applyLines(t, ch){
     var n=r.n; if(n<ch.a || n>ch.b) return;
     var c=B.cuts[n-1]; if(!c) return;
     var p=parseComp(r.comp); c.k=p.k; c.ang=p.ang; c.focus=p.focus?1:0; c.flash=p.flash?1:0; if(p.size) c.size=p.size; else delete c.size; if(p.use) c.use=p.use; else delete c.use; if(p.gap!=null) c.gap=p.gap; else delete c.gap;
-    c.who=r.who; c.scr=r.scr; c.line=r.line; if(r.wp) c.wp=r.wp; else delete c.wp;
-    if(r.nar) narSet(c, r.nar);   // 나레이션 칸이 없는 옛 5칸 줄이면 있던 나레이션을 그대로 둔다
+    c.who=r.who; c.scr=r.scr; if(r.wp) c.wp=r.wp; else delete c.wp;
+    if(srcOnly()) SPLIT_N+=srcSplit(c, r.line, r.nar);   // 원고에 없는 대사·나레이션은 추천으로
+    else { c.line=r.line; if(r.nar) narSet(c, r.nar); }   // 나레이션 칸이 없는 옛 5칸 줄이면 있던 나레이션을 그대로 둔다
     got++;
   });
   return got;
@@ -14599,8 +14616,8 @@ function polishAll(done){
       var pc=parseComp(x.comp), nw={k:pc.k, ang:pc.ang, focus:pc.focus?1:0, flash:pc.flash?1:0, who:x.who, scr:x.scr, line:x.line}; if(x.wp) c.wp=x.wp;
       var narSame=!x.nar || ((x.nar.nar||'')===old.nar && (!x.nar.nar || x.nar.pos===(old.narPos||'top')));
       if(nw.k===old.k && nw.ang===old.ang && nw.focus===(old.focus?1:0) && nw.flash===(old.flash?1:0) && nw.scr===old.scr && nw.line===(old.line||'') && nw.who.join(',')===old.who.join(',') && narSame) return;
-      c.k=nw.k; c.ang=nw.ang; c.focus=nw.focus; c.flash=nw.flash; c.who=nw.who; c.scr=nw.scr; c.line=nw.line; if(pc.size) c.size=pc.size; if(pc.use) c.use=pc.use;
-      if(x.nar) narSet(c, x.nar);
+      c.k=nw.k; c.ang=nw.ang; c.focus=nw.focus; c.flash=nw.flash; c.who=nw.who; c.scr=nw.scr; if(!srcOnly()) c.line=nw.line; if(pc.size) c.size=pc.size; if(pc.use) c.use=pc.use;
+      if(x.nar && !srcOnly()) narSet(c, x.nar);
       back.push(old); aft.push({n:c.n, scr:c.scr, line:c.line});
     });
     if(back.length){ B.prePolish=back; B.postPolish=aft; save(); back.forEach(function(o){ refreshCut(o.n); }); unpolishBtn(true); }
@@ -14644,7 +14661,8 @@ function writeAll(fromN){
     list=all.filter(function(ch){ return ch.b>=(fromN||1); });
   }
   if(!fromN && boardHasWork()) snapUndo('AI로 다시 쓰기 전으로 되돌리기', 'AI로 다시 쓰기 전 판으로 되돌렸다.');
-  if(!fromN) B.cuts.forEach(function(c){ c.scr=''; c.line=''; delete c.nar; delete c.narPos; });
+  if(!fromN) B.cuts.forEach(function(c){ c.scr=''; c.line=''; delete c.nar; delete c.narPos; delete c.sg; });
+  SPLIT_N=0;
   renderBoard();
   running=true; setBusy(true);
   var i=0;
@@ -14660,7 +14678,7 @@ function writeAll(fromN){
     });
   }
   function next(){
-    if(i>=list.length){ polishAll(function(pn,pnote){ running=false; setBusy(false); var sv=stAuto()?stSave('', false, true):null; stat((sv?'콘티 저장소 「'+sv.name+'」에 저장했다. ':'')+'다 썼다. '+B.cuts.filter(function(c){return c.scr;}).length+'/'+B.cuts.length+'컷.'+(pn>0?' 다듬은 컷 '+pn+'개.':'')+(pnote||'')); save(); }); return; }
+    if(i>=list.length){ polishAll(function(pn,pnote){ running=false; setBusy(false); var sv=stAuto()?stSave('', false, true):null; stat((sv?'콘티 저장소 「'+sv.name+'」에 저장했다. ':'')+'다 썼다. '+B.cuts.filter(function(c){return c.scr;}).length+'/'+B.cuts.length+'컷.'+(pn>0?' 다듬은 컷 '+pn+'개.':'')+(pnote||'')+(srcOnly()?' 대사는 원고에 적힌 것만 넣었다. 더할 대사·나레이션은 「대사·나레이션 추천」에서 고쳐 한 번에 올린다.':'')); save(); sgAfterWrite(SPLIT_N); }); return; }
     var ch=list[i];
     stat((i+1)+'/'+list.length+' · '+ch.a+'–'+ch.b+'번 컷 「'+ch.name+'」 쓰는 중…');
     aiAsk(csys(), cutPrompt(ch), Math.min(2600, 200+(ch.b-ch.a+1)*120), {temperature:0.65}).then(function(t){
@@ -15079,75 +15097,66 @@ var _flowPA=polishAll; polishAll=function(done){ return _flowPA(function(){ var 
   if(flowAuto()) setTimeout(function(){ flowCheck(null, true); }, 50); else flowDecorate(); }); };
 window.__ctFlow={rules:flowRules, all:flowAll, check:flowCheck, parse:function(t){ return flowParse(t); }, decorate:flowDecorate};
 
-/* ---------- 나레이션 배치: 글 보관함 웹소설·줄거리에서 나레이션(·대사)을 골라 컷에 붙인다 ---------- */
-// 「나레이션 배치」 → AI가 「번호|위치|문구」로 제안 → 고른 것만 「넣기」(c.nar·c.narPos). 「대사도 웹소설에서」 → 대사 빈 컷에 「번호|대사」
-var NSYS='당신은 한국 웹툰 각색 작가다. 웹소설 원고를 이미 짠 콘티로 옮기며, 원고의 서술·속마음·시간과 장소 표시 가운데 무엇을 나레이션 자막으로 살려 어느 컷 어디에 둘지 고른다. 정해진 형식의 줄만 쓴다. 서론·설명·마크다운 기호를 쓰지 않는다.';
-var LSYS='당신은 한국 웹툰 각색 작가다. 웹소설 원고의 따옴표 속 대사를 이미 짠 콘티의 대사 없는 컷에 옮긴다. 정해진 형식의 줄만 쓴다. 서론·설명·마크다운 기호를 쓰지 않는다.';
-var NP={items:[], busy:'', msg:'', open:false, over:false};
+/* ---------- 대사·나레이션 추천 (2026-10-18) ----------
+   「AI로 콘티 쓰기」는 대사를 원고(대강 이야기·웹소설·컷별 콘티)에 적힌 말 그대로만 넣는다(ctSrcOnly, 기본 켬).
+   원고에 없는 대사·AI가 쓴 나레이션은 컷의 추천(c.sg {line, nar, pos})으로 옮겨 두고, 「대사·나레이션 추천」에서
+   컷마다 추천을 받아 고친 뒤 「한 번에 말풍선 올리기」로 넣는다. 추천은 컷에 붙어 있어 옮겨도·새로고침해도 남는다. */
+var SGSYS='당신은 한국 웹툰 각색 작가다. 이미 짠 콘티의 컷마다 말풍선 대사와 나레이션 자막을 추천한다. 작가가 고르고 고친 뒤 올린다. 정해진 형식의 줄만 쓴다. 서론·설명·마크다운 기호를 쓰지 않는다.';
+var NP={busy:'', msg:'', open:false, over:false, all:false};
+function srcOnly(){ try{ return localStorage.getItem('ctSrcOnly')!=='0'; }catch(e){ return true; } }
 function npNorm(s){ return String(s==null?'':s).replace(/[\s.,!?…~·'"“”‘’「」『』()（）\-—:：]/g,''); }
+var SRC_N={k:'', v:''};
+function srcHas(b){   // 말풍선 하나가 원고에 글자 그대로 있나(이름: · 괄호 · 문장부호 빼고)
+  var t=npNorm(String(b||'').replace(/^[^:：]{1,12}[:：]\s*/,'')); if(t.length<2) return true;
+  var s=srcAll(); if(SRC_N.k!==s){ SRC_N.k=s; SRC_N.v=npNorm(s); } return SRC_N.v.indexOf(t)>-1;
+}
+function sgSet(c, o){ var g=c.sg||{}; if(o.line!=null){ g.line=o.line; } if(o.nar!=null){ g.nar=o.nar; g.pos=o.pos||g.pos||'top'; } if(o.on!=null) g.on=o.on;
+  if(!String(g.line||'').trim() && !String(g.nar||'').trim()) delete c.sg; else { if(g.on==null) g.on=true; c.sg=g; } }
+// AI가 쓴 줄을 컷에 넣을 때(원고 대사만 모드): 원고에 있는 말풍선만 대사로, 나머지·나레이션은 추천으로
+function srcSplit(c, line, nar){
+  var keep=[], mv=[]; String(line||'').split('\n').map(function(x){ return x.trim(); }).filter(Boolean).forEach(function(b){ (srcHas(b)?keep:mv).push(b); });
+  c.line=keep.join('\n');
+  var o={}; if(mv.length) o.line=mv.join('\n'); if(nar && nar.nar) { o.nar=nar.nar; o.pos=nar.pos||'top'; }
+  if(o.line!=null || o.nar!=null) sgSet(c, o);
+  return mv.length+(o.nar?1:0);
+}
 function npStory(){ var st=document.getElementById('ct-story'); return String(st?st.value:'').trim(); }
 function npSrcInfo(){ var L=refText().map(function(x){ return WNAME[x.fmt]+' 「'+x.title+'」'; }); if(npStory()) L.push('대강 이야기'); return L; }
 function npWritten(){ return ((B&&B.cuts)||[]).filter(function(c){ return c.scr; }); }
 function npCap(){ return Math.max(1, Math.round(npWritten().length/3.5)); }
 function npTargets(){ return npWritten().filter(function(c){ return !String(c.line||'').trim() && !c.silent; }); }
 function npNames(c){ return whoOf(c).map(function(x){ return x.name; }).join(','); }
-function npHead(){
+function sgPrompt(){
   var L=[srcAll()];
   if(chars().length) L.push('[등장인물]\n'+chars().map(function(x){ return x.name+(x.role?' — '+x.role:''); }).join('\n'));
-  L.push('[콘티 — 번호|구도|인물|화면|대사|나레이션]\n'+npWritten().map(function(c){ return cutRow(c,70,60); }).join('\n'));
-  return L;
-}
-function narPrompt(over){
-  var L=npHead();
-  L.push('위 원고(웹소설·줄거리·대강 이야기)를 이 콘티로 옮길 때 나레이션 자막을 어느 컷의 어디에 둘지 고른다.\n'+
-    '- 문구는 원고의 서술·속마음·시간과 장소 표시에서 골라 줄이거나 다듬는다. 원고에 없는 내용을 지어내지 않는다.\n'+
-    '- 먼저 고를 곳: 장면을 여는 컷, 시간·장소가 건너뛰는 컷(「사흘 뒤.」「그날 밤, 옥상.」), 대사 없는 조용한 컷의 속마음(웹툰식 1인칭 독백).\n'+
-    '- 그 컷의 대사나 화면이 이미 말하는 것은 쓰지 않는다. 이웃한 두 컷에 잇달아 두지 않는다.\n'+
-    (over?'':'- 이미 나레이션이 있는 컷은 고르지 않는다.\n')+
-    '- 많아야 '+npCap()+'줄(3~4컷에 하나). 꼭 필요한 곳만 고르고, 더 적어도 된다.\n'+
-    '형식(한 줄에 하나): 번호|위치|문구\n'+
-    '위치는 위(컷 위쪽)·아래(컷 아래쪽)·사이(앞 컷과 이 컷 사이 여백, 시간이 건너뛸 때) 가운데 하나. 문구는 40자 안쪽 한 문장.\n'+
-    '넣을 곳이 없으면 「없음」 한 줄.');
+  L.push('[콘티 — 번호|구도|인물|화면|대사(원고에서 옮긴 것)|나레이션]\n'+npWritten().map(function(c){ return cutRow(c,70,60)+(c.silent?'|무음':''); }).join('\n'));
+  var tg=npTargets().length;
+  L.push('위 콘티의 컷마다 말풍선 대사와 나레이션 자막을 추천한다. 작가가 고치고 골라서 한 번에 올린다.\n'+
+    '대사\n- 대사 칸이 이미 있는 컷과 무음 컷에는 대사를 추천하지 않는다(그 칸은 -).\n'+
+    '- 이야기를 움직이는 말(새 정보·결심·갈등·관계가 바뀌는 말)이 필요한 컷에만. 원고에 그 장면의 말이 있으면 그 말을 먼저 쓴다.\n'+
+    '- 감탄사·맞장구·「…」·그림으로 보이는 것을 되풀이하는 말은 추천하지 않는다. 대사 추천은 많아야 '+Math.max(1,Math.ceil(tg*.5))+'컷.\n'+
+    '- 말풍선은 하나가 기본, 두 사람이 주고받을 때만 둘(「 / 」로 잇는다). 하나에 25자 안쪽. 인물 칸에 두 사람이면 「이름: 」을 붙인다. 속마음은 (괄호), 외침은 !로 끝낸다.\n'+
+    '나레이션\n- 장면을 여는 컷, 시간·장소가 건너뛰는 컷(「사흘 뒤.」), 대사 없는 조용한 컷의 속마음 독백에만. 원고의 서술을 줄여 쓰고 없는 내용을 지어내지 않는다.\n'+
+    '- 그 컷의 대사·화면이 이미 말하는 것은 쓰지 않는다. 이웃한 두 컷에 잇달아 두지 않는다. 많아야 '+npCap()+'개.\n'+
+    '- 앞에 자리를 적는다: 위:(컷 위쪽) · 아래:(컷 아래쪽) · 사이:(앞 컷과 이 컷 사이 여백, 시간이 건너뛸 때).\n'+
+    '형식(한 줄에 컷 하나): 번호|대사|나레이션 — 비우는 칸은 -. 추천할 것이 없는 컷은 쓰지 않는다. 추천할 곳이 하나도 없으면 「없음」 한 줄.');
   return L.join('\n\n');
 }
-function linePrompt(){
-  var L=npHead();
-  L.push('[대사가 빈 컷 — 번호|구도|인물|화면]\n'+npTargets().map(function(c){ return c.n+'|'+compText(c)+'|'+npNames(c)+'|'+oneLn(c.scr).slice(0,70); }).join('\n'));
-  L.push('위 [대사가 빈 컷] 가운데 원고(웹소설)의 따옴표 속 대사(「」·“”·"")가 그 장면에 맞는 컷에만 대사를 붙인다.\n'+
-    '- 원고에 있는 말만 골라 줄인다. 새 말을 지어내지 않는다. 맞는 말이 없는 컷은 쓰지 않는다.\n'+
-    '- 감정이 가라앉는 컷·풍경 컷·인서트·표정 반응 컷처럼 말없이 두는 게 나은 컷은 고르지 않는다. 앞뒤 컷 대사를 되풀이하지 않는다.\n'+
-    '- 이야기를 움직이는 말(정보·결심·갈등·관계가 바뀌는 말)만 붙인다. 감탄사·맞장구·「…」·그림으로 보이는 것을 말로 되풀이하는 대사는 붙이지 않는다. 대사가 빈 컷의 절반 넘게 고르지 않는다.\n'+
-    '- 말풍선은 보통 하나, 많아야 둘(「 / 」로 잇는다). 하나에 20자 안쪽.\n'+
-    '- 말풍선마다 말하는 사람을 「이름: 」으로 붙인다(그 컷 인물 칸의 이름 그대로). 속마음은 (괄호), 외침은 !로 끝낸다.\n'+
-    '형식(한 줄에 하나): 번호|대사\n'+
-    '붙일 곳이 없으면 「없음」 한 줄.');
-  return L.join('\n\n');
-}
-function npParseNar(t){
-  var out=[], seen={}, max=Math.max(1, Math.ceil(npWritten().length/3));
+function sgParse(t){
+  var got=0, nl=0, nn=0, capL=Math.max(1,Math.ceil(npTargets().length*.5)), capN=Math.max(1, Math.ceil(npWritten().length/3)), seen={};
   String(t||'').split('\n').forEach(function(l){
     l=l.replace(/[*#]/g,'').replace(/^[\s\-·•]+/,'').trim();
-    var m=/^(\d+)\s*번?\s*[|｜]\s*(?:(위|아래|사이|top|bottom|between)\s*[|｜:：]\s*)?(.+)$/i.exec(l); if(!m) return;
-    var n=+m[1], c=B.cuts[n-1]; if(!c || !c.scr || seen[n]) return;
-    var tx=unq(oneLn(m[3])).slice(0,60), nt=npNorm(tx); if(!tx || emptyMark(tx) || nt.length<2) return;
-    if(npNorm(c.line).indexOf(nt)>-1 || npNorm(c.nar)===nt) return;   // 대사나 지금 나레이션과 같은 말
-    var pos=NAR_KO[String(m[2]||'위').toLowerCase()]||'top'; if(n===1 && pos==='between') pos='top';
-    seen[n]=1; out.push({kind:'nar', n:n, c:c, sig:c.scr, pos:pos, text:tx, on:true});
+    var m=/^(\d+)\s*번?\s*[|｜]\s*([^|｜]*)(?:[|｜]\s*(.*))?$/.exec(l); if(!m) return;
+    var n=+m[1], c=B.cuts[n-1]; if(!c || !c.scr || seen[n]) return; seen[n]=1;
+    var o={}, cur=c.sg||{};
+    if(!String(c.line||'').trim() && !c.silent && !String(cur.line||'').trim() && nl<capL){ var bs=balloonsParse(String(m[2]||'')); if(bs.length){ o.line=bs.join('\n'); nl++; } }
+    if(m[3]!=null && !String(cur.nar||'').trim() && (!c.nar || NP.over) && nn<capN){ var nr=narParse(m[3]); if(nr.nar && npNorm(nr.nar)!==npNorm(c.nar) && npNorm(c.line).indexOf(npNorm(nr.nar))<0){ if(n===1 && nr.pos==='between') nr.pos='top'; o.nar=nr.nar; o.pos=nr.pos; nn++; } }
+    if(o.line!=null || o.nar!=null){ o.on=true; sgSet(c, o); got++; }
   });
-  return out.slice(0, max);
+  return {got:got, lines:nl, nars:nn};
 }
-function npParseLine(t){
-  var ok={}, out=[], seen={}; npTargets().forEach(function(c){ ok[c.n]=1; });
-  String(t||'').split('\n').forEach(function(l){
-    l=l.replace(/[*#]/g,'').replace(/^[\s\-·•]+/,'').trim();
-    var m=/^(\d+)\s*번?\s*[|｜]\s*(.+)$/.exec(l); if(!m) return;
-    var n=+m[1], c=B.cuts[n-1]; if(!ok[n] || !c || seen[n]) return;
-    var bs=balloonsParse(m[2].replace(/\s*[|｜]\s*/g,' / ')).slice(0,2); if(!bs.length) return;
-    if(out.length>=Math.max(1, Math.ceil(npTargets().length*.4))) return;   // 대사가 빈 컷의 40%까지만
-    seen[n]=1; out.push({kind:'line', n:n, c:c, sig:c.scr, text:bs.join(' / '), on:true});
-  });
-  return out;
-}
+function sgCuts(){ return ((B&&B.cuts)||[]).filter(function(c){ return c.sg; }); }
+function npOnCount(){ return sgCuts().filter(function(c){ return c.sg.on!==false; }).length; }
 function npBox(){
   var bx=document.getElementById('ct-narbox');
   if(!bx){ var w=document.getElementById('ct-write'), bar=w&&w.parentNode; if(!bar||!bar.parentNode) return null;
@@ -15155,115 +15164,112 @@ function npBox(){
     bx.addEventListener('click', npClick); bx.addEventListener('change', npChange); bx.addEventListener('input', npChange); }
   return bx;
 }
-function npOnCount(){ return NP.items.filter(function(x){ return x.on; }).length; }
-function npApplyLabel(){ var n=npOnCount(); return '넣기'+(n?' ('+n+')':''); }
 function npRender(){
-  var bx=npBox(), nb=document.getElementById('ct-narr'); if(nb) nb.setAttribute('aria-expanded', NP.open?'true':'false');
+  var bx=npBox(), nb=document.getElementById('ct-narr'); if(nb){ nb.setAttribute('aria-expanded', NP.open?'true':'false'); var k=sgCuts().length; nb.textContent='대사·나레이션 추천'+(k?' ('+k+')':''); }
   if(!bx) return; bx.hidden=!NP.open; if(!NP.open){ bx.innerHTML=''; return; }
-  var src=npSrcInfo(), h='';
-  h+='<div class="ct-narh"><b>나레이션 배치</b><span class="small">'+(src.length?'참고: '+cesc(src.join(' · ')):'참고 글 없음')+'</span><button class="chip" type="button" data-np="close">닫기</button></div>';
-  h+='<p class="small">글 보관함에서 고른 웹소설·줄거리와 대강 이야기에서 나레이션(서술·속마음·시간과 장소 자막)을 골라 어느 컷의 <b>위·아래·사이</b>(앞 컷과의 사이 여백)에 둘지 AI가 제안한다. 3~4컷에 하나 정도, 대사·그림과 겹치지 않게. 체크한 것만 넣고, 이미 있는 나레이션은 「덮어쓰기」를 켜야 바꾼다.</p>';
+  var src=npSrcInfo(), list=NP.all?npWritten():sgCuts(), h='';
+  h+='<div class="ct-narh"><b>대사·나레이션 추천</b><span class="small">'+(src.length?'참고: '+cesc(src.join(' · ')):'참고 글 없음')+'</span><button class="chip" type="button" data-np="close">닫기</button></div>';
+  h+='<p class="small">원고에 적힌 대사는 그대로 말풍선에 들어가 있다. 여기서 <b>더할 대사와 나레이션</b>을 컷마다 추천받아 고치고, 뺄 것은 체크를 끈 뒤 <b>한 번에 말풍선으로 올린다</b>. 대사는 한 줄에 말풍선 하나(「이름: 대사」, 「(속마음)」).</p>';
+  h+='<label class="small"><input type="checkbox" id="ct-srconly"'+(srcOnly()?' checked':'')+'> AI로 콘티를 쓸 때 대사는 원고에 적힌 것만 넣고, 나머지는 여기 추천으로</label>';
   if(NP.msg) h+='<p class="small ct-npmsg" role="status">'+cesc(NP.msg)+'</p>';
-  [['nar','나레이션 제안'],['line','웹소설 대사 제안']].forEach(function(g){
-    var its=[]; NP.items.forEach(function(x,i){ if(x.kind===g[0]) its.push(i); }); if(!its.length) return;
-    h+='<h4 class="ct-reft">'+g[1]+' '+its.length+'개</h4><ol class="ct-nplist">'+its.map(function(i){
-      var it=NP.items[i], c=it.c, nar=it.kind==='nar', has=nar?narField(c):balloonsField(c.line);
-      return '<li class="ct-npi'+(it.on?'':' off')+'" data-ni="'+i+'"><label class="ct-npn"><input type="checkbox" data-np-on="'+i+'"'+(it.on?' checked':'')+'> <b>'+c.n+'번</b></label>'+
-        (nar?'<select data-np-pos="'+i+'" aria-label="'+c.n+'번 나레이션 자리">'+['top','bottom','between'].map(function(k){ return '<option value="'+k+'"'+(it.pos===k?' selected':'')+'>'+NAR_POS[k]+'</option>'; }).join('')+'</select>'
-            :'<span class="ct-npk">대사</span>')+
-        '<input type="text" data-np-tx="'+i+'" value="'+cesc(it.text)+'" aria-label="'+c.n+'번 '+(nar?'나레이션':'대사')+' 문구">'+
-        '<span class="ct-npctx small">'+cesc(compText(c))+(npNames(c)?' · '+cesc(npNames(c).replace(/,/g,', ')):'')+' · '+cesc(oneLn(c.scr).slice(0,44))+
-          (has?' · <em>지금 '+(nar?'나레이션':'대사')+': '+cesc(has.slice(0,34))+'</em>':'')+'</span></li>';
+  if(list.length){
+    h+='<ol class="ct-nplist ct-sglist">'+list.map(function(c){
+      var g=c.sg||{line:'', nar:'', pos:'top', on:false}, on=!!c.sg && g.on!==false;
+      return '<li class="ct-npi'+(on?'':' off')+'" data-n="'+c.n+'"><div class="ct-sgh"><label class="ct-npn"><input type="checkbox" data-sg-on="'+c.n+'"'+(on?' checked':'')+'> <b>'+c.n+'번</b></label>'+
+        '<span class="ct-npctx small">'+cesc(compText(c))+(npNames(c)?' · '+cesc(npNames(c).replace(/,/g,', ')):'')+' · '+cesc(oneLn(c.scr).slice(0,50))+'</span></div>'+
+        (String(c.line||'').trim()?'<p class="small ct-sgsrc">원고 대사: '+cesc(balloonsField(c.line).slice(0,80))+'</p>':'')+
+        (c.nar?'<p class="small ct-sgsrc">지금 나레이션: '+cesc(narField(c).slice(0,60))+'</p>':'')+
+        '<div class="ct-sgf"><label class="small">더할 대사<textarea rows="'+Math.max(1,Math.min(3,String(g.line||'').split('\n').length))+'" data-sg-line="'+c.n+'" placeholder="'+(c.silent?'무음 컷':'이름: 대사')+'">'+cesc(g.line||'')+'</textarea></label>'+
+        '<label class="small">나레이션<span class="ct-sgnr"><select data-sg-pos="'+c.n+'" aria-label="'+c.n+'번 나레이션 자리">'+['top','bottom','between'].map(function(k){ return '<option value="'+k+'"'+((g.pos||'top')===k?' selected':'')+'>'+NAR_POS[k]+'</option>'; }).join('')+'</select>'+
+        '<input type="text" data-sg-nar="'+c.n+'" value="'+cesc(g.nar||'')+'" placeholder="예: 사흘 뒤."></span></label></div></li>';
     }).join('')+'</ol>';
-  });
-  var on=npOnCount(), hasNar=NP.items.some(function(x){ return x.kind==='nar'; });
+  } else if(!NP.busy) h+='<p class="small">아직 추천이 없다. 「추천 받기」를 누른다.</p>';
+  var on=npOnCount();
   h+='<div class="filterbar ct-npacts">'+
-    '<button class="chip" type="button" data-np="apply"'+(on&&!NP.busy?'':' disabled')+'>'+npApplyLabel()+'</button>'+
-    '<label class="small" title="이미 나레이션(대사)이 있는 컷도 제안으로 바꾼다"><input type="checkbox" id="ct-narover"'+(NP.over?' checked':'')+'> 덮어쓰기</label>'+
-    '<button class="chip" type="button" data-np="nar"'+(NP.busy?' disabled':'')+'>'+(NP.busy==='nar'?'고르는 중…':(hasNar?'나레이션 다시 제안':'나레이션 제안 받기'))+'</button>'+
-    '<button class="chip" type="button" data-np="line"'+(NP.busy?' disabled':'')+' title="대사가 빈 컷에 웹소설의 따옴표 속 대사를 제안한다">'+(NP.busy==='line'?'고르는 중…':'대사도 웹소설에서')+'</button></div>';
+    '<button class="chip ct-go" type="button" data-np="apply"'+(on&&!NP.busy?'':' disabled')+'>한 번에 말풍선 올리기'+(on?' ('+on+'컷)':'')+'</button>'+
+    '<button class="chip" type="button" data-np="all"'+(NP.busy?' disabled':'')+'>'+(NP.busy?'추천 받는 중…':(sgCuts().length?'다시 추천 받기':'추천 받기'))+'</button>'+
+    '<label class="small"><input type="checkbox" id="ct-sgall"'+(NP.all?' checked':'')+'> 모든 컷 보기(직접 적기)</label>'+
+    '<label class="small" title="이미 나레이션이 있는 컷도 추천으로 바꾼다"><input type="checkbox" id="ct-narover"'+(NP.over?' checked':'')+'> 덮어쓰기</label>'+
+    (sgCuts().length?'<button class="chip" type="button" data-np="clear">추천 모두 지우기</button>':'')+'</div>';
   bx.innerHTML=h;
 }
+function npCut(n){ return B && B.cuts[+n-1]; }
 function npChange(e){
-  var t=e.target, i;
+  var t=e.target, c;
   if(t.id==='ct-narover'){ NP.over=t.checked; return; }
-  if(t.dataset.npOn!=null){ i=+t.dataset.npOn; if(!NP.items[i]) return; NP.items[i].on=t.checked;
-    var li=t.closest('li'); if(li) li.classList.toggle('off', !t.checked);
-    var ab=document.querySelector('#ct-narbox [data-np="apply"]'); if(ab){ ab.textContent=npApplyLabel(); ab.disabled=!npOnCount() || !!NP.busy; } return; }
-  if(t.dataset.npPos!=null){ i=+t.dataset.npPos; if(NP.items[i]) NP.items[i].pos=t.value; return; }
-  if(t.dataset.npTx!=null){ i=+t.dataset.npTx; if(NP.items[i]) NP.items[i].text=t.value; }
+  if(t.id==='ct-srconly'){ try{ localStorage.setItem('ctSrcOnly', t.checked?'1':'0'); }catch(er){} return; }
+  if(t.id==='ct-sgall'){ NP.all=t.checked; npRender(); return; }
+  if(t.dataset.sgOn!=null){ c=npCut(t.dataset.sgOn); if(!c) return; if(!c.sg && t.checked){ t.checked=false; return; } if(c.sg){ c.sg.on=t.checked; save(); }
+    var li=t.closest('li'); if(li) li.classList.toggle('off', !t.checked); npActs(); return; }
+  if(t.dataset.sgLine!=null || t.dataset.sgNar!=null || t.dataset.sgPos!=null){
+    c=npCut(t.dataset.sgLine||t.dataset.sgNar||t.dataset.sgPos); if(!c) return;
+    var li2=t.closest('li'), had=!!c.sg;
+    sgSet(c, {line:li2.querySelector('[data-sg-line]').value, nar:li2.querySelector('[data-sg-nar]').value, pos:li2.querySelector('[data-sg-pos]').value, on:had?undefined:true});
+    if(!had && c.sg){ var cb=li2.querySelector('[data-sg-on]'); cb.checked=true; li2.classList.remove('off'); }
+    clearTimeout(npChange._t); npChange._t=setTimeout(save, 400); npActs(); }
 }
+function npActs(){ var ab=document.querySelector('#ct-narbox [data-np="apply"]'), on=npOnCount(); if(ab){ ab.textContent='한 번에 말풍선 올리기'+(on?' ('+on+'컷)':''); ab.disabled=!on || !!NP.busy; }
+  var nb=document.getElementById('ct-narr'); if(nb){ var k=sgCuts().length; nb.textContent='대사·나레이션 추천'+(k?' ('+k+')':''); } }
 function npClick(e){
   var b=e.target.closest && e.target.closest('button[data-np]'); if(!b) return;
   var k=b.dataset.np;
   if(k==='close'){ NP.open=false; npRender(); var nb=document.getElementById('ct-narr'); if(nb) nb.focus(); return; }
-  if(k==='nar' || k==='line'){ npAsk(k); return; }
+  if(k==='all' || k==='nar' || k==='line'){ npAsk('all'); return; }
+  if(k==='clear'){ if(!b.dataset.arm){ b.dataset.arm='1'; b.textContent='한 번 더 누르면 지운다'; return; } sgCuts().forEach(function(c){ delete c.sg; }); save(); NP.msg='추천을 모두 지웠다.'; npRender(); return; }
   if(k==='apply') npApply();
 }
-function npAsk(kind){
+function npAsk(){
   if(NP.busy) return;
   NP.open=true;
   var why='';
-  if(!B || !npWritten().length) why='콘티를 먼저 쓴다. 나레이션은 이미 쓴 컷에 붙인다.';
+  if(!B || !npWritten().length) why='콘티를 먼저 쓴다. 추천은 이미 쓴 컷에 붙인다.';
   else if(!refText().length && !npStory()) why='글 보관함에서 웹소설이나 줄거리를 고르거나 대강 이야기를 적는다.';
-  else if(kind==='line' && !npTargets().length) why='대사가 빈 컷이 없다. 웹소설에서 옮길 자리가 없다.';
-  else if(!aiReady()) why='AI 연결에서 키를 넣어야 쓸 수 있다.';
+  else if(!aiReady()) why='AI 연결에서 키를 넣어야 추천을 받을 수 있다. 「모든 컷 보기」로 직접 적을 수는 있다.';
   else if(running || redoBusy) why='다른 쓰기가 끝난 뒤 다시 누른다.';
   if(why){ NP.msg=why; npRender(); stat(why); return; }
-  NP.busy=kind; NP.msg=kind==='nar'?'원고에서 나레이션을 고르는 중…':'웹소설에서 대사를 고르는 중…'; npRender();
-  var user=kind==='nar'?narPrompt(NP.over):linePrompt();
-  aiAsk(kind==='nar'?NSYS:LSYS, user, 1400, {temperature:0.5}).then(function(t){
+  NP.busy='all'; NP.msg='컷마다 대사·나레이션을 추천받는 중…'; npRender();
+  var n=npWritten().length;
+  aiAsk(SGSYS, sgPrompt(), Math.min(4000, 400+n*50), {temperature:0.55}).then(function(t){
     NP.busy='';
-    if(aiIsErr(t)){ NP.msg='제안을 받지 못했다. '+String(t).slice(0,80); npRender(); return; }
-    t=aiClean?aiClean(t):t;
-    var got=kind==='nar'?npParseNar(t):npParseLine(t);
-    NP.items=NP.items.filter(function(x){ return x.kind!==kind; }).concat(got);
-    NP.msg=got.length?(kind==='nar'?'나레이션 '+got.length+'곳을 골랐다.':'대사 '+got.length+'곳을 골랐다.')+' 고칠 것은 고치고, 뺄 것은 체크를 끈 뒤 「넣기」.'
-      :(kind==='nar'?'나레이션을 넣을 만한 곳을 찾지 못했다.':'웹소설에서 옮길 만한 대사를 찾지 못했다.');
+    if(aiIsErr(t)){ NP.msg='추천을 받지 못했다. '+String(t).slice(0,80); npRender(); return; }
+    var r=sgParse(aiClean?aiClean(t):t); save(); if(r.got) renderBoard();
+    NP.msg=r.got?'추천을 받았다 — 대사 '+r.lines+'컷 · 나레이션 '+r.nars+'컷. 고칠 것은 고치고, 뺄 것은 체크를 끈 뒤 「한 번에 말풍선 올리기」.':(sgCuts().length?'새로 추천할 곳이 없다. 있던 추천은 그대로다.':'추천할 만한 곳을 찾지 못했다.');
     npRender();
-  }, function(e){ NP.busy=''; NP.msg='제안을 받지 못했다. '+String(e&&e.message||e).slice(0,80); npRender(); });
+  }, function(e){ NP.busy=''; NP.msg='추천을 받지 못했다. '+String(e&&e.message||e).slice(0,80); npRender(); });
 }
 function npApply(){
   if(!B || NP.busy) return;
-  var over=!!NP.over, back=[], put=0, kept=0, gone=0, left=[], lines=0;
-  function bak(c){ if(!back.some(function(x){ return x.c===c; })) back.push({c:c, nar:c.nar||'', narPos:c.narPos||'', line:c.line||''}); }
-  NP.items.forEach(function(it){
-    if(!it.on){ left.push(it); return; }
-    var c=it.c;
-    if(B.cuts.indexOf(c)<0 || c.scr!==it.sig){ gone++; return; }   // 그사이 다시 썼거나 지운 컷
-    if(it.kind==='nar'){
-      var tx=unq(oneLn(it.text)).slice(0,80); if(!tx) return;
-      if(c.nar && !over){ kept++; left.push(it); return; }
-      bak(c); narSet(c, {nar:tx, pos:it.pos}); put++;
-    } else {
-      var ln=balloonsParse(it.text).slice(0,3).join('\n'); if(!ln) return;
-      if(String(c.line||'').trim() && !over){ kept++; left.push(it); return; }
-      bak(c); c.line=ln; put++; lines++;
-    }
+  var cs=sgCuts().filter(function(c){ return c.sg.on!==false; }); if(!cs.length) return;
+  snapUndo('말풍선 올리기 되돌리기', '말풍선을 올리기 전으로 되돌렸다.');
+  var put=0, lines=0, nars=0, kept=0;
+  cs.forEach(function(c){ var g=c.sg, did=0;
+    var add=balloonsParse(String(g.line||'').replace(/\n/g,'\n'));
+    if(add.length){ var cur=String(c.line||'').split('\n').filter(function(x){ return x.trim(); }); c.line=cur.concat(add).slice(0,3).join('\n'); lines++; did=1; }
+    var nt=unq(oneLn(g.nar||'')).slice(0,80);
+    if(nt){ if(c.nar && !NP.over && c.nar!==nt){ kept++; } else { narSet(c, {nar:nt, pos:g.pos||'top'}); nars++; did=1; } }
+    if(did) put++;
+    delete c.sg;
   });
-  NP.items=left;
-  if(back.length){ save(); back.forEach(function(x){ refreshCut(x.c.n); }); }
-  var msg=put?(lines&&lines<put?'나레이션·대사 ':lines?'대사 ':'나레이션 ')+put+'개를 넣었다.':'넣은 것이 없다.';
-  if(kept) msg+=' 이미 있는 '+kept+'곳은 그대로 뒀다(바꾸려면 「덮어쓰기」).';
-  if(gone) msg+=' 그사이 바뀐 컷 '+gone+'곳은 건너뛰었다.';
+  save(); renderBoard();
+  var msg=put?put+'컷에 올렸다 — 대사 '+lines+'컷 · 나레이션 '+nars+'컷.':'올린 것이 없다.'; if(kept) msg+=' 나레이션이 이미 있는 '+kept+'컷은 그대로 뒀다(바꾸려면 「덮어쓰기」).';
   NP.msg=msg; npRender(); stat(msg);
-  if(back.length) setUndo('nar', lines?'나레이션·대사 넣기 되돌리기':'나레이션 넣기 되돌리기', function(){
-    var r=0; back.forEach(function(x){ if(B.cuts.indexOf(x.c)<0) return; narSet(x.c, {nar:x.nar, pos:x.narPos}); x.c.line=x.line; refreshCut(x.c.n); r++; });
-    save(); var m=r+'컷의 나레이션'+(lines?'·대사':'')+'를 넣기 전으로 되돌렸다.'; NP.msg=m; if(NP.open) npRender(); stat(m);
-  });
+}
+// 다 쓰면 추천을 바로 받는다(흐름 점검이 끝나기를 기다렸다가)
+function sgAfterWrite(moved){
+  if(!srcOnly() || !aiReady()) { if(moved){ NP.open=true; NP.msg='원고에 없는 대사·나레이션 '+moved+'개를 추천으로 옮겼다.'; npRender(); } return; }
+  var tries=0; (function go(){ if((typeof flowBusy!=='undefined' && flowBusy) || running || redoBusy){ if(tries++<120) setTimeout(go, 500); return; } NP.open=true; npAsk(); })();
 }
 (function(){
   var w=document.getElementById('ct-scenego')||document.getElementById('ct-redraw'); if(!w || document.getElementById('ct-narr')) return;
-  var b=document.createElement('button'); b.className='chip'; b.id='ct-narr'; b.type='button'; b.textContent='나레이션 배치';
-  b.title='글 보관함의 웹소설·줄거리에서 나레이션을 골라 컷에 붙인다'; b.setAttribute('aria-controls','ct-narbox'); b.setAttribute('aria-expanded','false');
+  var b=document.createElement('button'); b.className='chip'; b.id='ct-narr'; b.type='button'; b.textContent='대사·나레이션 추천';
+  b.title='컷마다 더할 대사와 나레이션을 추천받아 고친 뒤 한 번에 말풍선으로 올린다'; b.setAttribute('aria-controls','ct-narbox'); b.setAttribute('aria-expanded','false');
   w.parentNode.insertBefore(b, w.nextSibling);
   b.addEventListener('click', function(){
     if(NP.open && !NP.busy){ NP.open=false; npRender(); return; }
-    NP.open=true; if(!NP.items.length && !NP.busy) npAsk('nar'); else npRender();
+    NP.open=true; if(!sgCuts().length && !NP.busy) npAsk(); else npRender();
   });
 })();
-window.__ctNar={ask:npAsk, apply:npApply, render:npRender, state:NP, parseNar:function(t){ return npParseNar(t); }, parseLine:function(t){ return npParseLine(t); },
-  narPrompt:function(o){ return narPrompt(o); }, linePrompt:function(){ return linePrompt(); }, row:function(c){ return cutRow(c); }, lineParse:lineParse, balloons:balloonsParse, nar:narParse,
+window.__ctNar={ask:npAsk, apply:npApply, render:npRender, state:NP, sgPrompt:function(){ return sgPrompt(); }, sgParse:function(t){ return sgParse(t); }, srcHas:function(t){ return srcHas(t); }, sgCuts:function(){ return sgCuts(); }, srcOnly:function(){ return srcOnly(); }, row:function(c){ return cutRow(c); }, lineParse:lineParse, balloons:balloonsParse, nar:narParse,
   applyLines:function(t,ch){ return applyLines(t,ch); }, board:function(){ return B; }};
 
 /* ---------- 연결 ---------- */
