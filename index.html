@@ -12720,7 +12720,7 @@ function autoUse(c, z){ if(c.use && useOf(c.use) && useOf(c.use)[1]===z) return 
 function modeDef(){ try{ return localStorage.getItem('ctMode')==='webtoon'?'webtoon':'manga'; }catch(e){ return 'manga'; } }
 function boardMode(){ return (B && B.mode==='webtoon')?'webtoon':'manga'; }
 function cutSize(c){
-  var z=c.size==='big'?'wide':c.size; if(z==='n') return ''; if(z==='wide'||z==='tall'||z==='half') return (z==='half' && boardMode()!=='webtoon')?'':z;
+  var z=c.size==='big'?'wide':c.size; if(z==='n') return ''; if(z==='wide'||z==='tall'||z==='half') return ((z==='half'||z==='tall') && boardMode()!=='webtoon')?'':z;   // 만화는 세로 컷·작은 컷을 안 쓴다(보통 컷으로)
   if(boardMode()==='webtoon'){ if(c.k==='bird' || +c.dyn>=2 || (c.k==='fs' && c.ang==='low')) return 'tall'; return ''; }   // 웹툰: 거의 한 줄에 한 컷, 높이·낙하만 세로로
   return (c.focus || c.hook)?'wide':'';   // 만화: 결정적인 컷은 한 줄을 혼자 쓴다
 }
@@ -12960,7 +12960,7 @@ function bandFor(total){
 function fresh(){
   var total=+document.getElementById('ct-total').value||70, story=document.getElementById('ct-story').value;
   var keepCh=(B&&B.chars)||[], src=srcGet(), band=bandFor(total);
-  var md=(B&&B.mode)||modeDef();
+  var md=(B&&B.mode)||modeDef(); SK_MODE=md;
   B={v:2, scenes:null, chars:keepCh, total:total, band:band, cl:[], drawn:'', story:story, srcAt:(B&&B.srcAt)||0, cuts:skeleton(total, band, []), mode:md};
   B.skScenes=SK_LAST;
   var nc=syncCast(); save(); renderAll(); storyOffer();
@@ -12978,7 +12978,7 @@ function pull(){
   var pend=false;
   if(src && src.text){ if(!story.trim()) story=src.text; else if(String(src.text).trim()!==story.trim() && (!B || src.at>(B.srcAt||0))) pend=true; }
   var keepCh=(B&&B.chars)||[];
-  var md=(B&&B.mode)||modeDef();
+  var md=(B&&B.mode)||modeDef(); SK_MODE=md;
   B={chars:keepCh, total:total, band:band, cl:cl, drawn:(typeof aiDrawn==='function'?aiDrawn(true):''), story:story, srcAt:(src&&!pend)?src.at:((B&&B.srcAt)||0), cuts:skeleton(total, band, cl), mode:md};
   B.skScenes=SK_LAST;
   document.getElementById('ct-story').value=story;
@@ -13065,6 +13065,9 @@ function skSizes(len, R, key){
   for(var j=0;j+1<cnt;j++){ var mv=Math.floor(R()*3)-1; if(out[j]+mv>=3 && out[j+1]-mv>=3){ out[j]+=mv; out[j+1]-=mv; } }
   return out;
 }
+// 이야기를 움직이는 말(정보·결정·갈등)이 오는 컷 역할만 빈 말풍선 자리를 둔다. 표정·반응·풍경·몸짓 컷은 그림으로
+var SK_SAY={'지금 상황을 말한다':1,'이 인물이 바라는 것이 드러난다':1,'인물 사이 관계':1,'가벼운 대화':1,'말하는 쪽 (어깨 너머)':1,'되받는 말':1,
+  '부딪친다':1,'충격 — 집중선':1,'다시 만난 사람':1,'그때의 장면':1,'상대가 받아친다':1,'가장 큰 한 컷':1,'결정적인 한마디':1,'마지막 대화':1};
 // 한 장면 깔기: 종류 type, 컷 수 L → 컷 배열
 function skScene(type, L, R, key){
   var T=SK_TYPES[type]||SK_TYPES.talk, slots=[], head=T.head, tail=T.tail;
@@ -13075,18 +13078,24 @@ function skScene(type, L, R, key){
     for(var q=0;q<m;q++){ slots.push(T.body[i%T.body.length]); i+=R()<.72?1:2; }
     slots=slots.concat(tail);
   }
-  return slots.map(function(s){
+  var out=slots.map(function(s){
     var o=s[2]||{}, c={k:skPick(R,s[0]), hint:s[1], _o:s[0]};
     if(o.a){ var an=skPick(R,o.a); if(an) c.ang=an; }
     if(o.d && (key==='절정' || R()<.6)) c.dyn=o.d;
     if(o.f) c.focus=1; if(o.s) c.silent=1; if(o.fl) c.flash=1; if(o.h) c.hook=1; if(o.n) c.narph=1;
-    if(o.b && !o.s){ c.bal=o.b; if(o.k) c.balk=o.k; }
-    if(o.z && R()<(o.zp||.6)){ var zz=skPick(R,[].concat(o.z)).split(':'), uu=useOf(zz[1]); c.size=zz[0]; c.use=zz[1];
+    if(o.b && !o.s && SK_SAY[s[1]]){ c.bal=1; if(o.k) c.balk=o.k; }
+    var zs=o.z?[].concat(o.z).filter(function(z){ return SK_MODE==='webtoon' || z.indexOf('tall:')<0; }):[];   // 만화는 세로 컷 없이
+    if(zs.length && R()<(o.zp||.6)){ var zz=skPick(R,zs).split(':'), uu=useOf(zz[1]); c.size=zz[0]; c.use=zz[1];
       if(uu){ if(uu[4].indexOf(c.k)<0) c.k=uu[4][0]; if(uu[5] && !c.ang) c.ang=uu[5]; c._o=[c.k].concat(uu[4].filter(function(k){ return k!==c.k; })); } }
     if(!o.a && key==='절정' && R()<.18 && /^(ms|bs|fs)$/.test(c.k)) c.ang=R()<.5?'low':'dutch';
     if(!o.a && !c.ang && /^(ls|fs)$/.test(c.k) && R()<.12) c.ang='high';
     return c;
   });
+  // 말풍선 컷은 장면의 1/3까지, 바로 이어 붙지 않게(뒤쪽 결정적인 말을 남긴다)
+  var cap=Math.max(1, Math.floor(L/3)), has=function(){ return out.filter(function(c){ return c.bal; }).length; };
+  for(var j=1;j<out.length;j++) if(out[j].bal && out[j-1].bal && !out[j].focus){ delete out[j-1].bal; delete out[j-1].balk; }
+  for(var x=0;x<out.length && has()>cap;x++) if(out[x].bal && !out[x].focus){ delete out[x].bal; delete out[x].balk; }
+  return out;
 }
 function skType(key, R, prev, first){
   if(first) return R()<.62?'open':(R()<.6?'cold':'daily');
@@ -13100,7 +13109,7 @@ function skSmooth(cuts){
   for(var i=2;i<cuts.length;i++){ var c=cuts[i]; if(c.k===cuts[i-1].k && c.k===cuts[i-2].k) c.k=c.k==='ms'?'bs':'ms'; }
   cuts.forEach(function(c){ delete c._o; });
 }
-var SK_LAST=[];
+var SK_LAST=[], SK_MODE='manga';
 // 구간(band)·클리셰 칸(cl)을 따라 판 전체 뼈대를 깐다. 클리셰 칸은 그 클리셰의 연출 도구 순서(toolSeq)를 쓴다
 function skeleton(total, band, cl, seed){
   cl=cl||[]; var R=skRng(seed||((Date.now()^Math.floor(Math.random()*1e9))>>>0)), cuts=[], scenes=[], seqs={};
@@ -13134,7 +13143,7 @@ function skeleton(total, band, cl, seed){
 }
 // 장면 하나만 다시 깐다(a–b). 종류를 바꾸고 싶으면 type, 아니면 그 구간에 맞는 것 중 하나를 고른다
 function skRegen(a, b, type, avoid){
-  var R=skRng((Date.now()^Math.floor(Math.random()*1e9))>>>0), bd=bandOf(a), key=skBandKey(bd&&bd.name);
+  var R=skRng((Date.now()^Math.floor(Math.random()*1e9))>>>0), bd=bandOf(a), key=skBandKey(bd&&bd.name); SK_MODE=boardMode();
   if(!type){ type=a===1 ? (R()<.6?'open':'cold') : skType(key, R, avoid||''); if(b>=B.total && R()<.5) type='hook'; }
   var cs=skScene(type, b-a+1, R, key);   // 앞뒤 컷과 같은 구도가 겹치지 않게만 다듬는다
   var pv=B.cuts[a-2], nx=B.cuts[b];
@@ -13528,7 +13537,7 @@ function openEdit(f){
     '<div class="ct-chk"><label><input type="checkbox" class="ct-f"'+(c.focus?' checked':'')+'>집중선</label><label><input type="checkbox" class="ct-fl"'+(c.flash?' checked':'')+'>회상 테두리</label></div>'+
     '<label>인물 (왼쪽부터, 쉼표 · 이름 없으면 ?) <input class="ct-w" type="text"></label><div class="ct-wp"></div>'+
     '<label class="ct-dynl">역동성 <select class="ct-dyn">'+[['0','보통'],['1','역동'],['2','과장']].map(function(d){ return '<option value="'+d[0]+'"'+(String(c.dyn||0)===d[0]?' selected':'')+'>'+d[1]+'</option>'; }).join('')+'</select></label>'+
-    '<div class="ct-szrow"><label class="ct-szl">컷 크기 <select class="ct-sz">'+[['','자동'],['n','보통'],['wide','가로로 긴 한 컷'],['tall','세로로 긴 한 컷'],['half','작게 (웹툰에서 두 컷 나란히)']].map(function(d){ return '<option value="'+d[0]+'"'+(((c.size==='big'?'wide':c.size)||'')===d[0]?' selected':'')+'>'+d[1]+'</option>'; }).join('')+'</select></label>'+
+    '<div class="ct-szrow"><label class="ct-szl">컷 크기 <select class="ct-sz">'+[['','자동'],['n','보통'],['wide','가로로 긴 한 컷']].concat(boardMode()==='webtoon'?[['tall','세로로 긴 한 컷'],['half','작게 (두 컷 나란히)']]:[]).map(function(d){ return '<option value="'+d[0]+'"'+(((c.size==='big'?'wide':c.size)||'')===d[0]?' selected':'')+'>'+d[1]+'</option>'; }).join('')+'</select></label>'+
     '<label class="ct-usel" hidden>쓰임 <select class="ct-use"></select></label></div><p class="ct-hint ct-used" hidden></p>'+
     '<label>화면 <textarea class="ct-s" rows="2"></textarea></label>'+
     '<label>대사 (한 줄에 말풍선 하나, 셋까지) <textarea class="ct-l" rows="2" placeholder="이름: 대사&#10;(속마음)&#10;외침!"></textarea></label><p class="ct-hint">「이름: 대사」 말한 사람 · 「(속마음)」 생각 풍선 · 「외침!」 뾰족 풍선 · 「…」 작은 풍선. 이름이 없으면 인물 칸 첫 사람</p>'+
@@ -13822,7 +13831,8 @@ var CEX=[
 function contiRules(ch, hasScenes){
   var R=[
     '한 줄에 한 컷. 형식: 번호|구도|인물|화면|대사|나레이션 (칸이 비어도 | 는 모두 쓴다)',
-    '대사 칸: 말풍선은 보통 하나, 많아야 둘(꼭 필요할 때만 셋). 여러 개면 「 / 」로 잇는다. 인물 칸에 두 사람이 있으면 말풍선마다 앞에 「이름: 」을 붙인다(그 컷 인물 칸의 이름). 한 사람뿐이면 이름은 안 붙여도 된다. 속마음은 (괄호)로, 외침은 !로 끝낸다.',
+    '대사는 이야기를 앞으로 움직이는 말만 쓴다 — 새 정보, 결심·선택, 갈등, 관계가 바뀌는 말. 그림으로 이미 보이는 것, 상황 설명, 감탄사(어?·헉·아…)·맞장구(응·그래)·「…」만 있는 풍선, 앞 컷 말의 되풀이는 쓰지 않고 대사 칸을 비운다. 표정·반응·풍경·인서트·움직임 컷은 대개 대사 없이 그림으로 둔다. 대사가 있는 컷은 전체의 절반을 넘지 않는다.',
+    '대사 칸: 말풍선은 한 컷에 하나가 기본, 둘은 두 사람이 주고받을 때만(셋은 쓰지 않는다). 한 풍선은 25자 안쪽. 여러 개면 「 / 」로 잇는다. 인물 칸에 두 사람이 있으면 말풍선마다 앞에 「이름: 」을 붙인다(그 컷 인물 칸의 이름). 한 사람뿐이면 이름은 안 붙여도 된다. 속마음은 (괄호)로, 외침은 !로 끝낸다.',
     '나레이션 칸은 비우는 것이 기본이다. 장면을 여는 컷, 시간·장소가 건너뛰는 곳(「사흘 뒤.」「그날 밤, 옥상.」), 대사 없는 컷의 속마음(웹툰식 1인칭 독백)에만 쓴다. 3~4컷에 하나를 넘지 않고 25자 안쪽. 그림이나 대사가 이미 말하는 것은 쓰지 않는다. 웹소설이 있으면 그 서술·속마음을 줄여 쓴다.',
     '나레이션 앞에 자리를 적는다: 위:(컷 위쪽 자막) · 아래:(컷 아래쪽) · 사이:(앞 컷과 이 컷 사이 여백에 뜨는 자막, 시간이 건너뛸 때). 적지 않으면 위.',
     '인물 칸에는 그 컷에 보이는 인물 이름을 화면 왼쪽부터 쉼표로 적는다(많아야 2명). 등장인물 목록의 이름을 그대로 쓴다. 인물이 없으면 비운다.',
@@ -13840,8 +13850,8 @@ function contiRules(ch, hasScenes){
     '한 컷에는 한 가지만 보여 준다. 한 화면에 컷 한두 개가 보인다.',
     '같은 샷을 세 번 연속 쓰지 않는다. 넓은 컷·중간 컷·가까운 컷을 섞는다.',
     (boardMode()==='webtoon' ? '웹툰 세로 스크롤 판형이다(거의 한 줄에 한 컷). 세로로 긴 한 컷은 구도에 +세로:쓰임, 화면 폭을 다 쓰는 납작한 가로 컷은 +가로:쓰임, 짧은 반응 두 컷을 나란히 둘 때는 둘 다 +작게를 붙인다.'
-                             : '만화 판형이다(한 줄에 두 컷). 한 줄을 혼자 쓰는 가로로 긴 한 컷은 구도에 +가로:쓰임, 두 줄 높이의 세로로 긴 한 컷은 +세로:쓰임을 붙인다.')+
-      ' 가로 쓰임: '+usesText('wide')+'. 세로 쓰임: '+usesText('tall')+'. 예: ELS+가로:전경, FS+앙각+세로:높이. 열 컷에 한두 개만, 쓰임이 꼭 맞는 컷에만.',
+                             : '만화 판형이다(한 줄에 두 컷). 한 줄을 혼자 쓰는 가로로 긴 한 컷만 구도에 +가로:쓰임을 붙인다. 세로로 긴 컷(+세로)은 쓰지 않는다.')+
+      ' 가로 쓰임: '+usesText('wide')+'.'+(boardMode()==='webtoon'?' 세로 쓰임: '+usesText('tall')+'. 예: ELS+가로:전경, FS+앙각+세로:높이.':' 예: ELS+가로:전경, STAND+가로:대치·거리.')+' 열 컷에 한두 개만, 쓰임이 꼭 맞는 컷에만.',
     '장면이 바뀌면 첫 컷은 장소를 보여 주는 넓은 컷(ELS·LS·EMPTY)으로 연다.',
     '감정이 터지는 CU·ECU 바로 앞에는 넓거나 조용한 컷을 하나 둔다.',
     '큰 대사·사건 뒤에는 듣거나 보는 사람의 반응 컷(BS·CU)을 둔다.',
@@ -13959,13 +13969,16 @@ function oneLn(s){ return String(s==null?'':s).replace(/[|｜]/g,' ').replace(/\
 function unq(s){ return String(s==null?'':s).trim().replace(/^[「“"'『]+|[」”"'』]+$/g,'').trim(); }
 function emptyMark(s){ s=String(s==null?'':s).trim(); return /^[-—–\s]*$/.test(s) || /^\(?(없음|무음|대사 없음|나레이션 없음)\)?\.?$/.test(s); }
 // 「A: 이거 써요. / B: 네?」 → ['A: 이거 써요.', 'B: 네?']
+// 이야기에 안 보태는 풍선: 문장부호·말줄임표만
+var BAL_FILLER=/^[(（]?[\s…\.\?!~,·ㅋㅎ]*[)）]?$/;   // 말은 없고 부호만(「…」「?!」「ㅋㅋ」). 감탄사·맞장구는 AI 규칙으로 줄인다
+function balFiller(b){ return BAL_FILLER.test(String(b||'').replace(/^[^:：]{1,12}[:：]\s*/,'').trim()); }
 function balloonsParse(s){
   var out=[];
   String(s==null?'':s).split(/\s+\/\s*|\s*\/\s+|／|\n/).forEach(function(b){
-    b=b.trim(); if(!b || out.length>=3) return;
+    b=b.trim(); if(!b || out.length>=2) return;
     var m=/^([^\s:：「“"'(（][^:：「“"'.,!?…]{0,11}?)\s*[:：]\s*(.*)$/.exec(b), who='';
     if(m && !/^\d+$/.test(m[1])){ who=m[1].trim(); b=m[2]; }
-    b=unq(b); if(emptyMark(b)) return;
+    b=unq(b); if(emptyMark(b) || balFiller(b)) return;
     out.push((who?who+': ':'')+b);
   });
   return out;
@@ -14480,7 +14493,7 @@ var _scCP=cutPrompt; cutPrompt=function(ch){
 };
 // 시험·다른 기능용 창구
 window.__ctScene={list:sceneList, skeleton:function(t,bd,cl,seed){ return skeleton(t,bd,cl||[],seed); }, last:function(){ return SK_LAST; }, band:bandFor,
-  parseScenes:function(t){ return flowParseScenes(t); }, size:cutSize, comp:parseComp, prompt:function(a,b){ return cutPrompt({a:a,b:b,name:''}); }, board:function(){ return B; }};
+  parseScenes:function(t){ return flowParseScenes(t); }, balloons:function(t){ return balloonsParse(t); }, size:cutSize, comp:parseComp, prompt:function(a,b){ return cutPrompt({a:a,b:b,name:''}); }, board:function(){ return B; }, mode:function(m){ SK_MODE=m; }};
 function flowOpen(f, i){
   var it=FLOW_CUR[i]; if(!f || !it) return;
   var old=f.querySelector('.ct-flowbox'); if(old){ old.remove(); if(+old.dataset.fi===i) return; }
@@ -14582,7 +14595,8 @@ function linePrompt(){
   L.push('[대사가 빈 컷 — 번호|구도|인물|화면]\n'+npTargets().map(function(c){ return c.n+'|'+compText(c)+'|'+npNames(c)+'|'+oneLn(c.scr).slice(0,70); }).join('\n'));
   L.push('위 [대사가 빈 컷] 가운데 원고(웹소설)의 따옴표 속 대사(「」·“”·"")가 그 장면에 맞는 컷에만 대사를 붙인다.\n'+
     '- 원고에 있는 말만 골라 줄인다. 새 말을 지어내지 않는다. 맞는 말이 없는 컷은 쓰지 않는다.\n'+
-    '- 감정이 가라앉는 컷·풍경 컷·인서트처럼 말없이 두는 게 나은 컷은 고르지 않는다. 앞뒤 컷 대사를 되풀이하지 않는다.\n'+
+    '- 감정이 가라앉는 컷·풍경 컷·인서트·표정 반응 컷처럼 말없이 두는 게 나은 컷은 고르지 않는다. 앞뒤 컷 대사를 되풀이하지 않는다.\n'+
+    '- 이야기를 움직이는 말(정보·결심·갈등·관계가 바뀌는 말)만 붙인다. 감탄사·맞장구·「…」·그림으로 보이는 것을 말로 되풀이하는 대사는 붙이지 않는다. 대사가 빈 컷의 절반 넘게 고르지 않는다.\n'+
     '- 말풍선은 보통 하나, 많아야 둘(「 / 」로 잇는다). 하나에 20자 안쪽.\n'+
     '- 말풍선마다 말하는 사람을 「이름: 」으로 붙인다(그 컷 인물 칸의 이름 그대로). 속마음은 (괄호), 외침은 !로 끝낸다.\n'+
     '형식(한 줄에 하나): 번호|대사\n'+
@@ -14609,6 +14623,7 @@ function npParseLine(t){
     var m=/^(\d+)\s*번?\s*[|｜]\s*(.+)$/.exec(l); if(!m) return;
     var n=+m[1], c=B.cuts[n-1]; if(!ok[n] || !c || seen[n]) return;
     var bs=balloonsParse(m[2].replace(/\s*[|｜]\s*/g,' / ')).slice(0,2); if(!bs.length) return;
+    if(out.length>=Math.max(1, Math.ceil(npTargets().length*.4))) return;   // 대사가 빈 컷의 40%까지만
     seen[n]=1; out.push({kind:'line', n:n, c:c, sig:c.scr, text:bs.join(' / '), on:true});
   });
   return out;
