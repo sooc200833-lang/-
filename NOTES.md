@@ -221,3 +221,12 @@ arcForm, deviceId, folderMemo, gdBase, gdLast, gdLinked, ideaText, mangaDataVer,
 - 그림은 이 모듈이 Rough.js로 직접 그린다(`DRAW[id](D)`): 칸 `pnl`·`poly`·`clipR`·`clipP`, 사람 `fig`(콘티 그림과 같은 생김새)·`bust`, 큰 얼굴 `head`(eye: open·dot·white·blank·spiral·closed·smile·sad / brow / mouth / shade: eyes·half / noBody), 말풍선 `bal`(normal·shout·think·trem·phone·narr·whisper), 선 `focusL`·`radOut`·`speedL`·`wavy`·`hatch`, 폰 화면 `phone`. 보이는 칸만 그린다(IntersectionObserver), 테마 바뀌면 다시
 - 창구 `window.__cutDict={list, groups, show(id)}`
 - **바탕화면 하는 일대로 묶기 (2026-10-19)**: 바탕화면 묶음은 `PAGES.g` 대신 `dkCat`(표 `DK_CAT`, 없으면 제목 낱말·옛 갈래로)으로 — 저장소(즐겨찾기·등장인물·글 보관함·콘티 저장소)·색인(클리셰·소재·캐릭터 모티브·엔딩·에피소드·콘티 연출·컷 연출 사전·금지 조합)·도구(랜덤·아이디어·콘티 구성기·아크 점검표·작품 분석·AI 연결)·배우기(기초·제작·마무리 글)·사전 본편, 순서 `DK_CAT_ORDER`. 예전 바로 가기 아이콘(s:favs 등)은 바탕화면에서 빼고(`dkSC()`는 빈 목록, 창 내용·정보는 그대로 `DK_SC0`), 「저장소」 창이 저장소마다 개수를 보이고 누르면 그 저장소 창(◀ 저장소로 돌아가기), 길게 누르면 자동 저장 설정 모음. 묶음 그림 store·idx·tool·book. 콘티 페이지가 없으면 콘티·콘티 저장소는 묶음에서 빠진다(`dkVis`).
+
+## 컷 배치 연출 → 콘티 (2026-10-19, `CT_LAY`)
+- 컷 연출 사전 「컷 배치 연출」 32가지 중 네모 격자 판으로 옮길 수 있는 25가지를 컷 몇 개의 구도·크기·간격 틀로 옮겼다(`CT_LAY.list`, 웹툰 전용 `wt:1`). 사선·기우는 칸 모양, 겹친 칸, 한 배경 나누기, 칸 건너기, 쪽 넘김 펼침은 뺐다.
+- 장면 나누기(`reviewPrompt`)의 7번째 칸이 「컷 배치 이름 시작-끝」 — AI가 장면마다 골라도 되고 비워도 된다. `parseScenes` → `B.scenes[i].lay={id,a,b}`.
+- `layScenes`는 장면 종류대로 깐 뒤(`skSmooth` 다음) `layApply`로 틀을 깐다. 깔린 컷: `c.lay`(id), `c.lz`(틀의 size·use·gap·focus — AI 구도 칸이 빠뜨려도 `layKeep`이 채운다), `c.hint`=「이름 i/n — 할 일」.
+- 쓰기 프롬프트: 장면 줄에 `layLine`(이름·범위·효과), 연출 규칙 「같은 샷 세 번」에 틀 예외를 붙였다.
+- `evenFix`는 틀 안에 컷을 끼우거나 빼지 않는다. 범위는 `layRange`가 `c.lay`로 다시 찾는다.
+- 장면 머리 「배치 · 이름」 단추와 장면 메뉴 「컷 배치」 → 고르기 칸(깔기·사전에서 그림 보기·없음). 글이 있는 컷도 구도·크기만 바꾸고 되돌리기가 있다. 「뼈대 다시」도 틀을 다시 깐다.
+- 시험: `/home/claude/fx/tlay.py webtoon|manga`.

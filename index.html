@@ -1295,6 +1295,12 @@ body.dk-drag, body.dk-drag *{user-select:none!important; -webkit-user-select:non
 .ct-sced{display:grid; grid-template-columns:max-content 1fr; gap:.25rem .5rem; align-items:center; margin:.35rem 0; font-size:.8rem}
 .ct-sced input{font:inherit; font-size:.8rem; padding:.15rem .3rem; border:1px solid var(--rule-hard); background:var(--paper); color:var(--ink); min-width:0}
 .ct-sced .filterbar{grid-column:1/-1}
+.ct-slay{font:inherit; font-size:.72rem; border:1px solid var(--note); color:var(--note); background:transparent; padding:0 .35rem; border-radius:2px; cursor:pointer}
+.ct-slay small{font-size:.66rem; color:var(--ink-3)}
+.ct-sclay{display:grid; grid-template-columns:max-content minmax(0,1fr); gap:.25rem .5rem; align-items:center; margin:.35rem 0; font-size:.8rem}
+.ct-sclay select{font:inherit; font-size:.8rem; padding:.15rem .3rem; border:1px solid var(--rule-hard); background:var(--paper); color:var(--ink); min-width:0; max-width:100%}
+.ct-sclay .ct-slfx{grid-column:1/-1; margin:0; color:var(--ink-2); font-size:.78rem}
+.ct-sclay .filterbar,.ct-sclay .ct-scn{grid-column:1/-1}
 .ct-hintr{color:var(--note)}
 .ct-main{align-items:center}
 .ct-main .ct-go{font-weight:700; border-color:var(--ink); background:var(--ink); color:var(--paper)}
@@ -13054,8 +13060,9 @@ function evenFix(maxD){
     if(R.length%2===0 || R.some(function(c){ return c.scr || c.line; })) return;
     var f0=R[0], l=R[R.length-1];
     if(/^(els|ls|empty|bird|crowd)$/.test(f0.k) && !f0.size){ f0.size='wide'; f0.use=f0.k==='empty'?'mood':(f0.k==='crowd'?'crowd':'est'); changed++; return; }
-    if(net<maxD && (net<=0 || R.length<3)){ var nc={k:l.k==='cu'?'bs':'cu', hint:'반응 — 말 없이 받는다', silent:1, scr:'', line:''}; if(l.cl) nc.cl=l.cl; B.cuts.splice(B.cuts.indexOf(l)+1, 0, nc); net++; changed++; return; }
-    if(R.length>=3 && net>-maxD){ for(var j=R.length-1;j>=1;j--){ var x=R[j]; if(!x.focus && !x.hook && !x.size){ B.cuts.splice(B.cuts.indexOf(x),1); net--; changed++; return; } } }
+    var free=R.filter(function(c){ return !c.lay; }), at=free.length?free[free.length-1]:null;   // 컷 배치 틀 안에는 끼우지 않는다
+    if(at && net<maxD && (net<=0 || R.length<3)){ var nc={k:at.k==='cu'?'bs':'cu', hint:'반응 — 말 없이 받는다', silent:1, scr:'', line:''}; if(at.cl) nc.cl=at.cl; B.cuts.splice(B.cuts.indexOf(at)+1, 0, nc); net++; changed++; return; }
+    if(R.length>=3 && net>-maxD){ for(var j=R.length-1;j>=1;j--){ var x=R[j]; if(!x.focus && !x.hook && !x.size && !x.lay){ B.cuts.splice(B.cuts.indexOf(x),1); net--; changed++; return; } } }
     if(!l.size){ l.size='wide'; changed++; }
   });
   if(!changed) return 0;
@@ -14251,6 +14258,110 @@ window.__ctInsertCuts=function(specs, opts){
   return insertCuts(specs, opts);
 };
 
+/* ---------- 컷 배치 연출 → 콘티 (2026-10-19) ----------
+   컷 연출 사전 「컷 배치 연출」 중 네모 칸 콘티 판으로 옮길 수 있는 것(25가지)을 컷 몇 개의 구도·크기·간격 틀로 바꾼다.
+   장면 배정표에서 AI가 장면마다 하나를 고르거나(「배치」 칸), 장면 메뉴에서 작가가 고른다. 장면 객체 x.lay = {id, a, b}
+   깔린 컷: c.lay=id, c.lz={size,use,gap,focus} (AI가 구도 칸에 크기·간격을 빠뜨려도 틀을 지킨다), c.hint=「배치 이름 i/n — 할 일」
+   사선·기우는 칸 모양, 겹친 칸, 한 배경 나누기, 칸 건너기, 쪽 넘김 펼침은 네모 격자 판에서 모양을 못 살려 넣지 않았다. */
+var CT_LAY=(function(){
+  function S(k,o,h){ o=o||{}; o.k=k; o.h=h; return o; }
+  function pick(arr, m){ if(m>=arr.length) return arr.slice(); var out=[]; for(var i=0;i<m;i++) out.push(arr[Math.round(i*(arr.length-1)/Math.max(1,m-1))]); return out; }
+  var L=[
+  {id:'grow', name:'점점 커지는 칸', fx:'칸이 한 단계씩 커지며 감정이 쌓이다 마지막 칸에서 터진다', at:'tail', n:[3,4],
+    f:function(m,wt){ var a=[S('insert',{z:wt?'half':''},'작은 칸 — 터지기 전 조짐(떨리는 손·쥔 주먹)'),S('bs',{},'조금 큰 칸 — 참는 얼굴'),S('cu',{},'더 큰 칸 — 감정이 차오른다'),S('fs',{z:wt?'tall':'wide',u:wt?'entrance':'impact',f:1,d:1,a:'low'},'가장 큰 칸 — 터진다')]; return m>=4?a:[a[0],a[1],a[3]]; }},
+  {id:'shrink', name:'좁아지다 터지는 칸', fx:'칸이 점점 좁아지며 숨이 막히다가 큰 칸 하나로 풀린다', at:'tail', n:[4,5],
+    f:function(m,wt){ var a=[S('stand',{z:'wide',u:'standoff'},'넓은 칸 — 맞선 두 편의 거리'),S('bs',{g:0},'좁아진다 — 노려보는 얼굴'),S('ecu',{g:0,s:1},'더 좁게 — 눈만'),S('insert',{g:0,s:1},'가장 좁게 — 움직이기 직전의 손·발'),S('ms',{z:'wide',u:'impact',f:1,d:2,g:wt?2:null},'터진다 — 한꺼번에 움직인다')]; return m>=5?a:[a[0],a[1],a[2],a[4]]; }},
+  {id:'flatburst', name:'고른 칸 뒤 큰 한 칸', fx:'같은 크기 칸으로 평온을 깔아 두고 갑자기 큰 칸 하나로 깬다', at:'tail', n:[3,5],
+    f:function(m,wt){ var out=[], ks=['ms','two','bs','ms']; for(var i=0;i<m-1;i++) out.push(S(ks[i%ks.length],{},'고른 칸 '+(i+1)+' — 평온한 일상, 같은 크기로')); out.push(S('ls',{z:'wide',u:'impact',f:1,g:wt?2:null},'갑자기 큰 한 칸 — 평온이 깨진다')); return out; }},
+  {id:'bigsmall', name:'큰 칸 뒤 작은 반응 칸들', fx:'큰 칸으로 사건을 보여 주고, 작은 칸들로 각자의 반응을 받는다', at:'any', n:[3,4],
+    f:function(m,wt){ var out=[S('ls',{z:'wide',u:'crowd',f:1},'큰 칸 — 모두가 보는 사건')]; for(var i=1;i<m;i++) out.push(S(i%2?'cu':'bs',{z:wt?'half':'',s:1},'작은 반응 칸 '+i+' — 인물마다 다른 표정')); return out; }},
+  {id:'narrow', name:'좁은 칸 연타', fx:'좁은 칸을 짧게 이어 시간을 잘게 쪼개고 긴장을 끌어올린다', at:'tail', n:[3,4],
+    f:function(m,wt){ var a=[S('ecu',{z:wt?'half':'',s:1,g:0},'짧은 칸 — 눈'),S('insert',{z:wt?'half':'',s:1,g:0},'짧은 칸 — 손끝'),S('ecu',{s:1,g:0},'짧은 칸 — 땀·숨'),S('insert',{s:1,g:0},'짧은 칸 — 움직이기 직전')]; return a.slice(0,m); }},
+  {id:'samezoom', name:'같은 구도로 다가가며 표정 키우기', fx:'같은 각도·같은 자세로 한 단계씩 다가가며 표정이 점점 강해져 감정이 극대화된다', at:'tail', n:[3,4],
+    f:function(m,wt){ var a=[S('ms',{},'같은 각도·같은 자세 — 표정 1단계(굳는다)'),S('bs',{g:0},'같은 각도 — 표정 2단계(흔들린다)'),S('cu',{g:0},'같은 각도 — 표정 3단계(차오른다)'),S('ecu',{f:1,g:0,z:'wide',u:'impact'},'같은 각도 — 가장 강한 표정')]; return m>=4?a:[a[0],a[2],a[3]]; }},
+  {id:'fixed', name:'고정 카메라 반복', fx:'카메라를 고정한 채 같은 칸을 반복해 침묵과 기다림의 시간을 늘인다', at:'any', n:[3,4],
+    f:function(m){ var out=[]; for(var i=0;i<m;i++) out.push(S('two',{s:i<m-1?1:0},i<m-1?'같은 자리·같은 크기 반복 '+(i+1)+' — 아주 작은 변화만':'같은 자리 — 마지막에 하나가 달라진다')); return out; }},
+  {id:'sametime', name:'같은 자리, 다른 시간', fx:'같은 장소를 같은 구도로 다시 보여 주어 흐른 시간과 달라진 것을 대사 없이 알린다', at:'any', n:[2,3],
+    f:function(m,wt){ var a=[S('ls',{},'같은 자리 — 그때'),S('ls',{s:1,g:wt?3:null},'같은 구도 — 시간이 흐른 뒤, 달라진 것 하나'),S('ls',{s:1,g:wt?3:null},'같은 구도 — 지금')]; return a.slice(0,m); }},
+  {id:'samefar', name:'같은 구도로 멀어지기', fx:'같은 방향에서 칸마다 물러나 인물이 점점 작아지며 외로움이 커진다', at:'tail', n:[3,4],
+    f:function(m,wt){ var a=[S('cu',{s:1},'같은 방향 — 얼굴'),S('ms',{s:1},'같은 방향 — 한 걸음 물러난다'),S('ls',{s:1},'같은 방향 — 주변이 보인다'),S('els',{s:1,z:'wide',u:'mood',g:wt?2:null},'같은 방향 — 인물이 작게 남는다')]; return m>=4?a:[a[0],a[2],a[3]]; }},
+  {id:'twist4', name:'셋은 같게, 넷째는 비틀기', fx:'같은 칸 세 번으로 기대를 만들고 넷째 칸에서 어긋나게 한다', at:'tail', n:[4,4],
+    f:function(){ return [S('ms',{},'같은 구도 1 — 늘 하던 대로'),S('ms',{},'같은 구도 2 — 그대로'),S('ms',{},'같은 구도 3 — 그대로'),S('cu',{f:1},'넷째 — 어긋난다(반전·이상 징후)')]; }},
+  {id:'reveal', name:'놀란 얼굴 뒤 넓어지며 상황 공개', fx:'놀란 얼굴을 먼저 보여 주고 다음 칸부터 넓혀 무엇을 봤는지 전경으로 드러낸다', at:'any', n:[2,4],
+    f:function(m,wt){ var a=[S('cu',{f:1},'놀란 얼굴 — 무엇을 봤는지는 아직 안 보인다'),S('back',{},'뒷모습 너머로 조금 보인다'),S('ls',{},'더 넓게 — 상황이 드러난다'),S('els',{z:wt?'tall':'wide',u:wt?'height':'crowd',a:wt?'low':'',g:wt?2:null,s:1},'가장 넓게 — 전경 공개')]; return m>=4?a:m===3?[a[0],a[1],a[3]]:[a[0],a[3]]; }},
+  {id:'zoomin3', name:'멀리서 눈까지 좁히기', fx:'전경에서 인물, 얼굴, 눈까지 좁혀 들어가며 속마음으로 들어간다', at:'head', n:[3,4],
+    f:function(m){ var a=[S('els',{z:'wide',u:'est'},'멀리 — 장소 전체'),S('ms',{},'인물'),S('cu',{},'얼굴'),S('ecu',{s:1},'눈 — 속마음으로')]; return m>=4?a:[a[0],a[2],a[3]]; }},
+  {id:'zoomout4', name:'얼굴에서 도시까지 물러나기', fx:'얼굴에서 시작해 점점 물러나 세상 속의 작은 인물로 끝낸다', at:'tail', n:[3,4],
+    f:function(m,wt){ var a=[S('cu',{s:1},'얼굴'),S('ms',{s:1},'물러난다 — 몸과 주변'),S('ls',{s:1,a:'high'},'더 물러난다 — 건물·거리'),S('els',{s:1,a:'high',z:'wide',u:'mood',g:wt?2:null},'도시·하늘 — 인물이 점처럼')]; return m>=4?a:[a[0],a[2],a[3]]; }},
+  {id:'piece', name:'조각 모아 전신 등장', fx:'발·손·눈 조각으로 기대를 모은 뒤 전신을 크게 보여 준다', at:'any', n:[3,4],
+    f:function(m,wt){ var a=[S('insert',{s:1},'조각 — 발'),S('insert',{s:1},'조각 — 손·무기'),S('ecu',{s:1},'조각 — 눈'),S('fs',{a:'low',f:1,z:wt?'tall':'wide',u:wt?'entrance':'impact'},'전신 등장')]; return m>=4?a:[a[0],a[2],a[3]]; }},
+  {id:'approach', name:'칸마다 다가오는 것', fx:'같은 자리에서 다가오는 것을 칸마다 크게 그려 피할 수 없음을 느끼게 한다', at:'any', n:[3,4],
+    f:function(m,wt){ var a=[S('pov',{},'멀리 — 작게 보인다'),S('pov',{g:0},'가까워진다'),S('pov',{g:0,a:'low'},'더 가까이 — 칸을 채운다'),S('cu',{f:1,g:0,a:'low',z:'wide',u:'impact'},'코앞')]; return m>=4?a:[a[0],a[2],a[3]]; }},
+  {id:'actsplit', name:'한 동작을 여러 칸으로', fx:'한 동작을 몇 칸으로 쪼개 그 순간의 시간을 늘린다', at:'any', n:[3,4],
+    f:function(m,wt){ var a=[S('ms',{d:1},'동작 시작 — 준비'),S('fs',{d:1,g:0},'동작 중간'),S('cu',{d:1,g:0},'결정적인 찰나(손·눈)'),S('fs',{d:2,f:1,g:0,z:wt?'tall':'wide',u:wt?'fall':'impact'},'동작 끝 — 결과')]; return m>=4?a:[a[0],a[1],a[3]]; }},
+  {id:'montage', name:'작은 칸 몽타주', fx:'작은 칸을 이어 붙여 긴 시간이나 여러 일을 빠르게 훑는다', at:'any', n:[4,6],
+    f:function(m,wt){ var ks=['ms','insert','bs','fs','insert','cu'], out=[]; for(var i=0;i<m;i++) out.push(S(ks[i%ks.length],{z:wt?'half':'',s:1,g:i?0:null},'몽타주 '+(i+1)+'/'+m+' — 짧은 한 순간')); return out; }},
+  {id:'simul', name:'같은 시각 다른 곳', fx:'두 곳을 번갈아(웹툰은 나란히) 보여 같은 시각에 벌어지는 일로 읽히게 한다', at:'any', n:[2,4],
+    f:function(m,wt){ var out=[]; for(var i=0;i<m;i++) out.push(S(i%2?'bs':'bs',{z:wt?'half':''},(i%2?'다른 곳 — 같은 시각의 다른 인물':'한 곳 — 같은 시각의 한 인물')+(m>2?' ('+(Math.floor(i/2)+1)+')':''))); return out; }},
+  {id:'mirror', name:'마주 보는 두 칸', fx:'두 인물을 같은 크기·좌우 대칭으로 마주 놓아 대결이나 맞섬을 보여 준다', at:'any', n:[2,3],
+    f:function(m){ var a=[S('bs',{},'왼쪽 인물 — 오른쪽을 본다'),S('bs',{g:0},'오른쪽 인물 — 왼쪽을 본다(같은 크기·대칭)'),S('stand',{z:'wide',u:'standoff'},'둘 사이 거리')]; return a.slice(0,m); }},
+  {id:'zigzag', name:'번갈아 놓은 대화 칸', fx:'말하는 쪽을 칸마다 번갈아 놓아 대화의 핑퐁을 리듬으로 만든다', at:'any', n:[4,6],
+    f:function(m){ var out=[]; for(var i=0;i<m;i++) out.push(S(i%2?'ots':'ots',{},(i%2?'오른쪽 인물이 받아친다':'왼쪽 인물이 말한다')+' ('+(i+1)+'/'+m+')')); return out; }},
+  {id:'tilt', name:'점점 기우는 칸', fx:'앵글이 칸마다 더 기울어 정신이 흔들리는 것을 보여 준다', at:'tail', n:[3,4],
+    f:function(m){ var a=[S('ms',{},'반듯한 칸 — 아직 괜찮다'),S('bs',{a:'dutch'},'조금 기운다'),S('cu',{a:'dutch'},'더 기운다'),S('ecu',{a:'dutch',f:1},'크게 기운다 — 무너진다')]; return m>=4?a:[a[0],a[2],a[3]]; }},
+  {id:'wt-gapwide', name:'간격이 점점 넓어지는 세로 칸', fx:'컷 사이 여백이 칸마다 넓어져 스크롤이 느려지고 여운이 길어진다', at:'tail', n:[3,4], wt:1,
+    f:function(m){ var a=[S('bs',{g:1},'보통 간격'),S('back',{g:2,s:1},'여백이 넓어진다'),S('ls',{g:3,s:1},'긴 여백'),S('empty',{g:3,s:1,z:'tall',u:'pause'},'가장 긴 여백 — 빈 배경')]; return m>=4?a:[a[0],a[1],a[3]]; }},
+  {id:'wt-gaptight', name:'간격 없이 몰아치는 세로 칸', fx:'컷 사이를 붙여 스크롤이 멈추지 않게 몰아친다', at:'any', n:[3,5], wt:1,
+    f:function(m){ var ks=['fs','cu','ms','ecu','fs'], out=[]; for(var i=0;i<m;i++) out.push(S(ks[i%ks.length],{g:i?0:null,d:1,a:i%2?'dutch':''},'붙인 칸 '+(i+1)+' — 몰아친다')); out[m-1].f=1; out[m-1].d=2; return out; }},
+  {id:'wt-grow', name:'스크롤하며 커지는 칸', fx:'세로 칸이 점점 길어져 스크롤 시간이 늘고 마지막 칸이 화면을 채운다', at:'tail', n:[3,3], wt:1,
+    f:function(){ return [S('bs',{z:'half'},'짧은 칸'),S('ms',{},'보통 칸'),S('fs',{z:'tall',u:'entrance',f:1,a:'low',g:2},'화면을 채우는 긴 칸')]; }},
+  {id:'wt-pan', name:'긴 그림을 위에서 아래로 훑기', fx:'거대한 것을 세로 칸 여러 개로 이어 붙여 스크롤로 훑어 내리게 한다', at:'any', n:[2,3], wt:1,
+    f:function(m){ var a=[S('ls',{z:'tall',u:'scan',a:'low',s:1},'맨 위 — 꼭대기'),S('ls',{z:'tall',u:'scan',g:0,s:1},'가운데 — 이어지는 몸통'),S('fs',{z:'tall',u:'height',g:0,a:'low'},'맨 아래 — 올려다보는 작은 인물')]; return m>=3?a:[a[0],a[2]]; }}
+  ];
+  var by={}; L.forEach(function(x){ by[x.id]=x; });
+  return {list:L, by:by, pick:pick};
+})();
+function layOk(id, wt){ var x=CT_LAY.by[id]; return !!x && (!x.wt || wt); }
+function layList(wt){ return CT_LAY.list.filter(function(x){ return !x.wt || wt; }); }
+// 이름(조금 달라도)으로 찾기
+function layIdOf(s){
+  s=String(s||'').replace(/[「」"'*]/g,'').replace(/\s*\d+\s*[-~–]\s*\d+\s*$/,'').trim(); if(!s || /^(없음|-|—|보통)$/.test(s)) return '';
+  if(CT_LAY.by[s]) return s;
+  var nm=s.replace(/\s+/g,''), hit='';
+  CT_LAY.list.forEach(function(x){ var n=x.name.replace(/\s+/g,''); if(!hit && (n===nm || n.indexOf(nm)>-1 || (nm.length>=6 && nm.indexOf(n.slice(0,6))>-1))) hit=x.id; });
+  return hit;
+}
+// 장면 [a,b]에 배치 id를 깐다. at: 'head' 장면 앞, 'tail'·'any' 장면 끝(범위를 주면 그 자리). force면 글이 있는 컷도 구도만 바꾼다
+function layApply(sc, opt){
+  opt=opt||{}; var lay=sc&&sc.lay, P=lay&&CT_LAY.by[lay.id], wt=boardMode()==='webtoon'; if(!P || !layOk(lay.id, wt)) return 0;
+  var a=Math.max(1,sc.a), b=Math.min(B.cuts.length, sc.b), L=b-a+1; if(L<P.n[0]) return 0;
+  var m=Math.min(P.n[1], L), s=a;
+  if(lay.a && lay.b && lay.a>=a && lay.b<=b && lay.b-lay.a+1>=P.n[0]){ s=lay.a; m=Math.min(P.n[1], lay.b-lay.a+1); }
+  else if(P.at==='head') s=a; else s=b-m+1;
+  var steps=P.f(m, wt), n=0;
+  steps.forEach(function(st,j){ var c=B.cuts[s-1+j]; if(!c) return; if(!opt.force && (c.scr || c.line)) return;
+    c.k=st.k; if(st.a) c.ang=st.a; else delete c.ang;
+    ['size','use','gap','focus','dyn','silent'].forEach(function(k){ delete c[k]; });
+    var z=st.z && (wt || st.z==='wide') ? st.z : '';
+    if(z){ c.size=z; if(st.u && useOf(st.u) && useOf(st.u)[1]===z) c.use=st.u; }
+    if(wt && st.g!=null) c.gap=st.g;
+    if(st.f) c.focus=1; if(st.d) c.dyn=st.d; if(st.s){ c.silent=1; delete c.bal; delete c.balk; }
+    c.hint=P.name+' '+(j+1)+'/'+steps.length+' — '+st.h; c.lay=P.id;
+    c.lz={}; ['size','use','gap','focus'].forEach(function(k){ if(c[k]!=null) c.lz[k]=c[k]; });
+    n++; });
+  lay.a=s; lay.b=s+steps.length-1;
+  return n;
+}
+// 장면 안의 옛 배치 표시를 지운다(배치를 바꾸거나 없앨 때)
+function layClear(a, b){ for(var n=a;n<=b;n++){ var c=B.cuts[n-1]; if(c && c.lay){ delete c.lay; delete c.lz; } } }
+// AI가 쓴 구도 칸이 배치 틀의 크기·간격·집중선을 빠뜨리면 틀대로 채운다
+function layKeep(c){ var z=c.lz; if(!z) return; if(z.size && !c.size){ c.size=z.size; if(z.use) c.use=z.use; } if(z.gap!=null && c.gap==null) c.gap=z.gap; if(z.focus && !c.focus) c.focus=1; }
+// 틀이 깔린 실제 컷 범위(컷을 옮기거나 넣어도 c.lay로 다시 찾는다)
+function layRange(x){ var id=x.lay&&x.lay.id, a=0, b=0; if(!id || !B || !B.cuts) return null;
+  for(var n=x.a;n<=Math.min(x.b,B.cuts.length);n++){ var c=B.cuts[n-1]; if(c && c.lay===id){ if(!a) a=n; b=n; } }
+  if(a){ x.lay.a=a; x.lay.b=b; return [a,b]; } return null; }
+function layLine(x){ var P=x.lay&&CT_LAY.by[x.lay.id], r=P&&layRange(x); return P?' · 컷 배치: '+P.name+(r?' ('+r[0]+'–'+r[1]+'번)':'')+' — '+P.fx:''; }
+
 /* ---------- 이야기 먼저: 장면 배정표 → 장면 종류대로 구도 (2026-10-17) ----------
    「AI로 콘티 쓰기」는 이야기가 있으면 늘 장면부터 나누고(reviewPrompt), 장면마다 종류(대화·움직임·고백…)를 정해
    그 종류의 컷 역할 순서로 구도를 깐 뒤(layScenes) 컷을 쓴다. 「이야기로 장면 나누기」는 쓰기 전에 장면만 나눠 보고 고칠 때.
@@ -14291,9 +14402,11 @@ function layScenes(){
       Object.keys(c).forEach(function(k){ delete c[k]; }); Object.assign(c, nw, keep); c.n=n0; c.scr=''; c.line=''; n++; });
   });
   skSmooth(B.cuts);
+  sc.forEach(function(x){ if(x.lay) layApply(x); });   // 컷 배치 연출(같은 구도 반복 등)은 고르게 다듬은 뒤에 깐다
   var lc=B.cuts[B.cuts.length-1]; if(lc && !lc.hook) lc.hook=1;
   B.skScenes=null;   // 장면 구조는 배정표가 맡는다
   evenFix();
+  B.scenes.forEach(function(x){ if(x.lay) layRange(x); });
   return n;
 }
 var planBusy=false;
@@ -14664,7 +14777,7 @@ function contiRules(ch, hasScenes){
   var D=[
     wt ? '웹툰 세로 스크롤 판형이다. 한 컷에는 한 가지만 보여 주고, 한 화면에 컷 한두 개가 보이며 위에서 아래로 읽힌다.'
        : '만화 판형이다(한 줄에 두 컷). 한 컷에는 한 가지만 보여 주고, 한 쪽에 컷 5~7개, 펼친 두 쪽을 한눈에 본다.',
-    '같은 샷을 세 번 연속 쓰지 않는다. 넓은 컷·중간 컷·가까운 컷을 섞는다.',
+    '같은 샷을 세 번 연속 쓰지 않는다. 넓은 컷·중간 컷·가까운 컷을 섞는다. 단 컷 역할에 「컷 배치 이름 i/n」이 적힌 컷은 그 틀을 따른다 — 같은 구도 반복·크기·간격을 추천대로 지키고, 화면 칸에 그 단계(표정의 세기·거리·시간)가 보이게 쓴다.',
     '새 장면에서는 첫 컷이나 늦어도 둘째 컷에서 어디인지 보여 준다(ELS·LS·EMPTY). 가까운 컷으로 바로 들어가는 장면이면 그 뒤에 넓혀 준다.',
     '감정이 터지는 CU·ECU 앞에는 넓거나 조용한 컷을, 큰 대사·사건 뒤에는 듣거나 보는 사람의 반응 컷(BS·CU)을 둔다.',
     '감정이 가라앉는 자리에 대사 없는 무음 컷을 두고, 이야기의 열쇠가 되는 사물(편지·폰·반지 등)은 INSERT로 따로 보여 준다.',
@@ -14739,7 +14852,9 @@ function reviewPrompt(){
     '- 장소나 시간이 바뀌거나 회상이 시작·끝나는 곳에서 새 장면이다. 1번부터 '+B.total+'번까지 빈틈없이 장면으로 나눈다. 장면 하나는 2~8컷.\n'+
     '- 컷은 이야기 무게대로 나눈다: 결정적 장면(고백·대결·폭로·결말)에 컷을 많이, 이동·설명 장면은 짧게. 구간 이름에 이야기를 억지로 맞추지 않는다.\n'+
     '- 장면 종류(하나): '+Object.keys(SK_TYPES).map(function(k){ return SK_TYPES[k].name.replace(/ 장면$/,''); }).join('·')+'\n'+
-    '형식(한 줄에 장면 하나): 시작번호-끝번호|장면 요약 25자 안쪽|이 장면에서 꼭 보여 줄 것(대사·행동·사물) 40자 안쪽|장소·시간 15자 안쪽|장면 종류|구간(도입·전개·전환·절정·마지막 훅)\n'+
+    '- 컷 배치(골라도 되고 비워도 된다): 컷 여러 개를 어떻게 이어 놓느냐로 감정·상황을 키우는 틀이다. 그 장면의 핵심 순간에 꼭 맞을 때만 아래에서 하나 고르고, 그 틀이 차지할 컷 범위를 적는다(예: 같은 구도로 다가가며 표정 키우기 14-17). 컷 범위는 장면 안, 틀의 컷 수에 맞춘다. 장면의 절반 넘게 쓰지 않고, 같은 배치를 이어지는 두 장면에 쓰지 않는다.\n'+
+    layList(boardMode()==='webtoon').map(function(x){ return '  · '+x.name+' ('+x.n[0]+(x.n[1]>x.n[0]?'~'+x.n[1]:'')+'컷) — '+x.fx; }).join('\n')+'\n'+
+    '형식(한 줄에 장면 하나): 시작번호-끝번호|장면 요약 25자 안쪽|이 장면에서 꼭 보여 줄 것(대사·행동·사물) 40자 안쪽|장소·시간 15자 안쪽|장면 종류|구간(도입·전개·전환·절정·마지막 훅)|컷 배치 이름 시작-끝(없으면 비움)\n'+
     '이야기에 비해 '+B.total+'컷이 너무 많거나(늘어짐) 적으면(욱여넣음) 「분량|알맞은 컷 수|이유 20자」 한 줄을 더 쓴다.\n'+
     '마지막 줄에 「검토|」로 시작해 글끼리 어긋난 점과 어떻게 정리했는지 한 줄로 적는다. 어긋남이 없으면 「검토|어긋남 없음」.';
 }
@@ -14756,7 +14871,9 @@ function parseScenes(t){
     var m=/^(\d+)\s*[-~–]\s*(\d+)\s*[|｜]\s*([^|｜]+)(?:[|｜](.*))?$/.exec(line);
     if(m){ var a=+m[1], b=+m[2], F=String(m[4]||'').split(/[|｜]/).map(function(x){ return x.trim(); });
       if(a>=1 && b>=a && a<=B.total){ var o={a:a, b:Math.min(b,B.total), sum:m[3].trim(), show:F[0]||''}; if(F[1]) o.place=F[1].slice(0,30); var ty=skTypeOf(F[2]); if(ty) o.type=ty;
-        if(F[3] && /도입|전개|전환|절정|훅/.test(F[3])) o.band=F[3].replace(/\s+/g,' ').trim().slice(0,8); sc.push(o); } return; }
+        if(F[3] && /도입|전개|전환|절정|훅/.test(F[3])) o.band=F[3].replace(/\s+/g,' ').trim().slice(0,8);
+        var ly=layIdOf(F[4]); if(ly && layOk(ly, boardMode()==='webtoon')){ o.lay={id:ly}; var lr=/(\d+)\s*[-~–]\s*(\d+)\s*$/.exec(String(F[4])); if(lr && +lr[1]>=o.a && +lr[2]<=o.b && +lr[2]>=+lr[1]){ o.lay.a=+lr[1]; o.lay.b=+lr[2]; } }
+        sc.push(o); } return; }
     var q=/^분량\s*[|｜]\s*(\d+)\s*(?:[|｜]\s*(.*))?$/.exec(line); if(q){ tot={n:+q[1], why:String(q[2]||'').trim().slice(0,40)}; return; }
     var n=/^검토\s*[|｜]\s*(.*)$/.exec(line); if(n) note=n[1].trim();
   });
@@ -14768,7 +14885,7 @@ function cutPrompt(ch){
   L.push(srcAll());
   var scs=scenesFor(ch.a,ch.b);
   if(scs.length) L.push('[장면 배정표 — 먼저 검토해 정한 것. 이 범위를 따른다. 작가가 적은 칸은 꼭 따른다]\n'+scs.map(function(x){ var T=x.type&&SK_TYPES[x.type];
-    return x.a+'–'+x.b+' '+x.sum+(x.place?' · 어디·언제: '+x.place:'')+(x.who?' · 누가: '+x.who:'')+(x.show?' · 꼭 보여 줄 것: '+x.show:'')+(x.role?' · 하는 일: '+x.role:'')+(T?' · '+T.name+' — '+T.desc:''); }).join('\n'));
+    return x.a+'–'+x.b+' '+x.sum+(x.place?' · 어디·언제: '+x.place:'')+(x.who?' · 누가: '+x.who:'')+(x.show?' · 꼭 보여 줄 것: '+x.show:'')+(x.role?' · 하는 일: '+x.role:'')+(T?' · '+T.name+' — '+T.desc:'')+layLine(x); }).join('\n'));
   L.push('[전체 분량] '+B.total+'컷. 이번에는 '+ch.a+'~'+ch.b+'번 컷('+ch.name+' 구간)만 쓴다.');
   L.push('[구간] '+B.band.map(function(b){ return b.name+' '+b.a+'–'+b.b; }).join(' · '));
   var used={}, rows=[];
@@ -14858,7 +14975,7 @@ function applyLines(t, ch){
     var r=lineParse(line); if(!r) return;
     var n=r.n; if(n<ch.a || n>ch.b) return;
     var c=B.cuts[n-1]; if(!c) return;
-    var p=parseComp(r.comp); c.k=p.k; c.ang=p.ang; c.focus=p.focus?1:0; c.flash=p.flash?1:0; if(p.size) c.size=p.size; else delete c.size; if(p.use) c.use=p.use; else delete c.use; if(p.gap!=null) c.gap=p.gap; else delete c.gap;
+    var p=parseComp(r.comp); c.k=p.k; c.ang=p.ang; c.focus=p.focus?1:0; c.flash=p.flash?1:0; if(p.size) c.size=p.size; else delete c.size; if(p.use) c.use=p.use; else delete c.use; if(p.gap!=null) c.gap=p.gap; else delete c.gap; layKeep(c);
     c.who=r.who; c.scr=r.scr; if(r.wp) c.wp=r.wp; else delete c.wp;
     if(srcOnly()) SPLIT_N+=srcSplit(c, r.line, r.nar);   // 원고에 없는 대사·나레이션은 추천으로
     else { c.line=r.line; if(r.nar) narSet(c, r.nar); }   // 나레이션 칸이 없는 옛 5칸 줄이면 있던 나레이션을 그대로 둔다
@@ -15040,7 +15157,7 @@ function flowScenes(){
     out.forEach(function(x,i){ var nx=out[i+1]; x.a=Math.max(1,x.a); x.b=Math.min(B.cuts.length, nx?nx.a-1:Math.max(x.b,x.a)); });
     return out.filter(function(x){ return x.b>=x.a; });
   }
-  return (B.scenes || []).map(function(x,ix){ return x && x.a>=1 && x.b>=x.a ? {a:x.a, b:x.b, sum:x.sum||'', place:x.place||'', who:x.who||'', role:x.role||'', show:x.show||'', type:x.type||'', ed:x.ed||0, tr:'', plan:1, _i:ix, src:'plan'} : null; }).filter(Boolean);
+  return (B.scenes || []).map(function(x,ix){ return x && x.a>=1 && x.b>=x.a ? {a:x.a, b:x.b, sum:x.sum||'', place:x.place||'', who:x.who||'', role:x.role||'', show:x.show||'', type:x.type||'', lay:x.lay||null, ed:x.ed||0, tr:'', plan:1, _i:ix, src:'plan'} : null; }).filter(Boolean);
 }
 function flowSceneOf(n){ var r=null; flowScenes().forEach(function(x){ if(!r && n>=x.a && n<=x.b) r=x; }); return r; }
 function flowNames(c){ try{ return whoOf(c).map(function(x){ return x.name; }).filter(Boolean); }catch(e){ return []; } }
@@ -15256,15 +15373,57 @@ function sceneHTML(x,i){
   var dl=rows.map(function(r){ return '<dt>'+(r[0]==='show'?'꼭 보여 줄 것':r[0]==='role'&&!x.role?'연출':SC_LB[r[0]])+'</dt><dd'+(r[0]==='who'&&!x.who?' class="ro"':'')+'>'+cesc(r[1])+'</dd>'; }).join('');
   var note=(x.src==='sk'||x.src==='band') && !x.place && !x.sum ? '<p class="ct-scn">무작위 뼈대다. 「이야기로 장면 나누기」를 누르면 이야기에 맞춰 다시 나눈다. 「설명」에 적어 두면 AI가 따른다.</p>' : '';
   return '<div class="ct-sch"><b>장면 '+(i+1)+'</b><span class="r">'+x.a+'–'+x.b+'번 · '+L+'컷</span>'+(ty?'<span class="ty">'+cesc(ty)+'</span>':'')+
-    (x.tr&&x.tr!=='시작'?'<em>'+cesc(x.tr)+'</em>':'')+(src?'<span class="src">'+src+'</span>':'')+
+    (x.tr&&x.tr!=='시작'?'<em>'+cesc(x.tr)+'</em>':'')+(x.lay&&CT_LAY.by[x.lay.id]?'<button type="button" class="ct-slay" data-sc="lay" title="컷 배치 연출 — 눌러서 바꾸거나 없앤다">배치 · '+cesc(CT_LAY.by[x.lay.id].name)+(layRange(x)?' <small>'+x.lay.a+'–'+x.lay.b+'번</small>':'')+'</button>':'')+(src?'<span class="src">'+src+'</span>':'')+
     '<span class="ct-scb"><button type="button" data-sc="ed" title="어디·누가·무슨 일·하는 일을 적는다">설명</button>'+
     '<details class="ct-scm"><summary aria-label="장면 메뉴">⋯</summary><span class="ct-scmb">'+
+    '<button type="button" data-sc="lay" title="같은 구도로 다가가기·넓어지며 공개하기처럼 컷 여러 개를 잇는 틀을 이 장면에 깐다">컷 배치</button>'+
     '<button type="button" data-sc="redo" title="이 장면만 AI로 다시 쓴다"'+(redoBusy||running?' disabled':'')+'>AI로 다시 쓰기</button>'+
     '<button type="button" data-sc="clear" title="화면·대사·나레이션·인물을 비운다(구도는 그대로)">글 지우기</button>'+
     '<button type="button" data-sc="reset" title="이 장면의 구도를 새로 깔고 글을 비운다">뼈대 다시</button></span></details></span></div>'+
     (dl?'<dl class="ct-scd">'+dl+'</dl>':'')+note;
 }
 // 고친 설명을 장면의 원래 자리에 저장한다. 구간(band)뿐이면 뼈대 장면으로 만들어 저장한다
+function sceneStore(x){
+  var o=null;
+  if(x.src==='flow' && B.flow && B.flow.scenes) o=B.flow.scenes[x._i];
+  else if(x.src==='plan' && B.scenes) o=B.scenes[x._i];
+  else if(x.src==='sk' && B.skScenes) o=B.skScenes[x._i];
+  else if(x.src==='band'){
+    B.skScenes=sceneList().map(function(y){ return {a:y.a, b:y.b, type:'band', name:y.name, desc:y.desc}; });
+    o=B.skScenes.filter(function(y){ return y.a===x.a; })[0];
+  }
+  return o||null;
+}
+// 장면 메뉴 「컷 배치」: 틀을 고르면 이 장면 컷의 구도·크기·간격을 그 틀대로 다시 깐다(글은 그대로)
+function sceneLayForm(d, x){
+  var old=d.querySelector('.ct-sclay'); if(old){ old.remove(); return; }
+  var wt=boardMode()==='webtoon', L=x.b-x.a+1, cur=x.lay&&x.lay.id||'';
+  var opts=layList(wt).map(function(p){ var ok=L>=p.n[0]; return '<option value="'+p.id+'"'+(p.id===cur?' selected':'')+(ok?'':' disabled')+'>'+cesc(p.name)+' · '+p.n[0]+(p.n[1]>p.n[0]?'~'+p.n[1]:'')+'컷'+(ok?'':' (장면이 짧다)')+'</option>'; }).join('');
+  var fm=document.createElement('div'); fm.className='ct-sclay';
+  fm.innerHTML='<label for="sl-'+x.a+'">컷 배치</label><select id="sl-'+x.a+'"><option value="">(없음 — 장면 종류대로)</option>'+opts+'</select>'+
+    '<p class="ct-slfx"></p><div class="filterbar"><button class="chip" type="button" data-sc="layset">이 장면에 깔기</button><button class="chip" type="button" data-sc="laysee">사전에서 그림 보기</button><button class="chip" type="button" data-sc="layclose">닫기</button></div>'+
+    '<p class="small ct-scn">'+(wt?'':'만화 판에서는 세로 컷·작은 컷 대신 보통 컷으로 깐다. ')+'모양이 네모 격자로 안 되는 배치(사선 칸·겹친 칸 등)는 목록에 없다.</p>';
+  d.appendChild(fm);
+  var sel=fm.querySelector('select'), fx=fm.querySelector('.ct-slfx');
+  var paint=function(){ var p=CT_LAY.by[sel.value]; fx.textContent=p?p.fx+'.':'고르지 않으면 장면 종류의 구도 순서를 그대로 쓴다.'; fm.querySelector('[data-sc="laysee"]').disabled=!p; };
+  sel.addEventListener('change', paint); paint(); sel.focus();
+}
+function sceneLaySet(x, id){
+  var o=sceneStore(x); if(!o) return;
+  var S=sceneSnap(x); S.lay={o:o, v:o.lay?JSON.parse(JSON.stringify(o.lay)):null};
+  layClear(x.a, x.b);
+  if(!id){ delete o.lay; sceneRelay(x); save(); renderBoard(); stat('장면 '+x.a+'–'+x.b+'번의 컷 배치를 없앴다. 글이 없는 컷은 장면 종류대로 다시 깔았다.'); sceneUndo(S, '컷 배치 되돌리기', '컷 배치를 바꾸기 전으로 되돌렸다.'); return; }
+  o.lay={id:id}; var tmp={a:x.a, b:x.b, lay:o.lay}, wrote=B.cuts.slice(x.a-1, x.b).some(function(c){ return c.scr || c.line; });
+  var n=layApply(tmp, {force:true}); save(); renderBoard();
+  stat(n?'장면 '+x.a+'–'+x.b+'번 중 '+o.lay.a+'–'+o.lay.b+'번에 「'+CT_LAY.by[id].name+'」을 깔았다.'+(wrote?' 글이 있는 컷은 구도·크기만 바꿨다 — 장면 메뉴의 「AI로 다시 쓰기」로 글을 틀에 맞춘다.':' 「AI로 콘티 쓰기」가 이 틀대로 쓴다.'):'이 장면은 그 배치를 깔기에 짧다.');
+  sceneUndo(S, '컷 배치 되돌리기', '컷 배치를 바꾸기 전으로 되돌렸다.');
+}
+// 배치를 없앤 장면: 글 없는 컷만 장면 종류대로 다시 깐다
+function sceneRelay(x){
+  var ty=x.type&&SK_TYPES[x.type]?x.type:null, r=skRegen(x.a, x.b, ty, null);
+  if(!r) return; B.cuts.slice(x.a-1, x.b).forEach(function(c,i){ if(c.scr || c.line || c.cl) return; var n0=c.n, keep={}; ['who','wp','nar','narPos'].forEach(function(k){ if(c[k]!=null) keep[k]=c[k]; });
+    Object.keys(c).forEach(function(k){ delete c[k]; }); Object.assign(c, r.cuts[i]||{k:'ms'}, keep); c.n=n0; c.scr=''; c.line=''; });
+}
 function sceneSave(x, v){
   var o=null;
   if(x.src==='flow' && B.flow && B.flow.scenes) o=B.flow.scenes[x._i];
@@ -15284,6 +15443,7 @@ function sceneUndo(S, label, msg){
     if(!S.keep.every(function(c){ return B.cuts.indexOf(c)>-1; })){ stat('그 뒤로 컷이 지워져서 되돌릴 수 없다.'); return; }
     S.keep.forEach(function(c,i){ var o=JSON.parse(S.bak[i]), n0=c.n; Object.keys(c).forEach(function(k){ delete c[k]; }); Object.assign(c,o); c.n=n0; });
     if(S.sk && B.skScenes && B.skScenes[S.sk.i]) Object.assign(B.skScenes[S.sk.i], S.sk.o);
+    if(S.lay){ if(S.lay.v) S.lay.o.lay=S.lay.v; else delete S.lay.o.lay; }
     save(); renderBoard(); stat(msg);
   });
 }
@@ -15306,6 +15466,7 @@ function sceneReset(x){
   });
   if(r && x.src==='sk' && B.skScenes && B.skScenes[x._i]){ var o=B.skScenes[x._i]; o.type=r.type; o.name=SK_TYPES[r.type].name; o.desc=SK_TYPES[r.type].desc; }
   if(x.src==='flow' && B.flow && B.flow.scenes && B.flow.scenes[x._i]) B.flow.scenes[x._i].sig='';
+  var so=sceneStore(x); if(so && so.lay){ var lt={a:x.a, b:x.b, lay:so.lay}; layApply(lt, {force:true}); }
   save(); renderBoard();
   stat('장면 '+x.a+'–'+x.b+'번을 새 뼈대로 깔았다'+(r?' — '+SK_TYPES[r.type].name:'')+'. 한 번 더 누르면 또 다르게 깐다.');
   sceneUndo(S, '뼈대 다시 되돌리기', x.a+'–'+x.b+'번 컷을 뼈대 다시 전으로 되돌렸다.');
@@ -15327,6 +15488,10 @@ document.getElementById('ct-board').addEventListener('click', function(e){
   var d=b.closest('.ct-scene'), x=sceneList()[+d.dataset.i]; if(!x || x.a!==+d.dataset.a){ flowDecorate(); return; }
   var act=b.dataset.sc;
   if(act==='ed'){ sceneEdit(d, x); return; }
+  if(act==='lay'){ var dm0=b.closest('details'); if(dm0) dm0.open=false; sceneLayForm(d, x); return; }
+  if(act==='layclose'){ var lf=d.querySelector('.ct-sclay'); if(lf) lf.remove(); return; }
+  if(act==='laysee'){ var sv=d.querySelector('.ct-sclay select'); if(sv && sv.value && window.__cutDict){ location.hash='#cutdict'; setTimeout(function(){ try{ window.__cutDict.show(sv.value); }catch(err){} },60); } return; }
+  if(act==='layset'){ if(running || redoBusy){ stat('다른 쓰기가 끝난 뒤 다시 누른다.'); return; } var sl=d.querySelector('.ct-sclay select'); sceneLaySet(x, sl?sl.value:''); return; }
   if(act==='close'){ var fm=d.querySelector('.ct-sced'); if(fm) fm.remove(); return; }
   if(act==='save'){ var v={}; [].slice.call(d.querySelectorAll('.ct-sced input')).forEach(function(i){ v[i.dataset.k]=i.value; });
     if(sceneSave(x, v)){ flowDecorate(); stat('장면 '+(+d.dataset.i+1)+' 설명을 저장했다. AI로 쓸 때 이 설명을 따른다.'); } return; }
