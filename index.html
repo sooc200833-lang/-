@@ -1400,6 +1400,27 @@ body.dk-drag, body.dk-drag *{user-select:none!important; -webkit-user-select:non
 .ct-ed .ct-redo-row{display:grid; gap:.3rem; justify-items:start}
 .ct-ed .ct-redo-row label{justify-self:stretch}
 .ct-ed .chip:disabled{opacity:.5; cursor:default}
+/* [[CSS:cutdict]] */
+.cd-bar .cd-q{flex:1 1 14rem; min-width:0; font:inherit; font-size:.88rem; padding:.3rem .5rem; background:var(--paper); color:var(--ink); border:1px solid var(--rule-hard)}
+.cd-grp{margin:1.6rem 0 0}
+.cd-grp>h3{margin:0 0 .2rem}
+.cd-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(230px,1fr)); gap:16px 14px; margin-top:.7rem}
+.cd-card{border:1px solid var(--rule); border-top:3px solid var(--ink-2); background:var(--paper-2); min-width:0; padding:.6rem .7rem .7rem; display:grid; gap:.3rem; align-content:start; transition:outline-color .3s}
+.cd-card.cd-hit{outline:3px solid var(--mark); outline-offset:2px}
+.cd-cv{display:block; width:100%; aspect-ratio:4/3; background:var(--paper); border:1px solid var(--rule)}
+.cd-card h4{margin:.2rem 0 0; font-size:1.02rem; font-family:"Hahmlet",serif}
+.cd-aka{margin:0; font-size:.74rem; color:var(--ink-3)}
+.cd-fx{margin:0; font-size:.86rem; line-height:1.6}
+.cd-more{font-size:.84rem; line-height:1.6}
+.cd-more summary{cursor:pointer; color:var(--note); font-size:.8rem}
+.cd-more p{margin:.35rem 0}
+.cd-ex{margin:.2rem 0; padding-left:1.1rem}
+.cd-warn{color:var(--ink-2)}
+.cd-warn b{color:var(--mark)}
+.cd-rel{font-size:.8rem}
+.cd-link{font:inherit; font-size:inherit; background:none; border:0; padding:0; color:var(--note); text-decoration:underline; text-underline-offset:.2em; cursor:pointer; text-align:left}
+.cd-src{margin-top:2rem; font-size:.84rem}
+/* [[/CSS:cutdict]] */
 </style>
 <body>
 <div class="wrap">
@@ -2548,6 +2569,11 @@ body.dk-drag, body.dk-drag *{user-select:none!important; -webkit-user-select:non
 <section class="blk" id="ctfx">
   <h2 class="big">콘티 연출 색인</h2>
   <div id="ctfx-root"></div>
+</section>
+
+<section class="blk" id="cutdict">
+  <h2 class="big">컷 연출 사전</h2>
+  <div id="cutdict-root"></div>
 </section>
 
 
@@ -5067,6 +5093,7 @@ var PAGES=[
  {g:'도구',id:'texts',t:'글 보관함',d:'구성기에서 쓴 줄거리·웹소설·컷별 콘티를 모아 둔다.'},
  {g:'도구',id:'conti',t:'콘티 구성기',d:'구성기의 이야기와 클리셰 컷 배정으로 컷마다 구도 그림과 글을 짠다.'},
  {g:'도구',id:'ctfx',t:'콘티 연출 색인',d:'컷 여러 개를 잇는 연출 46가지. 반응 컷·교차 편집·넘김 훅·스크롤 여백을 그림 순서로 보고 콘티에 바로 넣는다.'},
+ {g:'도구',id:'cutdict',t:'컷 연출 사전',d:'한 칸 안의 연출 69가지. 칸 모양·효과선·만화 기호·빛과 공간·말풍선·웹툰 한 칸을 그림과 효과·예시로.'},
  {g:'도구',id:'contis',t:'콘티 저장소',d:'콘티 구성기에서 쓴 콘티를 화·버전별로 모아 미리 보고 다시 연다.'},
  {g:'도구',id:'arc',t:'아크 점검표',d:'장편용. 네 칸을 채워 점검하고 장르별 예시 48개.'},
  {g:'도구',id:'epidx',t:'에피소드 소재 색인',d:'220개. 한 화를 채우는 작은 사건. 로맨스·개그·일상.'},
@@ -16089,6 +16116,786 @@ window.__ctFx={list:CONTI_FX, groups:CONTI_FX_GROUPS, byId:byId, show:show, spec
   filter:function(g,m,q){ CF.grp=g||''; CF.media=m||''; CF.q=q||''; if(!CF.built) build(); else { var qi=root.querySelector('.cf-q'); if(qi) qi.value=CF.q; filter(); } }};
 })();
 // [[/MOD:ctfx]]
+// [[MOD:cutdict]] 컷 연출 사전 — 컷 한 칸 안에서 하는 연출(칸 모양·효과선·만화 기호·빛과 공간·글자·웹툰 한 칸). 여러 컷을 잇는 연출은 콘티 연출 색인(ctfx), 자세는 자세·구도(poses)
+// 그림은 Rough.js로 이 모듈이 직접 그린다(콘티 그림과 같은 손그림 선). 항목 데이터 CUT_DICT, 창구 window.__cutDict={list, show(id)}
+(function(){
+var root=document.getElementById('cutdict-root'); if(!root) return;
+
+var CD_GROUPS=[
+  ['frame','칸 모양·테두리','칸의 크기·모양·테두리만 바꿔도 시간과 감정이 달라진다.'],
+  ['line','효과선·배경 효과','배경을 선과 무늬로 바꿔 움직임과 마음을 보이게 한다.'],
+  ['sign','만화 기호','얼굴 둘레에 붙이는 약속된 기호. 한 번에 읽히지만 많이 붙이면 가벼워진다.'],
+  ['light','빛·그림자·공간','빛의 방향과 화면 속 자리로 인물의 처지와 관계를 보여 준다.'],
+  ['text','글자·말풍선','말풍선 모양과 글자 크기가 목소리의 크기·온도·거리를 정한다.'],
+  ['webtoon','웹툰 한 칸','세로 스크롤 화면에서 한 칸이 하는 일. 폰 화면 한 장을 기준으로 생각한다.']
+];
+
+/* 항목: id, g(갈래), name, aka(원어·다른 이름), fx(어떤 효과), when(언제), ex(예시), warn(주의), rel(관련: [페이지, id 또는 이름, 보이는 글]) */
+var CUT_DICT=[
+/* ---------- 칸 모양·테두리 ---------- */
+{id:'wide',g:'frame',name:'가로로 긴 칸',aka:'와이드 칸 · 横長ゴマ',
+ fx:'시선이 옆으로 오래 흐르면서 공간의 넓이와 거리가 느껴지고, 읽는 시간도 길어진다.',
+ when:'장면 첫 칸에서 장소를 보여 줄 때, 두 인물 사이의 거리나 달리는 거리를 보여 줄 때.',
+ ex:['끝없는 사막을 가로지르는 일행을 아주 작게 그린 첫 칸','교실 양 끝에 앉은 두 사람, 그 사이에 빈 책상만 늘어선 칸 — 말없이 멀어진 관계'],
+ warn:'가로 칸만 이어지면 페이지가 납작해진다. 세로·작은 칸과 섞는다.'},
+{id:'tall',g:'frame',name:'세로로 긴 칸',aka:'縦長ゴマ',
+ fx:'높이와 낙하, 위에서 짓누르는 무게가 생긴다. 인물을 머리부터 발끝까지 세우면 존재감이 커진다.',
+ when:'높은 곳·추락·거대한 것, 적이나 주인공이 전신으로 처음 서는 순간.',
+ ex:['옥상 끝에서 내려다본 아득한 골목','계단 위에 전신으로 선 적을 아래에서 올려다본 칸'],
+ rel:[['ctfx','tall','콘티 연출 색인 「세로로 긴 컷」(웹툰 스크롤)']]},
+{id:'diag',g:'frame',name:'사선 칸',aka:'斜めゴマ · 기울어진 칸 경계',
+ fx:'칸 경계가 기울면 화면 전체가 불안정해져 속도와 충격이 실린다.',
+ when:'타격·추락·사고처럼 균형이 깨지는 순간.',
+ ex:['주먹이 닿는 순간만 칸 경계가 비스듬히 잘린다','넘어지는 자전거를 기울어진 칸 두 개로 이어 그린다'],
+ warn:'대화나 일상 장면에 쓰면 이유 없이 산만해진다. 액션 한두 칸에만.'},
+{id:'noframe',g:'frame',name:'테두리 없는 칸',aka:'枠なし · 열린 칸',
+ fx:'경계가 사라지면 그 순간이 칸 밖으로 번져 시간이 멈춘 듯한 여운이 생긴다.',
+ when:'고백 직후, 깨달음, 회상처럼 현실감에서 살짝 떠야 하는 순간.',
+ ex:['고백한 뒤 하얀 바탕 위에 인물만 떠 있는 칸','둘레의 테두리 칸들 사이에 열린 칸 하나 — 주변 칸이 액자가 된다'],
+ warn:'열린 칸이 많으면 읽는 순서가 흐려진다. 둘레에 테두리 칸을 두어 기준을 세운다.'},
+{id:'bleed',g:'frame',name:'재단선 끝까지 (타치키리)',aka:'断ち切り · 블리드(bleed)',
+ fx:'그림이 종이 끝까지 닿아 화면 밖으로 세계가 이어지는 개방감과 압도감이 생긴다.',
+ when:'장면이 바뀌는 첫 칸, 한 화에서 가장 보여 주고 싶은 칸.',
+ ex:['새 섬에 도착한 첫 칸을 세 변 모두 종이 끝까지','결전의 무대를 위아래로 잘라 붙인 칸'],
+ warn:'자주 쓰면 특별함이 사라지고 페이지가 어수선하다. 장면 전환·보여 주는 칸에만 아껴 쓴다.'},
+{id:'break',g:'frame',name:'칸을 뚫고 나오기',aka:'はみ出し · 오버랩 · 프레임 브레이크',
+ fx:'인물·물건이 테두리를 넘어 옆 칸 위로 겹치면 화면에서 튀어나오는 입체감과 박력이 생긴다.',
+ when:'공격이 날아오는 순간, 인물의 감정이나 힘이 상황을 넘어서는 순간.',
+ ex:['날아드는 주먹이 칸을 넘어 아래 칸 위에 걸친다','달리던 인물의 발끝이 칸 밖으로 나와 다음 칸으로 이어진다'],
+ rel:[['ctfx','frame-break','콘티 연출 색인 「틀 깨기」(앞뒤 칸과 잇는 법)']]},
+{id:'inset',g:'frame',name:'큰 칸 속 작은 칸',aka:'인셋 칸 · inset panel',
+ fx:'큰 그림 위에 같은 순간의 작은 정보(표정·손·물건)를 얹어, 큰 사건과 작은 반응을 한눈에 보여 준다.',
+ when:'풍경이나 사건이 크게 펼쳐진 칸에 인물의 반응을 함께 붙일 때.',
+ ex:['폭발이 번지는 큰 칸 구석에 놀란 눈만 담은 작은 칸','경기장 전경 위에 공을 쥔 손만 작게'],
+ warn:'작은 칸이 큰 그림의 중요한 곳을 가리지 않게 자리를 잡는다.'},
+{id:'round',g:'frame',name:'둥근 칸',aka:'丸ゴマ · 원형 칸',
+ fx:'둥근 테두리는 렌즈나 기억처럼 들여다보는 느낌을 주고, 마음속을 그린다는 표시가 된다.',
+ when:'떠올리는 얼굴, 망원경·조준경 시점, 마음속 장면.',
+ ex:['헤어진 사람의 웃는 얼굴을 둥근 칸에 담아 현재 칸 옆에 둔다','저격수 조준경 속 표적'],
+ warn:'둥근 칸끼리 이어지면 읽는 순서가 어지럽다. 한 쪽에 하나 정도.'},
+{id:'cloud',g:'frame',name:'구름·물결 테두리',aka:'꿈 테두리 · 상상 테두리',
+ fx:'테두리를 부드럽게 흔들면 지금 보는 장면이 현실이 아니라는 약속이 된다.',
+ when:'상상·공상·꿈. 인물이 혼자 그리는 바람.',
+ ex:['고백에 성공하는 장면을 구름 테두리로 상상하고, 다음 칸에서 현실의 빈 교실로 돌아온다'],
+ warn:'회상과 상상을 같은 테두리로 쓰면 헷갈린다. 작품 안에서 하나씩 정해 둔다.'},
+{id:'flashback',g:'frame',name:'검은 칸 사이 (회상)',aka:'黒枠 · 먹 여백 · 회상 칸',
+ fx:'칸 사이 여백을 검게 칠하면 지금이 아닌 시간이라는 표시가 된다. 테두리를 흐리거나 톤을 옅게 덧입히기도 한다.',
+ when:'회상이 몇 칸 이상 이어질 때. 들어가고 나오는 곳을 분명히 할 때.',
+ ex:['어린 시절 장면 세 칸을 검은 여백 위에 놓고, 현재로 돌아오는 칸에서 흰 여백으로 바꾼다'],
+ rel:[['poses','회상 테두리','자세·구도 「회상 테두리」'],['ctfx','frame-back','콘티 연출 색인 「회상 들어가고 나오기」']]},
+{id:'jag',g:'frame',name:'번개·톱니 테두리',aka:'ギザギザ枠 · 충격 테두리',
+ fx:'테두리 자체가 날카롭게 떨려 비명·충격·위급함이 칸 전체에 퍼진다.',
+ when:'비명, 경보, 끔찍한 소식을 들은 순간.',
+ ex:['전화로 사고 소식을 듣는 얼굴을 톱니 테두리로'],
+ warn:'개그에도 자주 쓰여 가벼워 보일 수 있다. 진지한 장면은 테두리 대신 베타 플래시가 낫다.'},
+{id:'show',g:'frame',name:'보여 주는 큰 칸',aka:'見せゴマ · 大ゴマ · 스플래시',
+ fx:'한 쪽의 반 이상을 한 칸에 쓰면 그 순간이 그 화의 그림 한 장으로 기억된다.',
+ when:'각성, 등장, 결정적 한 방, 고백처럼 이야기가 꺾이는 순간.',
+ ex:['작은 칸 다섯 개로 몰아붙인 뒤 다음 쪽을 통째로 쓴 한 방'],
+ warn:'큰 칸은 앞에 작고 고른 칸이 있어야 커 보인다. 계속 크면 아무것도 크지 않다.',
+ rel:[['ctfx','spread','콘티 연출 색인 「스프레드」'],['ctfx','flat-burst','「고른 칸 깔고 터뜨리기」']]},
+{id:'white',g:'frame',name:'빈 흰 칸',aka:'白ゴマ · 공백 칸 · 間(마)',
+ fx:'아무것도 없는 칸 하나가 숨을 멈추게 한다. 시간이 흐르거나 말이 끊긴 자리를 보여 준다.',
+ when:'충격적인 말 직후, 침묵, 시간이 훌쩍 지나는 자리.',
+ ex:['「헤어지자」 다음에 빈 칸 하나, 그다음 칸에 대답'],
+ warn:'출판 만화에서는 한 쪽에 하나 이상 넣지 않는다. 웹툰은 여백이 이 역할을 대신한다.'},
+{id:'black',g:'frame',name:'먹칸',aka:'ベタゴマ · 검은 칸 · 암전',
+ fx:'칸 전체를 검게 칠하면 정전·기절·눈 감음처럼 의식이 끊긴 순간이 된다. 소리만 하얗게 얹으면 더 섬뜩하다.',
+ when:'총성·사고 뒤, 기절하는 순간, 이야기를 딱 끊어 다음 장으로 넘길 때.',
+ ex:['검은 칸 가운데 하얀 「탕」 한 글자','눈을 감는 칸 다음의 먹칸, 그다음 병실 천장']},
+
+/* ---------- 효과선·배경 효과 ---------- */
+{id:'focus',g:'line',name:'집중선',aka:'集中線 · 포커스 라인',
+ fx:'칸 가장자리에서 한 점으로 모이는 선이 시선을 강제로 끌어모은다. 놀람·등장·날아오는 것에 힘이 실린다.',
+ when:'인물이 무언가를 알아차린 순간, 처음 등장하는 인물, 정면으로 날아오는 물건.',
+ ex:['문이 열리고 새 인물의 얼굴에 집중선','「설마…」 하고 눈을 크게 뜬 클로즈업'],
+ warn:'중심점에 무엇이 있는지가 전부다. 중심이 비면 선만 요란하다. 남발하면 효과가 금방 줄어든다.',
+ rel:[['poses','집중선 등장','자세·구도 「집중선 등장」']]},
+{id:'speed',g:'line',name:'스피드선 (흐름선)',aka:'スピード線 · 流線 · 배경 흐름선',
+ fx:'배경을 평행한 선으로 지우면 인물은 또렷하고 세상이 뒤로 흘러가 빠르게 달리는 느낌이 된다.',
+ when:'달리기·추격·차·낙하처럼 인물을 따라가며 속도를 보여 줄 때.',
+ ex:['배경 없이 가로 흐름선 위에서 달리는 주인공','아래에서 위로 흐르는 선 위로 떨어지는 인물'],
+ warn:'선 방향이 곧 움직임 방향이다. 앞 칸의 이동 방향과 맞춘다.'},
+{id:'motion',g:'line',name:'움직임 궤적선',aka:'動線 · 모션 라인',
+ fx:'움직인 길을 선으로 남기면 한 칸 안에 동작의 시작과 끝이 함께 담긴다.',
+ when:'팔을 휘두를 때, 공·칼·발차기의 궤도, 고개를 홱 돌릴 때.',
+ ex:['칼이 지나간 반원 궤적만 남기고 칼은 이미 끝에 있다','고개를 돌린 방향으로 짧은 곡선 세 줄'],
+ warn:'궤적선은 물체 뒤쪽에만 붙인다. 앞에 붙이면 반대로 움직이는 것처럼 읽힌다.'},
+{id:'shake',g:'line',name:'흔들림 선',aka:'揺れ線 · 떨림 선',
+ fx:'윤곽 둘레에 짧은 선을 겹치면 떨림·진동·불안한 흔들림이 보인다.',
+ when:'겁에 질린 손, 흔들리는 땅, 휴대폰 진동, 웃음을 참는 어깨.',
+ ex:['편지를 쥔 손 둘레에 짧은 떨림 선','책상 위 휴대폰 진동'],
+ warn:'떨림 선이 크면 개그가 된다. 진지한 장면은 짧고 가늘게.'},
+{id:'beta',g:'line',name:'베타 플래시',aka:'ベタフラッシュ · 검은 섬광',
+ fx:'집중선 바깥을 검게 칠해 가운데가 하얗게 터지는 섬광. 머리를 맞은 듯한 충격과 깨달음을 준다.',
+ when:'결정적인 진실을 알았을 때, 충격적인 장면을 본 순간, 감정이 폭발하는 대사.',
+ ex:['「네가… 범인이었어?」 하고 굳은 얼굴 뒤에 베타 플래시','숨겨 온 정체가 드러나는 칸'],
+ warn:'한 화의 가장 큰 충격에만 쓴다. 손이 많이 가고, 자주 쓰면 화면이 무거워진다.'},
+{id:'uni',g:'line',name:'성게 플래시',aka:'ウニフラッシュ · 가시 섬광',
+ fx:'인물 뒤로 가시처럼 퍼지는 선이 번쩍 떠오름·놀람·설렘을 밝게 터뜨린다. 베타 플래시보다 가볍고 화사하다.',
+ when:'좋은 생각이 떠올랐을 때, 반한 순간, 밝은 놀람.',
+ ex:['「그거다!」 하고 손뼉을 치는 인물 뒤','처음 본 상대에게 반하는 순정만화의 한 칸']},
+{id:'radial',g:'line',name:'뻗어 나가는 선',aka:'放射線 · 방사선',
+ fx:'인물에서 바깥으로 선이 퍼지면 밝고 당당한 기운, 기쁨, 자신감이 뿜어져 나오는 것처럼 보인다.',
+ when:'환하게 웃을 때, 승리 선언, 등장한 인물이 빛나 보여야 할 때.',
+ ex:['합격 소식을 들고 활짝 웃는 얼굴 둘레'],
+ warn:'집중선과 방향이 반대다. 모이는 선은 놀람, 퍼지는 선은 기쁨.'},
+{id:'odoro',g:'line',name:'으스스 선',aka:'おどろ線 · 불길한 선',
+ fx:'구불구불 떨리는 선이 가장자리에서 기어들어 와 불안·분노·공포를 칸 전체에 깐다.',
+ when:'공포의 대상이 다가올 때, 분노를 참고 있을 때, 꺼림칙한 예감.',
+ ex:['웃고 있는데 배경만 으스스 선으로 가득한 인물 — 겉과 속이 다르다'],
+ rel:[['line','hatch','「그물 톤」과 함께 쓰면 더 무겁다']]},
+{id:'tare',g:'line',name:'세로 처짐선',aka:'タレ線 · 縦線 · 「가-앙」 선',
+ fx:'칸 위에서 아래로 늘어진 세로선이 기운이 쭉 빠지는 낙담·충격을 보여 준다.',
+ when:'실망, 창피, 「망했다」 싶은 순간. 개그에도 진지한 충격에도 쓴다.',
+ ex:['시험지를 받아 든 인물 머리 위로 세로선이 쏟아진다'],
+ rel:[['sign','pale','만화 기호 「이마 세로줄」은 얼굴에만 붙이는 작은 판']]},
+{id:'hatch',g:'line',name:'그물 톤',aka:'カケアミ · ナワアミ · 크로스해칭 배경',
+ fx:'겹친 빗금으로 배경을 메우면 공기가 무겁고 답답해져 근심·불안이 깔린다.',
+ when:'고민, 우울, 꺼림칙한 분위기, 불안이 오래 이어지는 대화.',
+ ex:['방 한구석에 웅크린 인물 뒤를 그물 톤으로 채운다'],
+ warn:'얼굴까지 덮으면 표정이 안 읽힌다. 인물 둘레는 비워 둔다.'},
+{id:'flower',g:'line',name:'꽃·반짝이 배경',aka:'花背負い · 키라키라 · 순정만화 배경',
+ fx:'인물 뒤에 꽃과 반짝이를 띄우면 그 인물이 보는 이의 눈에 얼마나 빛나 보이는지가 드러난다.',
+ when:'첫눈에 반한 순간, 미남·미녀의 등장, 설렘. 개그로 비틀어 쓰기도 한다.',
+ ex:['전학 온 선배가 웃는 칸 뒤에 꽃이 핀다','근육질 아저씨 뒤에 꽃을 피워 웃음을 만든다'],
+ warn:'누구의 시선인지 정해 둔다. 반한 사람의 눈에만 보이는 꽃이어야 설렘이 된다.'},
+{id:'ripple',g:'line',name:'동심원 파동',aka:'충격파 · 울림',
+ fx:'겹친 원이 퍼지면 소리·충격·마음의 울림이 공간으로 번진다.',
+ when:'종소리, 발을 구르는 충격, 물방울, 한마디가 크게 울리는 순간.',
+ ex:['물웅덩이에 떨어진 눈물 한 방울','「…좋아해」 한마디 둘레로 번지는 원']},
+{id:'aura',g:'line',name:'기운 (오라)',aka:'오라 · 투기 · 「쿠구구」',
+ fx:'인물 둘레에서 피어오르는 불꽃 같은 선과 낮게 울리는 효과음이 대결 직전의 위압감을 만든다.',
+ when:'결전 직전, 강자의 등장, 화난 것을 숨기지 못할 때.',
+ ex:['서로 노려보는 두 사람 둘레로 기운이 피어오르고 「쿠구구구」가 깔린다','「죠죠의 기묘한 모험」의 「ゴゴゴ」처럼 소리 없는 소리로 긴장을 채운다'],
+ warn:'효과음을 칸 바깥쪽에 크게, 대사는 짧게. 둘 다 크면 서로를 지운다.'},
+
+/* ---------- 만화 기호 ---------- */
+{id:'sweat',g:'sign',name:'땀방울',aka:'冷や汗 · 큰 땀방울 하나',
+ fx:'머리 옆의 커다란 물방울 하나가 당황·민망·어이없음을 표정을 바꾸지 않고 얹는다.',
+ when:'곤란한 부탁을 받았을 때, 상대의 엉뚱한 말에 할 말을 잃었을 때.',
+ ex:['웃는 얼굴 그대로 머리 옆에 땀 한 방울 — 「하하…」'],
+ warn:'얼굴에 작은 땀이 여러 개면 긴장·공포, 머리 옆 큰 땀 하나면 민망함이다.'},
+{id:'vein',g:'sign',name:'분노 마크',aka:'怒りマーク · 핏대 · 십자 마크',
+ fx:'이마나 머리 옆의 십자 모양 핏대가 화났다는 사실을 한눈에 알린다. 웃는 얼굴에 붙이면 「참는 분노」.',
+ when:'참다 참다 폭발 직전, 웃으면서 화난 장면.',
+ ex:['미소 띤 선생님 이마에 핏대 두 개 — 「다시 한번 말해 볼래?」']},
+{id:'blush',g:'sign',name:'홍조 빗금',aka:'照れ線 · 斜線',
+ fx:'뺨에 짧은 빗금을 그으면 얼굴이 붉어진 것이 흑백에서도 보인다.',
+ when:'부끄러움, 설렘, 술기운, 열.',
+ ex:['칭찬을 듣고 고개를 돌린 옆얼굴 뺨에 빗금 세 줄'],
+ warn:'빗금이 많을수록 더 붉다. 얼굴 전체에 그으면 「창백함」과 헷갈릴 수 있다.'},
+{id:'notice',g:'sign',name:'깨달음 표시',aka:'気づき線 · 「!」',
+ fx:'머리 옆에 튀는 짧은 선 몇 개나 느낌표가 「앗」 하고 알아차린 순간을 보여 준다.',
+ when:'뒤에서 부르는 소리, 단서를 발견한 순간, 기척을 느꼈을 때.',
+ ex:['뒤돌아보기 직전, 머리 옆에 짧은 선 세 개'],
+ rel:[['sign','question','물음표는 「모르겠다」, 느낌표는 「알았다」']]},
+{id:'question',g:'sign',name:'물음표',aka:'「?」 · 갸웃',
+ fx:'머리 위 물음표 하나가 어리둥절함을 대사 없이 전한다.',
+ when:'상대의 말을 못 알아들었을 때, 이상한 상황.',
+ ex:['고개를 갸웃한 얼굴 위에 「?」 — 대사는 비운다']},
+{id:'pale',g:'sign',name:'이마 세로줄',aka:'青線 · 창백함 · 「가-앙」',
+ fx:'이마나 눈 아래에 세로줄을 그으면 핏기가 가신 충격·불안·역겨움이 보인다.',
+ when:'끔찍한 걸 봤을 때, 들켰을 때, 큰 실수를 깨달았을 때.',
+ ex:['비밀 일기를 들킨 얼굴 이마에 세로줄 — 효과음 「가-앙」'],
+ rel:[['line','tare','배경 전체로 키우면 「세로 처짐선」']]},
+{id:'whiteeye',g:'sign',name:'흰자 눈',aka:'白目 · 눈동자 지우기',
+ fx:'눈동자를 지우면 넋이 나간 충격이나 무서운 분노가 된다. 「유리가면」의 하얀 눈처럼 충격의 상징으로 쓰인다.',
+ when:'믿을 수 없는 것을 본 순간, 이성을 잃은 분노.',
+ ex:['배역을 빼앗겼다는 말을 들은 배우가 흰자 눈으로 굳는다'],
+ warn:'개그 장면에도 흔해서 진지한 장면이면 그림자·톤으로 무게를 더한다.'},
+{id:'blank',g:'sign',name:'빛 없는 눈',aka:'ハイライトなし · 생기 없는 눈',
+ fx:'눈동자의 하얀 반짝임을 지우면 생기가 빠져 절망·세뇌·조종당함·광기가 된다.',
+ when:'모든 걸 잃었을 때, 누군가에게 조종당할 때, 집착이 위험해질 때.',
+ ex:['같은 인물이 처음엔 반짝이는 눈, 배신 뒤에는 빛 없는 눈'],
+ warn:'다른 칸에서 반짝임을 늘 그려 둬야 지운 것이 보인다.'},
+{id:'tear',g:'sign',name:'눈물',aka:'涙 · 눈물 줄기·방울',
+ fx:'한 방울은 참는 슬픔, 흐르는 줄기는 무너진 슬픔, 폭포처럼 쏟으면 개그가 된다.',
+ when:'참다가 터지는 순간, 기쁨의 눈물.',
+ ex:['웃고 있는데 한쪽 눈에서만 눈물 한 방울']},
+{id:'steam',g:'sign',name:'김·콧김',aka:'怒りの湯気 · 씩씩',
+ fx:'머리 위로 피어오르는 김이나 코에서 뿜는 김이 끓어오르는 화를 가볍고 귀엽게 보여 준다.',
+ when:'토라짐, 귀여운 분노, 의욕 넘침(「흥!」).',
+ ex:['팔짱 끼고 고개를 돌린 아이 머리 위에 김 두 줄기']},
+{id:'spiral',g:'sign',name:'소용돌이 눈',aka:'ぐるぐる目 · 빙글빙글',
+ fx:'눈을 소용돌이로 그리면 어지러움·혼란·정신이 나간 상태가 웃기게 보인다.',
+ when:'맞고 쓰러졌을 때, 너무 많은 정보에 머리가 터질 때, 취했을 때.',
+ ex:['공에 맞아 쓰러진 인물, 소용돌이 눈과 머리 위를 도는 별']},
+{id:'soul',g:'sign',name:'넋 빠져나가기',aka:'魂が抜ける · 영혼 탈출',
+ fx:'입에서 작은 유령이 빠져나가면 「완전히 지쳤다」, 「충격으로 끝났다」가 과장되게 웃기다.',
+ when:'시험 끝, 야근 끝, 망신을 당한 뒤.',
+ ex:['책상에 엎드린 학생 입에서 둥실 떠오르는 유령'],
+ warn:'개그 전용이다. 진지한 장면에 쓰면 분위기가 깨진다.'},
+{id:'sd',g:'sign',name:'2등신으로 줄이기',aka:'SD · 데포르메 · ちびキャラ',
+ fx:'진지한 장면 한가운데서 인물을 2~3등신으로 줄이면 긴장이 풀리고 웃음이 난다.',
+ when:'무거운 대화 사이 숨 돌리기, 속마음 개그, 귀여움.',
+ ex:['심각한 회의 중 한 칸만 작아진 주인공이 「배고파…」'],
+ warn:'한 칸만 바꾸고 바로 원래 체형으로 돌아와야 리듬이 산다.'},
+
+/* ---------- 빛·그림자·공간 ---------- */
+{id:'backlight',g:'light',name:'역광 실루엣',aka:'逆光 · 실루엣',
+ fx:'빛을 등진 인물을 검게 그리면 정체를 숨긴 채 형태만 보여 주어 신비와 위압이 생긴다.',
+ when:'첫 등장, 정체를 숨길 때, 떠나는 사람.',
+ ex:['열린 문 밖 햇빛을 등진 검은 형체'],
+ rel:[['poses','실루엣 역광','자세·구도 「실루엣 역광」']]},
+{id:'eyeshadow',g:'light',name:'눈가 그림자',aka:'目元の影 · 눈 가리기',
+ fx:'이마부터 눈까지 그림자를 덮어 눈을 지우면 표정이 읽히지 않아 위협·결심·숨긴 슬픔이 된다.',
+ when:'악역이 본색을 드러낼 때, 인물이 무거운 결정을 내릴 때.',
+ ex:['입가만 웃고 눈은 그림자에 잠긴 얼굴 — 「그래, 내가 했어」'],
+ rel:[['ctfx','hide-face','콘티 연출 색인 「얼굴 숨기기」']]},
+{id:'halfshadow',g:'light',name:'얼굴 반 그림자',aka:'半面の影 · 두 얼굴',
+ fx:'얼굴 반쪽만 어둡게 하면 두 마음 사이의 갈등이나 숨긴 다른 얼굴이 보인다.',
+ when:'유혹 앞에서 망설일 때, 착한 인물의 어두운 속마음.',
+ ex:['배신을 제안받은 주인공 얼굴의 오른쪽 반이 그림자에 들어간다']},
+{id:'spot',g:'light',name:'위에서 떨어지는 빛',aka:'스포트라이트 · 빛줄기',
+ fx:'어둠 속에 인물만 비추는 빛줄기가 그를 무대 위에 홀로 세운다. 구원·고독·고백의 자리가 된다.',
+ when:'홀로 남은 순간, 무대·고백, 구원이 내려오는 장면.',
+ ex:['텅 빈 체육관 한가운데 위에서만 빛이 떨어지는 칸']},
+{id:'foreground',g:'light',name:'앞을 가린 구도',aka:'前景 · 전경 가리기 · 엿보기',
+ fx:'화면 앞쪽에 물건이나 사람을 크게 걸치면 누군가 몰래 보는 시선, 거리감, 깊이가 생긴다.',
+ when:'엿보기·미행, 대화를 멀리서 지켜보는 제3자, 공간의 깊이를 보여 줄 때.',
+ ex:['나뭇가지 사이로 보이는 두 사람 — 누군가 숨어서 보고 있다'],
+ rel:[['poses','프레임 속 프레임','자세·구도 「프레임 속 프레임」']]},
+{id:'depth',g:'light',name:'앞·가운데·뒤 세 겹',aka:'전경·중경·원경',
+ fx:'가까운 것·인물·먼 배경을 겹쳐 두면 평평한 칸에 깊이가 생기고, 무엇을 크게 둘지로 중요도를 정한다.',
+ when:'장소가 중요한 장면, 여러 인물이 한 칸에 있을 때.',
+ ex:['앞에 커피잔, 가운데 대화하는 두 사람, 뒤 창밖 비']},
+{id:'symmetry',g:'light',name:'대칭 구도',aka:'シンメトリー · 정면 대칭',
+ fx:'가운데 선을 기준으로 좌우를 맞추면 정지·의식·위엄이 생긴다. 흔들림 없는 화면이라 오히려 섬뜩할 수도 있다.',
+ when:'왕좌·제단·결전 장소, 이야기의 시작과 끝을 맞출 때.',
+ ex:['긴 복도 끝 정가운데 선 인물'],
+ warn:'대칭은 움직임을 죽인다. 액션 장면에는 맞지 않는다.'},
+{id:'space',g:'light',name:'큰 여백',aka:'余白 · 네거티브 스페이스',
+ fx:'인물을 한쪽 구석에 작게 두고 나머지를 비우면 외로움, 막막함, 생각에 잠긴 시간이 그 빈 곳에 담긴다.',
+ when:'홀로 남겨졌을 때, 결정 앞에서 망설일 때, 이야기의 쉼표.',
+ ex:['넓은 하늘 아래 칸 오른쪽 아래 구석에 작게 앉은 인물'],
+ rel:[['poses','빈 배경 여백','자세·구도 「빈 배경 여백」']]},
+{id:'diagonal',g:'light',name:'대각선 구도',aka:'対角線構図',
+ fx:'인물·지평선·건물을 대각선으로 놓으면 화면에 기울기가 생겨 움직임과 긴장이 생긴다.',
+ when:'달리는 장면, 기울어진 비탈·계단, 불안한 감정.',
+ ex:['칸의 왼쪽 아래에서 오른쪽 위로 뻗은 계단을 뛰어오르는 인물'],
+ rel:[['poses','더치 앵글','칸 전체를 기울이면 자세·구도 「더치 앵글」']]},
+{id:'reflect',g:'light',name:'비친 얼굴',aka:'映り込み · 거울·물웅덩이·유리',
+ fx:'거울·창문·물웅덩이에 비친 얼굴은 진짜 얼굴과 다른 속마음이나 또 다른 자신을 보여 준다.',
+ when:'자기 자신과 마주할 때, 변해 버린 자신을 깨달을 때.',
+ ex:['비 온 뒤 물웅덩이에 비친 얼굴만 울고 있다']},
+{id:'weather',g:'light',name:'날씨로 마음 그리기',aka:'비·눈·노을',
+ fx:'비·눈·노을·햇빛이 인물의 감정을 대신 말한다. 감정과 반대 날씨를 붙이면 아이러니가 된다.',
+ when:'이별(비), 고요한 슬픔(눈), 끝과 여운(노을).',
+ ex:['헤어지는 날 쏟아지는 비 속 우산 하나','장례식 날의 맑은 하늘 — 슬픔이 더 커진다'],
+ rel:[['poses','비 맞으며 서 있기','자세·구도 「비 맞으며 서 있기」']]},
+
+/* ---------- 글자·말풍선 ---------- */
+{id:'sfxbig',g:'text',name:'큰 효과음',aka:'描き文字 · 손글씨 효과음 · SFX',
+ fx:'효과음을 그림처럼 크게 그리면 소리의 크기·질감이 눈에 보인다. 글자 모양이 곧 소리 모양이다.',
+ when:'폭발·타격·문 닫히는 소리처럼 장면을 소리로 때려야 할 때.',
+ ex:['「쾅!!」을 칸 절반 크기로, 획 끝을 깨뜨려서'],
+ warn:'효과음이 인물의 얼굴·손을 가리지 않게 자리를 잡는다. 글자는 그림 뒤가 아니라 그림과 같은 층이다.'},
+{id:'sfxbreak',g:'text',name:'칸을 넘는 효과음',aka:'はみ出し描き文字',
+ fx:'효과음이 칸 테두리를 넘으면 소리가 장면 밖까지 울려 다음 칸으로 이어진다.',
+ when:'큰 충격음, 다음 칸까지 이어지는 소리(경보·초인종).',
+ ex:['「따르르릉」이 두 칸에 걸쳐 이어지며 다음 칸의 놀란 얼굴과 만난다']},
+{id:'shout',g:'text',name:'외침 풍선',aka:'叫びフキダシ · 가시 풍선',
+ fx:'가장자리가 뾰족한 풍선은 소리 지름·비명·흥분을 보여 준다. 글자도 굵고 크게.',
+ when:'외침, 비명, 다급한 부름.',
+ ex:['「도망쳐!!」를 가시 풍선에, 꼬리는 짧고 날카롭게'],
+ warn:'한 칸에 외침 풍선은 하나. 둘이면 누가 외치는지 흐려진다.'},
+{id:'think',g:'text',name:'속마음 풍선',aka:'心の声 · 생각 풍선 · 구름 풍선',
+ fx:'구름 모양이나 작은 동그라미 꼬리는 소리 내지 않은 생각이라는 표시다. 겉말과 나란히 두면 속과 겉이 갈린다.',
+ when:'겉으로 하는 말과 속마음이 다를 때, 혼자 하는 다짐.',
+ ex:['「괜찮아」(보통 풍선) 옆에 「하나도 안 괜찮아」(속마음 풍선)'],
+ warn:'요즘은 꼬리 없는 네모·점선 풍선으로 속마음을 쓰는 작품도 많다. 한 작품 안에서 하나로 정한다.'},
+{id:'trem',g:'text',name:'떨리는 풍선',aka:'震えフキダシ · 물결 풍선',
+ fx:'테두리를 잘게 떨면 목소리가 떨린다. 겁·추위·울먹임·참는 웃음.',
+ when:'울음을 참고 말할 때, 두려움, 추위.',
+ ex:['「괘…괜찮아」를 떨리는 테두리에, 글자 사이도 띄운다']},
+{id:'phone',g:'text',name:'전화·기계 풍선',aka:'電話フキダシ · 번개 꼬리',
+ fx:'꺾인 번개 꼬리나 각진 테두리는 전화·스피커·무전기·TV처럼 기계를 거친 목소리다.',
+ when:'통화, 방송, 녹음된 목소리, 무전.',
+ ex:['휴대폰을 든 인물 옆, 번개 꼬리 풍선으로 상대방 목소리']},
+{id:'offscreen',g:'text',name:'칸 밖의 목소리',aka:'画面外 · 꼬리가 칸 밖으로',
+ fx:'꼬리가 칸 테두리 밖을 가리키면 아직 보이지 않는 누군가가 말하고 있다. 다음 칸의 등장을 미리 깐다.',
+ when:'새 인물 등장 직전, 뒤에서 부르는 목소리, 숨어서 듣는 장면.',
+ ex:['「거기까지.」 꼬리가 칸 오른쪽 밖으로 — 다음 칸에서 문가에 선 인물'],
+ rel:[['ctfx','piecemeal','콘티 연출 색인 「조금씩 보여 주는 등장」']]},
+{id:'silent',g:'text',name:'말줄임 풍선',aka:'「……」 풍선 · 침묵 풍선',
+ fx:'점만 담긴 풍선은 「말을 했는데 아무 말도 못 했다」는 침묵이다. 대답해야 할 자리의 침묵이라 오히려 크게 들린다.',
+ when:'대답을 못 할 때, 어이없음, 서운함.',
+ ex:['「좋아해.」 — 다음 칸 상대의 풍선에는 「……」만']},
+{id:'whisper',g:'text',name:'작은 글씨·점선 풍선',aka:'小声 · 속삭임',
+ fx:'풍선 크기에 비해 글자를 작게 쓰거나 테두리를 점선으로 하면 속삭임·중얼거림이 된다.',
+ when:'귓속말, 혼잣말, 남이 못 듣게 하는 말.',
+ ex:['큰 풍선 구석에 작은 글씨로 「…바보」']},
+{id:'overlap',g:'text',name:'겹친 풍선',aka:'セリフの被せ · 말 끊기',
+ fx:'뒤 풍선이 앞 풍선을 덮으면 말이 끊기거나 동시에 말한 것이 된다. 대화의 속도가 빨라진다.',
+ when:'말다툼, 말 끊기, 여럿이 한꺼번에 떠들 때.',
+ ex:['「그러니까 내 말은—」 위를 덮는 「됐어!」']},
+{id:'narr',g:'text',name:'나레이션 상자',aka:'ナレーション · 네모 상자 · 캡션',
+ fx:'꼬리 없는 네모 상자는 장면 밖의 목소리다. 시간·장소를 알리거나, 지난 일을 돌아보는 화자의 목소리가 된다.',
+ when:'시간·장소 표시(「3년 후」), 회상하는 화자, 편지 읽는 목소리.',
+ ex:['「그해 여름, 나는 처음으로 거짓말을 했다.」를 칸 왼쪽 위 상자에']},
+{id:'handtext',g:'text',name:'풍선 없는 손글씨 대사',aka:'描き文字セリフ · 배경 대사',
+ fx:'풍선 없이 그림 속에 손글씨로 쓴 말은 꼭 읽지 않아도 되는 소리가 된다. 웅성거림·혼잣말·분위기용 대사.',
+ when:'군중의 웅성거림, 지나가는 말, 개그 속 중얼거림.',
+ ex:['교실 배경 곳곳에 작게 「소문 들었어?」「진짜?」'],
+ warn:'이야기에 꼭 필요한 말은 풍선에 넣는다. 풍선은 읽어야 할 말, 손글씨는 흘려도 되는 말이다.'},
+
+/* ---------- 웹툰 한 칸 ---------- */
+{id:'wt-full',g:'webtoon',name:'폰 화면 가득한 칸',aka:'꽉 찬 칸 · 풀컷',
+ fx:'폰 화면 하나를 한 칸이 다 채우면 독자는 그 그림만 보게 된다. 출판 만화의 펼침면과 같은 힘이다.',
+ when:'등장·각성·한 방·고백 같은 회차의 대표 장면.',
+ ex:['스크롤을 내리다 화면 가득 나타나는 괴물의 얼굴'],
+ rel:[['webtoon','wt-gap','앞에 여백을 두면 더 커 보인다']]},
+{id:'wt-gap',g:'webtoon',name:'흰 여백 한 화면',aka:'공백 스크롤 · 間',
+ fx:'아무것도 없는 화면을 한참 내리게 하면 시간이 흐르고 숨이 멈춘다. 다음 칸이 더 크게 다가온다.',
+ when:'충격적인 말 뒤, 장면 전환, 결정적 칸 직전.',
+ ex:['「…죽었어.」 다음 한 화면 분량의 흰 여백'],
+ rel:[['ctfx','scroll-gap','콘티 연출 색인 「세로 스크롤 여백」']]},
+{id:'wt-grad',g:'webtoon',name:'배경이 번져 바뀌는 전환',aka:'그라데이션 전환 · 칸 없는 흐름',
+ fx:'칸 테두리 없이 배경색이 서서히 바뀌며 다음 장면으로 흘러가면 시간·장소가 부드럽게 이어진다.',
+ when:'낮에서 밤으로, 현재에서 회상으로, 꿈에서 깨어날 때.',
+ ex:['하늘색 배경이 스크롤을 따라 남색으로 짙어지며 밤 장면이 시작된다']},
+{id:'wt-invert',g:'webtoon',name:'색 뒤집기',aka:'흑백 반전 · 네거티브',
+ fx:'흰 바탕을 검게, 검은 선을 희게 뒤집으면 현실이 깨지는 충격·각성·이상한 세계가 된다.',
+ when:'능력 각성, 정신이 무너지는 순간, 저세상 장면.',
+ ex:['각성하는 칸만 흑백이 뒤집히고 다음 칸에서 원래대로'],
+ warn:'뒤집은 칸은 한두 칸으로 끝낸다. 길어지면 읽기 힘들다.'},
+{id:'wt-fall',g:'webtoon',name:'세로로 떨어지는 칸',aka:'낙하 스크롤',
+ fx:'스크롤 방향이 곧 낙하 방향이라 길게 이어진 세로 칸은 독자가 직접 떨어지는 느낌을 준다.',
+ when:'추락, 깊은 곳으로 내려감, 거대한 것을 위에서 아래로 훑을 때.',
+ ex:['건물에서 떨어지는 인물을 여러 화면에 걸쳐 그리고 맨 아래에 땅'],
+ rel:[['ctfx','tall','콘티 연출 색인 「세로로 긴 컷」']]},
+{id:'wt-bubble',g:'webtoon',name:'풍선만 떠 있는 칸',aka:'말풍선 단독',
+ fx:'그림 없이 빈 바탕(흰색이나 검은색)에 풍선만 두면 목소리만 남아 어둠 속 대화나 얼굴을 보여 주지 않는 말이 된다.',
+ when:'전화 너머, 어둠, 누가 말하는지 숨길 때, 대화 템포를 빠르게 할 때.',
+ ex:['검은 화면에 풍선 하나 「…거기 누구 있어?」'],
+ rel:[['ctfx','bubble-bridge','콘티 연출 색인 「말풍선 다리」']]}
+];
+
+var CD_SRC=[
+  ['CLIP STUDIO 「小学館 まんが家養成講座 まんがの背景を描こう!(後編)」 — 집중선·스피드선·베타 플래시','https://www.clipstudio.net/oekaki/archives/151280'],
+  ['CLIP STUDIO 「フキダシと描き文字」 — 말풍선 종류와 손글씨 글자','https://www.clipstudio.net/oekaki/archives/152081'],
+  ['Japanese with Anime 「Line Effects」 — 효과선·기호 정리','https://japanesewithanime.com/2020/03/line-effects.html'],
+  ['Japanese with Anime 「Blue Lines」 — 세로줄과 만화 기호','https://www.japanesewithanime.com/2020/03/blue-lines.html'],
+  ['motoso 「コマ割り」 노트 — 보여 주는 칸·타치키리·여백','https://scrapbox.io/motoso/%E3%82%B3%E3%83%9E%E5%89%B2%E3%82%8A'],
+  ['assist 「漫画のコマ割り」 — 변형 칸·삐져나오기·칸 크기','https://lifestyle.assist-all.co.jp/?p=56730'],
+  ['Making Comics 「I’ve Been Framed: Comic Panels」 — 테두리 없는 칸·블리드·인셋','https://makingcomics.com/2014/03/31/ive-been-framed-comic-panels/'],
+  ['CLIP STUDIO 한국어 「효과·톤 도구」','https://www.clipstudio.net/kr/comics-manga/tool/effects-tones/']
+];
+
+/* ---------- 그리기 ---------- */
+var SEED=1;
+function CC(n){ return getComputedStyle(document.documentElement).getPropertyValue(n).trim(); }
+function clamp(v,a,b){ return Math.max(a,Math.min(b,v)); }
+function esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function needRough(cb){
+  if(window.rough){ cb(); return; }
+  (needRough.q=needRough.q||[]).push(cb); if(needRough.busy) return; needRough.busy=1;
+  var s=document.createElement('script'); s.src='https://cdn.jsdelivr.net/npm/roughjs@4.6.6/bundled/rough.js';
+  s.onload=function(){ var q=needRough.q; needRough.q=[]; needRough.busy=0; q.forEach(function(f){ try{ f(); }catch(e){} }); };
+  s.onerror=function(){ needRough.busy=0; needRough.q=[]; var m=root.querySelector('.cd-msg'); if(m) m.textContent='선 그림 라이브러리를 불러오지 못했다. 인터넷 연결을 확인하고 새로고침한다.'; };
+  document.head.appendChild(s);
+}
+function mk(cv){
+  var r=cv.getBoundingClientRect(), dpr=Math.min(window.devicePixelRatio||1,2), w=r.width, h=r.height; if(!w||!h) return null;
+  cv.width=Math.round(w*dpr); cv.height=Math.round(h*dpr);
+  var ctx=cv.getContext('2d'); ctx.setTransform(dpr,0,0,dpr,0,0); ctx.clearRect(0,0,w,h);
+  var c={ink:CC('--ink'), ink2:CC('--ink-2'), ink3:CC('--ink-3'), paper:CC('--paper'), paper2:CC('--paper-2'), note:CC('--note'), mark:CC('--mark')};
+  var k=0, base=(+(cv.dataset.seed||0))*37+SEED*997, sw=clamp(Math.min(w,h)/150,1,1.9), rs=base;
+  function pen(p){ return function(e){ return Object.assign({seed:base+(++k)}, p, e||{}); }; }
+  var D={ctx:ctx, w:w, h:h, c:c, rc:rough.canvas(cv), sw:sw,
+    ink:pen({stroke:c.ink, strokeWidth:1.3*sw, roughness:1, bowing:.8}),
+    thin:pen({stroke:c.ink, strokeWidth:.8, roughness:.6, bowing:.4}),
+    rnd:function(){ rs=(rs*9301+49297)%233280; return rs/233280; }};
+  return D;
+}
+function S(D,o){ return D.ink(Object.assign({fill:D.c.paper, fillStyle:'solid'}, o||{})); }
+function pnl(D,x,y,w,h,o){ D.rc.rectangle(x,y,w,h, D.ink(Object.assign({strokeWidth:2*D.sw, roughness:.5, bowing:.3}, o||{}))); }
+function poly(D,pts,o){ D.rc.polygon(pts, D.ink(Object.assign({strokeWidth:2*D.sw, roughness:.5, bowing:.3}, o||{}))); }
+function clipR(D,x,y,w,h,fn){ var x0=D.ctx; x0.save(); x0.beginPath(); x0.rect(x,y,w,h); x0.clip(); try{ fn(); }finally{ x0.restore(); } }
+function clipP(D,pts,fn){ var x0=D.ctx; x0.save(); x0.beginPath(); pts.forEach(function(p,i){ if(i) x0.lineTo(p[0],p[1]); else x0.moveTo(p[0],p[1]); }); x0.closePath(); x0.clip(); try{ fn(); }finally{ x0.restore(); } }
+function fillR(D,x,y,w,h,col){ D.ctx.save(); D.ctx.fillStyle=col; D.ctx.fillRect(x,y,w,h); D.ctx.restore(); }
+function txt(D,x,y,t,o){
+  o=o||{}; var x0=D.ctx; x0.save(); var fs=o.size||Math.round(clamp(D.h/11,11,16));
+  x0.font=(o.weight||700)+' '+fs+'px '+(o.serif?'"Hahmlet",':'')+'"IBM Plex Sans KR", sans-serif';
+  x0.textAlign=o.align||'center'; x0.textBaseline='middle'; x0.translate(x,y); if(o.rot) x0.rotate(o.rot);
+  if(o.outline){ x0.lineWidth=o.outline; x0.strokeStyle=o.ocol||D.c.paper; x0.lineJoin='round'; x0.strokeText(t,0,0); }
+  x0.fillStyle=o.color||D.c.ink; x0.fillText(t,0,0); x0.restore();
+}
+/* 사람 (콘티 그림과 같은 생김새) */
+function geo(H){ var T=.13+.03+.32+.5, u=H/T, d=.13*u; return {u:u, d:d}; }
+function fig(D,x,top,H,o){
+  o=o||{}; var f=o.face||0, g=geo(H), u=g.u, d=g.d, cy=top+d/2;
+  var shY=top+d+.04*u, hipY=shY+.31*u, footY=top+H, kneeY=hipY+(footY-hipY)*.5;
+  var sw=(f?.13:.25)*u, hw=(f?.1:.17)*u, body=o.sil?{fill:D.c.ink, fillStyle:'solid'}:{fill:D.c.paper, fillStyle:'solid'};
+  if(o.legs!==false) [-1,1].forEach(function(s){ var hx=x+s*hw*.28, kx=x+s*hw*.32+(o.run?s*.12*u:0), fx=x+s*hw*.42+(o.run?s*.22*u:0);
+    D.rc.linearPath([[hx,hipY],[kx,kneeY],[fx,footY]], D.ink(o.sil?{stroke:D.c.ink, strokeWidth:2.4*D.sw}:{})); });
+  D.rc.polygon([[x-sw/2,shY],[x+sw/2,shY],[x+hw/2,hipY],[x-hw/2,hipY]], D.ink(body));
+  [-1,1].forEach(function(s){ var sx=x+s*(f?sw*.3:sw/2), ex=sx+s*.035*u+f*.03*u, hx=sx+s*.02*u+f*.05*u;
+    if(o.armUp && s===o.armUp) D.rc.linearPath([[sx,shY],[sx+s*.08*u,shY-.12*u],[sx+s*.06*u,shY-.28*u]], D.ink());
+    else D.rc.linearPath([[sx,shY],[ex,shY+.16*u],[hx,shY+.31*u]], D.ink(o.sil?{strokeWidth:2.4*D.sw}:{})); });
+  D.rc.circle(x, cy, d, D.ink(body));
+  if(o.sil||o.back){ if(o.back) D.rc.circle(x,cy,d, D.ink({fill:D.c.ink3, fillStyle:'hachure', hachureGap:Math.max(2.5,d/11)})); return; }
+  if(d<9) return;
+  var r=d/2;
+  D.rc.path('M '+(x-r*.97)+' '+(cy-r*.24)+' A '+r+' '+r+' 0 0 1 '+(x+r*.97)+' '+(cy-r*.24)+' Q '+x+' '+(cy-r*.62)+' '+(x-r*.97)+' '+(cy-r*.24)+' Z',
+    D.ink({fill:D.c.ink3, fillStyle:'hachure', hachureGap:Math.max(2.2,d/12), hachureAngle:-40, strokeWidth:.9*D.sw}));
+  var ey=cy+.05*d;
+  if(!f){ [-1,1].forEach(function(s){ D.rc.circle(x+s*.19*d, ey, Math.max(2,d*.08), D.ink({fill:D.c.ink, fillStyle:'solid', roughness:.3})); });
+    if(d>=22) D.rc.line(x-.08*d, cy+.29*d, x+.08*d, cy+.29*d, D.ink()); }
+  else { D.rc.circle(x+f*.24*d, ey, Math.max(2,d*.08), D.ink({fill:D.c.ink, fillStyle:'solid'})); }
+}
+/* 큰 얼굴 — 기호 항목용. o.eye: open·dot·white·blank·spiral·closed·smile·sad / o.brow: angry·sad·up / o.mouth: line·o·smile·frown·grin·open·wave / o.shade: eyes·half */
+function head(D,cx,cy,r,o){
+  o=o||{}; var x=D.ctx;
+  // 목·어깨
+  if(!o.noBody) D.rc.path('M '+(cx-r*1.5)+' '+(cy+r*2.2)+' Q '+(cx-r*1.2)+' '+(cy+r*1.25)+' '+(cx-r*.32)+' '+(cy+r*1.1)+' L '+(cx+r*.32)+' '+(cy+r*1.1)+' Q '+(cx+r*1.2)+' '+(cy+r*1.25)+' '+(cx+r*1.5)+' '+(cy+r*2.2), D.ink());
+  if(!o.noBody){ D.rc.line(cx-r*.3, cy+r*.85, cx-r*.32, cy+r*1.12, D.ink()); D.rc.line(cx+r*.3, cy+r*.85, cx+r*.32, cy+r*1.12, D.ink()); }
+  D.rc.ellipse(cx, cy, r*1.9, r*2.1, S(D));
+  // 머리카락
+  D.rc.path('M '+(cx-r*.97)+' '+(cy-r*.15)+' Q '+(cx-r*1.05)+' '+(cy-r*1.15)+' '+cx+' '+(cy-r*1.12)+' Q '+(cx+r*1.05)+' '+(cy-r*1.15)+' '+(cx+r*.97)+' '+(cy-r*.15)+' Q '+(cx+r*.5)+' '+(cy-r*.62)+' '+(cx-r*.1)+' '+(cy-r*.45)+' Q '+(cx-r*.6)+' '+(cy-r*.6)+' '+(cx-r*.97)+' '+(cy-r*.15)+' Z',
+    D.ink({fill:D.c.ink3, fillStyle:'hachure', hachureGap:Math.max(2.4,r/7), hachureAngle:-40}));
+  var ey=cy+r*.12, ex=r*.38, er=r*.2;
+  [-1,1].forEach(function(s){
+    var px=cx+s*ex, e=o.eye||'open';
+    if(e==='open'||e==='blank'||e==='white'){
+      D.rc.ellipse(px, ey, er*1.6, er*1.25, S(D,{strokeWidth:1.4*D.sw}));
+      if(e!=='white'){ D.rc.circle(px, ey+er*.05, er*.95, D.ink({fill:e==='blank'?D.c.ink2:D.c.ink, fillStyle:'solid', roughness:.3}));
+        if(e==='open'){ x.save(); x.fillStyle=D.c.paper; x.beginPath(); x.arc(px+er*.18, ey-er*.18, er*.2, 0, 7); x.fill(); x.restore(); } }
+    } else if(e==='dot'){ D.rc.circle(px, ey, er*.5, D.ink({fill:D.c.ink, fillStyle:'solid'})); }
+    else if(e==='spiral'){ var pts=[]; for(var t=0;t<16;t++){ var a=t*.8, rr=er*.08+t*er*.055; pts.push([px+Math.cos(a)*rr, ey+Math.sin(a)*rr]); } D.rc.curve(pts, D.ink({roughness:.4})); }
+    else if(e==='closed'){ D.rc.line(px-er*.8, ey, px+er*.8, ey, D.ink({strokeWidth:1.6*D.sw})); }
+    else if(e==='smile'){ D.rc.arc(px, ey+er*.3, er*1.6, er*1.4, Math.PI*1.1, Math.PI*1.9, false, D.ink({strokeWidth:1.6*D.sw})); }
+    else if(e==='sad'){ D.rc.arc(px, ey-er*.3, er*1.6, er*1.2, Math.PI*.15, Math.PI*.85, false, D.ink({strokeWidth:1.6*D.sw})); }
+    var b=o.brow, by=ey-er*1.25;
+    if(b==='angry') D.rc.line(px-s*er*.9, by-er*.35, px+s*er*.8, by+er*.3, D.ink({strokeWidth:2*D.sw}));
+    else if(b==='sad') D.rc.line(px-s*er*.9, by+er*.3, px+s*er*.8, by-er*.3, D.ink({strokeWidth:1.6*D.sw}));
+    else if(b==='up') D.rc.arc(px, by, er*1.8, er*.9, Math.PI*1.1, Math.PI*1.9, false, D.ink({strokeWidth:1.6*D.sw}));
+    else D.rc.line(px-er*.8, by, px+er*.8, by-er*.12, D.ink({strokeWidth:1.6*D.sw}));
+  });
+  var my=cy+r*.62, m=o.mouth||'line';
+  if(m==='o') D.rc.ellipse(cx, my, r*.22, r*.3, D.ink({fill:D.c.ink, fillStyle:'solid'}));
+  else if(m==='smile') D.rc.arc(cx, my-r*.1, r*.5, r*.3, Math.PI*.1, Math.PI*.9, false, D.ink());
+  else if(m==='frown') D.rc.arc(cx, my+r*.12, r*.45, r*.25, Math.PI*1.12, Math.PI*1.88, false, D.ink());
+  else if(m==='grin'){ D.rc.rectangle(cx-r*.28, my-r*.08, r*.56, r*.18, S(D)); D.rc.line(cx-r*.28, my+r*.01, cx+r*.28, my+r*.01, D.thin()); }
+  else if(m==='open') D.rc.ellipse(cx, my, r*.4, r*.3, D.ink({fill:D.c.ink, fillStyle:'solid'}));
+  else if(m==='wave'){ D.rc.curve([[cx-r*.25,my],[cx-r*.12,my-r*.06],[cx,my],[cx+r*.12,my+r*.06],[cx+r*.25,my]], D.ink()); }
+  else D.rc.line(cx-r*.16, my, cx+r*.16, my, D.ink());
+  if(o.shade==='eyes'){ x.save(); x.beginPath(); x.ellipse(cx, cy, r*.95, r*1.05, 0, 0, 7); x.clip(); x.fillStyle=D.c.ink; x.globalAlpha=.88; x.fillRect(cx-r, cy-r*1.1, r*2, r*1.45); x.restore(); }
+  if(o.shade==='half'){ x.save(); x.beginPath(); x.ellipse(cx, cy, r*.95, r*1.05, 0, 0, 7); x.clip(); x.fillStyle=D.c.ink; x.globalAlpha=.75; x.fillRect(cx, cy-r*1.2, r*1.2, r*2.4); x.restore(); }
+  return {ey:ey, ex:ex, er:er, my:my};
+}
+/* 말풍선 */
+function bal(D,cx,cy,rx,ry,kind,tail,text,o){
+  o=o||{}; var pts=[], i, n, R=D.rnd, fillo=S(D,{strokeWidth:1.3*D.sw, roughness:.6});
+  if(tail && kind!=='narr' && kind!=='think' && kind!=='phone'){
+    var tx=tail[0], ty=tail[1], a=Math.atan2(ty-cy, tx-cx), bx=cx+Math.cos(a)*rx*.75, by=cy+Math.sin(a)*ry*.75, pa=a+Math.PI/2, tw=Math.min(rx,ry)*.28;
+    D.rc.polygon([[bx+Math.cos(pa)*tw, by+Math.sin(pa)*tw],[tx,ty],[bx-Math.cos(pa)*tw, by-Math.sin(pa)*tw]], fillo);
+  }
+  if(kind==='shout'){ n=14; for(i=0;i<n*2;i++){ var a2=i/(n*2)*Math.PI*2, k=i%2?1.28:.92+R()*.06; pts.push([cx+Math.cos(a2)*rx*k, cy+Math.sin(a2)*ry*k]); } D.rc.polygon(pts, S(D,{strokeWidth:1.6*D.sw, roughness:.4})); }
+  else if(kind==='think'){ n=11; for(i=0;i<n;i++){ var a3=i/n*Math.PI*2; D.rc.circle(cx+Math.cos(a3)*rx*.82, cy+Math.sin(a3)*ry*.82, Math.min(rx,ry)*.75, S(D,{roughness:.5})); }
+    D.rc.ellipse(cx, cy, rx*1.75, ry*1.7, D.ink({fill:D.c.paper, fillStyle:'solid', stroke:'none'}));
+    if(tail){ for(i=1;i<=3;i++){ var t=i/3.6; D.rc.circle(cx+(tail[0]-cx)*(.55+t*.45), cy+(tail[1]-cy)*(.55+t*.45), Math.min(rx,ry)*(.32-i*.07), S(D,{roughness:.4})); } } }
+  else if(kind==='trem'){ n=48; for(i=0;i<n;i++){ var a4=i/n*Math.PI*2, k2=1+(i%2?.045:-.045); pts.push([cx+Math.cos(a4)*rx*k2, cy+Math.sin(a4)*ry*k2]); } D.rc.polygon(pts, S(D,{roughness:.3, strokeWidth:1.1*D.sw})); }
+  else if(kind==='phone'){ n=10; for(i=0;i<n;i++){ var a5=i/n*Math.PI*2+.3; pts.push([cx+Math.cos(a5)*rx*1.02, cy+Math.sin(a5)*ry*1.02]); } D.rc.polygon(pts, S(D,{roughness:.3}));
+    if(tail){ var dx=tail[0]-cx, dy=tail[1]-cy, L=Math.hypot(dx,dy), ux=dx/L, uy=dy/L, sx=cx+ux*rx*.8, sy=cy+uy*ry*.8, nx=-uy, ny=ux, seg=(L-Math.min(rx,ry)*.8)/3;
+      D.rc.linearPath([[sx,sy],[sx+ux*seg+nx*seg*.5, sy+uy*seg+ny*seg*.5],[sx+ux*seg*2-nx*seg*.4, sy+uy*seg*2-ny*seg*.4],[tail[0],tail[1]]], D.ink({strokeWidth:1.6*D.sw, roughness:.3})); } }
+  else if(kind==='narr'){ D.rc.rectangle(cx-rx, cy-ry, rx*2, ry*2, S(D,{roughness:.3})); }
+  else if(kind==='whisper'){ D.rc.ellipse(cx, cy, rx*2, ry*2, S(D,{strokeLineDash:[5,4], roughness:.3})); }
+  else { D.rc.ellipse(cx, cy, rx*2, ry*2, fillo); }
+  if(tail && kind!=='narr' && kind!=='think' && kind!=='phone'){ D.ctx.save(); D.ctx.fillStyle=D.c.paper; D.ctx.beginPath(); D.ctx.ellipse(cx,cy,rx*.93,ry*.88,0,0,7); D.ctx.fill(); D.ctx.restore(); }
+  if(text) txt(D, cx, cy, text, {size:o.size||Math.round(clamp(Math.min(rx,ry)*.75, 9, 16)), weight:o.weight||600, color:o.color});
+}
+/* 선 효과 */
+function focusL(D,cx,cy,rIn,n,o){
+  o=o||{}; var x=D.ctx, R1=Math.hypot(D.w,D.h), R=D.rnd; x.save(); x.fillStyle=o.col||D.c.ink;
+  for(var i=0;i<n;i++){ var a=(i+R()*.7)/n*Math.PI*2, r0=rIn*(.9+R()*.6), wd=.005+R()*.013;
+    x.beginPath(); x.moveTo(cx+Math.cos(a)*r0, cy+Math.sin(a)*r0*(o.sq||.85)); x.lineTo(cx+Math.cos(a-wd)*R1, cy+Math.sin(a-wd)*R1); x.lineTo(cx+Math.cos(a+wd)*R1, cy+Math.sin(a+wd)*R1); x.closePath(); x.fill(); }
+  x.restore();
+}
+function radOut(D,cx,cy,r0,r1,n,o){ o=o||{}; var R=D.rnd; for(var i=0;i<n;i++){ var a=(i+R()*.5)/n*Math.PI*2, a1=r0*(1+R()*.15), a2=r1*(.7+R()*.35); D.rc.line(cx+Math.cos(a)*a1, cy+Math.sin(a)*a1*(o.sq||1), cx+Math.cos(a)*a2, cy+Math.sin(a)*a2*(o.sq||1), D.thin({strokeWidth:o.sw||1, stroke:o.col||D.c.ink})); } }
+function speedL(D,x,y,w,h,n,dir){
+  var R=D.rnd, ctx=D.ctx; ctx.save(); ctx.strokeStyle=D.c.ink; ctx.lineCap='round';
+  for(var i=0;i<n;i++){ var t=(i+R()*.6)/n, len=(dir==='v'?h:w)*(.25+R()*.6), st=(dir==='v'?h:w)*R()*.9-len*.3; ctx.lineWidth=.6+R()*1.6; ctx.beginPath();
+    if(dir==='v'){ ctx.moveTo(x+t*w, y+st); ctx.lineTo(x+t*w, y+st+len); } else { ctx.moveTo(x+st, y+t*h); ctx.lineTo(x+st+len, y+t*h); } ctx.stroke(); }
+  ctx.restore();
+}
+function hatch(D,x,y,w,h,gap){ D.rc.rectangle(x,y,w,h, D.ink({stroke:'none', fill:D.c.ink3, fillStyle:'cross-hatch', hachureGap:gap||5, fillWeight:.7, roughness:1.2})); }
+function star4(D,x,y,r){ D.rc.polygon([[x,y-r],[x+r*.22,y-r*.22],[x+r,y],[x+r*.22,y+r*.22],[x,y+r],[x-r*.22,y+r*.22],[x-r,y],[x-r*.22,y-r*.22]], D.ink({fill:D.c.paper, fillStyle:'solid', strokeWidth:1, roughness:.3})); }
+function flowerAt(D,x,y,r){ for(var i=0;i<5;i++){ var a=i/5*Math.PI*2-Math.PI/2; D.rc.circle(x+Math.cos(a)*r*.62, y+Math.sin(a)*r*.62, r*.85, S(D,{strokeWidth:1, roughness:.5})); } D.rc.circle(x,y,r*.55, D.ink({fill:D.c.ink3, fillStyle:'solid', strokeWidth:1})); }
+function wavy(D,x1,y1,x2,y2,amp,k,o){ var pts=[], n=Math.max(6,Math.round(Math.hypot(x2-x1,y2-y1)/6)), nx=-(y2-y1), ny=x2-x1, L=Math.hypot(nx,ny)||1; nx/=L; ny/=L;
+  for(var i=0;i<=n;i++){ var t=i/n, s=Math.sin(t*Math.PI*2*k)*amp*(o&&o.taper?(1-t):1); pts.push([x1+(x2-x1)*t+nx*s, y1+(y2-y1)*t+ny*s]); } D.rc.curve(pts, D.thin(o&&o.pen)); }
+
+/* 판 모양 그림 도우미: 한 쪽(페이지)을 그린다 */
+function page(D){ var m=Math.min(D.w,D.h)*.06; return {x:m, y:m, w:D.w-m*2, h:D.h-m*2, m:m}; }
+function bust(D,x,y,s,o){ fig(D, x, y, s*3.1, Object.assign({legs:false}, o||{})); }
+
+var DRAW={
+/* 칸 */
+wide:function(D){ var P=page(D), g=P.m*.8, h1=P.h*.42;
+  pnl(D,P.x,P.y,P.w,h1); clipR(D,P.x,P.y,P.w,h1,function(){ D.rc.linearPath([[P.x,P.y+h1*.62],[P.x+P.w*.2,P.y+h1*.45],[P.x+P.w*.35,P.y+h1*.58],[P.x+P.w*.6,P.y+h1*.38],[P.x+P.w*.8,P.y+h1*.55],[P.x+P.w,P.y+h1*.48]], D.thin());
+    D.rc.line(P.x, P.y+h1*.78, P.x+P.w, P.y+h1*.78, D.thin()); [.18,.21,.24].forEach(function(t,i){ fig(D, P.x+P.w*t, P.y+h1*.6, h1*.18); }); });
+  var y2=P.y+h1+g, h2=P.h-h1-g; pnl(D,P.x,y2,P.w*.48,h2); pnl(D,P.x+P.w*.52,y2,P.w*.48,h2);
+  clipR(D,P.x,y2,P.w*.48,h2,function(){ bust(D,P.x+P.w*.24,y2+h2*.2,h2*.36); }); clipR(D,P.x+P.w*.52,y2,P.w*.48,h2,function(){ bust(D,P.x+P.w*.76,y2+h2*.2,h2*.36,{face:-1}); });
+  txt(D, P.x+P.w*.5, P.y+h1*.15, '← 넓이·거리 →', {size:11, color:D.c.mark, weight:600}); },
+tall:function(D){ var P=page(D), g=P.m*.8, w1=P.w*.36;
+  pnl(D,P.x,P.y,w1,P.h); clipR(D,P.x,P.y,w1,P.h,function(){ fig(D,P.x+w1*.5,P.y+P.h*.08,P.h*.86); });
+  var x2=P.x+w1+g, w2=P.w-w1-g, h3=(P.h-g*2)/3; for(var i=0;i<3;i++){ var y=P.y+i*(h3+g); pnl(D,x2,y,w2,h3); (function(y){ clipR(D,x2,y,w2,h3,function(){ bust(D,x2+w2*.5,y+h3*.25,h3*.3,{face:i===1?-1:0}); }); })(y); }
+  txt(D, P.x+w1*.5, P.y+P.h-8, '전신', {size:11, color:D.c.mark}); },
+diag:function(D){ var P=page(D), g=P.m*.7, a=[P.x,P.y], b=[P.x+P.w,P.y], c=[P.x+P.w,P.y+P.h*.36], d=[P.x,P.y+P.h*.58];
+  var top=[a,b,c,d], bot=[[P.x,P.y+P.h*.58+g],[P.x+P.w,P.y+P.h*.36+g],[P.x+P.w,P.y+P.h],[P.x,P.y+P.h]];
+  poly(D,top); clipP(D,top,function(){ fig(D,P.x+P.w*.32,P.y+P.h*.06,P.h*.5,{face:1, armUp:1}); fig(D,P.x+P.w*.72,P.y+P.h*.08,P.h*.42,{face:-1}); speedL(D,P.x,P.y,P.w,P.h*.6,10,'h'); });
+  poly(D,bot); clipP(D,bot,function(){ bust(D,P.x+P.w*.5,P.y+P.h*.62,P.h*.16,{face:0}); });
+  txt(D, P.x+P.w*.8, P.y+P.h*.5, '기울어진 경계', {size:10, color:D.c.mark, rot:-.35}); },
+noframe:function(D){ var P=page(D), g=P.m*.8, h1=P.h*.26;
+  pnl(D,P.x,P.y,P.w*.48,h1); pnl(D,P.x+P.w*.52,P.y,P.w*.48,h1);
+  clipR(D,P.x,P.y,P.w*.48,h1,function(){ bust(D,P.x+P.w*.24,P.y+h1*.2,h1*.36,{face:1}); }); clipR(D,P.x+P.w*.52,P.y,P.w*.48,h1,function(){ bust(D,P.x+P.w*.76,P.y+h1*.2,h1*.36,{face:-1}); });
+  fig(D, P.x+P.w*.5, P.y+h1+g*2, P.h-h1-g*3); txt(D, P.x+P.w*.82, P.y+h1+P.h*.3, '테두리 없음', {size:10, color:D.c.mark}); },
+bleed:function(D){ var m=Math.min(D.w,D.h)*.12;
+  D.rc.rectangle(m,m,D.w-m*2,D.h-m*2, D.thin({strokeLineDash:[4,4], stroke:D.c.note}));
+  D.rc.linearPath([[0,D.h*.6],[D.w*.25,D.h*.38],[D.w*.42,D.h*.52],[D.w*.65,D.h*.25],[D.w*.85,D.h*.45],[D.w,D.h*.35]], D.ink());
+  D.rc.line(0,D.h*.75,D.w,D.h*.75, D.thin()); fig(D, D.w*.3, D.h*.6, D.h*.15); fig(D, D.w*.34, D.h*.62, D.h*.13);
+  txt(D, D.w*.5, m*.5, '그림이 종이 끝까지', {size:10, color:D.c.mark}); txt(D, D.w-m*1.2, D.h-m*.5, '안쪽 틀', {size:9, color:D.c.note, weight:500}); },
+break:function(D){ var P=page(D), g=P.m*.8, h1=P.h*.55, h2=P.h-h1-g;
+  pnl(D,P.x,P.y,P.w,h1); pnl(D,P.x,P.y+h1+g,P.w*.48,h2); pnl(D,P.x+P.w*.52,P.y+h1+g,P.w*.48,h2);
+  clipR(D,P.x,P.y+h1+g,P.w*.48,h2,function(){ bust(D,P.x+P.w*.24,P.y+h1+g+h2*.18,h2*.36); });
+  clipR(D,P.x,P.y,P.w,h1,function(){ focusL(D,P.x+P.w*.55,P.y+h1*.7,h1*.3,40); fig(D,P.x+P.w*.35,P.y+h1*.12,h1*.85,{face:1}); });
+  var fx=P.x+P.w*.6, fy=P.y+h1*.92; D.rc.linearPath([[P.x+P.w*.42,P.y+h1*.45],[fx-12,fy-18]], D.ink({strokeWidth:3*D.sw}));
+  D.rc.circle(fx, fy, P.h*.2, S(D,{strokeWidth:2*D.sw})); txt(D, fx+P.h*.16, fy+P.h*.1, '칸 밖으로', {size:10, color:D.c.mark, align:'left'}); },
+inset:function(D){ var P=page(D);
+  pnl(D,P.x,P.y,P.w,P.h); clipR(D,P.x,P.y,P.w,P.h,function(){ for(var i=0;i<6;i++){ var r=P.h*(.15+i*.12); D.rc.circle(P.x+P.w*.4,P.y+P.h*.6,r*2, D.thin({roughness:2})); }
+    D.rc.line(P.x,P.y+P.h*.85,P.x+P.w,P.y+P.h*.85, D.thin()); });
+  var iw=P.w*.34, ih=P.h*.32, ix=P.x+P.w-iw-P.m*.5, iy=P.y+P.m*.5; D.rc.rectangle(ix,iy,iw,ih, S(D,{strokeWidth:2*D.sw}));
+  clipR(D,ix,iy,iw,ih,function(){ head(D, ix+iw*.5, iy+ih*.62, ih*.42, {eye:'white', brow:'up', mouth:'o'}); });
+  txt(D, ix+iw*.5, iy+ih+12, '작은 칸', {size:10, color:D.c.mark}); },
+round:function(D){ var P=page(D), g=P.m*.8, w1=P.w*.55;
+  pnl(D,P.x,P.y,w1,P.h); clipR(D,P.x,P.y,w1,P.h,function(){ fig(D,P.x+w1*.45,P.y+P.h*.22,P.h*.7,{face:1}); });
+  var cx=P.x+w1+(P.w-w1)*.55, cy=P.y+P.h*.4, r=Math.min(P.w-w1, P.h)*.42;
+  D.rc.circle(cx,cy,r*2, S(D,{strokeWidth:2*D.sw})); clipP(D, Array.from({length:24},function(_,i){ var a=i/24*Math.PI*2; return [cx+Math.cos(a)*r, cy+Math.sin(a)*r]; }), function(){ head(D,cx,cy+r*.15,r*.5,{eye:'smile', mouth:'smile'}); });
+  [.25,.18,.12].forEach(function(s,i){ D.rc.circle(P.x+w1*(.7+i*.08), P.y+P.h*(.25-i*.04), r*s, D.thin()); }); },
+cloud:function(D){ var P=page(D), cx=P.x+P.w*.5, cy=P.y+P.h*.48, rx=P.w*.42, ry=P.h*.4, n=16;
+  for(var i=0;i<n;i++){ var a=i/n*Math.PI*2; D.rc.circle(cx+Math.cos(a)*rx, cy+Math.sin(a)*ry, Math.min(rx,ry)*.42, S(D)); }
+  D.ctx.save(); D.ctx.fillStyle=D.c.paper; D.ctx.beginPath(); D.ctx.ellipse(cx,cy,rx*1.02,ry*1.02,0,0,7); D.ctx.fill(); D.ctx.restore();
+  fig(D,cx-rx*.35,cy-ry*.55,ry*1.3,{face:1}); fig(D,cx+rx*.35,cy-ry*.55,ry*1.25,{face:-1}); [[cx,cy-ry*.62]].forEach(function(p){ txt(D,p[0],p[1],'♥',{size:16, color:D.c.mark}); });
+  txt(D, cx, cy+ry*.72, '…라면 좋을 텐데', {size:10, color:D.c.mark, weight:600}); },
+flashback:function(D){ var P=page(D); fillR(D,P.x-2,P.y-2,P.w+4,P.h+4,D.c.ink); var g=P.m*.9, w=(P.w-g)/2, h=(P.h-g)/2;
+  [[0,0],[1,0],[0,1],[1,1]].forEach(function(q,i){ var x=P.x+q[0]*(w+g), y=P.y+q[1]*(h+g); D.rc.rectangle(x,y,w,h, D.ink({fill:D.c.paper, fillStyle:'solid', stroke:D.c.paper})); clipR(D,x,y,w,h,function(){ if(i===3){ bust(D,x+w*.5,y+h*.2,h*.36); } else fig(D,x+w*.5,y+h*.25,h*.62*(i===0?1:.9),{face:i===1?-1:0}); D.ctx.save(); D.ctx.globalAlpha=.12; D.ctx.fillStyle=D.c.ink; D.ctx.fillRect(x,y,w,h); D.ctx.restore(); }); });
+  txt(D, P.x+P.w*.5, P.y+P.h*.5, '과거', {size:12, color:D.c.paper, outline:4, ocol:D.c.ink}); },
+jag:function(D){ var P=page(D), cx=P.x+P.w/2, cy=P.y+P.h/2, pts=[], n=34; for(var i=0;i<n;i++){ var a=i/n*Math.PI*2, k=i%2?1:.86; pts.push([cx+Math.cos(a)*P.w*.5*k, cy+Math.sin(a)*P.h*.5*k]); }
+  poly(D,pts,{fill:D.c.paper, fillStyle:'solid'}); clipP(D,pts,function(){ head(D,cx,cy-P.h*.05,P.h*.2,{eye:'white', brow:'up', mouth:'open'}); });
+  bal(D, P.x+P.w*.2, P.y+P.h*.2, P.w*.12, P.h*.1, 'phone', [P.x+P.w*.32,P.y+P.h*.38], '사고가…', {size:10}); },
+show:function(D){ var P=page(D), g=P.m*.6, h1=P.h*.22, w=(P.w-g*3)/4;
+  for(var i=0;i<4;i++){ var x=P.x+i*(w+g); pnl(D,x,P.y,w,h1); (function(x){ clipR(D,x,P.y,w,h1,function(){ bust(D,x+w*.5,P.y+h1*.22,h1*.32,{face:i%2?-1:1}); }); })(x); }
+  var y2=P.y+h1+g, h2=P.h-h1-g; pnl(D,P.x,y2,P.w,h2); clipR(D,P.x,y2,P.w,h2,function(){ focusL(D,P.x+P.w*.5,y2+h2*.45,h2*.35,60); fig(D,P.x+P.w*.5,y2+h2*.06,h2*.92,{armUp:1}); });
+  txt(D, P.x+P.w*.86, y2+h2*.12, '한 방', {size:12, color:D.c.mark}); },
+white:function(D){ var P=page(D), g=P.m*.8, w=(P.w-g*2)/3;
+  [0,1,2].forEach(function(i){ var x=P.x+i*(w+g); pnl(D,x,P.y,w,P.h); if(i===0) clipR(D,x,P.y,w,P.h,function(){ bal(D,x+w*.5,P.y+P.h*.2,w*.38,P.h*.1,'normal',[x+w*.5,P.y+P.h*.36],'헤어지자',{size:10}); bust(D,x+w*.5,P.y+P.h*.45,P.h*.2,{face:1}); });
+    if(i===2) clipR(D,x,P.y,w,P.h,function(){ bust(D,x+w*.5,P.y+P.h*.45,P.h*.2,{face:-1}); bal(D,x+w*.5,P.y+P.h*.2,w*.36,P.h*.1,'normal',[x+w*.5,P.y+P.h*.36],'…응',{size:10}); }); });
+  txt(D, P.x+w*1.5+g, P.y+P.h*.5, '(빈 칸)', {size:11, color:D.c.ink3, weight:500}); },
+black:function(D){ var P=page(D), g=P.m*.8, w=(P.w-g)/2;
+  pnl(D,P.x,P.y,w,P.h); clipR(D,P.x,P.y,w,P.h,function(){ head(D,P.x+w*.5,P.y+P.h*.42,P.h*.2,{eye:'closed', mouth:'line'}); });
+  fillR(D,P.x+w+g,P.y,w,P.h,D.c.ink); txt(D,P.x+w+g+w*.5,P.y+P.h*.5,'탕',{size:Math.round(P.h*.22), color:D.c.paper, serif:true, weight:900}); },
+/* 효과선 */
+focus:function(D){ var P=page(D); pnl(D,P.x,P.y,P.w,P.h); clipR(D,P.x,P.y,P.w,P.h,function(){ focusL(D,P.x+P.w*.5,P.y+P.h*.45,P.h*.3,90); head(D,P.x+P.w*.5,P.y+P.h*.42,P.h*.2,{eye:'white', brow:'up', mouth:'o'}); }); },
+speed:function(D){ var P=page(D); pnl(D,P.x,P.y,P.w,P.h); clipR(D,P.x,P.y,P.w,P.h,function(){ speedL(D,P.x,P.y,P.w,P.h,46,'h'); fig(D,P.x+P.w*.5,P.y+P.h*.12,P.h*.8,{face:1, run:true}); }); txt(D,P.x+P.w*.2,P.y+P.h*.12,'←',{size:16,color:D.c.mark}); },
+motion:function(D){ var P=page(D); pnl(D,P.x,P.y,P.w,P.h); clipR(D,P.x,P.y,P.w,P.h,function(){ var cx=P.x+P.w*.42, cy=P.y+P.h*.5;
+  for(var i=0;i<5;i++) D.rc.arc(cx, cy, P.h*(1.15-i*.06), P.h*(1.15-i*.06), Math.PI*1.15, Math.PI*1.75, false, D.thin({strokeWidth:1+i*.3}));
+  fig(D,cx,P.y+P.h*.18,P.h*.75,{face:1, armUp:1}); D.rc.line(cx+P.h*.12,P.y+P.h*.2,cx+P.h*.45,P.y+P.h*.05, D.ink({strokeWidth:3*D.sw})); }); },
+shake:function(D){ var P=page(D); pnl(D,P.x,P.y,P.w,P.h); clipR(D,P.x,P.y,P.w,P.h,function(){ var cx=P.x+P.w*.5, cy=P.y+P.h*.55;
+  D.rc.rectangle(cx-P.w*.16, cy-P.h*.2, P.w*.32, P.h*.36, S(D)); for(var i=0;i<4;i++) D.rc.line(cx-P.w*.12, cy-P.h*.12+i*P.h*.07, cx+P.w*.1, cy-P.h*.12+i*P.h*.07, D.thin());
+  D.rc.ellipse(cx+P.w*.14, cy+P.h*.12, P.w*.14, P.h*.18, S(D)); [-1,1].forEach(function(s){ for(var j=0;j<3;j++){ var x=cx+s*(P.w*.21+j*7); D.rc.line(x, cy-P.h*.15+j*9, x+s*3, cy-P.h*.05+j*9, D.ink({strokeWidth:1.2})); } }); }); txt(D,P.x+P.w*.5,P.y+P.h*.12,'편지를 쥔 떨리는 손',{size:10,color:D.c.mark,weight:500}); },
+beta:function(D){ var P=page(D), cx=P.x+P.w*.5, cy=P.y+P.h*.45; pnl(D,P.x,P.y,P.w,P.h);
+  clipR(D,P.x,P.y,P.w,P.h,function(){ fillR(D,P.x,P.y,P.w,P.h,D.c.ink); var pts=[], n=70, R=D.rnd; for(var i=0;i<n;i++){ var a=i/n*Math.PI*2, r=(i%2? P.h*(.42+R()*.35) : P.h*(.22+R()*.08)); pts.push([cx+Math.cos(a)*r*1.25, cy+Math.sin(a)*r]); }
+    D.ctx.save(); D.ctx.fillStyle=D.c.paper; D.ctx.beginPath(); pts.forEach(function(p,i){ if(i) D.ctx.lineTo(p[0],p[1]); else D.ctx.moveTo(p[0],p[1]); }); D.ctx.closePath(); D.ctx.fill(); D.ctx.restore();
+    head(D,cx,cy,P.h*.17,{eye:'white', brow:'up', mouth:'line'}); }); },
+uni:function(D){ var P=page(D), cx=P.x+P.w*.5, cy=P.y+P.h*.45; pnl(D,P.x,P.y,P.w,P.h);
+  clipR(D,P.x,P.y,P.w,P.h,function(){ var R=D.rnd, x=D.ctx; x.save(); x.fillStyle=D.c.ink; for(var i=0;i<80;i++){ var a=i/80*Math.PI*2+R()*.03, r0=P.h*(.26+R()*.08), r1=P.h*(.5+R()*.3), wd=.012+R()*.012; x.beginPath(); x.moveTo(cx+Math.cos(a)*r0*1.2, cy+Math.sin(a)*r0); x.lineTo(cx+Math.cos(a-wd)*r1*1.2, cy+Math.sin(a-wd)*r1); x.lineTo(cx+Math.cos(a+wd)*r1*1.2, cy+Math.sin(a+wd)*r1); x.closePath(); x.fill(); } x.restore();
+    head(D,cx,cy,P.h*.16,{eye:'open', brow:'up', mouth:'smile'}); star4(D,cx+P.h*.32,cy-P.h*.2,7); }); },
+radial:function(D){ var P=page(D), cx=P.x+P.w*.5, cy=P.y+P.h*.45; pnl(D,P.x,P.y,P.w,P.h); clipR(D,P.x,P.y,P.w,P.h,function(){ radOut(D,cx,cy,P.h*.3,P.h*.75,30,{sq:.85, sw:1.4}); head(D,cx,cy,P.h*.17,{eye:'smile', mouth:'grin'}); }); },
+odoro:function(D){ var P=page(D), cx=P.x+P.w*.5, cy=P.y+P.h*.46, R=D.rnd; pnl(D,P.x,P.y,P.w,P.h); clipR(D,P.x,P.y,P.w,P.h,function(){
+  for(var i=0;i<26;i++){ var a=i/26*Math.PI*2+R()*.1, r1=P.h*.8, r0=P.h*(.3+R()*.15); wavy(D, cx+Math.cos(a)*r1*1.3, cy+Math.sin(a)*r1, cx+Math.cos(a)*r0*1.3, cy+Math.sin(a)*r0, 3+R()*3, 2.5, {taper:true, pen:{strokeWidth:1.2}}); }
+  head(D,cx,cy,P.h*.17,{eye:'blank', brow:'angry', mouth:'smile', shade:'eyes'}); }); },
+tare:function(D){ var P=page(D), R=D.rnd; pnl(D,P.x,P.y,P.w,P.h); clipR(D,P.x,P.y,P.w,P.h,function(){ var x=D.ctx; x.save(); x.strokeStyle=D.c.ink; for(var i=0;i<40;i++){ var px=P.x+P.w*(i+R()*.5)/40, L=P.h*(.15+R()*.5); x.lineWidth=.7+R()*1.2; x.beginPath(); x.moveTo(px,P.y); x.lineTo(px,P.y+L); x.stroke(); } x.restore();
+  head(D,P.x+P.w*.5,P.y+P.h*.55,P.h*.17,{eye:'dot', brow:'sad', mouth:'wave'}); D.rc.rectangle(P.x+P.w*.62,P.y+P.h*.72,P.w*.2,P.h*.18,S(D)); txt(D,P.x+P.w*.72,P.y+P.h*.81,'12점',{size:10,color:D.c.mark}); }); },
+hatch:function(D){ var P=page(D); pnl(D,P.x,P.y,P.w,P.h); clipR(D,P.x,P.y,P.w,P.h,function(){ hatch(D,P.x,P.y,P.w,P.h,5); D.ctx.save(); D.ctx.fillStyle=D.c.paper; D.ctx.beginPath(); D.ctx.ellipse(P.x+P.w*.5,P.y+P.h*.6,P.w*.2,P.h*.32,0,0,7); D.ctx.fill(); D.ctx.restore();
+  head(D,P.x+P.w*.5,P.y+P.h*.5,P.h*.15,{eye:'closed', brow:'sad', mouth:'frown'}); }); },
+flower:function(D){ var P=page(D), R=D.rnd; pnl(D,P.x,P.y,P.w,P.h); clipR(D,P.x,P.y,P.w,P.h,function(){ for(var i=0;i<9;i++){ var a=i/9*Math.PI*2, r=P.h*(.36+R()*.1); flowerAt(D,P.x+P.w*.5+Math.cos(a)*r*1.4, P.y+P.h*.45+Math.sin(a)*r, P.h*(.06+R()*.04)); }
+  for(var j=0;j<10;j++) star4(D,P.x+P.w*R(),P.y+P.h*R(),3+R()*5); head(D,P.x+P.w*.5,P.y+P.h*.45,P.h*.16,{eye:'open', mouth:'smile'}); }); },
+ripple:function(D){ var P=page(D), cx=P.x+P.w*.5, cy=P.y+P.h*.7; pnl(D,P.x,P.y,P.w,P.h); clipR(D,P.x,P.y,P.w,P.h,function(){ for(var i=1;i<=6;i++) D.rc.ellipse(cx,cy,P.w*.12*i,P.h*.05*i, D.thin({strokeWidth:1.6-i*.15}));
+  D.ctx.save(); D.ctx.fillStyle=D.c.ink; D.ctx.beginPath(); D.ctx.moveTo(cx,cy-P.h*.42); D.ctx.quadraticCurveTo(cx+8,cy-P.h*.32,cx,cy-P.h*.28); D.ctx.quadraticCurveTo(cx-8,cy-P.h*.32,cx,cy-P.h*.42); D.ctx.fill(); D.ctx.restore(); }); txt(D,P.x+P.w*.5,P.y+P.h*.18,'…톡',{size:12, color:D.c.mark}); },
+aura:function(D){ var P=page(D), R=D.rnd; pnl(D,P.x,P.y,P.w,P.h); clipR(D,P.x,P.y,P.w,P.h,function(){ var cx=P.x+P.w*.5;
+  for(var k=0;k<3;k++){ var pts=[]; for(var i=0;i<=24;i++){ var t=i/24, a=Math.PI*(1+t), r=P.h*(.38+k*.09)+(i%2?P.h*.06:0)*(1-k*.2); pts.push([cx+Math.cos(a)*r*1.1, P.y+P.h*.95+Math.sin(a)*r*1.6]); } D.rc.curve(pts, D.thin({strokeWidth:1.4-k*.3})); }
+  fig(D,cx,P.y+P.h*.2,P.h*.8,{});
+  ['쿠','구','구','구'].forEach(function(ch,i){ txt(D,P.x+P.w*(.12+i*.025),P.y+P.h*(.2+i*.17),ch,{size:Math.round(P.h*.12), serif:true, weight:900, rot:-.15}); txt(D,P.x+P.w*(.86-i*.02),P.y+P.h*(.25+i*.17),ch,{size:Math.round(P.h*.1), serif:true, weight:900, rot:.12}); }); }); },
+/* 기호 */
+sweat:function(D){ var c=sign(D,{eye:'smile', mouth:'smile'}); drop(D,c.cx+c.r*1.15,c.cy-c.r*.55,c.r*.42); },
+vein:function(D){ var c=sign(D,{eye:'smile', mouth:'smile', brow:'angry'}); veinAt(D,c.cx+c.r*.55,c.cy-c.r*.62,c.r*.28); veinAt(D,c.cx+c.r*1.15,c.cy-c.r*.1,c.r*.22); },
+blush:function(D){ var c=sign(D,{eye:'closed', mouth:'wave', brow:'sad'}); [-1,1].forEach(function(s){ for(var i=0;i<3;i++){ var x=c.cx+s*c.r*.5+i*c.r*.1-c.r*.1, y=c.cy+c.r*.42; D.rc.line(x,y,x+c.r*.1,y-c.r*.16, D.ink({stroke:D.c.mark, strokeWidth:1.4})); } }); },
+notice:function(D){ var c=sign(D,{eye:'open', mouth:'line', brow:'up'}); for(var i=0;i<3;i++){ var a=-1.0+i*.42, r0=c.r*1.25, r1=c.r*1.6; D.rc.line(c.cx+Math.cos(a)*r0, c.cy+Math.sin(a)*r0, c.cx+Math.cos(a)*r1, c.cy+Math.sin(a)*r1, D.ink({strokeWidth:2*D.sw})); } txt(D,c.cx-c.r*1.35,c.cy-c.r*.9,'!',{size:Math.round(c.r*.9), serif:true, weight:900, color:D.c.mark}); },
+question:function(D){ var c=sign(D,{eye:'dot', mouth:'o', tilt:.15}); txt(D,c.cx+c.r*.9,c.cy-c.r*1.35,'?',{size:Math.round(c.r*1.1), serif:true, weight:900, color:D.c.mark}); },
+pale:function(D){ var c=sign(D,{eye:'white', mouth:'wave', brow:'up'}); var x=D.ctx; x.save(); x.strokeStyle=D.c.ink; x.lineWidth=1.2; for(var i=0;i<9;i++){ var px=c.cx-c.r*.6+i*c.r*.15; x.beginPath(); x.moveTo(px,c.cy-c.r*.85); x.lineTo(px,c.cy-c.r*(.35+(i%3)*.08)); x.stroke(); } x.restore(); txt(D,c.cx+c.r*1.4,c.cy+c.r*.2,'가-앙',{size:Math.round(c.r*.4), serif:true, weight:900, rot:.2}); },
+whiteeye:function(D){ var cx=D.w*.5, cy=D.h*.5, r=Math.min(D.w,D.h)*.24; focusL(D,cx,cy,r*1.7,70); head(D,cx,cy,r,{eye:'white', mouth:'open', brow:'up'}); },
+blank:function(D){ var P=page(D), w=(P.w-P.m)/2; pnl(D,P.x,P.y,w,P.h); pnl(D,P.x+w+P.m,P.y,w,P.h);
+  clipR(D,P.x,P.y,w,P.h,function(){ head(D,P.x+w*.5,P.y+P.h*.45,Math.min(w,P.h)*.28,{eye:'open', mouth:'smile'}); }); clipR(D,P.x+w+P.m,P.y,w,P.h,function(){ head(D,P.x+w*1.5+P.m,P.y+P.h*.45,Math.min(w,P.h)*.28,{eye:'blank', mouth:'line'}); hatch(D,P.x+w+P.m,P.y,w,P.h*.18,6); });
+  txt(D,P.x+w*.5,P.y+P.h*.92,'반짝임 있음',{size:10,color:D.c.note,weight:500}); txt(D,P.x+w*1.5+P.m,P.y+P.h*.92,'반짝임 지움',{size:10,color:D.c.mark,weight:500}); },
+tear:function(D){ var c=sign(D,{eye:'open', mouth:'smile', brow:'sad'}); D.rc.line(c.cx+c.r*.42,c.cy+c.r*.3,c.cx+c.r*.44,c.cy+c.r*.55,D.thin()); drop(D,c.cx+c.r*.45,c.cy+c.r*.78,c.r*.16,true); },
+steam:function(D){ var c=sign(D,{eye:'closed', mouth:'frown', brow:'angry'}); [-1,1].forEach(function(s){ var x=c.cx+s*c.r*.55; D.rc.curve([[x,c.cy-c.r*1.25],[x+s*c.r*.15,c.cy-c.r*1.5],[x-s*c.r*.05,c.cy-c.r*1.75],[x+s*c.r*.12,c.cy-c.r*2.0]], D.ink({strokeWidth:2*D.sw})); }); },
+spiral:function(D){ var c=sign(D,{eye:'spiral', mouth:'wave'}); for(var i=0;i<3;i++){ var a=i/3*Math.PI*2; star4(D,c.cx+Math.cos(a)*c.r*1.1,c.cy-c.r*1.25+Math.sin(a)*c.r*.25,6); } D.rc.ellipse(c.cx,c.cy-c.r*1.25,c.r*2.2,c.r*.5, D.thin({strokeLineDash:[3,3]})); },
+soul:function(D){ var c=sign(D,{eye:'closed', mouth:'open'}); var gx=c.cx+c.r*1.45, gy=c.cy-c.r*.2; D.rc.path('M '+(c.cx)+' '+(c.cy+c.r*.62)+' Q '+(c.cx+c.r*.5)+' '+(c.cy+c.r*.3)+' '+(gx-c.r*.1)+' '+(gy+c.r*.35), D.thin({strokeLineDash:[3,3]}));
+  D.rc.path('M '+(gx-c.r*.35)+' '+(gy+c.r*.3)+' Q '+(gx-c.r*.4)+' '+(gy-c.r*.45)+' '+gx+' '+(gy-c.r*.45)+' Q '+(gx+c.r*.4)+' '+(gy-c.r*.45)+' '+(gx+c.r*.35)+' '+(gy+c.r*.3)+' L '+(gx+c.r*.15)+' '+(gy+c.r*.15)+' L '+gx+' '+(gy+c.r*.32)+' L '+(gx-c.r*.15)+' '+(gy+c.r*.15)+' Z', S(D)); [-1,1].forEach(function(s){ D.rc.circle(gx+s*c.r*.12,gy-c.r*.1,3,D.ink({fill:D.c.ink,fillStyle:'solid'})); }); },
+sd:function(D){ var P=page(D), w=(P.w-P.m)/2; pnl(D,P.x,P.y,w,P.h); pnl(D,P.x+w+P.m,P.y,w,P.h);
+  clipR(D,P.x,P.y,w,P.h,function(){ fig(D,P.x+w*.5,P.y+P.h*.1,P.h*.85); }); clipR(D,P.x+w+P.m,P.y,w,P.h,function(){ var cx=P.x+w*1.5+P.m, by=P.y+P.h*.9, hr=P.h*.2;
+    D.rc.rectangle(cx-hr*.55,by-hr*1.1,hr*1.1,hr*.9,S(D)); D.rc.line(cx-hr*.3,by-hr*.2,cx-hr*.35,by,D.ink()); D.rc.line(cx+hr*.3,by-hr*.2,cx+hr*.35,by,D.ink()); head(D,cx,by-hr*2.1,hr,{eye:'dot', mouth:'wave'}); });
+  txt(D,P.x+w*.5,P.y+P.h*.06,'보통',{size:10,color:D.c.note,weight:500}); txt(D,P.x+w*1.5+P.m,P.y+P.h*.08,'배고파…',{size:11,color:D.c.mark}); },
+/* 빛·공간 */
+backlight:function(D){ var P=page(D); pnl(D,P.x,P.y,P.w,P.h); clipR(D,P.x,P.y,P.w,P.h,function(){ fillR(D,P.x,P.y,P.w,P.h,D.c.ink2); var dx=P.x+P.w*.3, dw=P.w*.4; fillR(D,dx,P.y+P.h*.08,dw,P.h*.92,D.c.paper); radOut(D,P.x+P.w*.5,P.y+P.h*.5,P.h*.2,P.h*.9,20,{sw:.8});
+  fig(D,P.x+P.w*.5,P.y+P.h*.2,P.h*.76,{sil:true}); }); },
+eyeshadow:function(D){ var c=sign(D,{eye:'open', mouth:'smile', shade:'eyes'}); txt(D,c.cx,c.cy+c.r*1.55,'그래, 내가 했어',{size:11, color:D.c.mark}); },
+halfshadow:function(D){ sign(D,{eye:'open', mouth:'line', shade:'half', brow:'sad'}); },
+spot:function(D){ var P=page(D); pnl(D,P.x,P.y,P.w,P.h); clipR(D,P.x,P.y,P.w,P.h,function(){ fillR(D,P.x,P.y,P.w,P.h,D.c.ink); var cx=P.x+P.w*.5, x=D.ctx; x.save(); x.fillStyle=D.c.paper; x.globalAlpha=.9; x.beginPath(); x.moveTo(cx-P.w*.06,P.y); x.lineTo(cx+P.w*.06,P.y); x.lineTo(cx+P.w*.26,P.y+P.h*.9); x.lineTo(cx-P.w*.26,P.y+P.h*.9); x.closePath(); x.fill(); x.globalAlpha=1; x.beginPath(); x.ellipse(cx,P.y+P.h*.9,P.w*.26,P.h*.06,0,0,7); x.fill(); x.restore();
+  fig(D,cx,P.y+P.h*.38,P.h*.52,{}); }); },
+foreground:function(D){ var P=page(D); pnl(D,P.x,P.y,P.w,P.h); clipR(D,P.x,P.y,P.w,P.h,function(){ fig(D,P.x+P.w*.45,P.y+P.h*.35,P.h*.4,{face:1}); fig(D,P.x+P.w*.62,P.y+P.h*.36,P.h*.39,{face:-1});
+  var R=D.rnd; for(var i=0;i<9;i++){ var lx=P.x+P.w*(R()*.3), ly=P.y+P.h*(R()); D.rc.ellipse(lx,ly,P.w*.22,P.h*.18, D.ink({fill:D.c.ink2, fillStyle:'solid', roughness:1.5})); } for(var j=0;j<7;j++){ var rx=P.x+P.w*(.82+R()*.3), ry=P.y+P.h*R(); D.rc.ellipse(rx,ry,P.w*.2,P.h*.16, D.ink({fill:D.c.ink2, fillStyle:'solid', roughness:1.5})); } }); txt(D,P.x+P.w*.53,P.y+P.h*.15,'누가 보고 있다',{size:10, color:D.c.mark}); },
+depth:function(D){ var P=page(D); pnl(D,P.x,P.y,P.w,P.h); clipR(D,P.x,P.y,P.w,P.h,function(){ D.rc.rectangle(P.x+P.w*.55,P.y+P.h*.08,P.w*.38,P.h*.4, D.thin()); for(var i=0;i<12;i++) D.rc.line(P.x+P.w*(.57+i*.03),P.y+P.h*.1,P.x+P.w*(.55+i*.03),P.y+P.h*.46, D.thin({stroke:D.c.ink3}));
+  fig(D,P.x+P.w*.45,P.y+P.h*.3,P.h*.5,{face:1}); fig(D,P.x+P.w*.62,P.y+P.h*.32,P.h*.48,{face:-1});
+  var cx=P.x+P.w*.2, cy=P.y+P.h*.8; D.rc.rectangle(cx-P.w*.12,cy-P.h*.22,P.w*.24,P.h*.36,S(D,{strokeWidth:2*D.sw})); D.rc.arc(cx+P.w*.14,cy-P.h*.05,P.w*.1,P.h*.16,-Math.PI/2,Math.PI/2,false,D.ink({strokeWidth:2*D.sw}));
+  txt(D,P.x+P.w*.2,P.y+P.h*.4,'앞',{size:10,color:D.c.mark}); txt(D,P.x+P.w*.53,P.y+P.h*.24,'가운데',{size:10,color:D.c.mark}); txt(D,P.x+P.w*.86,P.y+P.h*.04+8,'뒤',{size:10,color:D.c.mark}); }); },
+symmetry:function(D){ var P=page(D), cx=P.x+P.w*.5, vy=P.y+P.h*.42; pnl(D,P.x,P.y,P.w,P.h); clipR(D,P.x,P.y,P.w,P.h,function(){ [[0,0],[1,0],[0,1],[1,1]].forEach(function(q){ D.rc.line(cx,vy,q[0]?P.x+P.w:P.x,q[1]?P.y+P.h:P.y, D.thin()); });
+  for(var i=1;i<=4;i++){ var t=i/5, x1=cx+(P.x-cx)*t, x2=cx+(P.x+P.w-cx)*t; D.rc.line(x1,vy+(P.y+P.h-vy)*t,x1,vy+(P.y-vy)*t, D.thin({stroke:D.c.ink3})); D.rc.line(x2,vy+(P.y+P.h-vy)*t,x2,vy+(P.y-vy)*t, D.thin({stroke:D.c.ink3})); }
+  fig(D,cx,vy-P.h*.06,P.h*.22,{}); D.rc.line(cx,P.y,cx,P.y+P.h, D.ink({stroke:D.c.note, strokeLineDash:[5,5], strokeWidth:1})); }); },
+space:function(D){ var P=page(D); pnl(D,P.x,P.y,P.w,P.h); clipR(D,P.x,P.y,P.w,P.h,function(){ D.rc.line(P.x,P.y+P.h*.8,P.x+P.w,P.y+P.h*.8, D.thin()); D.rc.arc(P.x+P.w*.25,P.y+P.h*.3,P.w*.2,P.h*.1,Math.PI,Math.PI*2,false,D.thin({stroke:D.c.ink3})); D.rc.arc(P.x+P.w*.55,P.y+P.h*.2,P.w*.25,P.h*.12,Math.PI,Math.PI*2,false,D.thin({stroke:D.c.ink3}));
+  fig(D,P.x+P.w*.84,P.y+P.h*.66,P.h*.16,{back:true}); }); txt(D,P.x+P.w*.4,P.y+P.h*.55,'비워 둔다',{size:11,color:D.c.ink3,weight:500}); },
+diagonal:function(D){ var P=page(D); pnl(D,P.x,P.y,P.w,P.h); clipR(D,P.x,P.y,P.w,P.h,function(){ for(var i=0;i<9;i++){ var t=i/9, x=P.x+P.w*t, y=P.y+P.h*(1-t); D.rc.linearPath([[x,y],[x+P.w/9,y],[x+P.w/9,y-P.h/9]], D.ink({strokeWidth:1.2})); }
+  D.rc.line(P.x,P.y+P.h,P.x+P.w,P.y, D.ink({stroke:D.c.note, strokeLineDash:[6,5], strokeWidth:1})); fig(D,P.x+P.w*.55,P.y+P.h*.12,P.h*.42,{face:1, run:true}); }); },
+reflect:function(D){ var P=page(D), my=P.y+P.h*.56, r=P.h*.15, cy=P.y+P.h*.3; pnl(D,P.x,P.y,P.w,P.h); clipR(D,P.x,P.y,P.w,P.h,function(){ head(D,P.x+P.w*.5,cy,r,{eye:'open', mouth:'line', noBody:true});
+  fillR(D,P.x,my,P.w,P.h*.5,D.c.paper2); D.rc.line(P.x,my,P.x+P.w,my, D.ink()); var x=D.ctx; x.save(); x.translate(0,my*2); x.scale(1,-1); x.globalAlpha=.85; head(D,P.x+P.w*.5,cy,r,{eye:'sad', mouth:'frown', brow:'sad', noBody:true}); x.restore();
+  drop(D,P.x+P.w*.56,my*2-cy+r*.2,P.h*.035,true); for(var i=0;i<3;i++) D.rc.line(P.x+P.w*(.1+i*.3),my+P.h*(.08+i*.11),P.x+P.w*(.22+i*.3),my+P.h*(.08+i*.11), D.thin({stroke:D.c.ink3})); }); txt(D,P.x+P.w*.84,my+P.h*.36,'비친 얼굴',{size:10,color:D.c.mark}); },
+weather:function(D){ var P=page(D), R=D.rnd; pnl(D,P.x,P.y,P.w,P.h); clipR(D,P.x,P.y,P.w,P.h,function(){ var x=D.ctx; x.save(); x.strokeStyle=D.c.ink3; x.lineWidth=1; for(var i=0;i<90;i++){ var px=P.x+P.w*R(), py=P.y+P.h*R(); x.beginPath(); x.moveTo(px,py); x.lineTo(px-4,py+14); x.stroke(); } x.restore();
+  fig(D,P.x+P.w*.38,P.y+P.h*.35,P.h*.55,{face:1}); fig(D,P.x+P.w*.66,P.y+P.h*.36,P.h*.54,{face:-1}); var ux=P.x+P.w*.66, uy=P.y+P.h*.3; D.rc.arc(ux,uy,P.w*.3,P.h*.2,Math.PI,Math.PI*2,true,S(D)); D.rc.line(ux,uy,ux,uy+P.h*.22,D.ink()); }); },
+/* 글자 */
+sfxbig:function(D){ var P=page(D); pnl(D,P.x,P.y,P.w,P.h); clipR(D,P.x,P.y,P.w,P.h,function(){ D.rc.rectangle(P.x+P.w*.08,P.y+P.h*.12,P.w*.3,P.h*.8,S(D)); D.rc.circle(P.x+P.w*.32,P.y+P.h*.55,6,D.ink({fill:D.c.ink,fillStyle:'solid'}));
+  speedL(D,P.x+P.w*.4,P.y+P.h*.1,P.w*.2,P.h*.8,10,'h'); txt(D,P.x+P.w*.68,P.y+P.h*.5,'쾅!!',{size:Math.round(P.h*.42), serif:true, weight:900, outline:5, rot:-.08}); }); },
+sfxbreak:function(D){ var P=page(D), w=(P.w-P.m)/2; pnl(D,P.x,P.y,w,P.h); pnl(D,P.x+w+P.m,P.y,w,P.h);
+  clipR(D,P.x,P.y,w,P.h,function(){ D.rc.rectangle(P.x+w*.3,P.y+P.h*.3,w*.4,P.h*.5,S(D)); D.rc.circle(P.x+w*.5,P.y+P.h*.45,w*.15,S(D)); }); clipR(D,P.x+w+P.m,P.y,w,P.h,function(){ head(D,P.x+w*1.5+P.m,P.y+P.h*.55,Math.min(w,P.h)*.22,{eye:'white', mouth:'o', brow:'up'}); });
+  txt(D,P.x+w*.95,P.y+P.h*.18,'따르르릉',{size:Math.round(P.h*.16), serif:true, weight:900, outline:5, rot:-.06}); },
+shout:function(D){ var P=page(D); pnl(D,P.x,P.y,P.w,P.h); clipR(D,P.x,P.y,P.w,P.h,function(){ head(D,P.x+P.w*.3,P.y+P.h*.62,P.h*.17,{eye:'open', brow:'angry', mouth:'open'}); bal(D,P.x+P.w*.66,P.y+P.h*.35,P.w*.22,P.h*.18,'shout',[P.x+P.w*.42,P.y+P.h*.5],'도망쳐!!',{size:Math.round(P.h*.1), weight:900}); }); },
+think:function(D){ var P=page(D); pnl(D,P.x,P.y,P.w,P.h); clipR(D,P.x,P.y,P.w,P.h,function(){ head(D,P.x+P.w*.5,P.y+P.h*.68,P.h*.15,{eye:'smile', mouth:'smile'});
+  bal(D,P.x+P.w*.22,P.y+P.h*.28,P.w*.17,P.h*.12,'normal',[P.x+P.w*.42,P.y+P.h*.55],'괜찮아',{size:11}); bal(D,P.x+P.w*.74,P.y+P.h*.26,P.w*.19,P.h*.15,'think',[P.x+P.w*.6,P.y+P.h*.52],'안 괜찮아',{size:10}); }); },
+trem:function(D){ var P=page(D); pnl(D,P.x,P.y,P.w,P.h); clipR(D,P.x,P.y,P.w,P.h,function(){ head(D,P.x+P.w*.32,P.y+P.h*.62,P.h*.16,{eye:'open', brow:'sad', mouth:'wave'}); drop(D,P.x+P.w*.38,P.y+P.h*.72,P.h*.03,true); bal(D,P.x+P.w*.68,P.y+P.h*.3,P.w*.22,P.h*.15,'trem',[P.x+P.w*.45,P.y+P.h*.5],'괘…괜찮아',{size:12}); }); },
+phone:function(D){ var P=page(D); pnl(D,P.x,P.y,P.w,P.h); clipR(D,P.x,P.y,P.w,P.h,function(){ bust(D,P.x+P.w*.3,P.y+P.h*.3,P.h*.3,{face:1}); D.rc.rectangle(P.x+P.w*.34,P.y+P.h*.36,P.w*.04,P.h*.14,D.ink({fill:D.c.ink,fillStyle:'solid'})); bal(D,P.x+P.w*.7,P.y+P.h*.3,P.w*.2,P.h*.14,'phone',[P.x+P.w*.4,P.y+P.h*.42],'지금 어디야?',{size:11}); }); },
+offscreen:function(D){ var P=page(D); pnl(D,P.x,P.y,P.w,P.h); clipR(D,P.x,P.y,P.w,P.h,function(){ fig(D,P.x+P.w*.3,P.y+P.h*.25,P.h*.7,{face:1}); }); bal(D,P.x+P.w*.72,P.y+P.h*.3,P.w*.18,P.h*.13,'normal',[P.x+P.w+12,P.y+P.h*.36],'거기까지.',{size:11}); txt(D,P.x+P.w-6,P.y+P.h*.6,'→ 칸 밖',{size:10, color:D.c.mark, align:'right'}); },
+silent:function(D){ var P=page(D), w=(P.w-P.m)/2; pnl(D,P.x,P.y,w,P.h); pnl(D,P.x+w+P.m,P.y,w,P.h);
+  clipR(D,P.x,P.y,w,P.h,function(){ bust(D,P.x+w*.5,P.y+P.h*.45,P.h*.22,{face:1}); bal(D,P.x+w*.5,P.y+P.h*.2,w*.34,P.h*.11,'normal',[P.x+w*.5,P.y+P.h*.4],'좋아해.',{size:11}); });
+  clipR(D,P.x+w+P.m,P.y,w,P.h,function(){ bust(D,P.x+w*1.5+P.m,P.y+P.h*.45,P.h*.22,{face:-1}); bal(D,P.x+w*1.5+P.m,P.y+P.h*.2,w*.26,P.h*.11,'normal',[P.x+w*1.5+P.m,P.y+P.h*.4],'……',{size:13}); }); },
+whisper:function(D){ var P=page(D); pnl(D,P.x,P.y,P.w,P.h); clipR(D,P.x,P.y,P.w,P.h,function(){ head(D,P.x+P.w*.35,P.y+P.h*.62,P.h*.16,{eye:'closed', mouth:'wave', brow:'sad'}); bal(D,P.x+P.w*.7,P.y+P.h*.3,P.w*.2,P.h*.15,'whisper',[P.x+P.w*.5,P.y+P.h*.5],'',{});
+  txt(D,P.x+P.w*.76,P.y+P.h*.36,'…바보',{size:9, weight:500}); }); },
+overlap:function(D){ var P=page(D); pnl(D,P.x,P.y,P.w,P.h); clipR(D,P.x,P.y,P.w,P.h,function(){ bust(D,P.x+P.w*.25,P.y+P.h*.5,P.h*.2,{face:1}); bust(D,P.x+P.w*.75,P.y+P.h*.5,P.h*.2,{face:-1});
+  bal(D,P.x+P.w*.32,P.y+P.h*.25,P.w*.2,P.h*.12,'normal',[P.x+P.w*.25,P.y+P.h*.45],'그러니까 내 말은—',{size:10}); bal(D,P.x+P.w*.62,P.y+P.h*.3,P.w*.13,P.h*.12,'shout',[P.x+P.w*.72,P.y+P.h*.48],'됐어!',{size:12, weight:900}); }); },
+narr:function(D){ var P=page(D); pnl(D,P.x,P.y,P.w,P.h); clipR(D,P.x,P.y,P.w,P.h,function(){ D.rc.line(P.x,P.y+P.h*.7,P.x+P.w,P.y+P.h*.7,D.thin()); fig(D,P.x+P.w*.62,P.y+P.h*.4,P.h*.36,{back:true}); radOut(D,P.x+P.w*.82,P.y+P.h*.22,P.h*.06,P.h*.13,12,{});
+  D.rc.circle(P.x+P.w*.82,P.y+P.h*.22,P.h*.1,S(D)); }); bal(D,P.x+P.w*.3,P.y+P.h*.18,P.w*.24,P.h*.11,'narr',null,'그해 여름, 나는…',{size:11, weight:500}); },
+handtext:function(D){ var P=page(D); pnl(D,P.x,P.y,P.w,P.h); clipR(D,P.x,P.y,P.w,P.h,function(){ for(var i=0;i<4;i++) fig(D,P.x+P.w*(.15+i*.23),P.y+P.h*.38,P.h*.5,{face:i%2?-1:1});
+  [['소문 들었어?',.2,.18],['진짜?',.55,.12],['헐…',.85,.2],['그래서?',.38,.3]].forEach(function(t){ txt(D,P.x+P.w*t[1],P.y+P.h*t[2],t[0],{size:10, weight:500, rot:-.05, color:D.c.ink2}); }); }); },
+/* 웹툰 */
+'wt-full':function(D){ phone(D,function(X,Y,W,H){ fillR(D,X,Y,W,H*.06,D.c.paper2); pnl(D,X,Y+H*.08,W,H*.84); clipR(D,X,Y+H*.08,W,H*.84,function(){ focusL(D,X+W*.5,Y+H*.48,W*.4,50); head(D,X+W*.5,Y+H*.46,W*.28,{eye:'white', brow:'angry', mouth:'grin'}); }); }); },
+'wt-gap':function(D){ phone(D,function(X,Y,W,H){ pnl(D,X+W*.08,Y+H*.03,W*.84,H*.16); clipR(D,X+W*.08,Y+H*.03,W*.84,H*.16,function(){ bal(D,X+W*.5,Y+H*.11,W*.3,H*.05,'normal',null,'…죽었어.',{size:9}); });
+  for(var i=0;i<6;i++) txt(D,X+W*.5,Y+H*(.28+i*.08),'·',{size:12,color:D.c.ink3}); txt(D,X+W*.5,Y+H*.55,'흰 여백 한 화면',{size:10,color:D.c.mark,weight:500});
+  pnl(D,X+W*.1,Y+H*.84,W*.8,H*.3); clipR(D,X+W*.1,Y+H*.84,W*.8,H*.3,function(){ head(D,X+W*.5,Y+H*.98,W*.14,{eye:'white', mouth:'o'}); }); }); },
+'wt-grad':function(D){ phone(D,function(X,Y,W,H){ var x=D.ctx, g=x.createLinearGradient(0,Y,0,Y+H); g.addColorStop(0,D.c.paper); g.addColorStop(.45,D.c.paper); g.addColorStop(1,D.c.ink); x.save(); x.fillStyle=g; x.fillRect(X,Y,W,H); x.restore();
+  D.rc.circle(X+W*.7,Y+H*.15,W*.15,S(D)); for(var i=0;i<5;i++) star4(D,X+W*(.15+i*.18),Y+H*(.75+(i%2)*.08),4); txt(D,X+W*.25,Y+H*.1,'낮',{size:10,color:D.c.note}); txt(D,X+W*.25,Y+H*.9,'밤',{size:10,color:D.c.paper}); }); },
+'wt-invert':function(D){ var P=page(D), w=(P.w-P.m)/2; pnl(D,P.x,P.y,w,P.h); clipR(D,P.x,P.y,w,P.h,function(){ head(D,P.x+w*.5,P.y+P.h*.45,Math.min(w,P.h)*.26,{eye:'open', mouth:'line'}); });
+  var x2=P.x+w+P.m; fillR(D,x2,P.y,w,P.h,D.c.ink); clipR(D,x2,P.y,w,P.h,function(){ var save=D.c; D.c=Object.assign({},save,{ink:save.paper, paper:save.ink, ink3:save.ink2}); D.ink=(function(o){ return function(e){ return Object.assign(o(e),{stroke:D.c.ink}); }; })(D.ink); radOut(D,x2+w*.5,P.y+P.h*.45,P.h*.25,P.h*.7,24,{col:D.c.ink}); head(D,x2+w*.5,P.y+P.h*.45,Math.min(w,P.h)*.26,{eye:'white', mouth:'grin', brow:'angry'}); D.c=save; });
+  txt(D,x2+w*.5,P.y+P.h*.92,'뒤집힌 한 칸',{size:10,color:D.c.paper,weight:500}); },
+'wt-fall':function(D){ phone(D,function(X,Y,W,H){ pnl(D,X+W*.15,Y-H*.05,W*.7,H*1.1); clipR(D,X+W*.15,Y-H*.05,W*.7,H*1.1,function(){ speedL(D,X+W*.15,Y,W*.7,H,26,'v'); fig(D,X+W*.5,Y+H*.15,H*.3,{armUp:1}); D.rc.line(X,Y+H*.92,X+W,Y+H*.92,D.ink({strokeWidth:2})); hatch(D,X+W*.15,Y+H*.92,W*.7,H*.1,4); }); txt(D,X+W*.92,Y+H*.5,'↓',{size:16,color:D.c.mark}); }); },
+'wt-bubble':function(D){ phone(D,function(X,Y,W,H){ fillR(D,X,Y,W,H,D.c.ink); bal(D,X+W*.5,Y+H*.35,W*.36,H*.07,'normal',null,'…누구야?',{size:10}); bal(D,X+W*.55,Y+H*.62,W*.22,H*.06,'whisper',null,'……',{size:11}); }); }
+};
+function sign(D,o){ var cx=D.w*.5, cy=D.h*.5, r=Math.min(D.w,D.h)*.24; if(o.tilt){ D.ctx.save(); D.ctx.translate(cx,cy); D.ctx.rotate(o.tilt); D.ctx.translate(-cx,-cy); } head(D,cx,cy,r,o); if(o.tilt) D.ctx.restore(); return {cx:cx, cy:cy, r:r}; }
+function drop(D,x,y,r,tear){ D.rc.path('M '+x+' '+(y-r*1.4)+' Q '+(x+r*1.05)+' '+(y-r*.1)+' '+(x+r*.7)+' '+(y+r*.55)+' Q '+x+' '+(y+r*1.1)+' '+(x-r*.7)+' '+(y+r*.55)+' Q '+(x-r*1.05)+' '+(y-r*.1)+' '+x+' '+(y-r*1.4)+' Z', D.ink({fill:tear?D.c.paper:D.c.paper, fillStyle:'solid', strokeWidth:1.4*D.sw}));
+  D.rc.arc(x-r*.25, y+r*.15, r*.6, r*.8, Math.PI*.6, Math.PI*1.1, false, D.thin()); }
+function veinAt(D,x,y,s){ [[1,1],[-1,1],[1,-1],[-1,-1]].forEach(function(q){ D.rc.arc(x+q[0]*s*.55, y+q[1]*s*.55, s*.9, s*.9, q[0]>0?(q[1]>0?Math.PI:Math.PI*1.5):(q[1]>0?Math.PI*.5:0), (q[0]>0?(q[1]>0?Math.PI:Math.PI*1.5):(q[1]>0?Math.PI*.5:0))+Math.PI*.5, false, D.ink({stroke:D.c.mark, strokeWidth:2*D.sw})); }); }
+function focusLite(D,c){ clipR(D,0,0,D.w,D.h,function(){ var x=D.ctx; x.save(); x.globalCompositeOperation='destination-over'; focusL(D,c.cx,c.cy,c.r*1.6,60); x.restore(); }); }
+function phone(D,fn){ var H=D.h*.92, W=H*.52, X=(D.w-W)/2, Y=(D.h-H)/2; D.rc.rectangle(X-6,Y-6,W+12,H+12,D.ink({strokeWidth:1.6*D.sw, roughness:.3}));
+  clipR(D,X,Y,W,H,function(){ fn(X,Y,W,H); }); }
+
+/* ---------- 화면 ---------- */
+var CD={g:'', q:'', built:false, io:null, open:{}};
+function grpName(g){ for(var i=0;i<CD_GROUPS.length;i++) if(CD_GROUPS[i][0]===g) return CD_GROUPS[i][1]; return g; }
+function relHTML(e){
+  if(!e.rel) return ''; return '<p class="cd-rel"><b>함께 보기</b> '+e.rel.map(function(r){ return '<button type="button" class="cd-link" data-p="'+esc(r[0])+'" data-id="'+esc(r[1])+'">'+esc(r[2])+'</button>'; }).join(' ')+'</p>';
+}
+function cardHTML(e,i){
+  return '<article class="cd-card" id="cd-'+esc(e.id)+'" data-id="'+esc(e.id)+'" data-g="'+e.g+'">'+
+    '<canvas class="cd-cv" data-i="'+i+'" data-seed="'+(i*13+7)+'" role="img" aria-label="'+esc(e.name)+' 그림"></canvas>'+
+    '<h4>'+esc(e.name)+'</h4><p class="cd-aka">'+esc(e.aka||'')+'</p>'+
+    '<p class="cd-fx">'+esc(e.fx)+'</p>'+
+    '<details class="cd-more"'+(CD.open[e.id]?' open':'')+'><summary>언제 · 예시'+(e.warn?' · 주의':'')+'</summary>'+
+      '<p><b>언제</b> '+esc(e.when)+'</p>'+
+      '<ul class="cd-ex">'+(e.ex||[]).map(function(x){ return '<li>'+esc(x)+'</li>'; }).join('')+'</ul>'+
+      (e.warn?'<p class="cd-warn"><b>주의</b> '+esc(e.warn)+'</p>':'')+relHTML(e)+
+    '</details></article>';
+}
+function build(){
+  if(CD.built) return; CD.built=true;
+  var h='<p class="lede">컷 <b>한 칸 안에서</b> 쓰는 연출을 모았다. 칸의 모양과 테두리, 효과선, 얼굴 둘레의 만화 기호, 빛과 화면 속 자리, 글자와 말풍선, 웹툰 화면 한 장. 항목마다 그림 한 장과 <b>어떤 효과가 나는지</b>, 언제 쓰는지, 예시를 붙였다. 칸과 칸을 잇는 연출은 <button type="button" class="cd-link" data-p="ctfx" data-id="">콘티 연출 색인</button>, 인물 자세는 <button type="button" class="cd-link" data-p="poses" data-id="">만화 자세·구도</button>에 있다.</p>'+
+    '<div class="filterbar cd-bar"><input type="search" class="cd-q" id="cd-q" placeholder="찾기 (예: 충격, 회상, 풍선)" aria-label="컷 연출 찾기">'+
+    '<button type="button" class="chip" data-cg="" aria-pressed="true">전체 '+CUT_DICT.length+'</button>'+
+    CD_GROUPS.map(function(g){ var n=CUT_DICT.filter(function(e){ return e.g===g[0]; }).length; return '<button type="button" class="chip" data-cg="'+g[0]+'" aria-pressed="false">'+g[1]+' '+n+'</button>'; }).join('')+
+    '<button type="button" class="chip" id="cd-redraw">선 다시 긋기</button><span class="count cd-msg"></span></div>';
+  CD_GROUPS.forEach(function(g){
+    h+='<section class="cd-grp" data-g="'+g[0]+'"><h3>'+g[1]+'</h3><p class="small">'+g[2]+'</p><div class="cd-grid">';
+    CUT_DICT.forEach(function(e,i){ if(e.g===g[0]) h+=cardHTML(e,i); });
+    h+='</div></section>';
+  });
+  h+='<details class="cd-src"><summary>참고한 자료</summary><ul>'+CD_SRC.map(function(s){ return '<li><a href="'+esc(s[1])+'" target="_blank" rel="noopener">'+esc(s[0])+'</a></li>'; }).join('')+'</ul>'+
+    '<p class="small">그림은 이 사이트가 선으로 다시 그린 설명용 도식이다. 작품 이름은 그 연출이 널리 알려진 예로만 적었다.</p></details>';
+  root.innerHTML=h;
+  root.addEventListener('click', onClick);
+  root.addEventListener('toggle', function(e){ var d=e.target; if(d.classList&&d.classList.contains('cd-more')){ var c=d.closest('.cd-card'); if(c) CD.open[c.dataset.id]=d.open; } }, true);
+  var q=root.querySelector('.cd-q'); q.addEventListener('input', function(){ CD.q=q.value.trim(); filter(); });
+  if('IntersectionObserver' in window){ CD.io=new IntersectionObserver(function(es){ es.forEach(function(en){ if(en.isIntersecting){ paint(en.target); CD.io.unobserve(en.target); } }); }, {rootMargin:'300px'}); }
+  observeAll();
+}
+function observeAll(){ root.querySelectorAll('.cd-cv').forEach(function(cv){ if(CD.io) CD.io.observe(cv); else paint(cv); }); }
+function paint(cv){
+  needRough(function(){ if(!cv.isConnected || cv.offsetParent===null) return; var e=CUT_DICT[+cv.dataset.i], f=e&&DRAW[e.id]; if(!f) return;
+    var D=mk(cv); if(!D) return; fillR(D,0,0,D.w,D.h,D.c.paper); try{ f(D); }catch(err){ window.__cdErr=(window.__cdErr||[]).concat(e.id+': '+(err&&err.message)); } });
+}
+function repaintAll(){ if(!CD.built) return; if(CD.io){ CD.io.disconnect(); } observeAll(); }
+function filter(){
+  var q=CD.q.toLowerCase(), any=0;
+  root.querySelectorAll('.cd-card').forEach(function(c){ var e=CUT_DICT.filter(function(x){ return x.id===c.dataset.id; })[0];
+    var hay=(e.name+' '+e.aka+' '+e.fx+' '+e.when+' '+(e.ex||[]).join(' ')+' '+(e.warn||'')).toLowerCase();
+    var on=(!CD.g || e.g===CD.g) && (!q || hay.indexOf(q)>-1); c.hidden=!on; if(on) any++; });
+  root.querySelectorAll('.cd-grp').forEach(function(s){ s.hidden=!s.querySelector('.cd-card:not([hidden])'); });
+  root.querySelectorAll('[data-cg]').forEach(function(b){ b.setAttribute('aria-pressed', b.dataset.cg===CD.g?'true':'false'); });
+  var m=root.querySelector('.cd-msg'); if(m) m.textContent=any?(q||CD.g?any+'개':''):'맞는 항목이 없다.';
+  repaintAll();
+}
+function onClick(ev){
+  var b=ev.target.closest('button'); if(!b) return;
+  if(b.hasAttribute('data-cg')){ CD.g=b.dataset.cg; filter(); return; }
+  if(b.id==='cd-redraw'){ SEED++; repaintAll(); return; }
+  if(b.classList.contains('cd-link')){ var p=b.dataset.p, id=b.dataset.id;
+    if(p==='ctfx'){ if(window.__ctFx && id) window.__ctFx.show(id); else location.hash='#ctfx'; return; }
+    if(p==='poses'){ location.hash='#poses'; if(window.__poseRef && id) setTimeout(function(){ try{ window.__poseRef.filter('', id); }catch(e){} },60); return; }
+    show(id); return; }
+}
+function show(id){
+  if((location.hash||'')!=='#cutdict') location.hash='#cutdict';
+  build(); var c=root.querySelector('.cd-card[data-id="'+id+'"]'); if(!c) return false;
+  if(c.hidden){ CD.g=''; CD.q=''; var q=root.querySelector('.cd-q'); if(q) q.value=''; filter(); }
+  root.querySelectorAll('.cd-hit').forEach(function(x){ x.classList.remove('cd-hit'); }); c.classList.add('cd-hit');
+  setTimeout(function(){ try{ c.scrollIntoView({block:'center', behavior:'smooth'}); }catch(e){ c.scrollIntoView(); } },90);
+  setTimeout(function(){ c.classList.remove('cd-hit'); },2600); return true;
+}
+window.PAGE_ON=window.PAGE_ON||{};
+var prev=window.PAGE_ON.cutdict; window.PAGE_ON.cutdict=function(){ if(prev) try{ prev(); }catch(e){} build(); repaintAll(); };
+window.addEventListener('resize', function(){ clearTimeout(CD.rz); CD.rz=setTimeout(function(){ var s=document.getElementById('cutdict'); if(CD.built && s && s.classList.contains('page-on')) repaintAll(); },200); });
+try{ matchMedia('(prefers-color-scheme: dark)').addEventListener('change', repaintAll); }catch(e){}
+new MutationObserver(function(){ repaintAll(); }).observe(document.documentElement,{attributes:true, attributeFilter:['data-theme']});
+window.__cutDict={list:CUT_DICT, groups:CD_GROUPS, show:show};
+})();
+// [[/MOD:cutdict]]
+
 aiBar(); favAiBar(); aiSlots(); if(typeof ideaWriteBar==='function') ideaWriteBar();
 if(window.__reSlots) window.__reSlots(); if(typeof renderFavs==='function') renderFavs();
 dataMigrate();
