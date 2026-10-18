@@ -11050,9 +11050,10 @@ window.__imgFx={use:function(r){ build(); ifUse(r); }, run:ifRun, parse:ifParse,
 // [[MOD:desk]] 홈 바탕화면
 // 아이콘 자리는 localStorage.deskLayout {v:1, at, pos:{"f:폴더"|"s:favs"|"s:cast"|"s:texts"|"s:trash": [열, 줄]}}
 var DK={open:null, sel:null, drag:null, dirty:false, trash:[], ask:null, newOn:false, ren:false, delArm:false, g:null, disp:{}, occ:{}, w:0, t:0, lastType:'mouse', noClick:0};
-var DK_SC=[{id:'s:favs',t:'즐겨찾기',h:'favs',g:'star'},{id:'s:cast',t:'등장인물',h:'cast',g:'person'},{id:'s:texts',t:'글 보관함',h:'texts',g:'doc'},{id:'s:conti',t:'콘티 구성기',h:'conti',g:'conti',opt:1},{id:'s:contis',t:'콘티 저장소',h:'contis',g:'contis',opt:1,req:'conti'}];
+var DK_SC0=[{id:'s:favs',t:'즐겨찾기',h:'favs',g:'star'},{id:'s:cast',t:'등장인물',h:'cast',g:'person'},{id:'s:texts',t:'글 보관함',h:'texts',g:'doc'},{id:'s:conti',t:'콘티 구성기',h:'conti',g:'conti',opt:1},{id:'s:contis',t:'콘티 저장소',h:'contis',g:'contis',opt:1,req:'conti'}];
 // opt: 그 페이지(섹션)가 있을 때만 보인다
-function dkSC(){ return DK_SC.filter(function(s){ return (!s.opt || document.getElementById(s.h)) && (!s.req || document.getElementById(s.req)); }); }
+var DK_SC=DK_SC0;   // 창(내용·정보)은 그대로 쓰지만 바탕화면 아이콘으로는 두지 않는다
+function dkSC(){ return []; }
 var DK_TYPES=['c','m','ch','e','a','p','ep','cr','lt','dw','cz'];
 var DK_SVG={
   folder:'<svg viewBox="0 0 46 38" aria-hidden="true"><path d="M2.5 6.5h14l4 4.5h22.5v24.5H2.5z"/><path class="dk-ff" d="M2.5 14h41v21.5h-41z"/></svg>',
@@ -11061,6 +11062,10 @@ var DK_SVG={
   conti:'<svg viewBox="0 0 46 38" aria-hidden="true"><rect x="4.5" y="2.5" width="37" height="33" rx="1.5"/><path class="dk-ff" d="M8 6h14v12H8z"/><path d="M25 6h13v12H25zM8 21h30v11H8z"/></svg>',
   contis:'<svg viewBox="0 0 46 38" aria-hidden="true"><path d="M9.5 4.5h31v26h-31z"/><path d="M6.5 7.5v26h31"/><path class="dk-ff" d="M13 8h11v8H13z"/><path class="ln" d="M27 8h10v8H27zM13 19h24v8H13z"/></svg>',
   doc:'<svg viewBox="0 0 46 38" aria-hidden="true"><path d="M10.5 1.5h19l7 7v28h-26z"/><path class="dk-ff" d="M29.5 1.5v7h7z"/><path class="ln" d="M15 14h16M15 19h16M15 24h16M15 29h10"/></svg>',
+  store:'<svg viewBox="0 0 46 38" aria-hidden="true"><path d="M5.5 12.5h35v23h-35z"/><path class="dk-ff" d="M3.5 6.5h39v6h-39z"/><path class="ln" d="M18 19.5h10"/></svg>',
+  book:'<svg viewBox="0 0 46 38" aria-hidden="true"><path d="M6.5 5.5h15c1.5 0 1.5 1 1.5 2v28c0-1-.5-2-2-2h-14.5z"/><path d="M39.5 5.5h-15c-1.5 0-1.5 1-1.5 2v28c0-1 .5-2 2-2h14.5z"/><path class="ln" d="M10 12h9M10 17h9M27 12h9M27 17h9"/></svg>',
+  idx:'<svg viewBox="0 0 46 38" aria-hidden="true"><path d="M8.5 3.5h25v31h-25z"/><path class="dk-ff" d="M33.5 7h5v6h-5zM33.5 15h5v6h-5zM33.5 23h5v6h-5z"/><path class="ln" d="M13 11h15M13 16h15M13 21h15M13 26h10"/></svg>',
+  tool:'<svg viewBox="0 0 46 38" aria-hidden="true"><path d="M4.5 9.5h37v25h-37z"/><path class="dk-ff" d="M16.5 4.5h13v5h-13z"/><path class="ln" d="M4.5 18h37M20 16v5h6v-5"/></svg>',
   group:'<svg viewBox="0 0 46 38" aria-hidden="true"><path d="M2.5 6.5h14l4 4.5h22.5v24.5H2.5z"/><path class="dk-ff" d="M2.5 14h41v21.5h-41z"/><path class="ln" d="M10 19.5h7v5h-7zM20 19.5h7v5h-7zM30 19.5h6v5h-6zM10 27.5h7v4h-7zM20 27.5h7v4h-7z"/></svg>',
   page:'<svg viewBox="0 0 46 38" aria-hidden="true"><path d="M11.5 1.5h23v35h-23z"/><path class="dk-ff" d="M11.5 1.5h23v8h-23z"/><path class="ln" d="M16 15h14M16 20h14M16 25h14M16 30h9"/></svg>',
   trash:'<svg viewBox="0 0 46 38" aria-hidden="true"><path d="M11.5 8.5h23l-2.2 27.5H13.7z"/><path class="ln" d="M8.5 8.5h29M18.5 8.5V4.5h9v4"/><path class="ln" d="M18.5 14v17M23 14v17M27.5 14v17"/></svg>',
@@ -11070,9 +11075,19 @@ function dkLoad(){ var o=null; try{ o=JSON.parse(localStorage.getItem('deskLayou
   if(!o||typeof o!=='object') o={}; if(!o.pos||typeof o.pos!=='object') o.pos={}; return o; }
 function dkSave(L){ if(window.__stale) return; L.v=1; L.at=Date.now(); try{ localStorage.setItem('deskLayout', JSON.stringify(L)); }catch(e){} }
 // 정보 페이지 묶음(g:갈래)과 꺼내 둔 페이지(p:id). 바로 가기가 있는 페이지는 묶음에서 뺀다
-var DK_SCP=['favs','cast','texts','conti','contis'];
-function dkGroups(){ var gs=[]; PAGES.forEach(function(p){ if(DK_SCP.indexOf(p.id)<0 && gs.indexOf(p.g)<0) gs.push(p.g); }); return gs; }
-function dkGroupPages(g){ return PAGES.filter(function(p){ return p.g===g && DK_SCP.indexOf(p.id)<0; }); }
+var DK_SCP=[];   // 예전 바로 가기(즐겨찾기·등장인물·글 보관함·콘티)는 이제 「저장소」·「도구」 묶음 안에 있다
+var DK_CAT={favs:'저장소', cast:'저장소', texts:'저장소', contis:'저장소',
+  index:'색인', motifidx:'색인', chars:'색인', endidx:'색인', epidx:'색인', ctfx:'색인', cutdict:'색인', combo:'색인',
+  shuffle:'도구', ideacomp:'도구', conti:'도구', arc:'도구', probe:'도구', ai:'도구',
+  oneshot:'배우기', length:'배우기', redflag:'배우기', grammar:'배우기', authors:'배우기', poses:'배우기', pagemap:'배우기', advice:'배우기', final:'배우기', refs:'배우기'};
+var DK_CAT_ORDER=['저장소','색인','도구','배우기','사전 본편'];
+function dkCat(p){ if(DK_CAT[p.id]) return DK_CAT[p.id]; var t=String(p.t||'');
+  if(/보관함|저장소/.test(t)) return '저장소'; if(/색인|사전$|목록/.test(t) && p.g!=='사전 본편') return '색인'; if(/구성기|분석|점검표|연결/.test(t)) return '도구';
+  if(p.g==='기초'||p.g==='제작'||p.g==='마무리') return '배우기'; return p.g; }
+function dkVis(p){ return !/^(contis|conti)$/.test(p.id) || !!document.getElementById(p.id); }   // 콘티 페이지가 없는 판(시험용 등)에서는 빼기
+function dkGroups(){ var gs=[]; PAGES.forEach(function(p){ if(!dkVis(p)) return; var c=dkCat(p); if(gs.indexOf(c)<0) gs.push(c); });
+  return gs.sort(function(a,b){ var i=DK_CAT_ORDER.indexOf(a), j=DK_CAT_ORDER.indexOf(b); return (i<0?99:i)-(j<0?99:j); }); }
+function dkGroupPages(g){ return PAGES.filter(function(p){ return dkCat(p)===g && dkVis(p); }); }
 function dkPage(id){ for(var i=0;i<PAGES.length;i++) if(PAGES[i].id===id) return PAGES[i]; return null; }
 function dkPins(){ var L=DK.L||dkLoad(); return (Array.isArray(L.pins)?L.pins:[]).filter(function(id){ return !!dkPage(id) && DK_SCP.indexOf(id)<0; }); }
 function dkLabel(id, def){ var L=DK.L||dkLoad(); return (L.names && L.names[id]) || def; }
@@ -11108,7 +11123,7 @@ function dkIcon(id, c, g, cnt){
   if(f!==null){ label=f; glyph=DK_SVG.folder; n=cnt[f]||0; if(f===CURFOLDER) cls+=' cur';
     aria='폴더 '+f+', 항목 '+n+'개'+(f===CURFOLDER?', 지금 폴더':''); }
   else if(id==='s:trash'){ label='휴지통'; glyph=DK.trash.length?DK_SVG.trashFull:DK_SVG.trash; n=DK.trash.length; aria='휴지통'; }
-  else if(id.indexOf('g:')===0){ label=dkLabel(id, id.slice(2)); glyph=DK_SVG.group; n=dkGroupPages(id.slice(2)).length; aria=label+' 페이지 묶음, '+n+'개'; }
+  else if(id.indexOf('g:')===0){ var gg=id.slice(2); label=dkLabel(id, gg); glyph=DK_SVG[{'저장소':'store','색인':'idx','도구':'tool','배우기':'book'}[gg]]||DK_SVG.group; n=dkGroupPages(gg).length; aria=label+' 묶음, '+n+'개'; }
   else if(id.indexOf('p:')===0){ var pg=dkPage(id.slice(2)); label=dkLabel(id, pg?pg.t:id.slice(2)); glyph=DK_SVG.page; aria=label+' 열기'; }
   else { DK_SC.forEach(function(s){ if(s.id===id) sc=s; }); label=dkLabel(id, sc.t); glyph=DK_SVG[sc.g];
     n=id==='s:favs'?Object.keys(FAV).length:(id==='s:cast'?dkRec('mangaCast'):(id==='s:texts'?dkRec('mangaTexts'):(id==='s:contis'?dkRec('contiSaved'):0))); aria=label+' 열기'; }
@@ -11134,7 +11149,8 @@ function dkField(root){
   if(foc){ var el=dkIconEl(field, foc); if(el) try{ el.focus({preventScroll:true}); }catch(e){} }
 }
 function dkIconEl(scope, id){ var r=null; [].slice.call(scope.querySelectorAll('.dk-ic')).forEach(function(x){ if(x.getAttribute('data-id')===id) r=x; }); return r; }
-function dkHead(t, sub){ return '<div class="dk-wh"><b>'+t+'</b>'+(sub?'<span class="small">'+sub+'</span>':'')+'<button class="chip dk-x" data-dk="close">닫기</button></div>'; }
+function dkHead(t, sub){ var back=/^s:(favs|cast|texts|contis)$/.test(DK.open||'')?'<button class="chip" data-dk="sub" data-id="g:저장소" aria-label="저장소로 돌아가기">◀ 저장소</button>':'';
+  return '<div class="dk-wh">'+back+'<b>'+t+'</b>'+(sub?'<span class="small">'+sub+'</span>':'')+'<button class="chip dk-x" data-dk="close">닫기</button></div>'; }
 function dkCastAll(){ try{ return (typeof castAll==='function')?castAll():[]; }catch(e){ return []; } }
 function dkTexts(){ try{ return (typeof recList==='function')?recList('mangaTexts'):[]; }catch(e){ return []; } }
 var DK_FMT={plot:'줄거리', novel:'웹소설', cuts:'컷별 콘티'};
@@ -11142,6 +11158,14 @@ function dkWhen(t){ if(!t) return ''; var d=new Date(t); return (d.getMonth()+1)
 // 바로 가기·묶음을 눌렀을 때 보이는 내용
 function dkContent(id){
   var h='';
+  if(id==='g:저장소'){
+    var R=[['s:favs','★ 즐겨찾기',Object.keys(FAV).length+'개 · 폴더 '+FOLDERS.length+'개','favs'],['s:cast','등장인물',dkRec('mangaCast')+'명','cast'],['s:texts','글 보관함',dkRec('mangaTexts')+'편','texts'],['s:contis','콘티 저장소',dkRec('contiSaved')+'편','contis']]
+      .filter(function(x){ return document.getElementById(x[3]); });
+    h=dkHead(wsEsc(dkLabel(id,'저장소')), '내가 모은 것')+'<div class="dk-wb"><ul class="dk-rows">'+R.map(function(x){
+      return '<li class="dk-row" data-dk="sub" data-id="'+x[0]+'"><b>'+x[1]+'</b><span>'+x[2]+'</span></li>'; }).join('')+'</ul></div>'+
+      '<p class="dk-hint">누르면 안에 든 것을 본다. 길게 누르면 자동 저장 같은 설정을 바꾼다.</p>';
+    return h;
+  }
   if(id.indexOf('g:')===0){
     var g=id.slice(2), ps=dkGroupPages(g), pins=dkPins();
     h=dkHead(wsEsc(dkLabel(id,g)), '페이지 '+ps.length+'개')+'<div class="dk-wb"><ul class="dk-pgs">'+ps.map(function(p){
@@ -11208,6 +11232,14 @@ function dkInfoHTML(){
         '<div class="dk-fr" style="display:block"><span style="display:block;margin-bottom:.2rem">폴더 메모</span><textarea class="dk-imemo" rows="3" placeholder="이 폴더에 대한 메모">'+wsEsc(memo)+'</textarea><span class="dk-ok"></span></div>'+
         '<div class="dk-fr"><button class="chip" data-dk="iuse"'+(f===CURFOLDER?' disabled':'')+'>'+(f===CURFOLDER?'지금 폴더':'지금 폴더로')+'</button><button class="chip" data-dk="iopen">열기</button>'+
         (f==='기본'?'':'<button class="chip" data-dk="idel"'+(DK.infoArm?' data-arm="1"':'')+'>'+(DK.infoArm?'한 번 더 누르면 삭제 (항목·메모까지)':'삭제')+'</button>')+'</div>';
+    } else if(id==='g:저장소'){
+      t=wsEsc(dkLabel(id,'저장소')); sub='즐겨찾기·등장인물·글 보관함·콘티 저장소';
+      var cf2=(typeof castFolders==='function')?castFolders():['기본'], cd2=(typeof castDef==='function')?castDef():'기본';
+      b=lbl(id,'저장소')+(typeof fpCfg==='function'?ck('favpick', fpCfg().on, '구성기에서 즐겨찾기 먼저 뽑기'):'')+row('즐겨찾기 담는 곳', fsel('curf', CURFOLDER, FOLDERS))+
+        ck('castauto', (typeof castAutoOn==='function')?castAutoOn():false, '글이 완성되면 새 인물을 등장인물에 자동으로 넣기')+row('인물 넣을 폴더', fsel('castdef', cd2, cf2))+
+        ck('textsauto', (typeof txAuto==='function')?txAuto():true, '구성기에서 쓴 글 글 보관함에 자동 저장')+
+        ck('ctauto', (function(){ try{ return localStorage.getItem('ctAutoStore')!=='0'; }catch(e){ return true; } })(), 'AI로 다 쓴 콘티 콘티 저장소에 자동 저장')+
+        '<div class="dk-fr"><button class="chip" data-dk="iopen">열기</button></div>';
     } else if(id.indexOf('g:')===0){
       var g=id.slice(2), ps=dkGroupPages(g); t=wsEsc(dkLabel(id,g)); sub='페이지 '+ps.length+'개';
       b=lbl(id,g)+'<div class="dk-note">'+ps.map(function(p){ return wsEsc(p.t); }).join(' · ')+'</div><div class="dk-fr"><button class="chip" data-dk="iopen">열기</button></div>';
@@ -11453,6 +11485,7 @@ function dkClick(e){
     if(a==='close'){ if(DK.info){ DK.info=null; dkRender(); return; } DK.open=null; DK.ren=false; DK.delArm=false; dkRender(); return; }
     if(a==='go'){ dkGo(b.getAttribute('data-h')); return; }
     if(a==='openf'){ dkOpen('f:'+b.getAttribute('data-f')); return; }
+    if(a==='sub'){ DK.open=b.getAttribute('data-id'); DK.info=null; dkRender(); return; }
     if(a==='castgo'){ var cid=b.getAttribute('data-id');
       try{ if(typeof CP!=='undefined'){ CP.open[cid]=1; } if(typeof castLs==='function') castLs('castView',''); }catch(er){}
       dkGo('cast'); setTimeout(function(){ var c=document.querySelector('#cast-list .cast-card[data-id="'+cid+'"]'); if(c) try{ c.scrollIntoView({block:'start'}); }catch(er){} },120); return; }
