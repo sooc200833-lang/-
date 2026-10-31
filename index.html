@@ -1408,6 +1408,59 @@ body.dk-drag, body.dk-drag *{user-select:none!important; -webkit-user-select:non
 .ct-ed .ct-redo-row{display:grid; gap:.3rem; justify-items:start}
 .ct-ed .ct-redo-row label{justify-self:stretch}
 .ct-ed .chip:disabled{opacity:.5; cursor:default}
+/* [[CSS:play]] 클리셰 플레이 */
+#play-root{--pl-acc:var(--mark)}
+.pl-setup .pl-row{display:flex; flex-wrap:wrap; align-items:center; gap:.4rem .6rem; padding:.55rem 0; border-bottom:1px dashed var(--rule)}
+.pl-k{font-weight:600; min-width:3.6rem; font-size:.86rem; color:var(--ink-2)}
+.pl-setup select,.pl-setup input[type=text],.pl-free input{font:inherit; font-size:.9rem; padding:.3rem .45rem; background:var(--paper); color:var(--ink); border:1px solid var(--rule-hard); min-width:0}
+.pl-name{width:7rem}
+.pl-cards{display:flex; gap:.45rem; margin:.8rem 0 .4rem; flex-wrap:wrap}
+.pl-card{flex:1 1 5.4rem; max-width:9rem; min-height:4.6rem; border:1.5px solid var(--ink); background:var(--paper-2); padding:.4rem .45rem; display:flex; flex-direction:column; justify-content:space-between; font-size:.78rem; line-height:1.35; box-shadow:2px 2px 0 var(--shadow)}
+.pl-card b{font-family:"Hahmlet",serif; font-size:.9rem; line-height:1.25}
+.pl-card span{color:var(--ink-3); font-size:.72rem}
+.pl-card.back{background:repeating-linear-gradient(135deg,var(--paper-3) 0 6px,var(--paper-2) 6px 12px); align-items:center; justify-content:center; text-align:center}
+.pl-card.back b{font-size:1.6rem; color:var(--ink-3)}
+.pl-card.st-fired{border-color:var(--mark); outline:2px solid var(--mark); outline-offset:1px}
+.pl-card.st-fired span{color:var(--mark); font-weight:600}
+.pl-card.st-flipped{border-color:var(--note)} .pl-card.st-flipped span{color:var(--note); font-weight:600}
+.pl-card.st-followed span{color:var(--green)}
+.pl-go{font-weight:600; border-color:var(--ink)!important}
+.pl-msg{color:var(--mark)}
+.pl-hud{display:flex; flex-wrap:wrap; gap:.3rem .9rem; align-items:center; padding:.45rem .6rem; background:var(--paper); border:1.5px solid var(--ink); font-size:.84rem}
+.pl-hud .pl-t{font-weight:700; font-family:"Hahmlet",serif; margin-right:auto}
+.pl-bar{display:inline-block; width:5.5rem; height:.55rem; border:1px solid var(--ink-2); background:var(--paper-2); vertical-align:middle}
+.pl-bar i{display:block; height:100%; background:var(--mark); transition:width .4s}
+.pl-log{display:grid; gap:1.1rem; margin-top:.6rem}
+.pl-turn{border-top:1px solid var(--rule); padding-top:.7rem; min-width:0}
+.pl-act{margin:0 0 .45rem; font-size:.86rem; color:var(--note); font-weight:600}
+.pl-scene{display:grid; grid-template-columns:minmax(0,400px) minmax(0,1fr); gap:.8rem; align-items:start}
+@media (max-width:640px){.pl-scene{grid-template-columns:1fr}}
+.pl-cv{display:block; width:100%; aspect-ratio:4/3; background:var(--paper); border:2px solid var(--ink)}
+.pl-txt{min-width:0}
+.pl-narr{margin:0 0 .4rem; line-height:1.75; font-size:.96rem}
+.pl-lines{list-style:none; margin:.2rem 0 .5rem; padding:0; display:grid; gap:.2rem; font-size:.92rem}
+.pl-cm{display:grid; gap:.2rem; margin-top:.4rem; font-size:.78rem; color:var(--ink-3)}
+.pl-fr{display:inline-block; margin-top:.35rem; font-size:.75rem; color:var(--note); font-weight:600}
+.pl-event{display:flex; flex-wrap:wrap; gap:.7rem; align-items:center; margin:.7rem 0 0; padding:.6rem; background:var(--paper-2); border-left:4px solid var(--mark)}
+.pl-event .pl-card{flex:0 1 13rem; max-width:15rem; border-color:var(--mark)}
+.pl-event .pl-card i{font-style:normal; font-size:.7rem; color:var(--mark); font-weight:700; letter-spacing:.04em}
+.pl-ev-q{display:flex; flex-wrap:wrap; gap:.4rem; align-items:center}
+.pl-ev-q p{margin:0; width:100%; font-weight:600; font-size:.9rem}
+.pl-flip{border-color:var(--note)!important; color:var(--note)!important; font-weight:600}
+.pl-evr{margin:0; color:var(--ink-2)}
+.pl-act-box{display:flex; flex-wrap:wrap; gap:.45rem; margin:1rem 0 .3rem; padding:.7rem; border:1.5px dashed var(--ink-2)}
+.pl-ch{text-align:left}
+.pl-free{display:flex; gap:.4rem; width:100%}
+.pl-free input{flex:1 1 auto}
+.pl-wait{color:var(--mark); font-weight:600; margin:1rem 0 .3rem}
+.pl-end{margin:1.2rem 0 .4rem; padding:1rem; border:2px solid var(--ink); background:var(--paper-2); text-align:center}
+.pl-end h3{margin:.1rem 0; font-family:"Hahmlet",serif; font-size:1.5rem}
+.pl-ll{margin:.2rem 0 .7rem; color:var(--ink-2)}
+.pl-grade{display:flex; justify-content:center; align-items:center; gap:.8rem; margin:.4rem 0}
+.pl-grade b{font-family:"Hahmlet",serif; font-size:2.6rem; color:var(--mark); line-height:1}
+.pl-end .filterbar{justify-content:center}
+.pl-best{margin:.2rem 0; padding-left:1.1rem; font-size:.88rem}
+.pl-sys{margin-top:.8rem}
 /* [[CSS:cutdict]] */
 .cd-bar .cd-q{flex:1 1 14rem; min-width:0; font:inherit; font-size:.88rem; padding:.3rem .5rem; background:var(--paper); color:var(--ink); border:1px solid var(--rule-hard)}
 .cd-grp{margin:1.6rem 0 0}
@@ -2575,6 +2628,11 @@ body.dk-drag, body.dk-drag *{user-select:none!important; -webkit-user-select:non
   </details>
   <p class="small" id="ct-stat" role="status"></p>
   <div id="ct-board"></div>
+</section>
+
+<section class="blk" id="play">
+  <h2 class="big">클리셰 플레이</h2>
+  <div id="play-root"></div>
 </section>
 
 <section class="blk" id="contis">
@@ -5105,6 +5163,7 @@ var PAGES=[
  {g:'기초',id:'authors',t:'작가별 연출 문법',d:'나루토·죠죠·아키라·원피스·핑퐁 등 12가지 대표 연출.'},
  {g:'기초',id:'poses',t:'만화 자세·구도',d:'만화에서 자주 쓰이는 유명한 자세와 구도. 언제 쓰고 무엇을 전하나.'},
  {g:'기초',id:'pagemap',t:'페이지 배분 설계',d:'도입·초반·중반·정점·마무리 다섯 구간의 지면 계산.'},
+ {g:'놀이',id:'play',t:'클리셰 플레이',d:'AI가 진행하는 웹툰 한 편을 직접 플레이. 숨은 클리셰 카드가 터지면 따르거나 뒤집는다.'},
  {g:'도구',id:'shuffle',t:'랜덤 구성기',d:'소재·클리셰·엔딩을 한 번에. 연재 모드와 고정 지원.'},
  {g:'도구',id:'ideacomp',t:'아이디어 구성기',d:'적어 둔 아이디어로 소재·클리셰·엔딩·주인공을 골라 구성안을 만든다.'},
  {g:'도구',id:'texts',t:'글 보관함',d:'구성기에서 쓴 줄거리·웹소설·컷별 콘티를 모아 둔다.'},
@@ -11068,6 +11127,7 @@ var DK_SVG={
   conti:'<svg viewBox="0 0 46 38" aria-hidden="true"><rect x="4.5" y="2.5" width="37" height="33" rx="1.5"/><path class="dk-ff" d="M8 6h14v12H8z"/><path d="M25 6h13v12H25zM8 21h30v11H8z"/></svg>',
   contis:'<svg viewBox="0 0 46 38" aria-hidden="true"><path d="M9.5 4.5h31v26h-31z"/><path d="M6.5 7.5v26h31"/><path class="dk-ff" d="M13 8h11v8H13z"/><path class="ln" d="M27 8h10v8H27zM13 19h24v8H13z"/></svg>',
   doc:'<svg viewBox="0 0 46 38" aria-hidden="true"><path d="M10.5 1.5h19l7 7v28h-26z"/><path class="dk-ff" d="M29.5 1.5v7h7z"/><path class="ln" d="M15 14h16M15 19h16M15 24h16M15 29h10"/></svg>',
+  game:'<svg viewBox="0 0 46 38" aria-hidden="true"><path d="M8.5 11.5h29c3 0 5 2 5 5v8c0 4-3 7-6 7-2.5 0-4-1.5-5.5-4h-16c-1.5 2.5-3 4-5.5 4-3 0-6-3-6-7v-8c0-3 2-5 5-5z"/><path class="ln" d="M12 20h7M15.5 16.5v7"/><path class="dk-ff" d="M29 17.5h3v3h-3zM33 21.5h3v3h-3z"/></svg>',
   store:'<svg viewBox="0 0 46 38" aria-hidden="true"><path d="M5.5 12.5h35v23h-35z"/><path class="dk-ff" d="M3.5 6.5h39v6h-39z"/><path class="ln" d="M18 19.5h10"/></svg>',
   book:'<svg viewBox="0 0 46 38" aria-hidden="true"><path d="M6.5 5.5h15c1.5 0 1.5 1 1.5 2v28c0-1-.5-2-2-2h-14.5z"/><path d="M39.5 5.5h-15c-1.5 0-1.5 1-1.5 2v28c0-1 .5-2 2-2h14.5z"/><path class="ln" d="M10 12h9M10 17h9M27 12h9M27 17h9"/></svg>',
   idx:'<svg viewBox="0 0 46 38" aria-hidden="true"><path d="M8.5 3.5h25v31h-25z"/><path class="dk-ff" d="M33.5 7h5v6h-5zM33.5 15h5v6h-5zM33.5 23h5v6h-5z"/><path class="ln" d="M13 11h15M13 16h15M13 21h15M13 26h10"/></svg>',
@@ -11082,11 +11142,11 @@ function dkLoad(){ var o=null; try{ o=JSON.parse(localStorage.getItem('deskLayou
 function dkSave(L){ if(window.__stale) return; L.v=1; L.at=Date.now(); try{ localStorage.setItem('deskLayout', JSON.stringify(L)); }catch(e){} }
 // 정보 페이지 묶음(g:갈래)과 꺼내 둔 페이지(p:id). 바로 가기가 있는 페이지는 묶음에서 뺀다
 var DK_SCP=[];   // 예전 바로 가기(즐겨찾기·등장인물·글 보관함·콘티)는 이제 「저장소」·「도구」 묶음 안에 있다
-var DK_CAT={favs:'저장소', cast:'저장소', texts:'저장소', contis:'저장소',
+var DK_CAT={play:'놀이', favs:'저장소', cast:'저장소', texts:'저장소', contis:'저장소',
   index:'색인', motifidx:'색인', chars:'색인', endidx:'색인', epidx:'색인', ctfx:'색인', cutdict:'색인', combo:'색인',
   shuffle:'도구', ideacomp:'도구', conti:'도구', arc:'도구', probe:'도구', ai:'도구',
   oneshot:'배우기', length:'배우기', redflag:'배우기', grammar:'배우기', authors:'배우기', poses:'배우기', pagemap:'배우기', advice:'배우기', final:'배우기', refs:'배우기'};
-var DK_CAT_ORDER=['저장소','색인','도구','배우기','사전 본편'];
+var DK_CAT_ORDER=['놀이','저장소','색인','도구','배우기','사전 본편'];
 function dkCat(p){ if(DK_CAT[p.id]) return DK_CAT[p.id]; var t=String(p.t||'');
   if(/보관함|저장소/.test(t)) return '저장소'; if(/색인|사전$|목록/.test(t) && p.g!=='사전 본편') return '색인'; if(/구성기|분석|점검표|연결/.test(t)) return '도구';
   if(p.g==='기초'||p.g==='제작'||p.g==='마무리') return '배우기'; return p.g; }
@@ -11129,7 +11189,7 @@ function dkIcon(id, c, g, cnt){
   if(f!==null){ label=f; glyph=DK_SVG.folder; n=cnt[f]||0; if(f===CURFOLDER) cls+=' cur';
     aria='폴더 '+f+', 항목 '+n+'개'+(f===CURFOLDER?', 지금 폴더':''); }
   else if(id==='s:trash'){ label='휴지통'; glyph=DK.trash.length?DK_SVG.trashFull:DK_SVG.trash; n=DK.trash.length; aria='휴지통'; }
-  else if(id.indexOf('g:')===0){ var gg=id.slice(2); label=dkLabel(id, gg); glyph=DK_SVG[{'저장소':'store','색인':'idx','도구':'tool','배우기':'book'}[gg]]||DK_SVG.group; n=dkGroupPages(gg).length; aria=label+' 묶음, '+n+'개'; }
+  else if(id.indexOf('g:')===0){ var gg=id.slice(2); label=dkLabel(id, gg); glyph=DK_SVG[{'놀이':'game','저장소':'store','색인':'idx','도구':'tool','배우기':'book'}[gg]]||DK_SVG.group; n=dkGroupPages(gg).length; aria=label+' 묶음, '+n+'개'; }
   else if(id.indexOf('p:')===0){ var pg=dkPage(id.slice(2)); label=dkLabel(id, pg?pg.t:id.slice(2)); glyph=DK_SVG.page; aria=label+' 열기'; }
   else { DK_SC.forEach(function(s){ if(s.id===id) sc=s; }); label=dkLabel(id, sc.t); glyph=DK_SVG[sc.g];
     n=id==='s:favs'?Object.keys(FAV).length:(id==='s:cast'?dkRec('mangaCast'):(id==='s:texts'?dkRec('mangaTexts'):(id==='s:contis'?dkRec('contiSaved'):0))); aria=label+' 열기'; }
@@ -11471,6 +11531,7 @@ function dkOpen(id){
   if(!id) return;
   if(id==='s:conti'){ dkGo('conti'); return; }
   if(id.indexOf('p:')===0){ dkGo(id.slice(2)); return; }
+  if(id==='g:놀이'){ var gp=dkGroupPages('놀이'); if(gp.length===1){ dkGo(gp[0].id); return; } }   // 페이지가 하나뿐인 묶음은 바로 연다
   if(DK.open===id && !DK.info && Date.now()-(DK.openAt||0)>450){ DK.open=null; DK.ren=false; DK.delArm=false; dkRender(); return; }   // 다시 누르면 닫는다
   if(DK.open!==id){ DK.ren=false; DK.delArm=false; }
   DK.info=null; DK.open=id; DK.sel=id; DK.openAt=Date.now(); dkRender();
@@ -16413,6 +16474,207 @@ window.__stRender=render;
 render();
 })();
 // [[/MOD:ctstore]]
+
+// [[MOD:play]] 클리셰 플레이 — AI가 진행하는 인터랙티브 웹툰 게임 (2026-11-01)
+// 판 짜기(장르·세계·주인공·클리셰 카드 5장) → 턴마다 AI 진행자가 장면(콘티 한 컷 그림)·서술·대사·선택지·독자 댓글을 낸다.
+// 숨은 클리셰 카드가 「발동」하면 따르거나 뒤집는다(뒤집으면 신선도). 마지막 턴에 결말 → 결과 카드, 글 보관함·콘티 구성기로.
+// 저장: localStorage playSave(진행 중인 판), playBest(최고 기록). AI는 aiAsk(JSON 모드).
+(function(){
+var root=document.getElementById('play-root'); if(!root) return;
+var PL=null, BUSY=false, MSG='';
+function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g,function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
+function rnd(a){ return a[Math.floor(Math.random()*a.length)]; }
+function shuffle(a){ a=a.slice(); for(var i=a.length-1;i>0;i--){ var j=Math.floor(Math.random()*(i+1)), t=a[i]; a[i]=a[j]; a[j]=t; } return a; }
+function save(){ try{ if(PL) localStorage.setItem('playSave', JSON.stringify(PL)); else localStorage.removeItem('playSave'); }catch(e){} }
+function load(){ try{ PL=JSON.parse(localStorage.getItem('playSave')||'null'); }catch(e){ PL=null; } }
+var NAMES=['서윤','도현','하린','이안','민호','유나','준','세아','태오','지후','라온','소이','강하','윤슬','도윤','채이'];
+function genres(){ var g=[]; ROWS.forEach(function(r){ if(r[1] && g.indexOf(r[1])<0) g.push(r[1]); }); return g; }
+function charOf(axis){ return rnd(CHARS.filter(function(c){ return c[0]===axis; })); }
+function deck(genre){
+  var pool=ROWS.filter(function(r){ return !genre || r[1]===genre || /공통/.test(r[1]); }); if(pool.length<8) pool=ROWS.slice();
+  return shuffle(pool).slice(0,5).map(function(r){ return {name:r[0], genre:r[1], fn:r[2], def:r[8], point:r[9], st:'hidden'}; });
+}
+// ----- 판 짜기 -----
+var SETUP=null;
+function newSetup(){
+  var cast=window.__castList?window.__castList():[], g=genres();
+  SETUP={genre:rnd(g), world:rnd(MOTIFDATA), turns:10, castId:'',
+    hero:{name:rnd(NAMES), look:charOf('외모'), pers:charOf('성격'), lack:charOf('결핍')}, cast:cast.slice(0,40)};
+}
+function heroDesc(h){ return [h.look&&h.look[2], h.pers&&h.pers[2], h.lack&&('결핍: '+h.lack[2])].filter(Boolean).join(' · '); }
+function setupHTML(){
+  if(!SETUP) newSetup(); var S=SETUP, h=S.hero;
+  var gs=genres();
+  return '<div class="pl-setup">'+
+    '<p class="lede">AI가 진행하는 웹툰 한 편을 직접 <b>플레이</b>한다. 턴마다 장면이 그려지고, 무엇을 할지 고르거나 직접 적는다. 숨겨 둔 <b>클리셰 카드</b>가 터지면 따를지 <b>뒤집을지</b> 정한다 — 뒤집을수록 신선도가 오른다.</p>'+
+    '<div class="pl-row"><span class="pl-k">장르</span><select class="pl-genre">'+gs.map(function(x){ return '<option'+(x===S.genre?' selected':'')+'>'+esc(x)+'</option>'; }).join('')+'</select><button class="chip" type="button" data-pl="rg">🎲</button></div>'+
+    '<div class="pl-row"><span class="pl-k">세계</span><b>'+esc(S.world[0])+'</b><span class="small">'+esc(S.world[1])+(S.world[3]?' · 「'+esc(S.world[3])+'」 같은':'')+'</span><button class="chip" type="button" data-pl="rw">🎲</button></div>'+
+    '<div class="pl-row"><span class="pl-k">주인공</span>'+
+      (S.cast.length?'<select class="pl-cast"><option value="">새 인물(무작위)</option>'+S.cast.map(function(m){ return '<option value="'+esc(m.id)+'"'+(m.id===S.castId?' selected':'')+'>'+esc(m.name)+'</option>'; }).join('')+'</select>':'')+
+      (S.castId?'':'<input class="pl-name" type="text" maxlength="10" value="'+esc(h.name)+'" aria-label="주인공 이름"><span class="small">'+esc(heroDesc(h))+'</span><button class="chip" type="button" data-pl="rh">🎲</button>')+'</div>'+
+    '<div class="pl-row"><span class="pl-k">길이</span>'+[[6,'짧게'],[10,'보통'],[16,'길게']].map(function(t){ return '<label class="small"><input type="radio" name="pl-turns" value="'+t[0]+'"'+(S.turns===t[0]?' checked':'')+'> '+t[1]+' ('+t[0]+'턴)</label>'; }).join(' ')+'</div>'+
+    '<div class="pl-cards pl-back">'+[0,1,2,3,4].map(function(){ return '<div class="pl-card back"><b>?</b><span>클리셰 카드</span></div>'; }).join('')+'</div>'+
+    '<p class="small">카드 다섯 장은 판을 시작할 때 이 장르에서 뽑아 숨겨 둔다. 무엇이 나올지는 이야기가 흘러가야 안다.</p>'+
+    '<div class="filterbar"><button class="chip pl-go" type="button" data-pl="start"'+(BUSY?' disabled':'')+'>▶ 플레이 시작</button>'+(MSG?'<span class="small pl-msg">'+esc(MSG)+'</span>':'')+'</div>'+
+    bestHTML()+'</div>';
+}
+function bestHTML(){ var L=[]; try{ L=JSON.parse(localStorage.getItem('playBest')||'[]'); }catch(e){}
+  if(!L.length) return ''; return '<h4 class="ct-reft">지난 판</h4><ul class="pl-best">'+L.slice(0,6).map(function(x){ return '<li><b>'+esc(x.grade)+'</b> '+esc(x.title)+' <span class="small">신선도 '+x.fresh+' · 독자 '+x.likes+' · '+esc(x.genre)+'</span></li>'; }).join('')+'</ul>'; }
+// ----- AI -----
+var PSYS='당신은 한국 웹툰 인터랙티브 게임의 진행자(게임 마스터)다. 플레이어는 주인공을 움직이고, 당신은 세계와 다른 인물을 움직여 장면을 이어 간다. '+
+  '한 턴은 웹툰 한두 컷 분량: 짧고 생생하게, 현재형으로. 플레이어의 행동을 존중하되 결과에는 대가와 의외성을 준다. 플레이어 대신 주인공의 결정을 내리지 않는다. '+
+  '선정적·잔혹한 묘사는 하지 않는다. 반드시 JSON 하나만 출력한다.';
+function hero(){ return PL.hero; }
+function turnPrompt(act){
+  var P=PL, h=P.hero, L=[];
+  L.push('[판] 장르: '+P.genre+' · 세계: '+P.world[0]+'('+P.world[1]+') · 턴 '+(P.turn+1)+'/'+P.turns+' · 지금 긴장 '+P.tension+'/100');
+  L.push('[주인공 — 플레이어] '+h.name+': '+(h.desc||heroDesc(h)));
+  if(P.npcs.length) L.push('[나온 인물] '+P.npcs.map(function(x){ return x.name+'('+x.role+')'; }).join(', '));
+  L.push('[클리셰 카드 — 숨김은 아직 안 나옴]\n'+P.deck.map(function(c){ return '- '+c.name+' · '+({hidden:'숨김',fired:'발동(플레이어 결정 기다림)',followed:'따름',flipped:'뒤집음'})[c.st]+' · '+c.def; }).join('\n'));
+  if(P.summary) L.push('[지금까지] '+P.summary);
+  var last=P.log.slice(-2); if(last.length) L.push('[바로 앞 턴]\n'+last.map(function(t){ return t.narr+(t.act?' → 플레이어: '+t.act:''); }).join('\n'));
+  L.push('[이번 턴 플레이어의 행동] '+act);
+  var end=P.turn+1>=P.turns;
+  L.push('규칙\n'+
+    '- 숨은 카드가 이야기에 자연스럽게 맞으면 그 클리셰 상황을 일으키고 event.card에 카드 이름을 그대로, event.setup에 무엇이 벌어지려는지 한 줄을 쓴다. 2~3턴에 한 번 정도, 한 턴에 하나. 맞지 않으면 빈 문자열.\n'+
+    '- 행동이 「〈카드〉를 뒤집는다」이면 독자의 예상을 깨는 방식으로 그 클리셰를 비틀어 푼다(fresh 2~3). 「따른다」면 클리셰를 잘 살려 정석대로 푼다.\n'+
+    '- choices: 다음에 할 만한 행동 3개, 서로 성격이 다르게(정면 돌파·꾀·감정 등), 각 18자 안쪽.\n'+
+    '- comments: 이 장면을 본 웹툰 독자 댓글 2개(짧고 생생하게, 반말·유행어 가능, 욕설 없이).\n'+
+    '- panel: 이 턴을 대표하는 한 컷. k는 els ls fs ms bs cu ecu two ots stand bird insert pov back empty crowd 중 하나, ang은 ""·high·low·dutch, who는 컷에 보이는 인물 이름(많아야 2), scr은 30자 그림 설명.\n'+
+    '- lines: 이 컷의 대사 0~2개(각 25자 안쪽).\n'+
+    '- summary: 지금까지 줄거리를 300자 안쪽으로 새로 정리. npcs: 지금까지 나온 다른 인물 전부 {name, role(8자), look(외모 한 줄)}.\n'+
+    '- tension: 이번 턴 뒤 긴장 0~100. fresh: 이번 턴이 얼마나 신선했나 0~3.\n'+
+    (end?'- 이번이 마지막 턴이다. 이야기를 매듭짓고 end=true, ending에 {title(작품 제목 12자), logline(한 줄 40자), type(아래 결말 중 하나)}를 넣는다. choices는 빈 배열.\n  결말: '+shuffle(ENDINGS).slice(0,8).map(function(e){ return e[1]; }).join(' · ')+'\n':'- end=false.\n')+
+    '형식: {"narr":"","lines":[{"who":"","text":""}],"panel":{"k":"","ang":"","who":[],"scr":""},"event":{"card":"","setup":""},"choices":["","",""],"comments":["",""],"summary":"","npcs":[{"name":"","role":"","look":""}],"tension":0,"fresh":0,"end":false,"ending":null}');
+  return L.join('\n\n');
+}
+function parseJ(t){ t=String(aiClean?aiClean(t):t).trim(); try{ return JSON.parse(t); }catch(e){} var a=t.indexOf('{'), b=t.lastIndexOf('}'); if(a>-1 && b>a){ try{ return JSON.parse(t.slice(a,b+1)); }catch(e){} } return null; }
+function str(v,n){ return String(v==null?'':v).replace(/\s+/g,' ').trim().slice(0,n||200); }
+function turn(act, kind){
+  if(BUSY || !PL) return;
+  if(!aiReady()){ MSG='AI 연결에서 제미나이 키를 넣어야 플레이할 수 있다.'; render(); return; }
+  BUSY=true; MSG='진행자가 다음 장면을 그리는 중…'; render();
+  aiAsk(PSYS, turnPrompt(act), 2200, {temperature:0.95, json:true}).then(function(t){
+    BUSY=false;
+    if(aiIsErr(t)){ MSG='진행자가 답하지 못했다. '+String(t).slice(0,80)+' — 다시 눌러 본다.'; render(); return; }
+    var j=parseJ(t); if(!j || !j.narr){ MSG='답을 읽지 못했다. 같은 행동으로 다시 시도한다.'; PL.retry=act; render(); return; }
+    apply(j, act, kind); MSG=''; save(); render(); scrollEnd();
+  }, function(e){ BUSY=false; MSG='진행자가 답하지 못했다. '+String(e&&e.message||e).slice(0,80); render(); });
+}
+function apply(j, act, kind){
+  var P=PL, ev=j.event||{}, card=null;
+  if(kind && kind.card){ P.deck.forEach(function(c){ if(c.name===kind.card) c.st=kind.flip?'flipped':'followed'; }); if(kind.flip) P.fresh+=2; }
+  if(ev.card){ P.deck.forEach(function(c){ if(!card && c.st==='hidden' && (c.name===ev.card || ev.card.indexOf(c.name)>-1 || c.name.indexOf(ev.card)>-1)) card=c; }); if(card){ card.st='fired'; card.setup=str(ev.setup,80); } }
+  P.npcs=(Array.isArray(j.npcs)?j.npcs:P.npcs).filter(function(x){ return x && x.name && x.name!==P.hero.name; }).slice(0,8).map(function(x){ return {name:str(x.name,10), role:str(x.role,12), look:str(x.look,40)}; });
+  var t={n:P.turn+1, act:act, narr:str(j.narr,500), lines:(Array.isArray(j.lines)?j.lines:[]).slice(0,2).map(function(l){ return {who:str(l&&l.who,10), text:str(l&&l.text,40)}; }).filter(function(l){ return l.text; }),
+    panel:j.panel||{}, card:card?card.name:'', setup:card?card.setup:'', comments:(Array.isArray(j.comments)?j.comments:[]).slice(0,2).map(function(c){ return str(c,50); }).filter(Boolean),
+    choices:(Array.isArray(j.choices)?j.choices:[]).slice(0,3).map(function(c){ return str(c,24); }).filter(Boolean)};
+  var fr=Math.max(0,Math.min(3,+j.fresh||0)); P.fresh+=fr; t.fresh=fr;
+  var tn=Math.max(0,Math.min(100,Math.round(+j.tension||P.tension))); P.likes+=Math.round(20+tn*1.2+fr*25+Math.random()*30); P.tension=tn;
+  P.summary=str(j.summary||P.summary,400); P.log.push(t); P.turn++; delete P.retry;
+  if(j.end || P.turn>=P.turns){ var en=j.ending||{}; P.ending={title:str(en.title,20)||'무제', logline:str(en.logline,80), type:str(en.type,20)}; P.done=true; best(); }
+}
+function grade(){ var P=PL, flips=P.deck.filter(function(c){ return c.st==='flipped'; }).length, s=P.fresh/Math.max(1,P.turns)*2+flips*.6;
+  return s>=3.2?'S':s>=2.4?'A':s>=1.6?'B':'C'; }
+function best(){ var L=[]; try{ L=JSON.parse(localStorage.getItem('playBest')||'[]'); }catch(e){}
+  L.unshift({title:PL.ending.title, grade:grade(), fresh:PL.fresh, likes:PL.likes, genre:PL.genre, at:Date.now()}); try{ localStorage.setItem('playBest', JSON.stringify(L.slice(0,20))); }catch(e){} }
+// ----- 화면 -----
+function lookOf(name){ var P=PL; if(name===P.hero.name) return P.hero.fig||{};
+  var n=null; P.npcs.forEach(function(x){ if(x.name===name) n=x; }); var f=n&&typeof castFigGuess==='function'?castFigGuess(n.look||''):{}; return f; }
+function panelOf(t){ var p=t.panel||{}, who=(Array.isArray(p.who)?p.who:[]).slice(0,2).map(function(x){ return str(x,10); }).filter(Boolean);
+  return {n:t.n, k:/^(els|ls|fs|ms|bs|cu|ecu|two|ots|stand|bird|insert|pov|back|empty|crowd|frame)$/.test(p.k)?p.k:'ms', ang:/^(high|low|dutch)$/.test(p.ang)?p.ang:'', who:who, scr:str(p.scr,40),
+    line:t.lines.map(function(l){ return (l.who?l.who+': ':'')+l.text; }).join('\n')}; }
+function turnHTML(t, last){
+  var P=PL;
+  return '<article class="pl-turn">'+
+    (t.act?'<p class="pl-act">▶ '+esc(t.act)+'</p>':'')+
+    '<div class="pl-scene"><canvas class="pl-cv" data-t="'+t.n+'" role="img" aria-label="'+t.n+'턴 장면"></canvas>'+
+      '<div class="pl-txt"><p class="pl-narr">'+esc(t.narr)+'</p>'+
+        (t.lines.length?'<ul class="pl-lines">'+t.lines.map(function(l){ return '<li>'+(l.who?'<b>'+esc(l.who)+'</b> ':'')+'「'+esc(l.text)+'」</li>'; }).join('')+'</ul>':'')+
+        (t.comments.length?'<div class="pl-cm">'+t.comments.map(function(c){ return '<span>💬 '+esc(c)+'</span>'; }).join('')+'</div>':'')+
+        (t.fresh?'<span class="pl-fr">신선도 +'+t.fresh+'</span>':'')+'</div></div>'+
+    (t.card?'<div class="pl-event"><div class="pl-card front"><i>클리셰 발동</i><b>'+esc(t.card)+'</b><span>'+esc(t.setup||'')+'</span></div>'+
+      (last && !P.done && cardSt(t.card)==='fired'?'<div class="pl-ev-q"><p>뻔하게 갈까, 비틀까?</p><button class="chip" type="button" data-pl="follow" data-c="'+esc(t.card)+'">따른다 — 정석대로</button><button class="chip pl-flip" type="button" data-pl="flip" data-c="'+esc(t.card)+'">뒤집는다 — 예상을 깬다 (+2)</button></div>'
+        :'<p class="small pl-evr">'+({followed:'정석대로 따랐다', flipped:'뒤집었다!'})[cardSt(t.card)]+'</p>')+'</div>':'')+
+    '</article>';
+}
+function cardSt(n){ var s=''; PL.deck.forEach(function(c){ if(c.name===n) s=c.st; }); return s; }
+function hudHTML(){ var P=PL;
+  return '<div class="pl-hud"><span class="pl-t">'+esc(P.hero.name)+' · '+esc(P.genre)+'</span><span>턴 <b>'+Math.min(P.turn,P.turns)+'</b>/'+P.turns+'</span>'+
+    '<span class="pl-bar" title="긴장 '+P.tension+'"><i style="width:'+P.tension+'%"></i></span><span>✦ 신선도 <b>'+P.fresh+'</b></span><span>♥ 독자 <b>'+P.likes.toLocaleString()+'</b></span></div>'+
+    '<div class="pl-cards">'+P.deck.map(function(c){ var open=c.st!=='hidden';
+      return '<div class="pl-card '+(open?'front st-'+c.st:'back')+'" title="'+esc(open?c.name+' — '+c.def:'아직 나오지 않은 클리셰')+'"><b>'+(open?esc(c.name):'?')+'</b><span>'+(open?({fired:'발동!',followed:'따름',flipped:'뒤집음'})[c.st]:'숨김')+'</span></div>'; }).join('')+'</div>';
+}
+function playHTML(){
+  var P=PL, last=P.log[P.log.length-1], pend=P.deck.filter(function(c){ return c.st==='fired'; })[0];
+  var h=hudHTML()+'<div class="pl-log">'+P.log.map(function(t,i){ return turnHTML(t, i===P.log.length-1); }).join('')+'</div>';
+  if(P.done){ var flips=P.deck.filter(function(c){ return c.st==='flipped'; }), used=P.deck.filter(function(c){ return c.st!=='hidden'; });
+    h+='<div class="pl-end"><p class="small">완결</p><h3>『'+esc(P.ending.title)+'』</h3><p class="pl-ll">'+esc(P.ending.logline)+'</p>'+
+      '<div class="pl-grade"><b>'+grade()+'</b><span>신선도 '+P.fresh+' · 독자 ♥ '+P.likes.toLocaleString()+' · 결말: '+esc(P.ending.type||'—')+'</span></div>'+
+      '<p class="small">쓴 클리셰 '+used.length+'장 — '+used.map(function(c){ return esc(c.name)+(c.st==='flipped'?' (뒤집음)':''); }).join(', ')+(flips.length?'':' · 하나도 안 뒤집었다. 다음 판엔 뒤집어 보자.')+'</p>'+
+      '<div class="filterbar"><button class="chip" type="button" data-pl="totext">글 보관함에 줄거리로</button><button class="chip" type="button" data-pl="toconti">콘티 구성기로 보내기</button><button class="chip pl-go" type="button" data-pl="new">새 판</button></div></div>';
+  } else if(!P.log.length){
+    h+='<div class="pl-act-box"><button class="chip pl-go" type="button" data-pl="act" data-a="이야기를 시작한다"'+(BUSY?' disabled':'')+'>첫 장면 열기</button></div>';
+  } else if(pend){
+    h+='<p class="small pl-wait">클리셰 카드 「'+esc(pend.name)+'」가 터졌다. 위에서 따를지 뒤집을지 고른다.</p>';
+  } else {
+    var ch=(last&&last.choices)||[];
+    h+='<div class="pl-act-box">'+(P.retry?'<button class="chip" type="button" data-pl="act" data-a="'+esc(P.retry)+'">다시 시도</button>':'')+
+      ch.map(function(c){ return '<button class="chip pl-ch" type="button" data-pl="act" data-a="'+esc(c)+'"'+(BUSY?' disabled':'')+'>'+esc(c)+'</button>'; }).join('')+
+      '<form class="pl-free"><input type="text" maxlength="80" placeholder="직접 행동을 적는다 — 예: 우산을 접고 그 사람에게 다가간다" aria-label="직접 행동"><button class="chip" type="submit"'+(BUSY?' disabled':'')+'>하기</button></form></div>';
+  }
+  h+=(MSG?'<p class="small pl-msg" role="status">'+esc(MSG)+'</p>':'')+
+    '<div class="filterbar pl-sys"><button class="chip" type="button" data-pl="quit">'+(P.done?'처음 화면':'이 판 그만두기')+'</button></div>';
+  return h;
+}
+function render(){
+  if(!PL){ root.innerHTML=setupHTML(); return; }
+  root.innerHTML=playHTML(); paint();
+}
+function paint(){
+  if(!window.__ctCutData || !window.__ctPortrait){ if((paint.n=(paint.n||0)+1)<40) setTimeout(paint,250); return; }
+  [].slice.call(root.querySelectorAll('canvas.pl-cv')).forEach(function(cv){
+    var t=PL.log[+cv.dataset.t-1]; if(!t) return; var c=panelOf(t);
+    try{ window.__ctCutData(cv, c); cv.dataset.who=JSON.stringify(c.who.map(function(nm){ return {name:nm, look:lookOf(nm)}; })); delete cv.dataset.bempty; delete cv.dataset.nob; window.__ctPortrait(cv); }catch(e){}
+  });
+}
+function scrollEnd(){ var l=root.querySelector('.pl-turn:last-of-type'); if(l) try{ l.scrollIntoView({block:'start', behavior:'smooth'}); }catch(e){} }
+function start(){
+  var S=SETUP, h=S.hero, cm=null; if(S.castId) S.cast.forEach(function(m){ if(m.id===S.castId) cm=m; });
+  var nm=cm?cm.name:((root.querySelector('.pl-name')||{}).value||h.name).trim()||h.name;
+  var desc=cm?[cm.role, cm.desc].filter(Boolean).join(' · ').slice(0,200):heroDesc(h);
+  var fig=cm&&cm.look&&typeof cm.look==='object'?cm.look:(typeof castFigGuess==='function'?castFigGuess((h.look&&h.look[2])||''):{});
+  PL={v:1, genre:S.genre, world:S.world, turns:S.turns, hero:{name:nm, desc:desc, fig:fig, look:h.look, pers:h.pers, lack:h.lack}, deck:deck(S.genre), npcs:[], log:[], turn:0, tension:20, fresh:0, likes:0, summary:'', at:Date.now()};
+  save(); MSG=''; render(); turn('이야기를 시작한다 — 주인공이 처음 등장하는 장면');
+}
+root.addEventListener('click', function(e){
+  var b=e.target.closest && e.target.closest('[data-pl]'); if(!b) return; var a=b.dataset.pl;
+  if(a==='rg'){ SETUP.genre=rnd(genres()); render(); return; }
+  if(a==='rw'){ SETUP.world=rnd(MOTIFDATA); render(); return; }
+  if(a==='rh'){ SETUP.hero={name:rnd(NAMES), look:charOf('외모'), pers:charOf('성격'), lack:charOf('결핍')}; render(); return; }
+  if(a==='start'){ if(!aiReady()){ MSG='AI 연결 페이지에서 제미나이 키를 넣으면 플레이할 수 있다.'; render(); return; } start(); return; }
+  if(a==='act'){ turn(b.dataset.a); return; }
+  if(a==='follow' || a==='flip'){ var c=b.dataset.c; turn((a==='flip'?'「'+c+'」를 뒤집는다 — 독자가 예상하는 전개를 깬다':'「'+c+'」를 따른다 — 정석대로 간다'), {card:c, flip:a==='flip'}); return; }
+  if(a==='quit' || a==='new'){ if(a==='quit' && !PL.done && !b.dataset.arm){ b.dataset.arm='1'; b.textContent='한 번 더 누르면 그만둔다'; return; } PL=null; save(); newSetup(); render(); return; }
+  if(a==='totext' || a==='toconti'){
+    var text='『'+PL.ending.title+'』\n'+PL.ending.logline+'\n\n'+PL.summary+'\n\n[장면]\n'+PL.log.map(function(t){ return t.n+'. '+t.narr+(t.lines.length?' '+t.lines.map(function(l){ return (l.who?l.who+': ':'')+'“'+l.text+'”'; }).join(' '):''); }).join('\n');
+    if(a==='totext'){ try{ recPut('mangaTexts', {fmt:'plot', title:'줄거리 — '+PL.ending.title, text:text, from:'클리셰 플레이', cut:40, created:Date.now()}); MSG='글 보관함에 줄거리로 넣었다.'; }catch(er){ MSG='저장하지 못했다.'; } render(); return; }
+    try{ localStorage.setItem('contiSrc', JSON.stringify({title:'줄거리', text:text, at:Date.now(), from:'클리셰 플레이'})); }catch(er){}
+    location.hash='#conti'; setTimeout(function(){ var st=document.getElementById('ct-story'); if(st && !st.value.trim()){ st.value=text; st.dispatchEvent(new Event('input',{bubbles:true})); } }, 300); return; }
+});
+root.addEventListener('change', function(e){ var t=e.target;
+  if(t.classList.contains('pl-genre')){ SETUP.genre=t.value; return; }
+  if(t.classList.contains('pl-cast')){ SETUP.castId=t.value; render(); return; }
+  if(t.name==='pl-turns'){ SETUP.turns=+t.value||10; return; }
+  if(t.classList.contains('pl-name')){ SETUP.hero.name=t.value.trim()||SETUP.hero.name; } });
+root.addEventListener('submit', function(e){ var f=e.target.closest('.pl-free'); if(!f) return; e.preventDefault(); var v=(f.querySelector('input').value||'').trim(); if(v) turn(v); });
+window.PAGE_ON=window.PAGE_ON||{};
+var prev=window.PAGE_ON.play; window.PAGE_ON.play=function(){ if(prev) try{ prev(); }catch(e){} if(!PL) load(); if(!PL && !SETUP) newSetup(); render(); };
+window.__play={state:function(){ return PL; }, setup:function(){ return SETUP; }, prompt:function(a){ return turnPrompt(a); }, apply:function(j,a,k){ apply(j,a,k); save(); render(); }, parse:parseJ};
+load(); if(!PL) newSetup(); render();
+})();
+// [[/MOD:play]]
+
 
 // [[MOD:ctfx]] 콘티 연출 색인 페이지 — 컷 여러 개를 잇는 연출. 데이터 CONTI_FX, 그림은 콘티 구성기 창구(__ctCutData → __ctPortrait)
 // 창구 window.__ctFx = {list, byId(id), show(id), groups, spec(cut), insert(id)}. 넣기는 __ctInsertCuts(자리 이름 A·B는 빼고, 자세는 wp['#순번'])

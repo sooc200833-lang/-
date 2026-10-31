@@ -230,3 +230,11 @@ arcForm, deviceId, folderMemo, gdBase, gdLast, gdLinked, ideaText, mangaDataVer,
 - `evenFix`는 틀 안에 컷을 끼우거나 빼지 않는다. 범위는 `layRange`가 `c.lay`로 다시 찾는다.
 - 장면 머리 「배치 · 이름」 단추와 장면 메뉴 「컷 배치」 → 고르기 칸(깔기·사전에서 그림 보기·없음). 글이 있는 컷도 구도·크기만 바꾸고 되돌리기가 있다. 「뼈대 다시」도 틀을 다시 깐다.
 - 시험: `/home/claude/fx/tlay.py webtoon|manga`.
+
+## 클리셰 플레이 (2026-11-01) — `#play`, `[[MOD:play]]`, `[[CSS:play]]`
+- 크랙처럼 AI가 진행하는 인터랙티브 웹툰. 판 짜기(장르·세계 MOTIFDATA·주인공 — 등장인물에서 고르거나 CHARS 외모/성격/결핍 무작위·길이 6/10/16턴) → 장르에서 클리셰 카드 5장을 뽑아 숨긴다.
+- 턴마다 `aiAsk(PSYS, turnPrompt(act), 2200, {json:true, temperature:.95})` 한 번. 답 JSON: narr·lines·panel{k,ang,who,scr}·event{card,setup}·choices 3·comments 2·summary·npcs·tension·fresh·end·ending.
+- 카드가 「발동」하면 선택지를 숨기고 따른다/뒤집는다(+2)를 고르게 한다. 신선도·독자 ♥·긴장 막대가 HUD. 마지막 턴에 결말 → 등급(S~C), 글 보관함(plot)·콘티 구성기(`contiSrc`)로 보내기.
+- 장면 그림은 콘티 창구 `__ctCutData`+`__ctPortrait`. 인물 생김새는 주인공 fig, NPC는 `castFigGuess(look)`.
+- 저장: `playSave`(진행 중), `playBest`(지난 판 20개). 창구 `window.__play`. 바탕화면 묶음 「놀이」(한 페이지라 바로 연다).
+- 시험: `work/playtest.js`(jsdom, 가짜 AI), `work/pw_play.js`.
