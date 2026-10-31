@@ -238,3 +238,9 @@ arcForm, deviceId, folderMemo, gdBase, gdLast, gdLinked, ideaText, mangaDataVer,
 - 장면 그림은 콘티 창구 `__ctCutData`+`__ctPortrait`. 인물 생김새는 주인공 fig, NPC는 `castFigGuess(look)`.
 - 저장: `playSave`(진행 중), `playBest`(지난 판 20개). 창구 `window.__play`. 바탕화면 묶음 「놀이」(한 페이지라 바로 연다).
 - 시험: `work/playtest.js`(jsdom, 가짜 AI), `work/pw_play.js`.
+
+## 네비 「무료 키/유료 키」 표시 (2026-11-01) — `#ai-tier`, `#ai-tierpop`
+- 구글 API는 키의 요금제를 알려 주는 창구가 없다. 그래서 `gmCall`의 오류 답(`gmRaw` 옆 `tierSniff`)에 `free_tier`/`FreeTier`가 있으면 무료, `paid_tier`면 유료로 저절로 정한다.
+- 그 전에는 「요금제 ?」. 누르면 AI 스튜디오 API 키 페이지 링크와 「무료 키다/유료 키다/모름」을 고르는 칸이 뜬다.
+- 저장: `gmTier={t,src:'auto'|'me',k:키 끝 6자,at}`. 키가 바뀌면 모름으로 돌아간다. 키가 없으면 숨긴다. 시험: `work/tiertest.js`.
+- 바탕화면: 「놀이」 묶음은 「클리셰 플레이」 이름으로 보이고, 한 번 열기 전까지 「새로」 표시(`playSeen`).

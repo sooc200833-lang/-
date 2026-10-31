@@ -387,6 +387,9 @@ tr.twrow td{background:var(--paper-2); font-size:.86rem; line-height:1.7; white-
   padding:.28rem .45rem; color:var(--ink-2); background:var(--paper-2); white-space:nowrap}
 .synclink i{font-style:normal; font-size:.72rem; color:var(--ink-3)}
 button.synclink{font:inherit; cursor:pointer}
+.aitier.t-free i{color:var(--green); font-weight:600} .aitier.t-paid i{color:var(--note); font-weight:600}
+.aitierpop{position:absolute; top:100%; right:0; z-index:60; width:min(22rem, calc(100vw - 32px)); background:var(--paper); border:1.5px solid var(--ink); box-shadow:3px 3px 0 var(--shadow); padding:.6rem .7rem; font-size:.84rem; line-height:1.55}
+.aitierpop p{margin:.35rem 0} .aitierpop .filterbar{margin:.4rem 0}
 .synclink.ok i{color:var(--green)} .synclink.busy i{color:var(--note)} .synclink.warn i{color:var(--mark)}
 .gdrow{display:flex; gap:.5rem; align-items:center; padding:.3rem 0; border-bottom:1px solid var(--rule); font-size:.84rem}
 .gdrow:last-child{border-bottom:0}
@@ -1515,6 +1518,7 @@ body.dk-drag, body.dk-drag *{user-select:none!important; -webkit-user-select:non
 
 <div class="topbar"><label for="pagesel">페이지</label><select id="pagesel"></select><label for="topfolder" class="tf">담는 곳</label><select id="topfolder"></select><label class="trainbtn"><input type="checkbox" id="tr-on"> 트레이닝</label>
 <button class="synclink airef" id="ai-refresh" type="button" title="AI 새로고침 — 키·모델 다시 읽기, 막힘 표시 풀기, 연결 확인">🔄<i id="ai-ref-st">AI</i></button>
+<button class="synclink aitier t-unk" id="ai-tier" type="button" aria-haspopup="dialog" aria-controls="ai-tierpop" hidden><i>요금제 ?</i></button><div id="ai-tierpop" class="aitierpop" role="dialog" aria-label="키 요금제" hidden></div>
 <a class="synclink" id="sync-dot" href="#favs" title="드라이브 동기화">☁<i id="sync-st">꺼짐</i></a>
 <a class="favlink" href="#favs" title="즐겨찾기"><span>★</span><i id="topfavn">0</i></a></div>
 <div class="minihead"><a href="#home">← 만화 클리셰 사전</a><span id="mh-t"></span></div>
@@ -5875,7 +5879,7 @@ var AIKEY='', AIMODEL='', PROV='gm';   // 2026-10-16 사용자 요청으로 Open
 try{ localStorage.setItem('aiProv','gm');
   AIKEY=localStorage.getItem('gmKey')||''; AIMODEL=localStorage.getItem('gmModel')||''; }catch(e){}
 function aiReady(){ return !!AIKEY; }
-function aiSave(){ try{ localStorage.setItem('aiProv',PROV); localStorage.setItem(PROV+'Key',AIKEY); localStorage.setItem(PROV+'Model',AIMODEL); }catch(e){} }
+function aiSave(){ try{ localStorage.setItem('aiProv',PROV); localStorage.setItem(PROV+'Key',AIKEY); localStorage.setItem(PROV+'Model',AIMODEL); }catch(e){} try{ tierPaint(); }catch(e){} }
 function aiFavText(){
   var vs=CURFOLDER, keys=Object.keys(FAV).filter(function(k){ return (FAVDIR[k]||'기본')===vs; });
   if(!keys.length) keys=Object.keys(FAV);
@@ -6038,7 +6042,7 @@ function aiRefresh(){
   var b=document.getElementById('ai-refresh'), st=document.getElementById('ai-ref-st');
   function set(t,cls,tip){ if(st) st.textContent=t; if(b){ b.className='synclink airef'+(cls?' '+cls:''); if(tip) b.title=tip; } }
   try{ AIKEY=localStorage.getItem('gmKey')||''; AIMODEL=localStorage.getItem('gmModel')||AIMODEL; localStorage.removeItem('aiOut'); }catch(e){}
-  aiNoCreditMark(false);
+  aiNoCreditMark(false); try{ tierPaint(); }catch(e){}
   var k=document.getElementById('ai-key'); if(k) k.value=AIKEY;
   try{ aiBar(); favAiBar(); aiSlots(); if(typeof ideaWriteBar==='function') ideaWriteBar(); if(typeof pbBar==='function') pbBar(); if(window.__reSlots) window.__reSlots(); }catch(e){}
   if(!AIKEY){ set('키 없음','warn','AI 연결 페이지에서 구글 제미나이 키를 넣는다.'); return Promise.resolve(); }
@@ -6058,6 +6062,45 @@ function aiRefresh(){
   });
 }
 (function(){ var b=document.getElementById('ai-refresh'); if(b) b.addEventListener('click',function(){ aiRefresh(); }); })();
+// ----- 네비 「무료/유료」 표시 (2026-11-01): 구글이 한도 오류에 free_tier·paid_tier를 적어 보내면 저절로 정하고, 아니면 사용자가 AI 스튜디오에서 보고 고른다 -----
+// localStorage gmTier={t:'free'|'paid', src:'auto'|'me', k:키 끝 6자, at}. 키가 바뀌면 모름으로.
+var TIER_URL='https://aistudio.google.com/apikey';
+function tierKey(){ return String(AIKEY||'').slice(-6); }
+function tierGet(){ try{ var o=JSON.parse(localStorage.getItem('gmTier')||'null'); if(o && o.k===tierKey() && (o.t==='free'||o.t==='paid')) return o; }catch(e){} return null; }
+function tierSet(t, src){ try{ if(!t) localStorage.removeItem('gmTier'); else localStorage.setItem('gmTier', JSON.stringify({t:t, src:src||'me', k:tierKey(), at:Date.now()})); }catch(e){} tierPaint(); }
+function tierSniff(tx){   // 구글 오류 글에서 요금제 읽기
+  tx=String(tx||''); var t=/free_tier|FreeTier/i.test(tx)?'free':(/paid_tier|PaidTier/i.test(tx)?'paid':'');
+  if(t){ var o=tierGet(); if(!o || o.t!==t || o.src!=='auto') tierSet(t,'auto'); }
+}
+function tierPaint(){
+  var b=document.getElementById('ai-tier'); if(!b) return; var o=tierGet();
+  b.hidden=!AIKEY;
+  b.className='synclink aitier'+(o?(o.t==='free'?' t-free':' t-paid'):' t-unk');
+  b.querySelector('i').textContent=o?(o.t==='free'?'무료 키':'유료 키'):'요금제 ?';
+  b.title=o?((o.t==='free'?'무료 키':'유료(결제) 키')+(o.src==='auto'?' — 구글 한도 응답에서 확인':' — 직접 고름')+' · 누르면 바꾼다'):'이 키가 무료인지 유료인지 아직 모른다 · 눌러서 확인';
+  var p=document.getElementById('ai-tierpop'); if(p && !p.hidden) tierPop(true);
+}
+function tierPop(keep){
+  var p=document.getElementById('ai-tierpop'); if(!p) return;
+  if(!keep && !p.hidden){ p.hidden=true; return; }
+  var o=tierGet();
+  p.innerHTML='<b>'+(o?(o.t==='free'?'무료 키':'유료 키')+(o.src==='auto'?' <span class="small">(구글 응답으로 확인)</span>':' <span class="small">(직접 고름)</span>'):'아직 모른다')+'</b>'+
+    '<p class="small">구글은 키의 요금제를 따로 알려 주지 않는다. 한도에 걸릴 때 오는 답에 「free_tier」가 적혀 있으면 저절로 <b>무료</b>로 바꾼다.</p>'+
+    '<p class="small">바로 확인하려면 <a href="'+TIER_URL+'" target="_blank" rel="noopener">AI 스튜디오 → API 키</a>에서 이 키(끝 '+cescT(tierKey().slice(-4))+')의 <b>요금제</b> 칸을 본다. 「무료 등급(Free tier)」이면 무료, 「등급 1」 이상이면 유료.</p>'+
+    '<div class="filterbar"><button class="chip" type="button" data-tier="free">무료 키다</button><button class="chip" type="button" data-tier="paid">유료 키다</button><button class="chip" type="button" data-tier="">모름</button></div>'+
+    '<p class="small">무료 키는 하루·분당 요청 수가 정해져 있다. 클리셰 플레이 한 판(10턴)은 요청 10번쯤.</p>';
+  p.hidden=false;
+}
+function cescT(s){ return String(s||'').replace(/[&<>"]/g,function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
+(function(){
+  var b=document.getElementById('ai-tier'), p=document.getElementById('ai-tierpop'); if(!b || !p) return;
+  b.addEventListener('click', function(e){ e.stopPropagation(); tierPop(); });
+  p.addEventListener('click', function(e){ e.stopPropagation(); var x=e.target.closest('[data-tier]'); if(!x) return; tierSet(x.getAttribute('data-tier'),'me'); p.hidden=true; });
+  document.addEventListener('click', function(){ if(!p.hidden) p.hidden=true; });
+  document.addEventListener('keydown', function(e){ if(e.key==='Escape' && !p.hidden){ p.hidden=true; b.focus(); } });
+  tierPaint();
+})();
+
 // ----- (옛 OpenRouter 잔액·무료 모델 전환은 제미나이로 바꾸며 없앴다. 다른 코드가 부르므로 빈 함수만 남긴다) -----
 function aiAutoFree(){ return false; }
 function aiNoCredit(){ return false; }
@@ -6101,7 +6144,7 @@ function aiCall(system, user, onText, maxTok, _retry, opts){
     method:'POST', headers:{'Content-Type':'application/json','x-goog-api-key':AIKEY}, body:JSON.stringify(body)
   }).then(function(r){
      if(!r.ok){ return r.text().then(function(tx){
-       gmRaw(r.status+' '+tx);
+       gmRaw(r.status+' '+tx); try{ tierSniff(tx); }catch(e){}
        var m='', st=''; try{ var j=JSON.parse(tx); m=(j.error&&j.error.message)||tx; st=(j.error&&j.error.status)||''; }catch(e){ m=tx; }
        if(r.status===400 && /API key not valid|API_KEY_INVALID/i.test(m+tx)) throw new Error('키가 올바르지 않습니다. AI 연결에서 구글 AI 스튜디오 키(AIza로 시작)를 다시 넣는다.');
        if(r.status===400 && th && /thinking/i.test(m)){ var et=new Error('NO_THINK'); throw et; }
@@ -11189,13 +11232,13 @@ function dkIcon(id, c, g, cnt){
   if(f!==null){ label=f; glyph=DK_SVG.folder; n=cnt[f]||0; if(f===CURFOLDER) cls+=' cur';
     aria='폴더 '+f+', 항목 '+n+'개'+(f===CURFOLDER?', 지금 폴더':''); }
   else if(id==='s:trash'){ label='휴지통'; glyph=DK.trash.length?DK_SVG.trashFull:DK_SVG.trash; n=DK.trash.length; aria='휴지통'; }
-  else if(id.indexOf('g:')===0){ var gg=id.slice(2); label=dkLabel(id, gg); glyph=DK_SVG[{'놀이':'game','저장소':'store','색인':'idx','도구':'tool','배우기':'book'}[gg]]||DK_SVG.group; n=dkGroupPages(gg).length; aria=label+' 묶음, '+n+'개'; }
+  else if(id.indexOf('g:')===0){ var gg=id.slice(2); label=dkLabel(id, gg==='놀이'?'클리셰 플레이':gg); glyph=DK_SVG[{'놀이':'game','저장소':'store','색인':'idx','도구':'tool','배우기':'book'}[gg]]||DK_SVG.group; n=dkGroupPages(gg).length; aria=label+' 묶음, '+n+'개'; }
   else if(id.indexOf('p:')===0){ var pg=dkPage(id.slice(2)); label=dkLabel(id, pg?pg.t:id.slice(2)); glyph=DK_SVG.page; aria=label+' 열기'; }
   else { DK_SC.forEach(function(s){ if(s.id===id) sc=s; }); label=dkLabel(id, sc.t); glyph=DK_SVG[sc.g];
     n=id==='s:favs'?Object.keys(FAV).length:(id==='s:cast'?dkRec('mangaCast'):(id==='s:texts'?dkRec('mangaTexts'):(id==='s:contis'?dkRec('contiSaved'):0))); aria=label+' 열기'; }
   if(DK.sel===id) cls+=' sel'; if(DK.open===id) cls+=' open';
   return '<div class="'+cls+'" data-id="'+wsEsc(id)+'" tabindex="0" role="button" aria-label="'+wsEsc(aria)+'" title="'+wsEsc(label)+'" style="left:'+(c[0]*g.cw).toFixed(1)+'px;top:'+(c[1]*g.ch)+'px;width:'+g.cw.toFixed(1)+'px;height:'+g.ch+'px">'+
-    '<span class="dk-g">'+glyph+(n?'<span class="dk-n">'+n+'</span>':'')+(f!==null&&f===CURFOLDER?'<span class="dk-cur">지금</span>':'')+'</span>'+
+    '<span class="dk-g">'+glyph+(n?'<span class="dk-n">'+n+'</span>':'')+(f!==null&&f===CURFOLDER?'<span class="dk-cur">지금</span>':'')+(id==='g:놀이' && !(function(){ try{ return localStorage.getItem('playSeen'); }catch(e){ return 1; } })()?'<span class="dk-cur">새로</span>':'')+'</span>'+
     '<span class="dk-t">'+wsEsc(label)+'</span></div>';
 }
 function dkField(root){
@@ -16669,7 +16712,7 @@ root.addEventListener('change', function(e){ var t=e.target;
   if(t.classList.contains('pl-name')){ SETUP.hero.name=t.value.trim()||SETUP.hero.name; } });
 root.addEventListener('submit', function(e){ var f=e.target.closest('.pl-free'); if(!f) return; e.preventDefault(); var v=(f.querySelector('input').value||'').trim(); if(v) turn(v); });
 window.PAGE_ON=window.PAGE_ON||{};
-var prev=window.PAGE_ON.play; window.PAGE_ON.play=function(){ if(prev) try{ prev(); }catch(e){} if(!PL) load(); if(!PL && !SETUP) newSetup(); render(); };
+var prev=window.PAGE_ON.play; window.PAGE_ON.play=function(){ if(prev) try{ prev(); }catch(e){} try{ localStorage.setItem('playSeen','1'); }catch(e){} if(!PL) load(); if(!PL && !SETUP) newSetup(); render(); };
 window.__play={state:function(){ return PL; }, setup:function(){ return SETUP; }, prompt:function(a){ return turnPrompt(a); }, apply:function(j,a,k){ apply(j,a,k); save(); render(); }, parse:parseJ};
 load(); if(!PL) newSetup(); render();
 })();
