@@ -1423,6 +1423,18 @@ body.dk-drag, body.dk-drag *{user-select:none!important; -webkit-user-select:non
 .pl-card span{color:var(--ink-3); font-size:.72rem}
 .pl-card.back{background:repeating-linear-gradient(135deg,var(--paper-3) 0 6px,var(--paper-2) 6px 12px); align-items:center; justify-content:center; text-align:center}
 .pl-card.back b{font-size:1.6rem; color:var(--ink-3)}
+button.pl-card{font:inherit; color:inherit; text-align:left; cursor:pointer}
+button.pl-card[disabled]{cursor:default}
+.pl-card.peek{background:var(--high)}
+.pl-cdet{margin:.2rem 0 .6rem; padding:.55rem .7rem; border:1.5px solid var(--ink); background:var(--paper-2); font-size:.88rem; line-height:1.6}
+.pl-cdet p{margin:.3rem 0 0}
+.pl-evc{flex:1 1 15rem; min-width:0; font-size:.86rem; line-height:1.55}
+.pl-evc i{font-style:normal; font-size:.7rem; color:var(--mark); font-weight:700; letter-spacing:.04em; display:block}
+.pl-evc b{font-family:"Hahmlet",serif; font-size:1.05rem; margin-right:.4rem}
+.pl-evc p{margin:.3rem 0 0} .pl-evs{color:var(--mark)}
+.pl-tropes{margin-top:.5rem; display:grid; gap:.2rem}
+.pl-tr{font-size:.84rem; line-height:1.55} .pl-tr summary{cursor:pointer; color:var(--note)} .pl-tr p{margin:.2rem 0 0 .2rem}
+.pl-used{list-style:none; padding:0; margin:.4rem auto; max-width:34rem; text-align:left; display:grid; gap:.35rem; font-size:.88rem}
 .pl-card.st-fired{border-color:var(--mark); outline:2px solid var(--mark); outline-offset:1px}
 .pl-card.st-fired span{color:var(--mark); font-weight:600}
 .pl-card.st-flipped{border-color:var(--note)} .pl-card.st-flipped span{color:var(--note); font-weight:600}
@@ -16537,27 +16549,44 @@ function deck(genre){
   var pool=ROWS.filter(function(r){ return !genre || r[1]===genre || /공통/.test(r[1]); }); if(pool.length<8) pool=ROWS.slice();
   return shuffle(pool).slice(0,5).map(function(r){ return {name:r[0], genre:r[1], fn:r[2], def:r[8], point:r[9], st:'hidden'}; });
 }
+// 클리셰 이름 → 사전 줄 (같은 이름 먼저, 없으면 서로 품는 이름)
+function rowOf(n){ n=str(n,40).replace(/[「」『』"']/g,''); if(!n) return null; var hit=null;
+  ROWS.forEach(function(r){ if(!hit && r[0]===n) hit=r; });
+  if(!hit && n.length>=3) ROWS.forEach(function(r){ if(!hit && r[0].length>=3 && (n.indexOf(r[0])>-1 || r[0].indexOf(n)>-1)) hit=r; });
+  return hit; }
+function openOn(){ try{ return localStorage.getItem('playOpen')!=='0'; }catch(e){ return true; } }
+var PEEK='';   // 펼쳐 본 카드 이름
+function cardDetail(c){ if(!c) return '';
+  return '<div class="pl-cdet" role="region" aria-label="클리셰 설명"><b>'+esc(c.name)+'</b>'+(c.fn?' <span class="small">· '+esc(c.fn)+'</span>':'')+
+    (c.def?'<p>'+esc(c.def)+'</p>':'')+(c.point?'<p class="small"><b>써먹는 법</b> '+esc(c.point)+'</p>':'')+
+    (c.how?'<p class="small"><b>이 장면에서</b> '+esc(c.how)+'</p>':'')+'</div>'; }
+function cardBtn(c, open, st){ var lab=open?esc(c.name):'?';
+  return '<button type="button" class="pl-card '+(open?'front':'back')+(st?' st-'+st:'')+(PEEK===c.name && open?' peek':'')+'" data-pl="peek" data-c="'+esc(c.name)+'"'+(open?' aria-expanded="'+(PEEK===c.name)+'"':' disabled')+'>'+
+    '<b>'+lab+'</b><span>'+(open?esc(st?({hidden:'대기',fired:'발동!',followed:'따름',flipped:'뒤집음'})[st]:(c.fn||'')):'숨김')+'</span></button>'; }
 // ----- 판 짜기 -----
 var SETUP=null;
 function newSetup(){
   var cast=window.__castList?window.__castList():[], g=genres();
   SETUP={genre:rnd(g), world:rnd(MOTIFDATA), turns:10, castId:'',
     hero:{name:rnd(NAMES), look:charOf('외모'), pers:charOf('성격'), lack:charOf('결핍')}, cast:cast.slice(0,40)};
+  SETUP.deck=deck(SETUP.genre);
 }
 function heroDesc(h){ return [h.look&&h.look[2], h.pers&&h.pers[2], h.lack&&('결핍: '+h.lack[2])].filter(Boolean).join(' · '); }
 function setupHTML(){
   if(!SETUP) newSetup(); var S=SETUP, h=S.hero;
   var gs=genres();
   return '<div class="pl-setup">'+
-    '<p class="lede">AI가 진행하는 웹툰 한 편을 직접 <b>플레이</b>한다. 턴마다 장면이 그려지고, 무엇을 할지 고르거나 직접 적는다. 숨겨 둔 <b>클리셰 카드</b>가 터지면 따를지 <b>뒤집을지</b> 정한다 — 뒤집을수록 신선도가 오른다.</p>'+
+    '<p class="lede">AI가 진행하는 웹툰 한 편을 직접 <b>플레이</b>한다. 턴마다 장면이 그려지고, 무엇을 할지 고르거나 직접 적는다. 아래 <b>클리셰 카드</b>가 이야기 속에서 터지면 따를지 <b>뒤집을지</b> 정한다 — 뒤집을수록 신선도가 오른다.</p>'+
     '<div class="pl-row"><span class="pl-k">장르</span><select class="pl-genre">'+gs.map(function(x){ return '<option'+(x===S.genre?' selected':'')+'>'+esc(x)+'</option>'; }).join('')+'</select><button class="chip" type="button" data-pl="rg">🎲</button></div>'+
     '<div class="pl-row"><span class="pl-k">세계</span><b>'+esc(S.world[0])+'</b><span class="small">'+esc(S.world[1])+(S.world[3]?' · 「'+esc(S.world[3])+'」 같은':'')+'</span><button class="chip" type="button" data-pl="rw">🎲</button></div>'+
     '<div class="pl-row"><span class="pl-k">주인공</span>'+
       (S.cast.length?'<select class="pl-cast"><option value="">새 인물(무작위)</option>'+S.cast.map(function(m){ return '<option value="'+esc(m.id)+'"'+(m.id===S.castId?' selected':'')+'>'+esc(m.name)+'</option>'; }).join('')+'</select>':'')+
       (S.castId?'':'<input class="pl-name" type="text" maxlength="10" value="'+esc(h.name)+'" aria-label="주인공 이름"><span class="small">'+esc(heroDesc(h))+'</span><button class="chip" type="button" data-pl="rh">🎲</button>')+'</div>'+
     '<div class="pl-row"><span class="pl-k">길이</span>'+[[6,'짧게'],[10,'보통'],[16,'길게']].map(function(t){ return '<label class="small"><input type="radio" name="pl-turns" value="'+t[0]+'"'+(S.turns===t[0]?' checked':'')+'> '+t[1]+' ('+t[0]+'턴)</label>'; }).join(' ')+'</div>'+
-    '<div class="pl-cards pl-back">'+[0,1,2,3,4].map(function(){ return '<div class="pl-card back"><b>?</b><span>클리셰 카드</span></div>'; }).join('')+'</div>'+
-    '<p class="small">카드 다섯 장은 판을 시작할 때 이 장르에서 뽑아 숨겨 둔다. 무엇이 나올지는 이야기가 흘러가야 안다.</p>'+
+    '<div class="pl-row"><span class="pl-k">클리셰</span><label class="small"><input type="checkbox" class="pl-open"'+(openOn()?' checked':'')+'> 카드를 처음부터 펼쳐 둔다</label><span class="small">(끄면 이야기에서 터질 때까지 숨긴다 — 더 어렵게)</span><button class="chip" type="button" data-pl="rd">🎲 카드 다시</button></div>'+
+    '<div class="pl-cards">'+(S.deck||[]).map(function(c){ return cardBtn(c, openOn(), ''); }).join('')+'</div>'+
+    (openOn()?cardDetail((S.deck||[]).filter(function(c){ return c.name===PEEK; })[0]):'')+
+    '<p class="small">'+(openOn()?'이 장르에서 뽑은 클리셰 다섯 장. 카드를 누르면 무슨 클리셰인지 설명이 나온다. 진행자가 이야기 속에서 하나씩 터뜨린다.':'카드 다섯 장은 숨겨 둔다. 무엇이 나올지는 이야기가 흘러가야 안다. 터지면 설명이 나온다.')+'</p>'+
     '<div class="filterbar"><button class="chip pl-go" type="button" data-pl="start"'+(BUSY?' disabled':'')+'>▶ 플레이 시작</button>'+(MSG?'<span class="small pl-msg">'+esc(MSG)+'</span>':'')+'</div>'+
     bestHTML()+'</div>';
 }
@@ -16573,13 +16602,15 @@ function turnPrompt(act){
   L.push('[판] 장르: '+P.genre+' · 세계: '+P.world[0]+'('+P.world[1]+') · 턴 '+(P.turn+1)+'/'+P.turns+' · 지금 긴장 '+P.tension+'/100');
   L.push('[주인공 — 플레이어] '+h.name+': '+(h.desc||heroDesc(h)));
   if(P.npcs.length) L.push('[나온 인물] '+P.npcs.map(function(x){ return x.name+'('+x.role+')'; }).join(', '));
-  L.push('[클리셰 카드 — 숨김은 아직 안 나옴]\n'+P.deck.map(function(c){ return '- '+c.name+' · '+({hidden:'숨김',fired:'발동(플레이어 결정 기다림)',followed:'따름',flipped:'뒤집음'})[c.st]+' · '+c.def; }).join('\n'));
+  var nf=P.deck.filter(function(c){ return c.st!=='hidden'; }).length, want=Math.min(5, Math.max(3, Math.round(P.turns/2.5)));
+  L.push('[클리셰 카드 — 「숨김」은 아직 안 나옴'+(P.open?', 플레이어도 카드 이름을 안다':', 플레이어는 카드를 모른다')+' · 판 전체에서 '+want+'장 이상 발동, 지금 '+nf+'장]\n'+P.deck.map(function(c){ return '- '+c.name+' · '+({hidden:'숨김',fired:'발동(플레이어 결정 기다림)',followed:'따름',flipped:'뒤집음'})[c.st]+' · '+c.def; }).join('\n'));
   if(P.summary) L.push('[지금까지] '+P.summary);
   var last=P.log.slice(-2); if(last.length) L.push('[바로 앞 턴]\n'+last.map(function(t){ return t.narr+(t.act?' → 플레이어: '+t.act:''); }).join('\n'));
   L.push('[이번 턴 플레이어의 행동] '+act);
   var end=P.turn+1>=P.turns;
   L.push('규칙\n'+
-    '- 숨은 카드가 이야기에 자연스럽게 맞으면 그 클리셰 상황을 일으키고 event.card에 카드 이름을 그대로, event.setup에 무엇이 벌어지려는지 한 줄을 쓴다. 2~3턴에 한 번 정도, 한 턴에 하나. 맞지 않으면 빈 문자열.\n'+
+    '- 숨은 카드 하나를 골라 그 클리셰 상황을 일으킨다: event.card에 카드 이름을 그대로, event.setup에 무엇이 벌어지려는지 한 줄(40자), event.follow에 정석대로 가면 어떻게 될지(25자), event.flip에 뒤집으면 어떤 방향일지(25자). 2턴에 한 번쯤, 한 턴에 하나. 이번에 안 하면 card는 빈 문자열.\n'+
+    '- tropes: 이번 장면에 실제로 쓰인 만화 클리셰 1~2개 {name(흔히 부르는 이름, 카드면 카드 이름 그대로), how(이 장면에서 어떻게 쓰였나 30자)}.\n'+
     '- 행동이 「〈카드〉를 뒤집는다」이면 독자의 예상을 깨는 방식으로 그 클리셰를 비틀어 푼다(fresh 2~3). 「따른다」면 클리셰를 잘 살려 정석대로 푼다.\n'+
     '- choices: 다음에 할 만한 행동 3개, 서로 성격이 다르게(정면 돌파·꾀·감정 등), 각 18자 안쪽.\n'+
     '- comments: 이 장면을 본 웹툰 독자 댓글 2개(짧고 생생하게, 반말·유행어 가능, 욕설 없이).\n'+
@@ -16588,7 +16619,7 @@ function turnPrompt(act){
     '- summary: 지금까지 줄거리를 300자 안쪽으로 새로 정리. npcs: 지금까지 나온 다른 인물 전부 {name, role(8자), look(외모 한 줄)}.\n'+
     '- tension: 이번 턴 뒤 긴장 0~100. fresh: 이번 턴이 얼마나 신선했나 0~3.\n'+
     (end?'- 이번이 마지막 턴이다. 이야기를 매듭짓고 end=true, ending에 {title(작품 제목 12자), logline(한 줄 40자), type(아래 결말 중 하나)}를 넣는다. choices는 빈 배열.\n  결말: '+shuffle(ENDINGS).slice(0,8).map(function(e){ return e[1]; }).join(' · ')+'\n':'- end=false.\n')+
-    '형식: {"narr":"","lines":[{"who":"","text":""}],"panel":{"k":"","ang":"","who":[],"scr":""},"event":{"card":"","setup":""},"choices":["","",""],"comments":["",""],"summary":"","npcs":[{"name":"","role":"","look":""}],"tension":0,"fresh":0,"end":false,"ending":null}');
+    '형식: {"narr":"","lines":[{"who":"","text":""}],"panel":{"k":"","ang":"","who":[],"scr":""},"event":{"card":"","setup":"","follow":"","flip":""},"tropes":[{"name":"","how":""}],"choices":["","",""],"comments":["",""],"summary":"","npcs":[{"name":"","role":"","look":""}],"tension":0,"fresh":0,"end":false,"ending":null}');
   return L.join('\n\n');
 }
 function parseJ(t){ t=String(aiClean?aiClean(t):t).trim(); try{ return JSON.parse(t); }catch(e){} var a=t.indexOf('{'), b=t.lastIndexOf('}'); if(a>-1 && b>a){ try{ return JSON.parse(t.slice(a,b+1)); }catch(e){} } return null; }
@@ -16607,11 +16638,12 @@ function turn(act, kind){
 function apply(j, act, kind){
   var P=PL, ev=j.event||{}, card=null;
   if(kind && kind.card){ P.deck.forEach(function(c){ if(c.name===kind.card) c.st=kind.flip?'flipped':'followed'; }); if(kind.flip) P.fresh+=2; }
-  if(ev.card){ P.deck.forEach(function(c){ if(!card && c.st==='hidden' && (c.name===ev.card || ev.card.indexOf(c.name)>-1 || c.name.indexOf(ev.card)>-1)) card=c; }); if(card){ card.st='fired'; card.setup=str(ev.setup,80); } }
+  if(ev.card){ P.deck.forEach(function(c){ if(!card && c.st==='hidden' && (c.name===ev.card || ev.card.indexOf(c.name)>-1 || c.name.indexOf(ev.card)>-1)) card=c; }); if(card){ card.st='fired'; card.setup=str(ev.setup,80); card.follow=str(ev.follow,40); card.flip=str(ev.flip,40); } }
   P.npcs=(Array.isArray(j.npcs)?j.npcs:P.npcs).filter(function(x){ return x && x.name && x.name!==P.hero.name; }).slice(0,8).map(function(x){ return {name:str(x.name,10), role:str(x.role,12), look:str(x.look,40)}; });
   var t={n:P.turn+1, act:act, narr:str(j.narr,500), lines:(Array.isArray(j.lines)?j.lines:[]).slice(0,2).map(function(l){ return {who:str(l&&l.who,10), text:str(l&&l.text,40)}; }).filter(function(l){ return l.text; }),
     panel:j.panel||{}, card:card?card.name:'', setup:card?card.setup:'', comments:(Array.isArray(j.comments)?j.comments:[]).slice(0,2).map(function(c){ return str(c,50); }).filter(Boolean),
-    choices:(Array.isArray(j.choices)?j.choices:[]).slice(0,3).map(function(c){ return str(c,24); }).filter(Boolean)};
+    choices:(Array.isArray(j.choices)?j.choices:[]).slice(0,3).map(function(c){ return str(c,24); }).filter(Boolean),
+    tropes:(Array.isArray(j.tropes)?j.tropes:[]).slice(0,2).map(function(x){ return {name:str(x&&x.name,24), how:str(x&&x.how,50)}; }).filter(function(x){ return x.name; })};
   var fr=Math.max(0,Math.min(3,+j.fresh||0)); P.fresh+=fr; t.fresh=fr;
   var tn=Math.max(0,Math.min(100,Math.round(+j.tension||P.tension))); P.likes+=Math.round(20+tn*1.2+fr*25+Math.random()*30); P.tension=tn;
   P.summary=str(j.summary||P.summary,400); P.log.push(t); P.turn++; delete P.retry;
@@ -16635,18 +16667,25 @@ function turnHTML(t, last){
       '<div class="pl-txt"><p class="pl-narr">'+esc(t.narr)+'</p>'+
         (t.lines.length?'<ul class="pl-lines">'+t.lines.map(function(l){ return '<li>'+(l.who?'<b>'+esc(l.who)+'</b> ':'')+'「'+esc(l.text)+'」</li>'; }).join('')+'</ul>':'')+
         (t.comments.length?'<div class="pl-cm">'+t.comments.map(function(c){ return '<span>💬 '+esc(c)+'</span>'; }).join('')+'</div>':'')+
-        (t.fresh?'<span class="pl-fr">신선도 +'+t.fresh+'</span>':'')+'</div></div>'+
-    (t.card?'<div class="pl-event"><div class="pl-card front"><i>클리셰 발동</i><b>'+esc(t.card)+'</b><span>'+esc(t.setup||'')+'</span></div>'+
-      (last && !P.done && cardSt(t.card)==='fired'?'<div class="pl-ev-q"><p>뻔하게 갈까, 비틀까?</p><button class="chip" type="button" data-pl="follow" data-c="'+esc(t.card)+'">따른다 — 정석대로</button><button class="chip pl-flip" type="button" data-pl="flip" data-c="'+esc(t.card)+'">뒤집는다 — 예상을 깬다 (+2)</button></div>'
-        :'<p class="small pl-evr">'+({followed:'정석대로 따랐다', flipped:'뒤집었다!'})[cardSt(t.card)]+'</p>')+'</div>':'')+
+        (t.fresh?'<span class="pl-fr">신선도 +'+t.fresh+'</span>':'')+tropesHTML(t)+'</div></div>'+
+    (t.card?(function(){ var c=cardOf(t.card)||{name:t.card};
+      return '<div class="pl-event"><div class="pl-evc"><i>클리셰 발동</i><b>'+esc(t.card)+'</b>'+(c.fn?'<span class="small">'+esc(c.fn)+'</span>':'')+
+        (c.def?'<p>'+esc(c.def)+'</p>':'')+(t.setup?'<p class="pl-evs">▶ '+esc(t.setup)+'</p>':'')+'</div>'+
+      (last && !P.done && cardSt(t.card)==='fired'?'<div class="pl-ev-q"><p>뻔하게 갈까, 비틀까?</p><button class="chip" type="button" data-pl="follow" data-c="'+esc(t.card)+'">따른다 — '+esc(c.follow||'정석대로')+'</button><button class="chip pl-flip" type="button" data-pl="flip" data-c="'+esc(t.card)+'">뒤집는다 — '+esc(c.flip||'예상을 깬다')+' (+2)</button></div>'
+        :'<p class="small pl-evr">'+({followed:'정석대로 따랐다', flipped:'뒤집었다!'})[cardSt(t.card)]+'</p>')+'</div>'; })():'')+
     '</article>';
 }
+function cardOf(n){ var r=null; PL.deck.forEach(function(c){ if(c.name===n) r=c; }); return r; }
+function tropesHTML(t){ var L=(t.tropes||[]).filter(function(x){ return x.name!==t.card; }); if(!L.length) return '';
+  return '<div class="pl-tropes"><span class="small">이 장면의 클리셰</span>'+L.map(function(x){ var r=rowOf(x.name), c=cardOf(x.name);
+    var def=(c&&c.def)||(r&&r[8])||'', fn=(c&&c.fn)||(r&&r[2])||'';
+    return '<details class="pl-tr"><summary>🏷 '+esc(x.name)+(c?' <span class="small">(카드)</span>':'')+'</summary>'+(fn?'<p class="small">'+esc(fn)+'</p>':'')+(def?'<p>'+esc(def)+'</p>':'')+(x.how?'<p class="small"><b>여기서</b> '+esc(x.how)+'</p>':'')+(r?'':'<p class="small">사전에 같은 이름은 없다.</p>')+'</details>'; }).join('')+'</div>'; }
 function cardSt(n){ var s=''; PL.deck.forEach(function(c){ if(c.name===n) s=c.st; }); return s; }
 function hudHTML(){ var P=PL;
   return '<div class="pl-hud"><span class="pl-t">'+esc(P.hero.name)+' · '+esc(P.genre)+'</span><span>턴 <b>'+Math.min(P.turn,P.turns)+'</b>/'+P.turns+'</span>'+
     '<span class="pl-bar" title="긴장 '+P.tension+'"><i style="width:'+P.tension+'%"></i></span><span>✦ 신선도 <b>'+P.fresh+'</b></span><span>♥ 독자 <b>'+P.likes.toLocaleString()+'</b></span></div>'+
-    '<div class="pl-cards">'+P.deck.map(function(c){ var open=c.st!=='hidden';
-      return '<div class="pl-card '+(open?'front st-'+c.st:'back')+'" title="'+esc(open?c.name+' — '+c.def:'아직 나오지 않은 클리셰')+'"><b>'+(open?esc(c.name):'?')+'</b><span>'+(open?({fired:'발동!',followed:'따름',flipped:'뒤집음'})[c.st]:'숨김')+'</span></div>'; }).join('')+'</div>';
+    '<div class="pl-cards">'+P.deck.map(function(c){ return cardBtn(c, P.open || c.st!=='hidden', c.st); }).join('')+'</div>'+
+    cardDetail(P.deck.filter(function(c){ return c.name===PEEK && (P.open || c.st!=='hidden'); })[0]);
 }
 function playHTML(){
   var P=PL, last=P.log[P.log.length-1], pend=P.deck.filter(function(c){ return c.st==='fired'; })[0];
@@ -16654,7 +16693,8 @@ function playHTML(){
   if(P.done){ var flips=P.deck.filter(function(c){ return c.st==='flipped'; }), used=P.deck.filter(function(c){ return c.st!=='hidden'; });
     h+='<div class="pl-end"><p class="small">완결</p><h3>『'+esc(P.ending.title)+'』</h3><p class="pl-ll">'+esc(P.ending.logline)+'</p>'+
       '<div class="pl-grade"><b>'+grade()+'</b><span>신선도 '+P.fresh+' · 독자 ♥ '+P.likes.toLocaleString()+' · 결말: '+esc(P.ending.type||'—')+'</span></div>'+
-      '<p class="small">쓴 클리셰 '+used.length+'장 — '+used.map(function(c){ return esc(c.name)+(c.st==='flipped'?' (뒤집음)':''); }).join(', ')+(flips.length?'':' · 하나도 안 뒤집었다. 다음 판엔 뒤집어 보자.')+'</p>'+
+      '<p class="small">쓴 클리셰 '+used.length+'장'+(flips.length?'':' · 하나도 안 뒤집었다. 다음 판엔 뒤집어 보자.')+'</p>'+
+      '<ul class="pl-used">'+used.map(function(c){ return '<li><b>'+esc(c.name)+'</b> <span class="small">'+({fired:'발동',followed:'따름',flipped:'뒤집음'})[c.st]+'</span><br><span class="small">'+esc(c.def||'')+'</span></li>'; }).join('')+'</ul>'+
       '<div class="filterbar"><button class="chip" type="button" data-pl="totext">글 보관함에 줄거리로</button><button class="chip" type="button" data-pl="toconti">콘티 구성기로 보내기</button><button class="chip pl-go" type="button" data-pl="new">새 판</button></div></div>';
   } else if(!P.log.length){
     h+='<div class="pl-act-box"><button class="chip pl-go" type="button" data-pl="act" data-a="이야기를 시작한다"'+(BUSY?' disabled':'')+'>첫 장면 열기</button></div>';
@@ -16687,12 +16727,14 @@ function start(){
   var nm=cm?cm.name:((root.querySelector('.pl-name')||{}).value||h.name).trim()||h.name;
   var desc=cm?[cm.role, cm.desc].filter(Boolean).join(' · ').slice(0,200):heroDesc(h);
   var fig=cm&&cm.look&&typeof cm.look==='object'?cm.look:(typeof castFigGuess==='function'?castFigGuess((h.look&&h.look[2])||''):{});
-  PL={v:1, genre:S.genre, world:S.world, turns:S.turns, hero:{name:nm, desc:desc, fig:fig, look:h.look, pers:h.pers, lack:h.lack}, deck:deck(S.genre), npcs:[], log:[], turn:0, tension:20, fresh:0, likes:0, summary:'', at:Date.now()};
-  save(); MSG=''; render(); turn('이야기를 시작한다 — 주인공이 처음 등장하는 장면');
+  PL={v:1, genre:S.genre, world:S.world, turns:S.turns, hero:{name:nm, desc:desc, fig:fig, look:h.look, pers:h.pers, lack:h.lack}, deck:(S.deck&&S.deck.length?S.deck:deck(S.genre)).map(function(c){ return Object.assign({}, c, {st:'hidden'}); }), open:openOn(), npcs:[], log:[], turn:0, tension:20, fresh:0, likes:0, summary:'', at:Date.now()};
+  PEEK=''; save(); MSG=''; render(); turn('이야기를 시작한다 — 주인공이 처음 등장하는 장면');
 }
 root.addEventListener('click', function(e){
   var b=e.target.closest && e.target.closest('[data-pl]'); if(!b) return; var a=b.dataset.pl;
-  if(a==='rg'){ SETUP.genre=rnd(genres()); render(); return; }
+  if(a==='rg'){ SETUP.genre=rnd(genres()); SETUP.deck=deck(SETUP.genre); PEEK=''; render(); return; }
+  if(a==='rd'){ SETUP.deck=deck(SETUP.genre); PEEK=''; render(); return; }
+  if(a==='peek'){ var cn=b.dataset.c; PEEK=PEEK===cn?'':cn; render(); var pb=root.querySelector('.pl-card.peek'); if(pb) pb.focus(); return; }
   if(a==='rw'){ SETUP.world=rnd(MOTIFDATA); render(); return; }
   if(a==='rh'){ SETUP.hero={name:rnd(NAMES), look:charOf('외모'), pers:charOf('성격'), lack:charOf('결핍')}; render(); return; }
   if(a==='start'){ if(!aiReady()){ MSG='AI 연결 페이지에서 제미나이 키를 넣으면 플레이할 수 있다.'; render(); return; } start(); return; }
@@ -16706,7 +16748,8 @@ root.addEventListener('click', function(e){
     location.hash='#conti'; setTimeout(function(){ var st=document.getElementById('ct-story'); if(st && !st.value.trim()){ st.value=text; st.dispatchEvent(new Event('input',{bubbles:true})); } }, 300); return; }
 });
 root.addEventListener('change', function(e){ var t=e.target;
-  if(t.classList.contains('pl-genre')){ SETUP.genre=t.value; return; }
+  if(t.classList.contains('pl-genre')){ SETUP.genre=t.value; SETUP.deck=deck(SETUP.genre); PEEK=''; render(); return; }
+  if(t.classList.contains('pl-open')){ try{ localStorage.setItem('playOpen', t.checked?'1':'0'); }catch(er){} PEEK=''; render(); return; }
   if(t.classList.contains('pl-cast')){ SETUP.castId=t.value; render(); return; }
   if(t.name==='pl-turns'){ SETUP.turns=+t.value||10; return; }
   if(t.classList.contains('pl-name')){ SETUP.hero.name=t.value.trim()||SETUP.hero.name; } });
