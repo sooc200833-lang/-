@@ -255,3 +255,4 @@ arcForm, deviceId, folderMemo, gdBase, gdLast, gdLinked, ideaText, mangaDataVer,
 - 컷 필드 `set`(''=자동, 'none', 세트 열쇠), `cam`{y 좌우°, p 위아래°, d 거리 배수} → data-set/data-cam. `draw3d`가 샷 카메라 자리를 구면좌표로 돌린다.
 - 편집 창(3D일 때만): 「3D 배경」 고르기 + 「🎥 카메라 돌리기」 미리보기(끌기·휠·두 손가락, 정면/45°/옆/뒤/위/아래/멀리/가까이/처음대로). 「저장」을 눌러야 남는다(`camUI`).
 - 시험: `work/pw_3d.js`(12컷 세트별), `work/pw_cam.js`(편집 창 끌기·저장). 세 파일은 저장소 밖 작업 폴더.
+- (2026-11-08 추가) 기본 그림을 3D 인형으로: `drawMode()`는 `ctDrawV!=='2'`이면 한 번 `ctDraw='3d'`로 옮기고, 그 뒤엔 고른 대로(`setDraw`). 판 맨 위 `drawBar()` — 「🧍 3D 인형 / ✏️ 선 그림」 단추와 쓰는 법 한 줄. 3D일 때 컷마다 그림 오른쪽 위 `.ct-cam3` 🎥 단추 → 편집 창을 열고 카메라 미리보기까지 펼쳐 그 자리로 스크롤.

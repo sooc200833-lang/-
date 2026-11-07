@@ -1408,6 +1408,12 @@ body.dk-drag, body.dk-drag *{user-select:none!important; -webkit-user-select:non
 .ct-undo{display:inline-flex; flex-wrap:wrap; gap:.3rem; margin:-.4rem 0 .6rem}
 .ct-undo[hidden]{display:none}
 .ct-ed .ct-mv{align-items:center}
+.ct-cam3{position:absolute; right:8px; top:8px; z-index:2; width:2.3rem; height:2.3rem; border-radius:50%; border:1.5px solid var(--ink); background:var(--paper); font-size:1.05rem; line-height:1; cursor:pointer; box-shadow:2px 2px 0 var(--shadow); padding:0}
+.ct-cam3:hover,.ct-cam3:focus-visible{background:var(--high)}
+.ct-drawbar{display:flex; flex-wrap:wrap; align-items:center; gap:.35rem .5rem; margin:.2rem 0 .7rem; padding:.5rem .6rem; border:1.5px solid var(--ink); background:var(--paper-2)}
+.ct-drawbar .ct-dbk{font-weight:700; font-size:.86rem}
+.ct-drawbar .chip.on{background:var(--ink); color:var(--paper); border-color:var(--ink)}
+.ct-drawbar .ct-dbh{flex:1 1 16rem; line-height:1.5}
 .ct-ed .ct-3d{display:flex; flex-wrap:wrap; gap:.4rem .6rem; align-items:flex-end}
 .ct-ed .ct-3d label{flex:0 1 12rem}
 .ct-ed .ct-camv{display:grid; gap:.3rem}
@@ -13650,7 +13656,10 @@ function skRegen(a, b, type, avoid){
    인형·세트는 직접 만든 것(외부 모델 없음). 렌더러·빛·도형은 하나씩만 만들어 컷마다 돌려 쓴다(메모리·컨텍스트 아끼기). */
 var D3={st:0, R:null, G:null, M:null, L:null, err:0, warned:0};
 var D3_VER='0.186.1', D3_URLS=['https://cdn.jsdelivr.net/npm/three@'+D3_VER+'/+esm', 'https://cdn.jsdelivr.net/npm/three@'+D3_VER+'/build/three.module.js'];
-function drawMode(){ try{ return localStorage.getItem('ctDraw')==='3d'?'3d':'line'; }catch(e){ return 'line'; } }
+function drawMode(){ try{ if(localStorage.getItem('ctDrawV')!=='2'){ localStorage.setItem('ctDraw','3d'); localStorage.setItem('ctDrawV','2'); } return localStorage.getItem('ctDraw')==='line'?'line':'3d'; }catch(e){ return '3d'; } }   // 2026-11-08부터 기본은 3D 인형
+function setDraw(v){ try{ localStorage.setItem('ctDraw', v); localStorage.setItem('ctDrawV','2'); }catch(e){} var sd=document.getElementById('ct-draw'); if(sd) sd.value=v;
+  if(v==='3d'){ if(D3.st===-1) D3.st=0; d3Load(); stat(window.THREE?'3D 인형으로 그린다.':'3D 그림 도구를 불러오는 중… (처음 한 번)'); } else stat('선 그림으로 그린다.');
+  if(B && B.cuts && B.cuts.length) renderBoard(); else d3RedrawAll(); }
 function d3Ready(){ return D3.st===2 && !!D3.R && !!window.THREE; }
 function d3Want(cv){ var s=cv&&cv.dataset&&cv.dataset.style; return s==='3d' || (!s && drawMode()==='3d'); }
 function d3RedrawAll(){ [].slice.call(document.querySelectorAll('canvas[data-k]')).forEach(function(cv){ if(cv.isConnected) queue(cv); }); }
@@ -14340,7 +14349,20 @@ function cardHTML(c){
 function cutFill(f,c){
   if(c.nar && c.narPos==='between' && balloonsOn()){ var nb=document.createElement('p'); nb.className='ct-narb'; nb.innerHTML=cesc(c.nar).replace(/\n/g,'<br>'); nb.title='컷 사이 나레이션 — 앞 컷과 이 컷 사이'; f.appendChild(nb); }
   f.appendChild(cvFor(c)); f.insertAdjacentHTML('beforeend', cardHTML(c));
+  if(drawMode()==='3d'){ var cb=document.createElement('button'); cb.type='button'; cb.className='ct-cam3'; cb.textContent='🎥'; cb.title=c.n+'번 컷 배경·카메라 바꾸기'; cb.setAttribute('aria-label', c.n+'번 컷 배경·카메라 바꾸기');
+    var cvx=f.querySelector('canvas'), place=function(){ if(cvx && cvx.isConnected) cb.style.top=(cvx.offsetTop+8)+'px'; }; requestAnimationFrame(place); setTimeout(place, 400);
+    cb.addEventListener('pointerdown', function(e){ e.stopPropagation(); });
+    cb.addEventListener('click', function(e){ e.stopPropagation(); e.preventDefault(); if(!B) return; if(!f.querySelector('.ct-ed')) openEdit(f);
+      var ed=f.querySelector('.ct-ed'), cm=ed&&ed.querySelector('.ct-camb'), lv=ed&&ed.querySelector('.ct-camv'); if(cm && lv && lv.hidden) cm.click();
+      var tg=ed&&(ed.querySelector('.ct-3d')||ed); if(tg) try{ window.scrollTo({top:tg.getBoundingClientRect().top+window.scrollY-110, behavior:'smooth'}); }catch(er){} });
+    f.appendChild(cb); }
 }
+// 판 맨 위: 그림 방식 단추와 3D 쓰는 법 한 줄
+function drawBar(){ var d=document.createElement('div'), m=drawMode(); d.className='ct-drawbar'; d.setAttribute('role','group'); d.setAttribute('aria-label','그림 방식');
+  d.innerHTML='<span class="ct-dbk">그림</span><button type="button" class="chip'+(m==='3d'?' on':'')+'" data-draw="3d" aria-pressed="'+(m==='3d')+'">🧍 3D 인형</button><button type="button" class="chip'+(m==='line'?' on':'')+'" data-draw="line" aria-pressed="'+(m==='line')+'">✏️ 선 그림</button>'+
+    (m==='3d'?'<span class="small ct-dbh">컷 그림 오른쪽 위 <b>🎥</b>를 누르면 그 컷의 <b>배경</b>(교실·옥상·거리…)을 고르고 <b>카메라</b>를 끌어서 돌린다. 배경은 장면의 「어디」를 보고 저절로 깐다.</span>':'');
+  d.addEventListener('click', function(e){ var b=e.target.closest('[data-draw]'); if(b && b.dataset.draw!==drawMode()) setDraw(b.dataset.draw); });
+  return d; }
 function renderBoard(){
   var box=document.getElementById('ct-board'); if(!box) return; try{ loneMap(); }catch(e){}
   if(ro) root.querySelectorAll('#ct-board canvas').forEach(function(x){ ro.unobserve(x); });
@@ -14354,7 +14376,7 @@ function renderBoard(){
       f.setAttribute('aria-keyshortcuts','Alt+ArrowLeft Alt+ArrowRight'); f.setAttribute('aria-roledescription','옮길 수 있는 컷');
       cutFill(f,c); g.appendChild(f);
     });
-    sec.appendChild(g); box.appendChild(sec);
+    sec.appendChild(g); box.appendChild(drawBar()); box.appendChild(sec);
   });
   var done=B.cuts.filter(function(c){ return c.scr; }).length;
   if(!document.getElementById('ct-stat').textContent) stat(done?done+'/'+B.cuts.length+'컷 작성됨':'');
@@ -16112,12 +16134,12 @@ document.getElementById('ct-redraw').addEventListener('click', function(){ SEED+
   var lb=document.createElement('label'); lb.className='ct-balt small';
   lb.innerHTML='말풍선 <select id="ct-balmode"><option value="empty">빈 풍선 (자리만)</option><option value="text">글자까지</option><option value="0">끄기</option></select>';
   var ld=document.createElement('label'); ld.className='ct-balt small';
-  ld.innerHTML='그림 <select id="ct-draw"><option value="line">선 그림</option><option value="3d">3D 인형</option></select>';
+  ld.innerHTML='그림 <select id="ct-draw"><option value="3d">3D 인형</option><option value="line">선 그림</option></select>';
   var lm=document.createElement('label'); lm.className='ct-balt small';
   lm.innerHTML='판형 <select id="ct-mode"><option value="manga">만화 (한 줄에 두 컷)</option><option value="webtoon">웹툰 (한 줄에 한 컷)</option></select>';
   rd.parentNode.appendChild(lb); var mb=root.querySelector('.ct-main')||rd.parentNode; mb.appendChild(lm); mb.appendChild(ld);
   var sd=ld.querySelector('select'); sd.value=drawMode();
-  sd.addEventListener('change', function(){ try{ localStorage.setItem('ctDraw', sd.value); }catch(e){} if(sd.value==='3d'){ if(D3.st===-1) D3.st=0; d3Load(); stat(window.THREE?'3D 인형으로 그린다.':'3D 그림 도구를 불러오는 중… (처음 한 번, 약 600KB)'); } else stat('선 그림으로 그린다.'); d3RedrawAll(); });
+  sd.addEventListener('change', function(){ setDraw(sd.value); });
   var sb=lb.querySelector('select'), sm=lm.querySelector('select'); sb.value=balMode()==='off'?'0':balMode(); sm.value=boardMode();
   window.__ctModeSync=function(){ sm.value=B?boardMode():modeDef(); };
   sb.addEventListener('change', function(){ try{ localStorage.setItem('ctBalloons', sb.value); }catch(e){} if(B) renderBoard(); });
