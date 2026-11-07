@@ -1410,6 +1410,9 @@ body.dk-drag, body.dk-drag *{user-select:none!important; -webkit-user-select:non
 .ct-ed .ct-mv{align-items:center}
 .ct-cam3{position:absolute; right:8px; top:8px; z-index:2; width:2.3rem; height:2.3rem; border-radius:50%; border:1.5px solid var(--ink); background:var(--paper); font-size:1.05rem; line-height:1; cursor:pointer; box-shadow:2px 2px 0 var(--shadow); padding:0}
 .ct-cam3:hover,.ct-cam3:focus-visible{background:var(--high)}
+.drawtog{display:flex; flex-wrap:wrap; align-items:center; gap:.35rem .5rem; margin:-.2rem 0 .9rem}
+.drawtog .ct-dbk{font-weight:700; font-size:.86rem}
+.drawtog .chip.on{background:var(--ink); color:var(--paper); border-color:var(--ink)}
 .ct-drawbar{display:flex; flex-wrap:wrap; align-items:center; gap:.35rem .5rem; margin:.2rem 0 .7rem; padding:.5rem .6rem; border:1.5px solid var(--ink); background:var(--paper-2)}
 .ct-drawbar .ct-dbk{font-weight:700; font-size:.86rem}
 .ct-drawbar .chip.on{background:var(--ink); color:var(--paper); border-color:var(--ink)}
@@ -2670,11 +2673,13 @@ button.pl-card[disabled]{cursor:default}
 
 <section class="blk" id="ctfx">
   <h2 class="big">콘티 연출 색인</h2>
+  <div class="drawtog" role="group" aria-label="그림 방식"></div>
   <div id="ctfx-root"></div>
 </section>
 
 <section class="blk" id="cutdict">
   <h2 class="big">컷 연출 사전</h2>
+  <div class="drawtog" role="group" aria-label="그림 방식"></div>
   <div id="cutdict-root"></div>
 </section>
 
@@ -3117,6 +3122,7 @@ button.pl-card[disabled]{cursor:default}
 
 <section class="blk" id="poses">
   <h2 class="big">만화 자세·구도</h2>
+  <div class="drawtog" role="group" aria-label="그림 방식"></div>
   <div id="poses-root"></div>
 </section>
 
@@ -13659,7 +13665,23 @@ var D3_VER='0.186.1', D3_URLS=['https://cdn.jsdelivr.net/npm/three@'+D3_VER+'/+e
 function drawMode(){ try{ if(localStorage.getItem('ctDrawV')!=='2'){ localStorage.setItem('ctDraw','3d'); localStorage.setItem('ctDrawV','2'); } return localStorage.getItem('ctDraw')==='line'?'line':'3d'; }catch(e){ return '3d'; } }   // 2026-11-08부터 기본은 3D 인형
 function setDraw(v){ try{ localStorage.setItem('ctDraw', v); localStorage.setItem('ctDrawV','2'); }catch(e){} var sd=document.getElementById('ct-draw'); if(sd) sd.value=v;
   if(v==='3d'){ if(D3.st===-1) D3.st=0; d3Load(); stat(window.THREE?'3D 인형으로 그린다.':'3D 그림 도구를 불러오는 중… (처음 한 번)'); } else stat('선 그림으로 그린다.');
-  if(B && B.cuts && B.cuts.length) renderBoard(); else d3RedrawAll(); }
+  if(B && B.cuts && B.cuts.length) renderBoard(); d3RedrawAll(); d3Tell(); }
+function d3Tell(){ try{ window.dispatchEvent(new Event('drawmode')); }catch(e){} }
+// 인물 하나만 투명 바탕에 찍은 그림(컷 연출 사전처럼 손그림 도식 안에 3D 인물을 넣을 때). 세계 높이 0~1.86을 그림 높이에 맞춘다
+var SPR={}, SPR_N=0, SPR_H=1.86, SPR_W=1.8;
+function d3Sprite(sp, hpx){
+  if(drawMode()!=='3d') return null; if(!D3.st) d3Load(); if(!d3Ready()) return null;
+  hpx=clamp(Math.round(hpx||100),24,440); var key=JSON.stringify(sp||{})+'|'+hpx; if(SPR[key]) return SPR[key];
+  var T=window.THREE, R=D3.R, sc=new T.Scene(), L=D3.L; L.hemi.intensity=1.9; L.sun.intensity=2.9; sc.add(L.hemi); sc.add(L.sun); sc.add(L.sun.target);
+  L.sun.position.set(-2,5,4); L.sun.target.position.set(0,0,0);
+  var F=d3Fig((sp&&sp.look)||{}, POSE3[sp&&sp.pose]?sp.pose:''); F.root.rotation.y=((sp&&sp.yaw)||0)*D3_DEG; sc.add(F.root);
+  var W=Math.round(hpx*SPR_W/SPR_H), cam=new T.OrthographicCamera(-SPR_W/2, SPR_W/2, SPR_H, 0, .1, 40); cam.position.set(0, .55, 12); cam.lookAt(0, .55, 0);
+  cam.top=SPR_H-.55; cam.bottom=-.55; cam.updateProjectionMatrix(); sc.updateMatrixWorld(true);
+  R.setClearColor(0x000000, 0); R.setSize(W, hpx, false); R.render(sc, cam); sc.clear();
+  var out=document.createElement('canvas'); out.width=W; out.height=hpx; var x=out.getContext('2d'); x.drawImage(R.domElement, 0, 0);
+  if(sp && sp.sil){ x.globalCompositeOperation='source-in'; x.fillStyle=sp.sil; x.fillRect(0,0,W,hpx); }
+  if(++SPR_N>320){ SPR={}; SPR_N=0; } SPR[key]=out; return out;
+}
 function d3Ready(){ return D3.st===2 && !!D3.R && !!window.THREE; }
 function d3Want(cv){ var s=cv&&cv.dataset&&cv.dataset.style; return s==='3d' || (!s && drawMode()==='3d'); }
 function d3RedrawAll(){ [].slice.call(document.querySelectorAll('canvas[data-k]')).forEach(function(cv){ if(cv.isConnected) queue(cv); }); }
@@ -13668,8 +13690,8 @@ function d3Load(){
   if(window.THREE && window.THREE.WebGLRenderer){ try{ d3Init(); D3.st=2; }catch(e){ D3.st=-1; } d3RedrawAll(); return; }
   D3.st=1;
   var to=setTimeout(function(){ fail('시간이 너무 걸린다'); }, 40000);
-  function fail(w){ if(D3.st===-1 || D3.st===2) return; clearTimeout(to); D3.st=-1; try{ stat('3D 인형 그림을 쓸 수 없어 선 그림으로 그린다 ('+w+').'); }catch(e){} d3RedrawAll(); }
-  function ok(ns){ if(D3.st!==1) return; clearTimeout(to); try{ window.THREE=ns; d3Init(); D3.st=2; d3RedrawAll(); }catch(e){ fail('이 기기에서 WebGL을 쓸 수 없다'); } }
+  function fail(w){ if(D3.st===-1 || D3.st===2) return; clearTimeout(to); D3.st=-1; try{ stat('3D 인형 그림을 쓸 수 없어 선 그림으로 그린다 ('+w+').'); }catch(e){} d3RedrawAll(); d3Tell(); }
+  function ok(ns){ if(D3.st!==1) return; clearTimeout(to); try{ window.THREE=ns; d3Init(); D3.st=2; d3RedrawAll(); d3Tell(); }catch(e){ fail('이 기기에서 WebGL을 쓸 수 없다'); } }
   var imp=null; try{ imp=new Function('u','return import(u)'); }catch(e){}   // 옛 브라우저가 import() 줄 때문에 전체 글을 못 읽지 않게
   if(!imp){ fail('이 브라우저는 모듈을 불러오지 못한다'); return; }
   (function next(i){ if(i>=D3_URLS.length){ fail('인터넷 연결을 확인한다'); return; }
@@ -13677,7 +13699,7 @@ function d3Load(){
 }
 function d3Init(){
   var T=window.THREE, cv=document.createElement('canvas');
-  var R=new T.WebGLRenderer({canvas:cv, antialias:true, preserveDrawingBuffer:true, alpha:false, powerPreference:'low-power'});
+  var R=new T.WebGLRenderer({canvas:cv, antialias:true, preserveDrawingBuffer:true, alpha:true, powerPreference:'low-power'});
   if(!R.getContext()) throw new Error('webgl');
   R.setPixelRatio(1); R.shadowMap.enabled=true; R.shadowMap.type=T.PCFShadowMap;
   cv.addEventListener('webglcontextlost', function(e){ e.preventDefault(); D3.st=-1; D3.R=null; d3RedrawAll(); }, false);
@@ -16105,7 +16127,7 @@ document.getElementById('ct-fromcast').addEventListener('click', fromCast);
 window.__ctPortrait=function(cv){ needRough(function(){ try{ if(cv.isConnected) drawCv(cv); }catch(e){} }); };
 // 베스트컷이 쓰는 창구: 구도·앵글 목록, 컷 → 그림 칸, 인물 풀이, 베스트컷 → 콘티 컷
 window.__ctSHOTS=SHOTS; window.__ctANGS=ANGS; window.__ctShotName=shotName; window.__ctAngName=angName; window.__ctPoseJ=POSE_J; window.__ctPoseInfo=POSE_INFO;
-window.__ctCutData=function(cv,c){ return cutData(cv,c); }; window.__ctWhoOf=function(c){ return whoOf(c); }; window.__ctApplyBest=applyBest;
+window.__d3Sprite=d3Sprite; window.__setDraw=setDraw; window.__drawMode=drawMode; window.__ctCutData=function(cv,c){ return cutData(cv,c); }; window.__ctWhoOf=function(c){ return whoOf(c); }; window.__ctApplyBest=applyBest;
 document.getElementById('ct-addch').addEventListener('click', function(){ ensureB(); B.chars.push({name:'인물 '+(B.chars.length+1), role:'', look:{}, note:''}); save(); renderChars(); editChar(B.chars.length-1); });
 document.getElementById('ct-chars').addEventListener('click', function(e){
   var t=e.target.closest('button'); if(!t||!B) return;
@@ -17137,6 +17159,16 @@ window.__ctFx={list:CONTI_FX, groups:CONTI_FX_GROUPS, byId:byId, show:show, spec
   filter:function(g,m,q){ CF.grp=g||''; CF.media=m||''; CF.q=q||''; if(!CF.built) build(); else { var qi=root.querySelector('.cf-q'); if(qi) qi.value=CF.q; filter(); } }};
 })();
 // [[/MOD:ctfx]]
+// 그림 방식 단추(콘티 연출 색인·컷 연출 사전·만화 자세·구도 머리): 콘티 구성기와 같은 설정(ctDraw)을 바꾼다
+(function(){
+  function mode(){ return window.__drawMode?window.__drawMode():'line'; }
+  function paint(){ var m=mode(); [].slice.call(document.querySelectorAll('.drawtog')).forEach(function(d){
+    if(!d.firstChild) d.innerHTML='<span class="ct-dbk">그림</span><button type="button" class="chip" data-draw="3d">🧍 3D 인형</button><button type="button" class="chip" data-draw="line">✏️ 선 그림</button><span class="small dt-msg"></span>';
+    [].slice.call(d.querySelectorAll('[data-draw]')).forEach(function(b){ var on=b.dataset.draw===m; b.classList.toggle('on', on); b.setAttribute('aria-pressed', String(on)); }); }); }
+  document.addEventListener('click', function(e){ var b=e.target.closest && e.target.closest('.drawtog [data-draw]'); if(!b || !window.__setDraw) return;
+    if(b.dataset.draw!==mode()){ window.__setDraw(b.dataset.draw); var m=b.parentNode.querySelector('.dt-msg'); if(m) m.textContent=b.dataset.draw==='3d'?'3D 인형으로 다시 그린다 (처음 한 번 불러온다)':'선 그림으로 다시 그린다'; } });
+  window.addEventListener('drawmode', paint); paint();
+})();
 // [[MOD:cutdict]] 컷 연출 사전 — 탭 1 「컷 배치 연출」(여러 칸 배치가 만드는 효과, CUT_LAYOUT·CL_GROUPS·layoutDraw), 탭 2 「한 칸 연출」(칸 모양·효과선·만화 기호·빛과 공간·글자·웹툰 한 칸, CUT_DICT). 여러 컷을 잇는 연출은 콘티 연출 색인(ctfx), 자세는 자세·구도(poses)
 // 그림은 Rough.js로 이 모듈이 직접 그린다(콘티 그림과 같은 손그림 선). 항목 데이터 CUT_DICT, 창구 window.__cutDict={list, show(id)}
 (function(){
@@ -17545,8 +17577,17 @@ function txt(D,x,y,t,o){
 }
 /* 사람 (콘티 그림과 같은 생김새) */
 function geo(H){ var T=.13+.03+.32+.5, u=H/T, d=.13*u; return {u:u, d:d}; }
+function fig3(D,x,top,H,o){
+  if(!window.__d3Sprite || H<14) return false; var f=o.face||0, dpr=Math.min(window.devicePixelRatio||1,2);
+  var sp={pose:o.run?'달리기':(o.armUp?'손 흔들기':''), yaw:o.back?180:(o.run?(f<0?-68:68):f*55)}; if(o.sil) sp.sil=D.c.ink;
+  var im=window.__d3Sprite(sp, H*dpr); if(!im) return false;
+  var w=H*im.width/im.height, crop=o.legs===false?.55:1, x0=D.ctx; x0.save();
+  if(o.armUp===-1 && !o.back){ x0.translate(x*2,0); x0.scale(-1,1); }   // 반대 팔을 든 그림은 좌우로 뒤집는다
+  x0.drawImage(im, 0, 0, im.width, im.height*crop, x-w/2, top, w, H*crop); x0.restore(); return true;
+}
 function fig(D,x,top,H,o){
-  o=o||{}; var f=o.face||0, g=geo(H), u=g.u, d=g.d, cy=top+d/2;
+  o=o||{}; if(fig3(D,x,top,H,o)) return;
+  var f=o.face||0, g=geo(H), u=g.u, d=g.d, cy=top+d/2;
   var shY=top+d+.04*u, hipY=shY+.31*u, footY=top+H, kneeY=hipY+(footY-hipY)*.5;
   var sw=(f?.13:.25)*u, hw=(f?.1:.17)*u, body=o.sil?{fill:D.c.ink, fillStyle:'solid'}:{fill:D.c.paper, fillStyle:'solid'};
   if(o.legs!==false) [-1,1].forEach(function(s){ var hx=x+s*hw*.28, kx=x+s*hw*.32+(o.run?s*.12*u:0), fx=x+s*hw*.42+(o.run?s*.22*u:0);
@@ -18179,6 +18220,7 @@ function paint(cv){
     try{ if(set==='lay') layoutDraw(D,e.L); else DRAW[e.id](D); }catch(err){ window.__cdErr=(window.__cdErr||[]).concat(e.id+': '+(err&&err.message)); } });
 }
 function repaintAll(){ if(!CD.built) return; if(CD.io) CD.io.disconnect(); observeAll(); }
+window.addEventListener('drawmode', function(){ repaintAll(); });   // 3D 인형을 다 불러왔거나 그림 방식을 바꿨을 때
 function filter(set){
   var S0=SETS[set], box=root.querySelector('.cd-set[data-set="'+set+'"]'), q=CD.q[set].toLowerCase(), any=0;
   box.querySelectorAll('.cd-card').forEach(function(c){ var e=S0.data.filter(function(x){ return x.id===c.dataset.id; })[0];
