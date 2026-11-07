@@ -14274,8 +14274,15 @@ function drawCv(cv){
   var ft=band||3;   // 컷 사이 나레이션이 있으면 칸 테두리는 그 아래에서 시작
   D.rc.rectangle(3,ft,w-6,h-3-ft, D.ink({strokeWidth:(o.hook?3:2)*D.sw, roughness:.5, bowing:.3, stroke:o.hook?D.c.mark:D.c.ink}));
 }
+// 그릴 칸 줄: 화면에 보이는 칸부터, 한 프레임에 12ms까지만 그리고 나머지는 다음 프레임으로(3D 칸이 많은 색인에서 화면이 멈추지 않게)
 var pend=new Set(), raf=0;
-function queue(cv){ pend.add(cv); if(!raf) raf=requestAnimationFrame(function(){ raf=0; var p=pend; pend=new Set(); needRough(function(){ p.forEach(function(cv){ if(cv.isConnected) drawCv(cv); }); }); }); }
+function queue(cv){ pend.add(cv); if(!raf) raf=requestAnimationFrame(pump); }
+function pump(){ raf=0; needRough(function(){
+  var vh=window.innerHeight||800, arr=[], t0=performance.now();
+  pend.forEach(function(cv){ if(!cv.isConnected){ pend.delete(cv); return; } var r=cv.getBoundingClientRect(); arr.push([r.bottom<0?2e6-r.bottom:(r.top>vh?r.top:-1e6+r.top), cv]); });
+  arr.sort(function(a,b){ return a[0]-b[0]; });
+  for(var i=0;i<arr.length;i++){ var cv=arr[i][1]; pend.delete(cv); try{ drawCv(cv); }catch(e){}
+    if(performance.now()-t0>12 && pend.size){ raf=requestAnimationFrame(pump); return; } } }); }
 var ro=('ResizeObserver' in window)?new ResizeObserver(function(es){ es.forEach(function(e){ queue(e.target); }); }):null;
 // 「말풍선 보기」 (이 기기만, localStorage ctBalloons — '0'이면 끔). 끄면 그림 칸에 data-nob
 // ctBalloons: '0' 끄기 · 'text' 글자까지 · 그 밖(기본) 빈 말풍선 — 자리·크기만 보는 확인용
@@ -16124,7 +16131,7 @@ function fromCast(){
   stat(why+' 인물 '+add+'명을 가져왔다.'+(upd?' 이미 있던 '+upd+'명은 생김새를 맞췄다.':''));
 }
 document.getElementById('ct-fromcast').addEventListener('click', fromCast);
-window.__ctPortrait=function(cv){ needRough(function(){ try{ if(cv.isConnected) drawCv(cv); }catch(e){} }); };
+window.__ctPortrait=function(cv){ if(drawMode()==='3d'){ queue(cv); return; } needRough(function(){ try{ if(cv.isConnected) drawCv(cv); }catch(e){} }); };   // 3D는 줄을 서서 나눠 그린다
 // 베스트컷이 쓰는 창구: 구도·앵글 목록, 컷 → 그림 칸, 인물 풀이, 베스트컷 → 콘티 컷
 window.__ctSHOTS=SHOTS; window.__ctANGS=ANGS; window.__ctShotName=shotName; window.__ctAngName=angName; window.__ctPoseJ=POSE_J; window.__ctPoseInfo=POSE_INFO;
 window.__d3Sprite=d3Sprite; window.__setDraw=setDraw; window.__drawMode=drawMode; window.__ctCutData=function(cv,c){ return cutData(cv,c); }; window.__ctWhoOf=function(c){ return whoOf(c); }; window.__ctApplyBest=applyBest;
