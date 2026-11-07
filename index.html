@@ -1410,6 +1410,22 @@ body.dk-drag, body.dk-drag *{user-select:none!important; -webkit-user-select:non
 .ct-ed .ct-mv{align-items:center}
 .ct-cam3{position:absolute; right:8px; top:8px; z-index:2; width:2.3rem; height:2.3rem; border-radius:50%; border:1.5px solid var(--ink); background:var(--paper); font-size:1.05rem; line-height:1; cursor:pointer; box-shadow:2px 2px 0 var(--shadow); padding:0}
 .ct-cam3:hover,.ct-cam3:focus-visible{background:var(--high)}
+.g3-h{margin-top:2rem}
+#gram3d h4{margin:1.1rem 0 .4rem}
+.g3-row{display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:.7rem}
+.g3-row.g3-four{grid-template-columns:repeat(auto-fill,minmax(180px,1fr))}
+.g3-card{margin:0; display:grid; gap:.3rem; align-content:start; min-width:0}
+.g3-cv{display:block; width:100%; aspect-ratio:4/3; background:var(--paper)}
+.g3-card figcaption{display:grid; gap:.1rem; font-size:.82rem; line-height:1.45}
+.g3-card figcaption span{color:var(--ink-3); font-size:.76rem}
+.g3-play{display:grid; grid-template-columns:minmax(0,1.6fr) minmax(0,1fr); gap:.9rem; align-items:start}
+@media (max-width:700px){ .g3-play{grid-template-columns:1fr} }
+.g3-pv{display:block; width:100%; aspect-ratio:16/10; background:var(--paper); touch-action:none; cursor:grab; border:1.5px solid var(--ink)}
+.g3-pv:active{cursor:grabbing}
+.g3-ctl{display:grid; gap:.45rem; font-size:.84rem}
+.g3-ctl label{display:grid; grid-template-columns:3rem 1fr; align-items:center; gap:.4rem}
+.g3-ctl select{font:inherit; font-size:.85rem; background:var(--paper); color:var(--ink); border:1px solid var(--rule-hard); padding:.2rem .3rem; min-width:0}
+.g3-pre{gap:.25rem; margin:.2rem 0 0}
 .drawtog{display:flex; flex-wrap:wrap; align-items:center; gap:.35rem .5rem; margin:-.2rem 0 .9rem}
 .drawtog .ct-dbk{font-weight:700; font-size:.86rem}
 .drawtog .chip.on{background:var(--ink); color:var(--paper); border-color:var(--ink)}
@@ -1697,6 +1713,10 @@ button.pl-card[disabled]{cursor:default}
   <p class="small">세로 스크롤에는 페이지 넘김이 없다. 대신 <b>긴 여백</b>이 같은 역할을 한다. 여백 길이 = 뜸 들이는 시간. 스마트폰 한 화면에 컷 하나가 기본 단위이며, 스프레드의 대체물은 <i>세로로 긴 컷</i>이다.</p>
   </div>
   </div>
+
+  <h3 class="g3-h">샷과 앵글 — 같은 장면을 3D로</h3>
+  <div class="drawtog" role="group" aria-label="그림 방식"></div>
+  <div id="gram3d"></div>
 </section>
 
 <section class="blk" id="authors">
@@ -13257,7 +13277,7 @@ function whoOf(c){
     hit.sort(function(a,b){ return a[0]-b[0]; }); names=hit.slice(0,2).map(function(x){ return x[1]; }); }
   return names.map(function(n,i){ var ch=charOf(n), lk=(ch&&ch.look)||{}, w=wpOf(c,n,i), o={name:n};
     if(w && (w.pose || w.face)){ lk=Object.assign({}, lk); if(w.pose) lk.pose=w.pose; if(w.face) lk.face=w.face; }
-    o.look=lk; if(w){ if(w.pose) o.pose=w.pose; if(w.face) o.face=w.face; if(w.x!=null && isFinite(+w.x)) o.x=+w.x; }
+    o.look=lk; if(w){ if(w.pose) o.pose=w.pose; if(w.face) o.face=w.face; if(w.emo) o.emo=w.emo; if(w.prop) o.prop=w.prop; if(w.x!=null && isFinite(+w.x)) o.x=+w.x; }
     return o; });
 }
 // 컷마다 인물 자세·방향·자리 c.wp={이름:{pose,face,x}} (이름 없는 인물은 '#순번')
@@ -13672,11 +13692,13 @@ var SPR={}, SPR_N=0, SPR_H=1.86, SPR_W=1.8;
 function d3Sprite(sp, hpx){
   if(drawMode()!=='3d') return null; if(!D3.st) d3Load(); if(!d3Ready()) return null;
   hpx=clamp(Math.round(hpx||100),24,440); var key=JSON.stringify(sp||{})+'|'+hpx; if(SPR[key]) return SPR[key];
-  var T=window.THREE, R=D3.R, sc=new T.Scene(), L=D3.L; L.hemi.intensity=1.9; L.sun.intensity=2.9; sc.add(L.hemi); sc.add(L.sun); sc.add(L.sun.target);
+  var T=window.THREE, R=D3.R, sc=new T.Scene(), L=D3.L; L.hemi.intensity=1.5; L.sun.intensity=2.4; sc.add(L.hemi); sc.add(L.sun); sc.add(L.sun.target);
   L.sun.position.set(-2,5,4); L.sun.target.position.set(0,0,0);
-  var F=d3Fig((sp&&sp.look)||{}, POSE3[sp&&sp.pose]?sp.pose:''); F.root.rotation.y=((sp&&sp.yaw)||0)*D3_DEG; sc.add(F.root);
-  var W=Math.round(hpx*SPR_W/SPR_H), cam=new T.OrthographicCamera(-SPR_W/2, SPR_W/2, SPR_H, 0, .1, 40); cam.position.set(0, .55, 12); cam.lookAt(0, .55, 0);
-  cam.top=SPR_H-.55; cam.bottom=-.55; cam.updateProjectionMatrix(); sc.updateMatrixWorld(true);
+  var F=d3Fig((sp&&sp.look)||{}, POSE3[sp&&sp.pose]?sp.pose:'', {emo:sp&&sp.emo, prop:sp&&sp.prop}); F.root.rotation.y=((sp&&sp.yaw)||0)*D3_DEG; sc.add(F.root);
+  var W, cam;
+  if(sp && sp.head){ W=hpx; cam=new T.OrthographicCamera(-.3, .3, .3, -.3, .1, 40); cam.position.set(0, 1.69, 12); cam.lookAt(0, 1.69, 0); }   // 머리 가운데(1.69)에서 ±0.3
+  else { W=Math.round(hpx*SPR_W/SPR_H); cam=new T.OrthographicCamera(-SPR_W/2, SPR_W/2, SPR_H-.55, -.55, .1, 40); cam.position.set(0, .55, 12); cam.lookAt(0, .55, 0); }
+  cam.updateProjectionMatrix(); sc.updateMatrixWorld(true);
   R.setClearColor(0x000000, 0); R.setSize(W, hpx, false); R.render(sc, cam); sc.clear();
   var out=document.createElement('canvas'); out.width=W; out.height=hpx; var x=out.getContext('2d'); x.drawImage(R.domElement, 0, 0);
   if(sp && sp.sil){ x.globalCompositeOperation='source-in'; x.fillStyle=sp.sil; x.fillRect(0,0,W,hpx); }
@@ -13706,15 +13728,16 @@ function d3Init(){
   var G={sph:new T.SphereGeometry(1,22,16), cap:new T.SphereGeometry(1,22,12,0,Math.PI*2,0,Math.PI*.56), bob:new T.SphereGeometry(1,22,14,0,Math.PI*2,0,Math.PI*.78),
     box:new T.BoxGeometry(1,1,1), cyl:new T.CylinderGeometry(1,1,1,18), cone:new T.ConeGeometry(1,1,10), tor:new T.TorusGeometry(1,.16,8,20), lim:new T.CapsuleGeometry(.5,1,6,12),
     plane:new T.PlaneGeometry(1,1), cyl8:new T.CylinderGeometry(1,1,1,10), cone4:new T.ConeGeometry(1,1,4)};
+  G.arc=new T.TorusGeometry(1,.22,6,14,Math.PI);   // 반달(∩) — 웃는 눈·입
   G.boxE=new T.EdgesGeometry(G.box); G.cylE=new T.EdgesGeometry(G.cyl, 40); G.cyl8E=new T.EdgesGeometry(G.cyl8, 40); G.cone4E=new T.EdgesGeometry(G.cone4);
   var grad=new T.DataTexture(new Uint8Array([105,105,105,255, 182,182,182,255, 255,255,255,255]), 3, 1, T.RGBAFormat); grad.minFilter=grad.magFilter=T.NearestFilter; grad.needsUpdate=true;
   var toon=function(c){ return new T.MeshToonMaterial({color:c, gradientMap:grad}); };
   D3.M={body:toon(0xf6f3ec), skin:toon(0xf6f3ec), cloth:toon(0xe4e1da), hairD:toon(0x2b2a28), hairL:toon(0x8f8b83), prop:toon(0x9d9990), mark:toon(0xd14b3a),
     ink:new T.MeshBasicMaterial({color:0x161616}), out:new T.MeshBasicMaterial({color:0x161616, side:T.BackSide}), bg:toon(0xe9e6de),
     floor:toon(0xe4e1d9), wall:toon(0xeeebe4), wall2:toon(0xdcd8cf), dark:toon(0x4a4c48), road:toon(0xc9c6be), grass:toon(0xdfe0d4), leaf:toon(0xc4c7b9), glass:toon(0xf4f2ee), wood:toon(0xcfc6b6),
-    line:new T.LineBasicMaterial({color:0x2a2928}), lineL:new T.LineBasicMaterial({color:0xb4b0a7}), rain:new T.LineBasicMaterial({color:0x6b6964})};
+    blush:toon(0xe7aaa0), tear:toon(0xcfe0ea), line:new T.LineBasicMaterial({color:0x2a2928}), lineL:new T.LineBasicMaterial({color:0xb4b0a7}), rain:new T.LineBasicMaterial({color:0x6b6964})};
   // 빛은 하나씩만(그림자 지도도 하나) — 장면마다 다시 붙인다
-  var hemi=new T.HemisphereLight(0xffffff, 0x77736b, 1.9), sun=new T.DirectionalLight(0xffffff, 2.9);
+  var hemi=new T.HemisphereLight(0xffffff, 0x77736b, 1.5), sun=new T.DirectionalLight(0xffffff, 2.4);
   sun.castShadow=true; sun.shadow.mapSize.set(1024,1024); sun.shadow.bias=-.0006; sun.shadow.normalBias=.02;
   D3.L={hemi:hemi, sun:sun}; D3.G=G; D3.R=R; D3.cache={};
 }
@@ -13752,6 +13775,29 @@ var POSE3={
   '날아가며 맞음':{side:1, rt:[0,0,24], sp:[-30,0,0], hd:[-30,0,0], la:[-30,102,0], ra:[-30,102,0], ll:[-22,0,42], rl:[-52,0,72], dy:.3}
 };
 var D3_DEG=Math.PI/180;
+// 표정: eye dot·arc(웃는 눈)·wide(놀란 눈)·closed, brow 눈썹 기울기(+는 안쪽이 내려감=화남, -는 안쪽이 올라감=슬픔), mouth line·smile·frown·open·big, 덤(땀·눈물·홍조·핏대)
+var D3_EMO={'':{eye:'dot',brow:0,mouth:'line'}, smile:{eye:'arc',brow:-.12,by:.006,mouth:'smile'}, laugh:{eye:'arc',brow:-.15,by:.008,mouth:'big'},
+  anger:{eye:'dot',brow:.45,mouth:'frown'}, rage:{eye:'wide',brow:.55,mouth:'big',vein:1}, shout:{eye:'dot',brow:.35,mouth:'big'},
+  sad:{eye:'dot',brow:-.42,mouth:'frown'}, cry:{eye:'closed',brow:-.48,mouth:'open',tear:1}, shock:{eye:'wide',brow:-.06,by:.016,mouth:'open',sweat:1},
+  blush:{eye:'dot',brow:-.18,mouth:'line',blush:1}, closed:{eye:'closed',brow:0,mouth:'line'}};
+var D3_EMO_KO=[['','무표정'],['smile','미소'],['laugh','크게 웃음'],['shock','놀람'],['anger','화남'],['rage','격분'],['shout','외침'],['sad','슬픔'],['cry','울음'],['blush','부끄러움'],['closed','눈 감음']];
+var D3_EMO_RX=[['cry',/울음|운다|울며|울고|울먹|눈물|흐느|오열|훌쩍|ㅠㅠ|흑흑/],['shock',/놀라|놀란|놀래|충격|경악|얼어붙|굳어|소스라|헉|뭐\?!|!\?|\?!|설마/],['rage',/격분|폭발한|이성을 잃|분노가 터/],
+  ['anger',/화가|화난|화를|노려|이를 악|버럭|짜증|씩씩|째려|분해|분노/],['shout',/외친|외치|소리친|고함|절규|소리 지른|부르짖/],['laugh',/웃음을 터|폭소|깔깔|하하|ㅋㅋ|껄껄|빵 터/],
+  ['smile',/웃는|웃으며|웃었|웃는다|미소|싱긋|빙긋|활짝|기뻐|기쁜|반가|흐뭇/],['blush',/얼굴이 붉|빨개|두근|설레|부끄|수줍|홍조|얼굴을 붉/],['sad',/슬프|슬픈|시무룩|고개를 숙|풀이 죽|침울|쓸쓸|외로|씁쓸|한숨/],['closed',/눈을 감|잠든|자고 있|조는|졸고/]];
+// 소품: 화면 글에서 찾아 손에 쥐여 준다
+var D3_PROP_RX=[['umbrella',/우산/],['call',/전화를 받|전화를 걸|통화|전화한다|전화하며|전화 너머/],['phone',/휴대폰|핸드폰|스마트폰|폰을|폰 화면|문자를|메시지를|톡을/],['flower',/꽃다발|꽃을|장미/],
+  ['letter',/편지|쪽지|봉투|러브레터/],['book',/책을|공책|노트를|교과서|책장을/],['cup',/컵|커피|잔을|음료|캔을|차를 마|우유/],['bag',/가방|책가방|배낭/]];
+var D3_PROP_KO=[['','없음'],['umbrella','우산'],['phone','휴대폰'],['call','전화 통화'],['book','책'],['cup','컵'],['flower','꽃다발'],['letter','편지'],['bag','가방']];
+function d3Find(rx, t){ t=String(t||''); for(var i=0;i<rx.length;i++) if(rx[i][1].test(t)) return rx[i][0]; return ''; }
+// i번째 인물에 해당하는 글: 화면 글에서 그 이름 뒤 16자(다른 이름이 없으면 첫 사람은 화면 글 전체) + 그 사람의 대사
+function d3TextFor(o, cast, i){
+  var scr=String(o.scr||''), c=cast&&cast[i], nm=c&&c.name, t='';
+  if(nm && scr.indexOf(nm)>-1){ var at=scr.indexOf(nm); t=scr.slice(at, at+nm.length+16); }
+  else if(i===0 && !(cast||[]).some(function(x,j){ return j>0 && x && x.name && scr.indexOf(x.name)>-1; })) t=scr;
+  String(o.line||'').split('\n').forEach(function(L){ var m=L.match(/^\s*([^:：]{1,10})\s*[:：]\s*(.*)$/); if(m){ if(nm && m[1].trim()===nm) t+=' '+m[2]; } else if(i===0) t+=' '+L; });
+  return t; }
+var D3_IDLE={'':1,'곧은':1,'구부정':1,'고개 기울임':1,'팔짱':1,'주머니에 손':1,'뒷짐':1,'기대기':1};
+var D3_ARM={umbrella:{ra:[-40,8,-74]}, phone:{la:[-52,4,-98]}, call:{la:[-24,26,-150]}, book:{la:[-44,4,-76], ra:[-44,4,-76]}, cup:{la:[-40,4,-104]}, flower:{la:[-52,4,-44], ra:[-52,4,-44]}, letter:{la:[-62,4,-62], ra:[-62,4,-62]}};
 function d3Mesh(geo, mat, sx, sy, sz, par, px, py, pz, noOut){
   var T=window.THREE, m=new T.Mesh(geo, mat); m.scale.set(sx,sy,sz); m.position.set(px||0,py||0,pz||0); par.add(m); m.castShadow=true;
   if(!noOut){ var t=.011, o=new T.Mesh(geo, D3.M.out); o.scale.set((sx+2*t)/sx, (sy+2*t)/sy, (sz+2*t)/sz); m.add(o); }
@@ -13760,8 +13806,9 @@ function d3Mesh(geo, mat, sx, sy, sz, par, px, py, pz, noOut){
 function d3Group(par, x, y, z){ var g=new window.THREE.Group(); g.position.set(x||0,y||0,z||0); par.add(g); return g; }
 function d3Rot(g, a, mir){ if(!a) return; g.rotation.set((a[0]||0)*D3_DEG, (a[1]||0)*D3_DEG*(mir?-1:1), (a[2]||0)*D3_DEG*(mir?-1:1)); }
 // 인형 하나: look(머리·체격·안경·모자·옷), pose 이름 → {root, head(세계 좌표 얻을 그룹), hr(머리 반지름)}
-function d3Fig(look, pose){
+function d3Fig(look, pose, ex){
   var T=window.THREE, G=D3.G, M=D3.M, lk=look||{}, P=POSE3[pose]||POSE3[''], root=new T.Group();
+  ex=ex||{}; var prop=ex.prop||lk.prop||''; if(prop && D3_ARM[prop] && D3_IDLE[pose||'']) P=Object.assign({}, P, D3_ARM[prop]);
   var bs={작음:.86, 큼:1.1}[lk.build]||1, bw={마름:.84, 두꺼움:1.22, 큼:1.08}[lk.build]||1;
   root.scale.set(bs*bw, bs, bs*bw);
   var hips=d3Group(root, 0, .95+(P.dy||0), 0), rot=P.rt; if(rot) hips.rotation.set(rot[0]*D3_DEG, rot[1]*D3_DEG, rot[2]*D3_DEG);
@@ -13774,9 +13821,23 @@ function d3Fig(look, pose){
   var hd=d3Group(sp, 0, .66, 0); d3Rot(hd, P.hd);
   var hr=.12; d3Mesh(G.sph, M.skin, .115, .135, .122, hd, 0, 0, 0);
   // 얼굴: 눈·입(정면이 +z)
-  var ew=lk.eyes==='감은'?[.024,.004,.01]:[.016,.019,.012];
-  [-1,1].forEach(function(s){ if(lk.eyepatch && s===1){ d3Mesh(G.sph, M.ink, .03, .026, .012, hd, s*.045, .012, .112, true); return; } d3Mesh(G.sph, M.ink, ew[0], ew[1], ew[2], hd, s*.045, .012, .111, true); });
-  if(P.mouth) d3Mesh(G.sph, M.ink, .03, .026, .012, hd, 0, -.06, .108, true); else d3Mesh(G.box, M.ink, .045, .005, .006, hd, 0, -.06, .118, true);
+  var E=D3_EMO[ex.emo||lk.emo||'']||D3_EMO[''], ew=(lk.eyes==='감은'||E.eye==='closed')?[.024,.004,.01]:[.016,.019,.012];
+  [-1,1].forEach(function(s){ var ex0=s*.045;
+    if(lk.eyepatch && s===1){ d3Mesh(G.sph, M.ink, .03, .026, .012, hd, ex0, .012, .112, true); }
+    else if(E.eye==='arc' && lk.eyes!=='감은') d3Mesh(G.arc, M.ink, .019, .02, .03, hd, ex0, .004, .108, true);
+    else if(E.eye==='wide' && lk.eyes!=='감은'){ d3Mesh(G.tor, M.ink, .02, .023, .03, hd, ex0, .014, .108, true); d3Mesh(G.sph, M.ink, .006, .006, .006, hd, ex0, .014, .117, true); }
+    else d3Mesh(G.sph, M.ink, ew[0], ew[1], ew[2], hd, ex0, .012, .111, true);
+    var br=d3Mesh(G.box, M.ink, .036, .007, .008, hd, ex0, .037+(E.by||0), .112, true); br.rotation.z=s*(E.brow||0);
+    if(E.tear) d3Mesh(G.sph, M.tear, .009, .016, .006, hd, ex0+s*.008, -.012, .114, true);
+    if(E.blush) d3Mesh(G.sph, M.blush, .026, .011, .006, hd, s*.068, -.026, .1, true); });
+  var mo=E.mouth, my=-.062;
+  if(P.mouth || mo==='big') d3Mesh(G.sph, M.ink, .034, .03, .012, hd, 0, my, .107, true);
+  else if(mo==='open') d3Mesh(G.sph, M.ink, .02, .024, .012, hd, 0, my, .109, true);
+  else if(mo==='smile'){ var sm=d3Mesh(G.arc, M.ink, .028, .02, .03, hd, 0, my+.008, .108, true); sm.rotation.z=Math.PI; }
+  else if(mo==='frown') d3Mesh(G.arc, M.ink, .024, .014, .03, hd, 0, my-.008, .108, true);
+  else d3Mesh(G.box, M.ink, .045, .005, .006, hd, 0, my, .118, true);
+  if(E.sweat) d3Mesh(G.sph, M.tear, .014, .024, .01, hd, .118, .07, .02, true);
+  if(E.vein){ var vn=d3Group(hd, .075, .1, .07); [0,1].forEach(function(q){ var v=d3Mesh(G.box, M.mark, .03, .007, .006, vn, 0, 0, 0, true); v.rotation.z=q?.8:-.8; }); }
   d3Mesh(G.cone, M.skin, .018, .04, .018, hd, 0, -.018, .125, true).rotation.x=Math.PI/2;
   if(lk.glasses){ [-1,1].forEach(function(s){ var r=d3Mesh(G.tor, M.ink, .03, .026, .03, hd, s*.045, .012, .118, true); }); d3Mesh(G.box, M.ink, .03, .005, .005, hd, 0, .016, .122, true); }
   // 머리카락
@@ -13818,6 +13879,16 @@ function d3Fig(look, pose){
   if(pr==='seat') d3Mesh(G.box, M.bg, .5, .45, .45, root, 0, .225, -.12);
   if(lk.pack) d3Mesh(G.box, M.prop, .26, .32, .14, sp, 0, .27, -.17);
   if(lk.cape) d3Mesh(G.box, M.cloth, .4, .9, .02, sp, 0, .02, -.14);
+  if(prop){ root.updateMatrixWorld(true); var hp=function(h){ var v=new T.Vector3(); if(h) h.getWorldPosition(v); return root.worldToLocal(v); };
+    var hl=hp(hands.la||hands.ra), hr2=hp(hands.ra||hands.la), mid=hl.clone().add(hr2).multiplyScalar(.5), pg=d3Group(root,0,0,0);
+    if(prop==='umbrella'){ var top=Math.max(1.86, hr2.y+.68); d3Mesh(G.cyl8, M.dark, .012, top-hr2.y+.15, .012, pg, hr2.x, (top+hr2.y-.15)/2, hr2.z, true);
+      var cn=d3Mesh(G.cone, M.cloth, .62, .3, .62, pg, hr2.x*.4, top+.1, hr2.z*.5); cn.castShadow=true; d3Mesh(G.sph, M.dark, .02, .02, .02, pg, hr2.x*.4, top+.27, hr2.z*.5, true); }
+    else if(prop==='phone' || prop==='call'){ var ph=d3Mesh(G.box, M.dark, .06, .12, .012, pg, hl.x, hl.y+.03, hl.z+.03); if(prop==='call'){ ph.rotation.y=Math.PI/2; } }
+    else if(prop==='book') d3Mesh(G.box, M.mark, .18, .23, .035, pg, mid.x, mid.y-.02, mid.z+.06);
+    else if(prop==='cup') d3Mesh(G.cyl, M.glass, .04, .1, .04, pg, hl.x, hl.y+.05, hl.z+.02);
+    else if(prop==='flower'){ d3Mesh(G.cone, M.cloth, .1, .26, .1, pg, mid.x, mid.y-.02, mid.z+.08).rotation.x=Math.PI; [[-.06,.18],[.05,.2],[0,.25],[.07,.13],[-.07,.12]].forEach(function(q){ d3Mesh(G.sph, M.mark, .045, .045, .045, pg, mid.x+q[0], mid.y+q[1], mid.z+.08); }); }
+    else if(prop==='letter') d3Mesh(G.box, M.glass, .2, .13, .01, pg, mid.x, mid.y+.05, mid.z+.07);
+    else if(prop==='bag') d3Mesh(G.box, M.dark, .32, .24, .1, pg, hr2.x, hr2.y-.12, hr2.z); }
   return {root:root, head:hd, hr:hr*bs};
 }
 // ----- 배경 세트 -----
@@ -13941,7 +14012,7 @@ function draw3d(D, kind){
   var dpr=Math.min(D.dpr||1, 1.6), W=Math.max(2,Math.round(w*dpr)), H=Math.max(2,Math.round(h*dpr)); if(W>1500){ H=Math.round(H*1500/W); W=1500; }
   var setK=d3SetOf(o), md=d3Mood(o), seed=+o.seed||1;
   var sc=new T.Scene(); sc.background=new T.Color(md.night?0x575652:(D.c.paper||'#f6f3ec'));
-  var L=D3.L; L.hemi.intensity=md.night?.85:1.9; L.sun.intensity=md.night?1.1:(md.rain?2:2.9); sc.add(L.hemi); sc.add(L.sun); sc.add(L.sun.target);
+  var L=D3.L; L.hemi.intensity=md.night?.75:1.5; L.sun.intensity=md.night?.95:(md.rain?1.7:2.4); sc.add(L.hemi); sc.add(L.sun); sc.add(L.sun.target);
   var fov=30, cam=new T.PerspectiveCamera(fov, w/h, .02, 300), d=S.vh/(2*Math.tan(fov*D3_DEG/2)), cy=S.cy, aspect=w/h, vw=S.vh*aspect;
   var ang=o.ang||'', pz=o.pz?String(o.pz).split('|'):[], wide=/^(els|ls|fs|stand|crowd|frame|empty|bird|high|low)$/.test(kind)||/^(els|ls|fs|stand|crowd|frame|empty)$/.test(k);
   if(setK) d3Set(sc, setK, seed, wide);
@@ -13950,7 +14021,9 @@ function draw3d(D, kind){
   function add(i, x, z, yaw, poseDef){
     var c=who(i), lk=Object.assign({}, (c&&c.look)||{}), pose=(c&&c.pose)||lk.pose||pz[i]||poseDef||'', fc=d3Face((c&&c.face)||lk.face);
     var P0=POSE3[pose]; if(fc==null && P0 && P0.side && !/^(two|stand|ots|back|crowd)$/.test(k)) yaw=x>.05?-68:68;   // 움직임이 큰 자세는 옆에서 보여야 읽힌다
-    var F=d3Fig(lk, P0?pose:''); F.root.position.set(x,0,z); F.root.rotation.y=(fc!=null?fc:yaw||0)*D3_DEG; sc.add(F.root); F.c=c; F.i=i; figs.push(F); return F; }
+    var tx=d3TextFor(o, cast, i), emo=(c&&c.emo)||lk.emo||d3Find(D3_EMO_RX, tx)||(i===0 && o.shock?'shock':''), prop=(c&&c.prop)||lk.prop||d3Find(D3_PROP_RX, tx);
+    if(P0 && P0.mouth && !emo) emo='shout';
+    var F=d3Fig(lk, P0?pose:'', {emo:emo, prop:prop}); F.root.position.set(x,0,z); F.root.rotation.y=(fc!=null?fc:yaw||0)*D3_DEG; sc.add(F.root); F.c=c; F.i=i; figs.push(F); return F; }
   var n=Math.max(1, Math.min(3, cast.length||1)), xs=o.pos?JSON.parse(o.pos):null, xf=function(i,def){ var v=xs&&xs[i]!=null?+xs[i]:def; return (v-.5)*vw*.9; };
   var tx=0, tz=0, camPos=null, look=null, dyS=0;
   if(k==='two'){ add(0, xf(0,.3), 0, 55); add(1, xf(1,.7), 0, -55); }
@@ -14513,11 +14586,13 @@ function openEdit(f){
   var wpBox=ed.querySelector('.ct-wp'), wpCur={};
   Object.keys(c.wp||{}).forEach(function(k){ wpCur[k]=Object.assign({}, c.wp[k]); });
   function wpRead(){ [].slice.call(wpBox.querySelectorAll('.ct-wr')).forEach(function(r){ var k=r.getAttribute('data-k'), w=wpCur[k]||(wpCur[k]={});
-    w.pose=r.querySelector('.ct-wpp').value; w.face=r.querySelector('.ct-wpf').value; }); }
+    w.pose=r.querySelector('.ct-wpp').value; w.face=r.querySelector('.ct-wpf').value; var e=r.querySelector('.ct-wpe'), q=r.querySelector('.ct-wpo'); if(e) w.emo=e.value; if(q) w.prop=q.value; }); }
   function wpRows(){ wpRead(); var ns=wpNames(ed.querySelector('.ct-w').value);
     wpBox.innerHTML=ns.map(function(nm,i){ var k=nm||('#'+i), w=wpCur[k]||{};
       return '<div class="ct-wr" data-k="'+cesc(k)+'"><b>'+cesc(nm||'(이름 없음)')+'</b><select class="ct-wpp" aria-label="자세"><option value="">자세 그대로</option>'+P.map(function(p){ return '<option'+(w.pose===p?' selected':'')+'>'+p+'</option>'; }).join('')+'</select>'+
-        '<select class="ct-wpf" aria-label="방향">'+WP_FACE.map(function(o){ return '<option value="'+o[0]+'"'+((w.face||'')===o[0]?' selected':'')+'>'+o[1]+'</option>'; }).join('')+'</select></div>'; }).join(''); }
+        '<select class="ct-wpf" aria-label="방향">'+WP_FACE.map(function(o){ return '<option value="'+o[0]+'"'+((w.face||'')===o[0]?' selected':'')+'>'+o[1]+'</option>'; }).join('')+'</select>'+
+        (drawMode()==='3d'?'<select class="ct-wpe" aria-label="표정"><option value="">표정 자동</option>'+D3_EMO_KO.slice(1).map(function(o){ return '<option value="'+o[0]+'"'+((w.emo||'')===o[0]?' selected':'')+'>'+o[1]+'</option>'; }).join('')+'</select>'+
+          '<select class="ct-wpo" aria-label="소품"><option value="">소품 자동</option>'+D3_PROP_KO.slice(1).map(function(o){ return '<option value="'+o[0]+'"'+((w.prop||'')===o[0]?' selected':'')+'>'+o[1]+'</option>'; }).join('')+'</select>':'')+'</div>'; }).join(''); }
   wpRows();
   var wpT=0; ed.querySelector('.ct-w').addEventListener('input',function(){ clearTimeout(wpT); wpT=setTimeout(wpRows,250); });
   ed.addEventListener('click',function(e){ e.stopPropagation(); });
@@ -14528,7 +14603,7 @@ function openEdit(f){
     var nar=lineClean(ed.querySelector('.ct-ni').value), np=ed.querySelector('.ct-np').value;
     if(nar){ c.nar=nar; if(np==='bottom'||np==='between') c.narPos=np; else delete c.narPos; } else { delete c.nar; delete c.narPos; }
     wpRead(); c.who=wpNames(ed.querySelector('.ct-w').value);
-    var wp={}; c.who.forEach(function(nm,i){ var k=nm||('#'+i), w=wpCur[k]; if(!w) return; var o={}; if(w.pose) o.pose=w.pose; if(w.face) o.face=w.face; if(w.x!=null) o.x=w.x; if(Object.keys(o).length) wp[k]=o; });
+    var wp={}; c.who.forEach(function(nm,i){ var k=nm||('#'+i), w=wpCur[k]; if(!w) return; var o={}; if(w.pose) o.pose=w.pose; if(w.face) o.face=w.face; if(w.emo) o.emo=w.emo; if(w.prop) o.prop=w.prop; if(w.x!=null) o.x=w.x; if(Object.keys(o).length) wp[k]=o; });
     if(Object.keys(wp).length) c.wp=wp; else delete c.wp;
     var dy=+ed.querySelector('.ct-dyn').value||0; if(dy) c.dyn=dy; else delete c.dyn;
     var sz=ed.querySelector('.ct-sz').value, uu=ed.querySelector('.ct-use').value; if(sz) c.size=sz; else delete c.size;
@@ -16134,7 +16209,7 @@ document.getElementById('ct-fromcast').addEventListener('click', fromCast);
 window.__ctPortrait=function(cv){ if(drawMode()==='3d'){ queue(cv); return; } needRough(function(){ try{ if(cv.isConnected) drawCv(cv); }catch(e){} }); };   // 3D는 줄을 서서 나눠 그린다
 // 베스트컷이 쓰는 창구: 구도·앵글 목록, 컷 → 그림 칸, 인물 풀이, 베스트컷 → 콘티 컷
 window.__ctSHOTS=SHOTS; window.__ctANGS=ANGS; window.__ctShotName=shotName; window.__ctAngName=angName; window.__ctPoseJ=POSE_J; window.__ctPoseInfo=POSE_INFO;
-window.__d3Sprite=d3Sprite; window.__setDraw=setDraw; window.__drawMode=drawMode; window.__ctCutData=function(cv,c){ return cutData(cv,c); }; window.__ctWhoOf=function(c){ return whoOf(c); }; window.__ctApplyBest=applyBest;
+window.__d3Sprite=d3Sprite; window.__d3Sets=D3_SETS; window.__d3EmoKo=D3_EMO_KO; window.__d3PropKo=D3_PROP_KO; window.__setDraw=setDraw; window.__drawMode=drawMode; window.__ctCutData=function(cv,c){ return cutData(cv,c); }; window.__ctWhoOf=function(c){ return whoOf(c); }; window.__ctApplyBest=applyBest;
 document.getElementById('ct-addch').addEventListener('click', function(){ ensureB(); B.chars.push({name:'인물 '+(B.chars.length+1), role:'', look:{}, note:''}); save(); renderChars(); editChar(B.chars.length-1); });
 document.getElementById('ct-chars').addEventListener('click', function(e){
   var t=e.target.closest('button'); if(!t||!B) return;
@@ -17166,6 +17241,68 @@ window.__ctFx={list:CONTI_FX, groups:CONTI_FX_GROUPS, byId:byId, show:show, spec
   filter:function(g,m,q){ CF.grp=g||''; CF.media=m||''; CF.q=q||''; if(!CF.built) build(); else { var qi=root.querySelector('.cf-q'); if(qi) qi.value=CF.q; filter(); } }};
 })();
 // [[/MOD:ctfx]]
+// [[MOD:gram3d]] 만화 연출 문법 — 같은 장면을 3D로 찍어 샷·앵글·반응 컷을 보여 주고, 직접 돌려 보게 한다(콘티 그림 창구 __ctCutData·__ctPortrait)
+(function(){
+var root=document.getElementById('gram3d'); if(!root) return;
+var LOOK={'서윤':{hair:'긴'}, '도현':{hair:'짧은', dark:true}, '하린':{hair:'단발'}, '민호':{hair:'삐죽', dark:true, glasses:true}};
+var SH=[['els','익스트림 롱숏','장소와 규모. 사람은 점이 되고 세계가 주인공이 된다.'],['ls','롱숏','어디서 누가 무엇을 하는지 한눈에.'],['fs','풀숏','머리부터 발끝까지 — 자세와 행동이 읽힌다.'],
+  ['ms','미디엄숏','허리 위. 대화 장면의 기본 단위.'],['bs','바스트숏','가슴 위. 표정과 몸짓을 같이 본다.'],['cu','클로즈업','얼굴이 칸을 채운다 — 감정.'],['ecu','익스트림 클로즈업','눈이나 입만. 감정의 정점, 아껴 쓴다.']];
+var AN=[['ms','','눈높이','중립. 독자와 같은 높이에서 본다.'],['ms','high','부감 (위에서)','인물이 작고 약해 보인다. 고립·패배.'],['ms','low','앙각 (아래에서)','인물이 크고 위압적으로 보인다. 등장·위협.'],
+  ['ms','dutch','기울임','화면이 기울면 마음도 기운다. 불안·이상한 낌새.'],['bird','','버드아이','바로 위에서. 상황 전체, 길을 잃은 느낌.'],['ots','','어깨 너머','상대 어깨 너머로 — 대화에 독자를 끼운다.']];
+var RE=[{k:'fs', scr:'도현이 서윤에게 고백한다', who:['도현','서윤'], line:'도현: 좋아해', t:'사건'},{k:'cu', scr:'서윤이 깜짝 놀란다', who:['서윤'], t:'반응 1 — 놀람'},
+  {k:'cu', scr:'하린 얼굴이 빨개진다', who:['하린'], t:'반응 2 — 설렘'},{k:'cu', scr:'민호가 화가 나서 노려본다', who:['민호'], t:'반응 3 — 질투'}];
+var SET='roof', n=0;
+function cut(o){ return Object.assign({n:++n, set:SET, scr:'옥상, 서윤과 도현'}, o); }
+function card(c, title, desc, i){ return '<figure class="g3-card"><canvas class="g3-cv" data-i="'+i+'" role="img" aria-label="'+title+'"></canvas><figcaption><b>'+title+'</b>'+(desc?'<span>'+desc+'</span>':'')+'</figcaption></figure>'; }
+var CUTS=[];
+function build(){
+  n=0; CUTS=[];
+  var h='<p class="small">옥상에 선 <b>서윤</b>(긴 머리)과 <b>도현</b>(짧은 검은 머리)을 카메라만 바꿔 찍었다. 무엇을 보여 주느냐(샷)와 어디서 보느냐(앵글)만 바꿔도 같은 장면이 다른 말을 한다.</p>';
+  h+='<h4>샷 — 얼마나 가까이</h4><div class="g3-row">'+SH.map(function(s){ var c=cut({k:s[0], who:['서윤'], scr:s[0]==='ecu'?'옥상, 서윤의 눈':'옥상에 선 서윤'}); CUTS.push(c); return card(c, s[1], s[2], CUTS.length-1); }).join('')+'</div>';
+  h+='<h4>앵글 — 어디서 보나</h4><div class="g3-row">'+AN.map(function(a){ var c=cut({k:a[0], ang:a[1], who:a[0]==='ots'?['서윤','도현']:['도현'], scr:'옥상에 선 도현'}); CUTS.push(c); return card(c, a[2], a[3], CUTS.length-1); }).join('')+'</div>';
+  h+='<h4>반응 컷이 사건의 크기를 정한다</h4><p class="small">사건 한 컷 뒤에 보는 사람의 얼굴을 늘어놓으면, 반응의 수만큼 사건이 커진다(위 7번).</p><div class="g3-row g3-four">'+RE.map(function(r){ var c=cut(r); CUTS.push(c); return card(c, r.t, '', CUTS.length-1); }).join('')+'</div>';
+  h+='<h4>직접 돌려 보기</h4><div class="g3-play"><canvas class="g3-pv" role="img" aria-label="돌려 보는 3D 컷 — 끌어서 돌린다"></canvas><div class="g3-ctl">'+
+    '<label>샷 <select data-g="k">'+SH.map(function(s){ return '<option value="'+s[0]+'"'+(s[0]==='fs'?' selected':'')+'>'+s[1]+'</option>'; }).join('')+'<option value="two">투숏</option><option value="ots">어깨 너머</option><option value="bird">버드아이</option></select></label>'+
+    '<label>앵글 <select data-g="ang"><option value="">눈높이</option><option value="high">부감</option><option value="low">앙각</option><option value="dutch">기울임</option></select></label>'+
+    '<label>표정 <select data-g="emo">'+(window.__d3EmoKo||[['','무표정']]).map(function(e){ return '<option value="'+e[0]+'">'+e[1]+'</option>'; }).join('')+'</select></label>'+
+    '<label>소품 <select data-g="prop">'+(window.__d3PropKo||[['','없음']]).map(function(e){ return '<option value="'+e[0]+'">'+e[1]+'</option>'; }).join('')+'</select></label>'+
+    '<label>장소 <select data-g="set">'+(window.__d3Sets||[]).map(function(e){ return '<option value="'+e[0]+'"'+(e[0]===SET?' selected':'')+'>'+e[1]+'</option>'; }).join('')+'<option value="none">없음</option></select></label>'+
+    '<div class="filterbar g3-pre"><button class="chip" type="button" data-cy="0" data-cp="0">정면</button><button class="chip" type="button" data-cy="45" data-cp="0">45°</button><button class="chip" type="button" data-cy="90" data-cp="0">옆</button><button class="chip" type="button" data-cy="180" data-cp="0">뒤</button><button class="chip" type="button" data-cy="0" data-cp="35">위에서</button><button class="chip" type="button" data-cy="0" data-cp="-25">아래에서</button></div>'+
+    '<p class="small g3-msg">그림을 끌면 카메라가 돌고, 휠·두 손가락으로 당긴다.</p></div></div>';
+  root.innerHTML=h; paintAll(); playInit();
+}
+function prep(cv, c){
+  if(!window.__ctCutData) return false; window.__ctCutData(cv, c);
+  var who=(c.who||[]).map(function(nm,i){ var o={name:nm, look:Object.assign({}, LOOK[nm]||{})}; if(c.emo && i===0) o.emo=c.emo; if(c.prop && i===0) o.prop=c.prop; return o; });
+  if(who.length) cv.dataset.who=JSON.stringify(who); delete cv.dataset.bempty; return true; }
+function paintAll(){ [].slice.call(root.querySelectorAll('canvas.g3-cv')).forEach(function(cv){ var c=CUTS[+cv.dataset.i]; if(c && prep(cv, c) && window.__ctPortrait) window.__ctPortrait(cv); }); }
+var PV={k:'fs', ang:'', emo:'', prop:'', set:SET, cam:{y:0,p:0,d:1}}, rq=0;
+function pvCut(){ var two=/^(two|ots)$/.test(PV.k); var c={n:99, k:PV.k, ang:PV.ang, set:PV.set, who:two?['서윤','도현']:['서윤'], scr:'서윤이 서 있다', emo:PV.emo, prop:PV.prop};
+  if(PV.cam.y||PV.cam.p||PV.cam.d!==1) c.cam={y:Math.round(PV.cam.y), p:Math.round(PV.cam.p), d:Math.round(PV.cam.d*100)/100}; return c; }
+function pvDraw(){ var cv=root.querySelector('.g3-pv'); if(cv && prep(cv, pvCut()) && window.__ctPortrait) window.__ctPortrait(cv); }
+function later(){ if(rq) return; rq=requestAnimationFrame(function(){ rq=0; pvDraw(); }); }
+function playInit(){
+  var cv=root.querySelector('.g3-pv'); if(!cv) return; pvDraw();
+  root.querySelector('.g3-ctl').addEventListener('change', function(e){ var g=e.target.getAttribute('data-g'); if(!g) return; PV[g]=e.target.value; later(); });
+  root.querySelector('.g3-pre').addEventListener('click', function(e){ var b=e.target.closest('button'); if(!b) return; PV.cam={y:+b.dataset.cy, p:+b.dataset.cp, d:1}; later(); });
+  var pts={}, last=null, pinch=0, clamp=function(v,a,b){ return Math.max(a,Math.min(b,v)); };
+  cv.addEventListener('pointerdown', function(e){ pts[e.pointerId]={x:e.clientX,y:e.clientY}; try{ cv.setPointerCapture(e.pointerId); }catch(er){} last={x:e.clientX,y:e.clientY}; e.preventDefault(); });
+  cv.addEventListener('pointermove', function(e){ if(!pts[e.pointerId]) return; pts[e.pointerId]={x:e.clientX,y:e.clientY}; var ids=Object.keys(pts);
+    if(ids.length>=2){ var a=pts[ids[0]], b=pts[ids[1]], dd=Math.hypot(a.x-b.x,a.y-b.y); if(pinch) PV.cam.d=clamp(PV.cam.d*pinch/dd,.3,3); pinch=dd; later(); return; }
+    PV.cam.y-=(e.clientX-last.x)*.45; PV.cam.p=clamp(PV.cam.p+(e.clientY-last.y)*.35,-80,80); if(PV.cam.y>180) PV.cam.y-=360; if(PV.cam.y<-180) PV.cam.y+=360; last={x:e.clientX,y:e.clientY}; later(); });
+  var up=function(e){ delete pts[e.pointerId]; pinch=0; var ids=Object.keys(pts); if(ids.length) last=pts[ids[0]]; };
+  cv.addEventListener('pointerup', up); cv.addEventListener('pointercancel', up);
+  cv.addEventListener('wheel', function(e){ e.preventDefault(); PV.cam.d=clamp(PV.cam.d*Math.exp(e.deltaY*.0012),.3,3); later(); }, {passive:false});
+  msg();
+}
+function msg(){ var m=root.querySelector('.g3-msg'); if(m) m.textContent=(window.__drawMode&&window.__drawMode()==='3d')?'그림을 끌면 카메라가 돌고, 휠·두 손가락으로 당긴다.':'지금은 선 그림이다. 위 「3D 인형」을 누르면 돌려 볼 수 있다.'; }
+window.addEventListener('drawmode', function(){ if(root.firstChild){ paintAll(); pvDraw(); msg(); } });
+window.PAGE_ON=window.PAGE_ON||{}; var prev=window.PAGE_ON.grammar;
+window.PAGE_ON.grammar=function(){ if(prev) try{ prev(); }catch(e){} if(!root.firstChild) build(); else { paintAll(); pvDraw(); } };
+if(location.hash==='#grammar') setTimeout(function(){ if(!root.firstChild) build(); }, 0);
+})();
+// [[/MOD:gram3d]]
+
 // 그림 방식 단추(콘티 연출 색인·컷 연출 사전·만화 자세·구도 머리): 콘티 구성기와 같은 설정(ctDraw)을 바꾼다
 (function(){
   function mode(){ return window.__drawMode?window.__drawMode():'line'; }
@@ -17592,6 +17729,13 @@ function fig3(D,x,top,H,o){
   if(o.armUp===-1 && !o.back){ x0.translate(x*2,0); x0.scale(-1,1); }   // 반대 팔을 든 그림은 좌우로 뒤집는다
   x0.drawImage(im, 0, 0, im.width, im.height*crop, x-w/2, top, w, H*crop); x0.restore(); return true;
 }
+// 얼굴 칸: 감정·단계를 3D 표정으로(머리 가운데 cx,cy · 머리 반지름 r)
+var EMO3={shock:['','shock','shock','shock'], anger:['','anger','shout','rage'], sad:['','sad','sad','cry'], calm:['','','',''], smile:['smile','smile','laugh','laugh']};
+function head3(D,cx,cy,r,emo,lv,shade){
+  if(shade || !window.__d3Sprite || r<6) return false; var dpr=Math.min(window.devicePixelRatio||1,2), em=(EMO3[emo]||EMO3.shock)[clamp(lv|0,0,3)];
+  var im=window.__d3Sprite({head:1, emo:em, tear:emo==='sad'&&lv>=2}, r*5.2*dpr); if(!im) return false;
+  D.ctx.drawImage(im, cx-r*2.6, cy-r*2.6, r*5.2, r*5.2); return true;
+}
 function fig(D,x,top,H,o){
   o=o||{}; if(fig3(D,x,top,H,o)) return;
   var f=o.face||0, g=geo(H), u=g.u, d=g.d, cy=top+d/2;
@@ -17912,7 +18056,7 @@ var CT={
    if(o.fx==='beta'){ fillR(D,R.x,R.y,R.w,R.h,D.c.ink); var pts=[]; for(var i=0;i<60;i++){ var a=i/60*Math.PI*2, rr=i%2?r*(1.6+D.rnd()*.8):r*1.2; pts.push([cx+Math.cos(a)*rr*1.2, cy+Math.sin(a)*rr]); } D.ctx.save(); D.ctx.fillStyle=D.c.paper; D.ctx.beginPath(); pts.forEach(function(p,i){ if(i) D.ctx.lineTo(p[0],p[1]); else D.ctx.moveTo(p[0],p[1]); }); D.ctx.fill(); D.ctx.restore(); }
    if(o.emo==='sad'&&lv>=3) hatch(D,R.x,R.y,R.w,R.h,5);
    if(o.emo==='anger'&&lv>=3){ var R2=D.rnd; for(var k=0;k<14;k++){ var a2=k/14*Math.PI*2; wavy(D,cx+Math.cos(a2)*r*2.6,cy+Math.sin(a2)*r*2.4,cx+Math.cos(a2)*r*1.25,cy+Math.sin(a2)*r*1.2,2,2,{taper:true}); } }
-   var e=EXP(o.emo||'shock',lv); e.noBody=o.body===false; if(o.shade) e.shade=o.shade; head(D,cx,cy,r,e);
+   var e=EXP(o.emo||'shock',lv); e.noBody=o.body===false; if(o.shade) e.shade=o.shade; if(!head3(D,cx,cy,r,o.emo||'shock',lv,o.shade)) head(D,cx,cy,r,e);
    if((o.emo||'shock')==='shock'&&lv>=2) drop(D,cx+r*1.1,cy-r*.4,r*.2+lv*r*.04);
    if(o.emo==='shock'&&lv>=3){ var x=D.ctx; x.save(); x.strokeStyle=D.c.ink; x.lineWidth=1; for(var j=0;j<7;j++){ var px=cx-r*.5+j*r*.16; x.beginPath(); x.moveTo(px,cy-r*.85); x.lineTo(px,cy-r*.45); x.stroke(); } x.restore(); }
    if(o.emo==='anger'&&lv>=2) veinAt(D,cx+r*.6,cy-r*.65,r*.2);
