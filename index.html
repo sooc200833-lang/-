@@ -1408,6 +1408,12 @@ body.dk-drag, body.dk-drag *{user-select:none!important; -webkit-user-select:non
 .ct-undo{display:inline-flex; flex-wrap:wrap; gap:.3rem; margin:-.4rem 0 .6rem}
 .ct-undo[hidden]{display:none}
 .ct-ed .ct-mv{align-items:center}
+.ct-ed .ct-3d{display:flex; flex-wrap:wrap; gap:.4rem .6rem; align-items:flex-end}
+.ct-ed .ct-3d label{flex:0 1 12rem}
+.ct-ed .ct-camv{display:grid; gap:.3rem}
+.ct-ed .ct-camcv{display:block; width:100%; background:var(--paper); border:1.5px solid var(--ink); touch-action:none; cursor:grab}
+.ct-ed .ct-camcv:active{cursor:grabbing}
+.ct-ed .ct-campre{gap:.25rem}
 .ct-ed .ct-redo-row{display:grid; gap:.3rem; justify-items:start}
 .ct-ed .ct-redo-row label{justify-self:stretch}
 .ct-ed .chip:disabled{opacity:.5; cursor:default}
@@ -13637,13 +13643,13 @@ function skRegen(a, b, type, avoid){
   return {type:type, cuts:cs};
 }
 
-/* ---------- 3D 인형 그림 (2026-10-19) ----------
-   「그림: 3D 인형」을 고르면 three.js(MIT, jsDelivr에서 그때 한 번만 불러온다)로 관절 인형을 세우고
-   구도(샷)·앵글·인물 방향(45도 포함)·자세(POSE3)대로 카메라를 놓아 찍은 뒤, 콘티 칸에 그려 넣는다.
+/* ---------- 3D 인형 그림 (2026-10-19, 2026-11-08 r186·배경 세트·그림자·카메라 돌리기) ----------
+   「그림: 3D 인형」을 고르면 three.js r186(MIT, jsDelivr에서 그때 한 번만 ES 모듈로 불러온다)로 관절 인형을 세우고
+   장소(장면 장소·화면 글)에 맞는 배경 세트를 깔고 해 그림자를 떨어뜨린 뒤, 구도(샷)·앵글·카메라 돌림(c.cam)대로 찍어 콘티 칸에 그려 넣는다.
    말풍선·이름표·집중선·테두리는 원래 그림 위에 그리던 그대로. 불러오기·WebGL이 안 되면 선 그림으로 돌아간다.
-   인형은 직접 만든 것(외부 모델 없음). 렌더러는 하나만 만들어 컷마다 돌려 쓴다(메모리·컨텍스트 아끼기). */
-var D3={st:0, R:null, G:null, M:null, err:0, warned:0};
-var D3_URL='https://cdn.jsdelivr.net/npm/three@0.147.0/build/three.min.js';
+   인형·세트는 직접 만든 것(외부 모델 없음). 렌더러·빛·도형은 하나씩만 만들어 컷마다 돌려 쓴다(메모리·컨텍스트 아끼기). */
+var D3={st:0, R:null, G:null, M:null, L:null, err:0, warned:0};
+var D3_VER='0.186.1', D3_URLS=['https://cdn.jsdelivr.net/npm/three@'+D3_VER+'/+esm', 'https://cdn.jsdelivr.net/npm/three@'+D3_VER+'/build/three.module.js'];
 function drawMode(){ try{ return localStorage.getItem('ctDraw')==='3d'?'3d':'line'; }catch(e){ return 'line'; } }
 function d3Ready(){ return D3.st===2 && !!D3.R && !!window.THREE; }
 function d3Want(cv){ var s=cv&&cv.dataset&&cv.dataset.style; return s==='3d' || (!s && drawMode()==='3d'); }
@@ -13651,26 +13657,35 @@ function d3RedrawAll(){ [].slice.call(document.querySelectorAll('canvas[data-k]'
 function d3Load(){
   if(D3.st) return;
   if(window.THREE && window.THREE.WebGLRenderer){ try{ d3Init(); D3.st=2; }catch(e){ D3.st=-1; } d3RedrawAll(); return; }
-  D3.st=1; var s=document.createElement('script'); s.src=D3_URL; s.async=true; s.crossOrigin='anonymous';
-  var to=setTimeout(function(){ fail('시간이 너무 걸린다'); }, 30000);
-  function fail(w){ if(D3.st===-1) return; clearTimeout(to); D3.st=-1; try{ stat('3D 인형 그림을 쓸 수 없어 선 그림으로 그린다 ('+w+').'); }catch(e){} d3RedrawAll(); }
-  s.onload=function(){ clearTimeout(to); try{ d3Init(); D3.st=2; d3RedrawAll(); }catch(e){ fail('이 기기에서 WebGL을 쓸 수 없다'); } };
-  s.onerror=function(){ fail('인터넷 연결을 확인한다'); };
-  document.head.appendChild(s);
+  D3.st=1;
+  var to=setTimeout(function(){ fail('시간이 너무 걸린다'); }, 40000);
+  function fail(w){ if(D3.st===-1 || D3.st===2) return; clearTimeout(to); D3.st=-1; try{ stat('3D 인형 그림을 쓸 수 없어 선 그림으로 그린다 ('+w+').'); }catch(e){} d3RedrawAll(); }
+  function ok(ns){ if(D3.st!==1) return; clearTimeout(to); try{ window.THREE=ns; d3Init(); D3.st=2; d3RedrawAll(); }catch(e){ fail('이 기기에서 WebGL을 쓸 수 없다'); } }
+  var imp=null; try{ imp=new Function('u','return import(u)'); }catch(e){}   // 옛 브라우저가 import() 줄 때문에 전체 글을 못 읽지 않게
+  if(!imp){ fail('이 브라우저는 모듈을 불러오지 못한다'); return; }
+  (function next(i){ if(i>=D3_URLS.length){ fail('인터넷 연결을 확인한다'); return; }
+    imp(D3_URLS[i]).then(function(ns){ if(ns && ns.WebGLRenderer) ok(ns); else next(i+1); }, function(){ next(i+1); }); })(0);
 }
 function d3Init(){
   var T=window.THREE, cv=document.createElement('canvas');
   var R=new T.WebGLRenderer({canvas:cv, antialias:true, preserveDrawingBuffer:true, alpha:false, powerPreference:'low-power'});
   if(!R.getContext()) throw new Error('webgl');
-  R.setPixelRatio(1);
+  R.setPixelRatio(1); R.shadowMap.enabled=true; R.shadowMap.type=T.PCFShadowMap;
   cv.addEventListener('webglcontextlost', function(e){ e.preventDefault(); D3.st=-1; D3.R=null; d3RedrawAll(); }, false);
   var G={sph:new T.SphereGeometry(1,22,16), cap:new T.SphereGeometry(1,22,12,0,Math.PI*2,0,Math.PI*.56), bob:new T.SphereGeometry(1,22,14,0,Math.PI*2,0,Math.PI*.78),
-    box:new T.BoxGeometry(1,1,1), cyl:new T.CylinderGeometry(1,1,1,18), cone:new T.ConeGeometry(1,1,10), tor:new T.TorusGeometry(1,.16,8,20), lim:new T.CapsuleGeometry(.5,1,6,12)};
+    box:new T.BoxGeometry(1,1,1), cyl:new T.CylinderGeometry(1,1,1,18), cone:new T.ConeGeometry(1,1,10), tor:new T.TorusGeometry(1,.16,8,20), lim:new T.CapsuleGeometry(.5,1,6,12),
+    plane:new T.PlaneGeometry(1,1), cyl8:new T.CylinderGeometry(1,1,1,10), cone4:new T.ConeGeometry(1,1,4)};
+  G.boxE=new T.EdgesGeometry(G.box); G.cylE=new T.EdgesGeometry(G.cyl, 40); G.cyl8E=new T.EdgesGeometry(G.cyl8, 40); G.cone4E=new T.EdgesGeometry(G.cone4);
   var grad=new T.DataTexture(new Uint8Array([105,105,105,255, 182,182,182,255, 255,255,255,255]), 3, 1, T.RGBAFormat); grad.minFilter=grad.magFilter=T.NearestFilter; grad.needsUpdate=true;
   var toon=function(c){ return new T.MeshToonMaterial({color:c, gradientMap:grad}); };
   D3.M={body:toon(0xf6f3ec), skin:toon(0xf6f3ec), cloth:toon(0xe4e1da), hairD:toon(0x2b2a28), hairL:toon(0x8f8b83), prop:toon(0x9d9990), mark:toon(0xd14b3a),
-    ink:new T.MeshBasicMaterial({color:0x161616}), out:new T.MeshBasicMaterial({color:0x161616, side:T.BackSide}), bg:toon(0xe9e6de)};
-  D3.G=G; D3.R=R;
+    ink:new T.MeshBasicMaterial({color:0x161616}), out:new T.MeshBasicMaterial({color:0x161616, side:T.BackSide}), bg:toon(0xe9e6de),
+    floor:toon(0xe4e1d9), wall:toon(0xeeebe4), wall2:toon(0xdcd8cf), dark:toon(0x4a4c48), road:toon(0xc9c6be), grass:toon(0xdfe0d4), leaf:toon(0xc4c7b9), glass:toon(0xf4f2ee), wood:toon(0xcfc6b6),
+    line:new T.LineBasicMaterial({color:0x2a2928}), lineL:new T.LineBasicMaterial({color:0xb4b0a7}), rain:new T.LineBasicMaterial({color:0x6b6964})};
+  // 빛은 하나씩만(그림자 지도도 하나) — 장면마다 다시 붙인다
+  var hemi=new T.HemisphereLight(0xffffff, 0x77736b, 1.9), sun=new T.DirectionalLight(0xffffff, 2.9);
+  sun.castShadow=true; sun.shadow.mapSize.set(1024,1024); sun.shadow.bias=-.0006; sun.shadow.normalBias=.02;
+  D3.L={hemi:hemi, sun:sun}; D3.G=G; D3.R=R; D3.cache={};
 }
 // 관절 각도(도): sp 허리[x 숙임,y 비틀기,z 기울기] hd 고개 la/ra 팔[x 앞(-)으로 들기, z 옆으로(+는 바깥), 팔꿈치 굽힘(-)] ll/rl 다리[x 앞(-)으로, z 옆, 무릎(+)] rt 몸 전체[x,y,z] dy 엉덩이 높이 변화
 var POSE3={
@@ -13707,7 +13722,7 @@ var POSE3={
 };
 var D3_DEG=Math.PI/180;
 function d3Mesh(geo, mat, sx, sy, sz, par, px, py, pz, noOut){
-  var T=window.THREE, m=new T.Mesh(geo, mat); m.scale.set(sx,sy,sz); m.position.set(px||0,py||0,pz||0); par.add(m);
+  var T=window.THREE, m=new T.Mesh(geo, mat); m.scale.set(sx,sy,sz); m.position.set(px||0,py||0,pz||0); par.add(m); m.castShadow=true;
   if(!noOut){ var t=.011, o=new T.Mesh(geo, D3.M.out); o.scale.set((sx+2*t)/sx, (sy+2*t)/sy, (sz+2*t)/sz); m.add(o); }
   return m;
 }
@@ -13774,20 +13789,132 @@ function d3Fig(look, pose){
   if(lk.cape) d3Mesh(G.box, M.cloth, .4, .9, .02, sp, 0, .02, -.14);
   return {root:root, head:hd, hr:hr*bs};
 }
+// ----- 배경 세트 -----
+// 인물은 원점 둘레(가로 ±1.5, 깊이 ±1)에 서고 카메라는 +z 쪽에서 본다. 세트는 그 둘레를 비워 두고 뒤(-z)·옆에 깐다.
+// 선(외곽선)은 EdgesGeometry 한 벌을 돌려 쓰고, 도형은 모두 공유 도형을 늘려 쓴다(컷마다 새 도형을 만들지 않는다).
+var D3_SETS=[['room','방·집 안'],['class','교실'],['corridor','복도'],['roof','옥상'],['street','거리·골목'],['stop','버스 정류장'],['cafe','카페·식당·가게'],['park','공원·숲'],['stairs','계단'],['hall','홀·궁전·성당'],['field','들판·광장·운동장']];
+var D3_SET_RX=[['roof',/옥상/],['stop',/정류장|버스/],['corridor',/복도|회랑|통로/],['class',/교실|강의실|교무실|학원|도서관|과학실|보건실|미술실|음악실|학생회실|동아리방|부실/],['stairs',/계단/],
+  ['cafe',/카페|식당|가게|편의점|술집|레스토랑|매점|빵집|포장마차|주점|찻집|바 안|라멘집|분식/],['hall',/연회장|강당|신전|교회|성당|왕좌|알현|궁전|궁 안|성 안|대전|무도회|홀 안|로비/],
+  ['room',/(자기|제|내|그의|그녀의|누나|형|동생|엄마|아빠|친구)\s?방|방 안|방안|방에서|방으로|방문을|침실|거실|자취|원룸|집 안|집안|집에서|우리 집|부엌|주방|현관|사무실|병실|오피스텔|아파트 안|숙소|여관|객실|다락/],
+  ['park',/공원|숲|산길|산속|정원|나무 아래|나무 밑|벤치|강가|강변|호숫가|숲길|들길|뒷산|캠프/],['field',/들판|전장|광장|운동장|경기장|훈련장|평원|사막|마당|결투장|연병장|초원|해변|모래사장|바닷가/],
+  ['street',/거리|골목|시내|도로|횡단보도|역 앞|시장|번화가|길거리|길가|길 위|귀갓길|등굣길|하굣길|교문|집 앞|가로등|건널목|사거리|상가|주차장/]];
+function d3SetOf(o){
+  var s=o.set||''; if(s==='none') return ''; if(s && s!=='auto') return s;
+  var pl=String(o.place||''), tx=String(o.scr||'')+' '+String(o.ptx||'');
+  for(var i=0;i<D3_SET_RX.length;i++) if(D3_SET_RX[i][1].test(pl)) return D3_SET_RX[i][0];
+  for(i=0;i<D3_SET_RX.length;i++) if(D3_SET_RX[i][1].test(tx)) return D3_SET_RX[i][0];
+  return '';
+}
+function d3Mood(o){ var t=String(o.place||'')+' '+String(o.scr||'')+' '+String(o.ptx||'');
+  return {night:/밤|야간|한밤|새벽|어둠|어두운|깜깜|달빛|별빛|자정/.test(t), rain:/비가|빗속|빗줄기|빗물|폭우|장마|소나기|우산|비 오|비오|비를 맞/.test(t), snow:/눈이 내|눈발|폭설|눈송이|함박눈|눈 내리/.test(t)}; }
+function d3Box(par, mat, w, h, d, x, y, z, edge){ var T=window.THREE, m=new T.Mesh(D3.G.box, mat); m.scale.set(w,h,d); m.position.set(x,y,z); m.castShadow=m.receiveShadow=true; par.add(m);
+  if(edge!==false){ var e=new T.LineSegments(D3.G.boxE, edge==='l'?D3.M.lineL:D3.M.line); m.add(e); } return m; }
+function d3Cyl(par, mat, r, h, x, y, z, edge, geo){ var T=window.THREE, G=D3.G, g=geo||G.cyl, m=new T.Mesh(g, mat); m.scale.set(r,h,r); m.position.set(x,y,z); m.castShadow=m.receiveShadow=true; par.add(m);
+  if(edge!==false){ var e=new T.LineSegments(g===G.cyl8?G.cyl8E:(g===G.cone4?G.cone4E:G.cylE), D3.M.line); m.add(e); } return m; }
+function d3Floor(par, mat, w, d, x, z){ var T=window.THREE, m=new T.Mesh(D3.G.plane, mat); m.rotation.x=-Math.PI/2; m.scale.set(w,d,1); m.position.set(x||0,0,z||0); m.receiveShadow=true; par.add(m); return m; }
+// 바닥 무늬·창살 같은 잔선: 열쇠마다 한 번만 만들어 두고 돌려 쓴다
+function d3Lines(par, key, mk, mat, x, y, z){ var T=window.THREE, g=D3.cache[key];
+  if(!g){ var p=[]; mk(p); g=new T.BufferGeometry(); g.setAttribute('position', new T.Float32BufferAttribute(p,3)); D3.cache[key]=g; }
+  var l=new T.LineSegments(g, mat||D3.M.lineL); l.position.set(x||0,y||0,z||0); par.add(l); return l; }
+function d3Grid(par, key, w, d, step, y, x0, z0, onlyX){ return d3Lines(par, 'g:'+key, function(p){ var i;
+  for(i=-w/2;i<=w/2+1e-6;i+=step){ if(!onlyX) p.push(i,0,-d/2, i,0,d/2); }
+  for(i=-d/2;i<=d/2+1e-6;i+=step) p.push(-w/2,0,i, w/2,0,i); }, D3.M.lineL, x0||0, y||.003, z0||0); }
+function d3Window(par, w, h, x, y, z, rotY){ var g=d3Group(par, x, y, z); if(rotY) g.rotation.y=rotY;
+  d3Box(g, D3.M.glass, w, h, .04, 0, 0, 0); d3Box(g, D3.M.wall2, w+.1, .08, .14, 0, -h/2-.04, .04); d3Box(g, D3.M.wall2, .04, h, .06, 0, 0, .03, 'l'); d3Box(g, D3.M.wall2, w, .04, .06, 0, h*.1, .03, 'l'); return g; }
+function d3Tree(par, x, z, s){ d3Cyl(par, D3.M.wood, .13*s, 1.8*s, x, .9*s, z, true, D3.G.cyl8); var c=new window.THREE.Mesh(D3.G.sph, D3.M.leaf); c.scale.set(1.1*s,1.25*s,1.1*s); c.position.set(x, 2.35*s, z); c.castShadow=c.receiveShadow=true; par.add(c);
+  var o=new window.THREE.Mesh(D3.G.sph, D3.M.out); o.scale.set(1.02,1.02,1.02); c.add(o); }
+function d3Lamp(par, x, z, h){ d3Cyl(par, D3.M.dark, .05, h, x, h/2, z, false, D3.G.cyl8); d3Box(par, D3.M.wall2, .5, .08, .18, x+.2, h, z); }
+function d3Chair(par, x, z, ry){ var g=d3Group(par, x, 0, z); g.rotation.y=ry||0; d3Box(g, D3.M.wood, .42, .06, .42, 0, .45, 0); d3Box(g, D3.M.wood, .42, .48, .05, 0, .7, -.19); [-1,1].forEach(function(a){ [-1,1].forEach(function(b){ d3Box(g, D3.M.dark, .04, .44, .04, a*.18, .22, b*.18, false); }); }); return g; }
+function d3Set(sc, key, seed, wide){
+  var M=D3.M, mir=(seed%2)?-1:1, r=function(i){ return ((seed*31+i*17)%97)/97; }, g=d3Group(sc,0,0,0);
+  if(key==='room'){
+    d3Floor(g, M.wood, 14, 40, 0, 17); d3Lines(g, 'room-plank', function(p){ for(var z=-3;z<=30;z+=.32) p.push(-7,0,z, 7,0,z); }, M.lineL, 0, .003, 0);
+    d3Box(g, M.wall, 14, 2.8, .12, 0, 1.4, -2.7); d3Box(g, M.wall, .12, 2.8, 9, mir*-3.6, 1.4, 1.6);
+    d3Box(g, M.wall2, 14, .1, .03, 0, .05, -2.62, 'l');
+    d3Window(g, 1.5, 1.15, mir*1.5, 1.55, -2.62);
+    d3Box(g, M.cloth, 2, .42, 1.35, mir*2.7, .21, -1.9); d3Box(g, M.glass, .7, .14, .45, mir*2.7, .5, -2.35); d3Box(g, M.wood, 2.04, .9, .06, mir*2.7, .45, -2.6);
+    d3Box(g, M.wood, 1.2, .74, .6, mir*-2.4, .37, -2.25); d3Chair(g, mir*-2.4, -1.65, Math.PI); d3Box(g, M.glass, .55, .7, .02, mir*-.6, 1.6, -2.62, 'l');
+    if(r(1)>.5) d3Box(g, M.wood, .9, 1.9, .35, mir*-3.3, .95, .2);
+  } else if(key==='class'){
+    d3Floor(g, M.floor, 16, 44, 0, 18); d3Grid(g, 'class2', 16, 44, .5, .003, 0, 18);
+    d3Box(g, M.wall, 16, 3, .12, 0, 1.5, -3.6); d3Box(g, M.dark, 3.8, 1.25, .05, mir*-.4, 1.6, -3.52); d3Box(g, M.wood, 3.8, .06, .14, mir*-.4, .95, -3.5);
+    d3Box(g, M.wall, .12, 3, 10, mir*4.2, 1.5, -.6); [-2.6,-.4,1.8].forEach(function(z){ d3Window(g, 1.4, 1.3, mir*4.13, 1.65, z, -mir*Math.PI/2); });
+    [-2.7,-1.35,1.35,2.7].forEach(function(x){ [-2.5,-1.3,-.1].forEach(function(z){ if(Math.abs(x)<1.6 && z>-1.5) return;
+      d3Box(g, M.wood, .62, .06, .44, x, .72, z); d3Box(g, M.dark, .56, .66, .03, x, .36, z-.18, false); d3Chair(g, x, z+.42, Math.PI); }); });
+  } else if(key==='corridor'){
+    d3Floor(g, M.floor, 3.6, 46, 0, -6); d3Grid(g, 'corr2', 3.6, 46, .6, .003, 0, -6);
+    [-1,1].forEach(function(s){ d3Box(g, M.wall, .12, 2.9, 46, s*1.85, 1.45, -6); d3Box(g, M.wall2, .03, .12, 46, s*1.78, .06, -6, 'l'); });
+    for(var z=1;z>-26;z-=3.2){ d3Window(g, 1.6, 1.2, mir*1.78, 1.6, z, -mir*Math.PI/2); if(z<-1) d3Box(g, M.wood, .04, 2.1, .95, -mir*1.8, 1.05, z-.8); }
+  } else if(key==='roof'){
+    d3Floor(g, M.floor, 18, 40, 0, 16); d3Grid(g, 'roof2', 18, 40, 1, .003, 0, 16);
+    var fz=-2.8; [.12,1.55].forEach(function(y){ d3Box(g, M.wall2, 14, .06, .06, 0, y, fz); [-1,1].forEach(function(s){ d3Box(g, M.wall2, .06, .06, 8, s*5, y, fz+4); }); });
+    d3Lines(g, 'roof-bars', function(p){ for(var x=-7;x<=7;x+=.22) p.push(x,.12,0, x,1.55,0); }, M.line, 0, 0, fz);
+    d3Box(g, M.wall2, 1.8, 2.5, 1.7, mir*3.6, 1.25, -1.2); d3Box(g, M.dark, .8, 1.9, .02, mir*3.6, .95, -.34, 'l');
+    d3Cyl(g, M.glass, .7, 1.2, mir*-3.2, 1.6, -1.6, true); d3Box(g, M.dark, 1.2, 1, 1.2, mir*-3.2, .5, -1.6, 'l');
+  } else if(key==='street' || key==='stop'){
+    d3Floor(g, M.floor, 40, 32, 0, 14.3); d3Grid(g, 'walk2', 40, 32, .6, .003, 0, 14.3);
+    d3Box(g, M.wall2, 40, .12, .2, 0, .06, -1.7, 'l'); d3Floor(g, M.road, 40, 7, 0, -5.1);
+    d3Lines(g, 'road-mid', function(p){ for(var x=-20;x<20;x+=2) p.push(x,0,0, x+1.1,0,0); }, M.glass, 0, .004, -5.1);
+    d3Floor(g, M.floor, 40, 4, 0, -10.6);
+    for(var b=0;b<9;b++){ var bw=2.6+r(b)*2.4, bh=4+r(b+9)*7, bx=-17+b*4.3; d3Box(g, b%3?M.wall:M.wall2, bw, bh, 3, bx, bh/2, -14);
+      var bk='bwin:'+bw.toFixed(1)+':'+bh.toFixed(1); (function(bw,bh){ d3Lines(g, bk, function(p){ for(var yy=1.4;yy<bh-.6;yy+=1.3) for(var xx=-bw/2+.5;xx<=bw/2-.5;xx+=.75){ p.push(xx-.2,yy,0, xx+.2,yy,0); } }, M.lineL, bx, 0, -12.45); })(bw,bh); }
+    if(key==='stop'){ var sx=mir*-.2, sz=-1.15; d3Box(g, M.wall2, 3, .07, 1.2, sx, 2.3, sz); [-1,1].forEach(function(s){ d3Box(g, M.dark, .07, 2.3, .07, sx+s*1.4, 1.15, sz-.5, false); });
+      d3Box(g, M.glass, 2.9, 1.7, .03, sx, 1.25, sz-.55); d3Box(g, M.wood, 1.9, .07, .38, sx, .46, sz-.3); d3Box(g, M.dark, .45, .7, .05, sx+mir*1.75, 2.3, sz+.4); }
+    d3Lamp(g, mir*3.3, -1.45, 3.6); d3Lamp(g, mir*-6, -1.45, 3.6);
+    if(r(3)>.4) d3Lines(g, 'cross', function(p){ for(var z=-8;z<-2;z+=.5){ p.push(0,0,z, 0,0,z+.3); p.push(1.2,0,z, 1.2,0,z+.3); } }, M.glass, mir*6, .005, 0);
+  } else if(key==='cafe'){
+    d3Floor(g, M.floor, 14, 40, 0, 15); d3Grid(g, 'cafe2', 14, 40, .45, .003, 0, 15);
+    d3Box(g, M.wall, 14, 2.9, .12, 0, 1.45, -3.2); d3Box(g, M.wood, 4.2, 1, .6, mir*1.2, .5, -2.6); d3Box(g, M.wall2, 4.2, .05, .7, mir*1.2, 1.02, -2.6);
+    d3Lines(g, 'shelf', function(p){ [1.6,2.1].forEach(function(y){ p.push(-2,y,0, 2,y,0); }); }, M.line, mir*1.2, 0, -3.13);
+    d3Box(g, M.dark, 1.3, .8, .03, mir*-2.4, 1.9, -3.13);
+    [[-2.6,-1.4],[2.7,-.6],[-3,.9],[3.1,1.4]].forEach(function(t){ var x=t[0]*mir; d3Cyl(g, M.wood, .38, .05, x, .74, t[1], true); d3Cyl(g, M.dark, .04, .72, x, .36, t[1], false, D3.G.cyl8); d3Chair(g, x+.6, t[1], -Math.PI/2); });
+    [-2,0,2].forEach(function(x){ d3Lines(g, 'lampcord', function(p){ p.push(0,2.9,0, 0,2.35,0); }, M.line, x, 0, -1.6); d3Cyl(g, M.wall2, .2, .2, x, 2.28, -1.6, true, D3.G.cone4); });
+  } else if(key==='park'){
+    d3Floor(g, M.grass, 60, 70, 0, 0); d3Floor(g, M.floor, 2.4, 70, mir*.6, 0).position.y=.003;
+    [[-3,-3,1],[2.7,-4.2,1.1],[-6.5,-6.5,1.3],[5.4,-2.4,.9],[1,-8.5,1.4],[-9,-3.5,1.2],[8.5,-7,1.3],[-3.6,-11,1.5]].forEach(function(t){ d3Tree(g, t[0]*mir, t[1], t[2]); });
+    var bx2=mir*2.3; d3Box(g, M.wood, 1.7, .06, .45, bx2, .45, -1.5); d3Box(g, M.wood, 1.7, .4, .05, bx2, .72, -1.72); [-1,1].forEach(function(s){ d3Box(g, M.dark, .06, .45, .45, bx2+s*.75, .22, -1.5, false); });
+    d3Lamp(g, mir*-2.6, -1.8, 3.2);
+  } else if(key==='stairs'){
+    d3Floor(g, M.floor, 14, 32, 0, 13); d3Grid(g, 'stf2', 14, 32, .5, .003, 0, 13);
+    for(var i2=0;i2<12;i2++) d3Box(g, M.floor, 3.4, .17*(i2+1), .32, mir*.4, .085*(i2+1), -1.6-i2*.32, 'l');
+    [-1,1].forEach(function(s){ d3Box(g, M.wall, .12, 4.5, 8, mir*.4+s*1.8, 2.25, -3.4); });
+    d3Lines(g, 'rail', function(p){ p.push(0,.95,0, 0,.95+12*.17,-12*.32); for(var k=0;k<12;k+=2) p.push(0,.17*(k+1),-k*.32, 0,.95+.17*k,-k*.32); }, M.line, mir*.4+1.6, 0, -1.6);
+    d3Box(g, M.wall, 14, 4.5, .12, 0, 2.25, -6);
+  } else if(key==='hall'){
+    d3Floor(g, M.floor, 20, 50, 0, 6); d3Grid(g, 'hall2', 20, 50, 1.2, .003, 0, 6); d3Floor(g, M.cloth, 2.2, 50, 0, 6).position.y=.004;
+    [-1,1].forEach(function(s){ for(var z=0;z>-18;z-=4){ d3Cyl(g, M.wall, .38, 6, s*3.4, 3, z-1.2, true); d3Box(g, M.wall2, 1, .3, 1, s*3.4, .15, z-1.2); } });
+    d3Box(g, M.wall, 20, 8, .2, 0, 4, -19); d3Box(g, M.wall2, 2.2, .6, 1.2, 0, .3, -16.5); d3Box(g, M.wood, 1, 1.8, .6, 0, 1.5, -16.8);
+  } else if(key==='field'){
+    d3Floor(g, M.grass, 90, 90, 0, -10); d3Lines(g, 'field', function(p){ for(var z=-40;z<10;z+=2.5) p.push(-40,0,z, 40,0,z); }, M.lineL, 0, .003, 0);
+    [[-30,-45,9,7],[-12,-50,12,10],[8,-48,10,8],[26,-44,8,6]].forEach(function(m){ var c=new window.THREE.Mesh(D3.G.cone, M.wall2); c.scale.set(m[2]*1.6,m[3],m[2]); c.position.set(m[0],m[3]/2,m[1]); g.add(c); });
+    d3Box(g, M.wall2, 14, .7, .4, mir*2, .35, -7);
+  }
+  return g;
+}
+// 비·눈: 3D 그림을 칸에 옮긴 뒤 2D로 덧그린다(빗금은 화면 기준이 읽기 쉽다)
+function d3Weather(D, md){ if(!md.rain && !md.snow) return; var c=D.ctx, w=D.w, h=D.h, n=Math.round(w*h/(md.rain?900:1400)), s=(+D.opt.seed||1)*9301;
+  var rr=function(){ s=(s*9301+49297)%233280; return s/233280; };
+  c.save(); c.strokeStyle=md.night?'rgba(240,238,232,.55)':'rgba(40,40,40,.4)'; c.fillStyle=c.strokeStyle; c.lineWidth=1;
+  for(var i=0;i<n;i++){ var x=rr()*w*1.2-w*.1, y=rr()*h, L=8+rr()*16; if(md.rain){ c.beginPath(); c.moveTo(x,y); c.lineTo(x-L*.25,y+L); c.stroke(); } else { c.beginPath(); c.arc(x,y,1+rr()*1.6,0,Math.PI*2); c.fill(); } }
+  c.restore(); }
 // 샷마다 카메라·인물 배치
 var D3_SHOT={els:{vh:13, cy:3}, ls:{vh:4.8, cy:1.25}, fs:{vh:2.35, cy:.98}, ms:{vh:1.18, cy:1.36}, bs:{vh:.8, cy:1.5}, cu:{vh:.44, cy:1.68}, ecu:{vh:.15, cy:1.715},
   two:{vh:1.38, cy:1.36}, ots:{vh:1, cy:1.42}, stand:{vh:2.6, cy:1}, frame:{vh:2.7, cy:1}, bird:{vh:3.4, cy:0}, insert:{vh:.36, cy:1.05}, pov:{vh:1.8, cy:1.35},
   back:{vh:1.3, cy:1.36}, empty:{vh:5, cy:1.4}, crowd:{vh:4.4, cy:1.1}, high:{vh:4.8, cy:1}, low:{vh:4.8, cy:1.2}};
 function d3Face(f){ return {front:0, left45:-45, right45:45, left:-90, right:90, back:180}[f]; }
+function d3Cam(o){ var c=null; try{ c=o.cam?JSON.parse(o.cam):null; }catch(e){} if(!c) return null;
+  return {y:clamp(+c.y||0,-180,180), p:clamp(+c.p||0,-80,80), d:clamp(+c.d||1,.3,3)}; }
 function draw3d(D, kind){
   if(!d3Ready() || !d3Want(D.cv)) return false;
   var T=window.THREE, R=D3.R, w=D.w, h=D.h, o=D.opt, k=o.k||'ms', S=D3_SHOT[k]||D3_SHOT.ms, cast=D.cast||[];
   var dpr=Math.min(D.dpr||1, 1.6), W=Math.max(2,Math.round(w*dpr)), H=Math.max(2,Math.round(h*dpr)); if(W>1500){ H=Math.round(H*1500/W); W=1500; }
-  var sc=new T.Scene(); sc.background=new T.Color(D.c.paper||'#f6f3ec');
-  sc.add(new T.HemisphereLight(0xffffff, 0x77736b, .62)); var dl=new T.DirectionalLight(0xffffff, .95); dl.position.set(-3,4,4); sc.add(dl);
-  var fov=30, cam=new T.PerspectiveCamera(fov, w/h, .02, 200), d=S.vh/(2*Math.tan(fov*D3_DEG/2)), cy=S.cy, aspect=w/h, vw=S.vh*aspect;
+  var setK=d3SetOf(o), md=d3Mood(o), seed=+o.seed||1;
+  var sc=new T.Scene(); sc.background=new T.Color(md.night?0x575652:(D.c.paper||'#f6f3ec'));
+  var L=D3.L; L.hemi.intensity=md.night?.85:1.9; L.sun.intensity=md.night?1.1:(md.rain?2:2.9); sc.add(L.hemi); sc.add(L.sun); sc.add(L.sun.target);
+  var fov=30, cam=new T.PerspectiveCamera(fov, w/h, .02, 300), d=S.vh/(2*Math.tan(fov*D3_DEG/2)), cy=S.cy, aspect=w/h, vw=S.vh*aspect;
   var ang=o.ang||'', pz=o.pz?String(o.pz).split('|'):[], wide=/^(els|ls|fs|stand|crowd|frame|empty|bird|high|low)$/.test(kind)||/^(els|ls|fs|stand|crowd|frame|empty)$/.test(k);
-  if(wide){ var gr=new T.GridHelper(60, 60, 0xa8a49b, 0xd2cec5); gr.position.y=0; sc.add(gr); }
+  if(setK) d3Set(sc, setK, seed, wide);
+  else if(!o.nolabel){ d3Floor(sc, D3.M.bg, 60, 60, 0, -10); if(wide) d3Grid(sc, 'plain', 40, 40, 1, .003, 0, -10); }   // 장소를 모르면 바닥만(그림자 받기) — 초상화(nolabel)는 빈 종이
   var figs=[], who=function(i){ return cast[i]||null; };
   function add(i, x, z, yaw, poseDef){
     var c=who(i), lk=Object.assign({}, (c&&c.look)||{}), pose=(c&&c.pose)||lk.pose||pz[i]||poseDef||'', fc=d3Face((c&&c.face)||lk.face);
@@ -13807,19 +13934,32 @@ function draw3d(D, kind){
   else { if(cast.length>=2 && /^(ms|fs|ls|bs)$/.test(k)){ add(0, xf(0,.32), 0, 35); add(1, xf(1,.68), 0, -35); }
     else { var x0=o.x!=null?+o.x:.5, F1=add(0, (x0-.5)*vw*.9, 0, x0<.45?22:(x0>.55?-22:0)), P1=POSE3[(F1.c&&F1.c.pose)||((F1.c&&F1.c.look)||{}).pose||pz[0]||'']; if(P1 && P1.dy && /^(fs|ls|ms)$/.test(k)) dyS=P1.dy*(k==='ms'?.6:.8); } }
   if(k==='frame'){ [-1,1].forEach(function(s){ d3Mesh(D3.G.box, D3.M.bg, .14, 2.3, .14, sc, s*.75, 1.15, .9); }); d3Mesh(D3.G.box, D3.M.bg, 1.64, .14, .14, sc, 0, 2.3, .9); }
-  if(k==='els' || k==='empty' || (k==='ls' && !cast.length)){ for(var b=0;b<7;b++){ var bh=1.5+((b*29)%5)*1.1; d3Mesh(D3.G.box, D3.M.bg, 1.6+((b*13)%3)*.6, bh, 1.4, sc, (b-3)*3.2, bh/2, -9-((b*17)%3)*3); } }
-  // 카메라
-  if(k==='bird'){ cam.position.set(0, d*1.1, .01); cam.up.set(0,0,-1); cam.lookAt(0,0,0); }
-  else if(camPos){ cam.position.set(camPos[0],camPos[1],camPos[2]); cam.lookAt(look[0],look[1],look[2]); }
+  if(!setK && (k==='els' || k==='empty' || (k==='ls' && !cast.length))){ for(var b=0;b<7;b++){ var bh=1.5+((b*29)%5)*1.1; d3Box(sc, D3.M.bg, 1.6+((b*13)%3)*.6, bh, 1.4, (b-3)*3.2, bh/2, -9-((b*17)%3)*3); } }
+  // 카메라: 샷·앵글이 정한 자리 → 돌림(c.cam: 좌우 y°, 위아래 p°, 거리 배수 d)
+  var tgt=new T.Vector3();
+  if(k==='bird'){ cam.position.set(0, d*1.1, .01); cam.up.set(0,0,-1); tgt.set(0,0,0); }
+  else if(camPos){ cam.position.set(camPos[0],camPos[1],camPos[2]); tgt.set(look[0],look[1],look[2]); }
   else {
     cy+=dyS; var cyy=cy, py=cy, pzc=d;
     if(ang==='high'){ py=cy+d*.62; pzc=d*.82; } else if(ang==='low'){ py=Math.max(.12, cy-d*.55); pzc=d*.85; }
     if(k==='insert' || k==='pov'){ cyy=k==='insert'?1.05:1.35; }
-    cam.position.set(tx, py, tz+pzc); cam.lookAt(tx, cyy, tz);
+    cam.position.set(tx, py, tz+pzc); tgt.set(tx, cyy, tz);
   }
+  var CC=d3Cam(o);
+  if(CC){ var off=cam.position.clone().sub(tgt), sp=new T.Spherical().setFromVector3(off);
+    sp.theta+=CC.y*D3_DEG; sp.phi=clamp(sp.phi-CC.p*D3_DEG, .03, Math.PI-.15); sp.radius*=CC.d; sp.makeSafe();
+    cam.position.copy(tgt).add(new T.Vector3().setFromSpherical(sp));
+    if(k==='bird') cam.up.set(-Math.sin(CC.y*D3_DEG),0,-Math.cos(CC.y*D3_DEG));
+    if(cam.position.y<.05) cam.position.y=.05; }
+  cam.lookAt(tgt);
+  // 해: 비추는 범위를 찍는 곳에 맞춘다(넓으면 넓게)
+  var ext=clamp(Math.max(S.vh*aspect, S.vh)*.75*(CC?CC.d:1), 2.2, 18), sun=L.sun, sh=sun.shadow.camera;
+  sun.target.position.copy(tgt).setY(0); sun.position.set(tgt.x-ext*.55, ext*1.4+3, tgt.z+ext*.7);
+  sh.left=-ext; sh.right=ext; sh.top=ext; sh.bottom=-ext; sh.near=.5; sh.far=ext*4+12; sh.updateProjectionMatrix();
   cam.updateProjectionMatrix(); sc.updateMatrixWorld(true);
   R.setSize(W, H, false); R.render(sc, cam);
   D.ctx.drawImage(R.domElement, 0, 0, w, h);
+  d3Weather(D, md);
   // 머리 자리(말풍선 꼬리)·이름표
   var v=new T.Vector3(), up=new T.Vector3();
   figs.forEach(function(F){ if(F.i<0) return;
@@ -13829,8 +13969,8 @@ function draw3d(D, kind){
     var c=F.c; headAdd(D, c&&c.name||'', c?F.i:'g', x, y, r);
     if(c && c.name && !o.nolabel && x>-r && x<w+r && y>-r && y<h+r) nameTag(D, x, Math.max(14, y-r*1.25), c.name, 'center');
   });
-  // 장면에서 쓴 물건 정리(공유 도형·재질은 두고 장면만 버린다)
-  sc.clear();
+  // 장면에서 쓴 물건 정리(공유 도형·재질·빛은 두고 장면만 버린다)
+  sc.clear(); D.set3=setK;
   return true;
 }
 
@@ -14144,6 +14284,10 @@ function autoPoses(c, wl){
     if(used[p]) p=''; if(p) used[p]=1; out.push(p); }
   return out;
 }
+// 이 컷이 든 장면의 장소·줄거리(3D 배경 세트 고르기용). 콘티 판의 컷일 때만 장면을 찾는다
+function cutPlace(c){ var r={place:String(c.place||''), ptx:''}; if(r.place) return r;
+  try{ if(B && B.cuts && B.cuts[(c.n||0)-1]===c){ var L=sceneList(); for(var i=0;i<L.length;i++){ var x=L[i]; if(c.n>=x.a && c.n<=x.b){ r.place=String(x.place||''); r.ptx=[x.sum,x.name,x.desc].filter(Boolean).join(' ').slice(0,200); break; } } } }catch(e){}
+  return r; }
 function cutData(cv,c){
   Object.keys(cv.dataset).forEach(function(k){ if(k!=='nolabel') delete cv.dataset[k]; });
   cv.dataset.k=c.k||'ms'; cv.dataset.seed=c.n||1; cv.dataset.x=(c.k==='cu'||c.k==='ms'||c.k==='bs')?((c.n||1)%2?'.42':'.58'):'.5';
@@ -14157,6 +14301,8 @@ function cutData(cv,c){
   if(c.focus) cv.dataset.focus='1'; if(c.flash) cv.dataset.flash='1';
   var dy=+c.dyn; if(dy>0 && isFinite(dy)) cv.dataset.dyn=String(clamp(Math.round(dy),0,2));   // 역동 (없으면 0)
   if(c.scr) cv.dataset.scr=c.scr;
+  if(c.set) cv.dataset.set=c.set; if(c.cam) cv.dataset.cam=JSON.stringify(c.cam);   // 3D 배경 세트·카메라 돌림
+  var pp=c._pl||cutPlace(c); if(pp.place) cv.dataset.place=pp.place; if(pp.ptx) cv.dataset.ptx=pp.ptx;
   if(c.line) cv.dataset.line=String(c.line);   // 말풍선 (줄마다 하나)
   if(c.nar){ cv.dataset.nar=String(c.nar); var np=c.narPos; if(np==='bottom' || np==='between') cv.dataset.narpos=np; }   // 나레이션 (기본 위)
   if(!balloonsOn()) cv.dataset.nob='1'; else if(balMode()==='empty') cv.dataset.bempty='1';
@@ -14238,6 +14384,41 @@ function applyBest(c, rec){
   return c;
 }
 function lineClean(v){ return String(v||'').split('\n').map(function(x){ return x.trim(); }).filter(Boolean).join('\n'); }   // 줄마다 앞뒤 빈칸·빈 줄 지움
+// 편집 창의 카메라 돌리기: 칸 모양 그대로의 미리보기에서 끌면 좌우·위아래로 돌고, 휠·두 손가락으로 당긴다. 「저장」을 눌러야 컷에 남는다
+function camTxt(v){ if(!v || (!v.y && !v.p && (!v.d || v.d===1))) return '샷·앵글 그대로';
+  var t=[]; if(v.y) t.push((v.y>0?'오른쪽으로 ':'왼쪽으로 ')+Math.abs(Math.round(v.y))+'°'); if(v.p) t.push((v.p>0?'위에서 ':'아래에서 ')+Math.abs(Math.round(v.p))+'°');
+  if(v.d && v.d!==1) t.push(v.d>1?Math.round(v.d*10)/10+'배 멀리':Math.round(1/v.d*10)/10+'배 가까이'); return t.join(' · '); }
+function camUI(ed, c, cur, setCam){
+  var btn=ed.querySelector('.ct-camb'), box=ed.querySelector('.ct-camv'), txt=ed.querySelector('.ct-camt'); if(!btn || !box) return;
+  var v=cur().cam?Object.assign({y:0,p:0,d:1}, cur().cam):{y:0,p:0,d:1}, lcv=null, rq=0;
+  function paintT(){ txt.textContent=camTxt(v); }
+  function draw(){ if(!lcv) return; var st=cur(), cc=Object.assign({}, c, {set:st.set, cam:(v.y||v.p||v.d!==1)?{y:v.y,p:v.p,d:v.d}:null, _pl:cutPlace(c)});
+    if(!cc.cam) delete cc.cam; if(!cc.set) delete cc.set; cutData(lcv, cc); lcv.dataset.style='3d'; needRough(function(){ if(lcv.isConnected) drawCv(lcv); }); }
+  function later(){ setCam((v.y||v.p||v.d!==1)?{y:v.y,p:v.p,d:v.d}:null); paintT(); if(rq) return; rq=requestAnimationFrame(function(){ rq=0; draw(); }); }
+  box.__draw=draw; paintT();
+  btn.addEventListener('click', function(){
+    var open=box.hidden; box.hidden=!open; btn.setAttribute('aria-expanded', String(open)); if(!open) return;
+    if(!lcv){ var src=ed.parentNode && ed.parentNode.querySelector('canvas'), r=src?src.getBoundingClientRect():{width:4,height:3}, ar=(r.width&&r.height)?r.width/r.height:4/3;
+      box.innerHTML='<canvas class="ct-camcv" role="img" aria-label="카메라 미리보기 — 끌어서 돌린다"></canvas>'+
+        '<div class="filterbar ct-campre">'+[['정면',0,0,1],['오른쪽 45°',45,0,1],['왼쪽 45°',-45,0,1],['옆',90,0,1],['뒤',180,0,1],['위에서',0,35,1],['아래에서',0,-25,1],['멀리',null,null,1.6],['가까이',null,null,.65],['처음대로',0,0,1]]
+          .map(function(q){ return '<button class="chip" type="button" data-y="'+q[1]+'" data-p="'+q[2]+'" data-d="'+q[3]+'">'+q[0]+'</button>'; }).join('')+'</div>'+
+        '<p class="ct-hint">끌어서 돌리고, 휠이나 두 손가락으로 당기거나 민다. 「저장」을 눌러야 컷에 남는다.</p>';
+      lcv=box.querySelector('canvas'); lcv.style.aspectRatio=String(ar);
+      var pts={}, last=null, pinch=0;
+      lcv.addEventListener('pointerdown', function(e){ pts[e.pointerId]={x:e.clientX,y:e.clientY}; try{ lcv.setPointerCapture(e.pointerId); }catch(er){} last={x:e.clientX,y:e.clientY}; e.preventDefault(); });
+      lcv.addEventListener('pointermove', function(e){ if(!pts[e.pointerId]) return; pts[e.pointerId]={x:e.clientX,y:e.clientY}; var ids=Object.keys(pts);
+        if(ids.length>=2){ var a=pts[ids[0]], b=pts[ids[1]], dd=Math.hypot(a.x-b.x,a.y-b.y); if(pinch) v.d=clamp(v.d*pinch/dd, .3, 3); pinch=dd; later(); return; }
+        v.y-= (e.clientX-last.x)*.45; v.p=clamp(v.p+(e.clientY-last.y)*.35, -80, 80); if(v.y>180) v.y-=360; if(v.y<-180) v.y+=360; last={x:e.clientX,y:e.clientY}; later(); });
+      var up=function(e){ delete pts[e.pointerId]; pinch=0; var ids=Object.keys(pts); if(ids.length) last=pts[ids[0]]; };
+      lcv.addEventListener('pointerup', up); lcv.addEventListener('pointercancel', up);
+      lcv.addEventListener('wheel', function(e){ e.preventDefault(); v.d=clamp(v.d*Math.exp(e.deltaY*.0012), .3, 3); later(); }, {passive:false});
+      box.querySelector('.ct-campre').addEventListener('click', function(e){ var q=e.target.closest('button'); if(!q) return;
+        if(q.dataset.y!=='null') v.y=+q.dataset.y; if(q.dataset.p!=='null') v.p=+q.dataset.p; v.d=q.dataset.y==='null'?clamp(v.d*(+q.dataset.d),.3,3):+q.dataset.d; later(); });
+      if(!D3.st) d3Load();
+    }
+    draw();
+  });
+}
 function openEdit(f){
   var n=+f.dataset.n, c=B.cuts[n-1]; if(!c || f.querySelector('.ct-ed')) return;
   var ed=document.createElement('div'), P=wpPoses(); ed.className='ct-ed';
@@ -14254,6 +14435,8 @@ function openEdit(f){
     '<label>대사 (한 줄에 말풍선 하나, 셋까지) <textarea class="ct-l" rows="2" placeholder="이름: 대사&#10;(속마음)&#10;외침!"></textarea></label><p class="ct-hint">「이름: 대사」 말한 사람 · 「(속마음)」 생각 풍선 · 「외침!」 뾰족 풍선 · 「…」 작은 풍선. 이름이 없으면 인물 칸 첫 사람</p>'+
     '<div class="ct-nrow"><label>나레이션 <textarea class="ct-ni" rows="1" placeholder="예: 그날 이후, 우리는 말을 하지 않았다."></textarea></label>'+
     '<label>위치 <select class="ct-np"><option value="top">위</option><option value="bottom">아래</option><option value="between">컷 사이</option></select></label></div>'+
+    (drawMode()==='3d'?'<div class="ct-3d"><label>3D 배경 <select class="ct-set"><option value="">자동 (장소에서)</option><option value="none">없음</option>'+D3_SETS.map(function(x){ return '<option value="'+x[0]+'"'+(c.set===x[0]?' selected':'')+'>'+x[1]+'</option>'; }).join('')+'</select></label>'+
+      '<button class="chip ct-camb" type="button" aria-expanded="false">🎥 카메라 돌리기</button><span class="small ct-camt"></span></div><div class="ct-camv" hidden></div>':'')+
     '<div class="filterbar"><button class="chip ct-ok" type="button">저장</button><button class="chip ct-x" type="button">닫기</button>'+
     '<button class="chip ct-add" type="button">뒤에 컷 추가</button><button class="chip ct-del" type="button">이 컷 지우기</button></div>'+
     '<div class="filterbar ct-mv"><button class="chip ct-mvl" type="button"'+(n<=1?' disabled':'')+'>◀ 앞으로</button><button class="chip ct-mvr" type="button"'+(n>=B.cuts.length?' disabled':'')+'>뒤로 ▶</button></div>'+
@@ -14274,6 +14457,8 @@ function openEdit(f){
       var x=u[6]||{}; if(x.focus) ed.querySelector('.ct-f').checked=true; if(x.dyn) ed.querySelector('.ct-dyn').value=String(x.dyn); });
     fill();
   })();
+  var cam3=c.cam?Object.assign({}, c.cam):null, set3=ed.querySelector('.ct-set');
+  if(set3){ if(c.set==='none') set3.value='none'; camUI(ed, c, function(){ return {set:set3.value, cam:cam3}; }, function(v){ cam3=v; }); set3.addEventListener('change', function(){ var lv=ed.querySelector('.ct-camv'); if(lv && !lv.hidden && lv.__draw) lv.__draw(); }); }
   var wpBox=ed.querySelector('.ct-wp'), wpCur={};
   Object.keys(c.wp||{}).forEach(function(k){ wpCur[k]=Object.assign({}, c.wp[k]); });
   function wpRead(){ [].slice.call(wpBox.querySelectorAll('.ct-wr')).forEach(function(r){ var k=r.getAttribute('data-k'), w=wpCur[k]||(wpCur[k]={});
@@ -14297,6 +14482,7 @@ function openEdit(f){
     var dy=+ed.querySelector('.ct-dyn').value||0; if(dy) c.dyn=dy; else delete c.dyn;
     var sz=ed.querySelector('.ct-sz').value, uu=ed.querySelector('.ct-use').value; if(sz) c.size=sz; else delete c.size;
     var gq=ed.querySelector('.ct-gap'); if(gq){ if(gq.value==='') delete c.gap; else c.gap=+gq.value; }
+    if(set3){ if(set3.value) c.set=set3.value; else delete c.set; if(cam3 && (cam3.y||cam3.p||(cam3.d&&cam3.d!==1))) c.cam={y:Math.round(cam3.y||0), p:Math.round(cam3.p||0), d:Math.round((cam3.d||1)*100)/100}; else delete c.cam; }
     if((sz==='wide'||sz==='tall') && uu && useOf(uu) && useOf(uu)[1]===sz){ c.use=uu; if(useOf(uu)[6] && useOf(uu)[6].silent) c.silent=1; } else delete c.use;
   }
   ed.querySelector('.ct-ok').addEventListener('click',function(){ apply(); save(); refreshCut(n); });
