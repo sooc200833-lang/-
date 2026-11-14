@@ -299,3 +299,11 @@ arcForm, deviceId, folderMemo, gdBase, gdLast, gdLinked, ideaText, mangaDataVer,
 - iOS 파일 앱에서 GLB를 선택하는 로컬 파일 입력을 유지하며 파일은 서버로 업로드하지 않음.
 - GLB는 35MB 이하만 허용하고 모델 높이를 장면 크기에 맞춰 자동 정규화.
 - 실제 iPhone Safari 런타임 검증은 아직 수행하지 않았으므로 배포 후 기기 확인 필요.
+
+## 무료 3D 모델 프리뷰 확장 (2026-11-15)
+
+- Three.js 실험실에 Quaternius CC0 모델 프리뷰 4종을 추가했다: 남성 캐주얼, 남성 캐주얼 2, 여성 캐주얼, 사슴.
+- 원본 GLB는 `trebeljahr/quaternius-showcase`의 `public/glb/` 경로에서 불러온다. 해당 저장소의 `LICENSES.md`는 각 모델 팩의 원본 라이선스를 CC0-1.0으로 명시한다. 저장소 코드의 MIT 라이선스와 모델의 CC0 라이선스는 별개다.
+- GLB에 애니메이션 클립이 포함된 경우 첫 번째 클립을 AnimationMixer로 자동 재생하고, 모델 교체/초기화 시 믹서를 정리한다.
+- 모델 높이를 기준으로 크기를 정규화하고 화면 종횡비에 따른 카메라 거리 계산으로 전신이 보이도록 배치한다.
+- 주의: GitHub 트리에서 모델 파일 경로를 확인했지만 iPhone Safari에서 실제 렌더링/애니메이션 실행은 아직 확인하지 않았다.
