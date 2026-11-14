@@ -172,24 +172,39 @@ function disposeModel(root){
   });
 }
 function installModel(root,label){
+  root.updateMatrixWorld(true);
   const bounds=new THREE.Box3().setFromObject(root);
   const size=bounds.getSize(new THREE.Vector3());
   const center=bounds.getCenter(new THREE.Vector3());
   if(!Number.isFinite(size.y)||size.y<.001)throw new Error('모델 크기를 확인할 수 없어.');
-  const scale=3.7/size.y;
+  // 모델 자체를 작게 정규화해 모바일 화면에서 여백을 확보
+  const scale=2.65/size.y;
   root.scale.setScalar(scale);
   root.position.set(-center.x*scale,-bounds.min.y*scale,-center.z*scale);
+  root.updateMatrixWorld(true);
+  const fittedBounds=new THREE.Box3().setFromObject(root);
+  const fittedCenter=fittedBounds.getCenter(new THREE.Vector3());
+  const sphere=fittedBounds.getBoundingSphere(new THREE.Sphere());
   if(importedRoot){scene.remove(importedRoot);disposeModel(importedRoot);}
   importedRoot=root;
   scene.add(importedRoot);
   figure.visible=false;
   turned=false;
   importedRoot.rotation.y=0;
-  camera.position.set(5,2.9,8);
-  camera.fov=36;camera.updateProjectionMatrix();
-  controls.target.set(0,1.8,0);controls.update();
+  camera.fov=42;
+  camera.updateProjectionMatrix();
+  const verticalFov=THREE.MathUtils.degToRad(camera.fov);
+  const horizontalFov=2*Math.atan(Math.tan(verticalFov/2)*camera.aspect);
+  const limitingFov=Math.min(verticalFov,horizontalFov);
+  const distance=Math.max(6.5,(sphere.radius*1.35)/Math.sin(limitingFov/2));
+  camera.position.set(fittedCenter.x+distance*.18,fittedCenter.y+distance*.10,fittedCenter.z+distance);
+  camera.lookAt(fittedCenter);
+  controls.target.copy(fittedCenter);
+  controls.minDistance=3;
+  controls.maxDistance=20;
+  controls.update();
   document.querySelectorAll('[data-view]').forEach(b=>b.classList.remove('active'));
-  modelStatus.textContent='불러오기 완료: '+label+' · 장면 크기에 맞췄어.';
+  modelStatus.textContent='불러오기 완료: '+label+' · 모바일 화면에 맞춰 전신이 보이도록 크기를 조정했어.';
 }
 function resetImportedModel(){
   if(importedRoot){scene.remove(importedRoot);disposeModel(importedRoot);importedRoot=null;}
