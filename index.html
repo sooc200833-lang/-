@@ -4,112 +4,35 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#f2efe7">
-<meta name="description" content="만든 웹 프로젝트와 창작 도구를 모아 둔 작업실입니다.">
-<title>작업실 — 창작 도구와 프로젝트</title>
+<meta name="description" content="나물의 작업실 — 직접 만든 게임과 만화 창작 도구를 모아 둔 공간입니다.">
+<title>나물의 작업실</title>
 <style>
-:root{color-scheme:light;--paper:#f2efe7;--ink:#24231f;--muted:#77746c;--line:#d8d2c6;--orange:#c66a3d;--blue:#526c78;--green:#65745d}
-*{box-sizing:border-box}
-html{scroll-behavior:smooth}
-body{margin:0;background:var(--paper);color:var(--ink);font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Noto Sans KR",sans-serif}
-a{color:inherit}
-.shell{width:min(1120px,calc(100% - 44px));margin:auto}
-.topbar{height:76px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between}
-.brand{display:flex;align-items:center;gap:11px;text-decoration:none;font-size:14px;font-weight:800;letter-spacing:.02em}
-.brand-mark{width:30px;height:30px;background:var(--ink);color:var(--paper);display:grid;place-items:center;border-radius:9px;font-family:Georgia,serif;font-size:18px}
-.top-note{font-size:12px;color:var(--muted);letter-spacing:.08em}
-.hero{padding:76px 0 58px;display:grid;grid-template-columns:1fr auto;align-items:end;gap:32px}
-.eyebrow{font-size:11px;font-weight:800;letter-spacing:.19em;color:var(--orange);text-transform:uppercase;margin:0 0 18px}
-h1{font-family:Georgia,"Noto Serif KR",serif;font-size:clamp(42px,7vw,76px);line-height:1.08;letter-spacing:-.055em;font-weight:500;margin:0;max-width:720px}
-h1 em{font-style:normal;color:var(--orange)}
-.hero-copy{max-width:480px;color:var(--muted);font-size:15px;line-height:1.9;margin:22px 0 0}
-.hero-stamp{width:116px;height:116px;border:1px solid #c8bfb0;border-radius:50%;display:grid;place-items:center;text-align:center;transform:rotate(9deg);color:var(--orange);font-family:Georgia,serif;font-size:13px;line-height:1.35}
-.hero-stamp span{display:block;font-family:ui-sans-serif,sans-serif;font-size:9px;letter-spacing:.16em;margin-top:5px}
-.section-head{display:flex;align-items:baseline;justify-content:space-between;border-top:1px solid var(--ink);padding:18px 0 22px}
-.section-head h2{font-size:13px;letter-spacing:.1em;margin:0}
-.section-head p{font-size:12px;color:var(--muted);margin:0}
-.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px;padding-bottom:76px}
-.card{position:relative;min-height:290px;border:1px solid var(--line);background:#f8f6f0;text-decoration:none;display:flex;flex-direction:column;overflow:hidden;transition:transform .2s,border-color .2s,box-shadow .2s}
-.card:hover{transform:translateY(-4px);border-color:#aaa294;box-shadow:0 12px 30px #39312612}
-.card-art{height:145px;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center}
-.art-library{background:#e5dfd2}
-.art-observer{background:#dce3df}
-.art-truck{background:#e8ded0}
-.art-symbol{font-family:Georgia,serif;font-size:64px;line-height:1;color:#3a3831;opacity:.88}
-.art-library:before,.art-library:after{content:"";position:absolute;width:110px;height:140px;border:1px solid #a99f8f;transform:rotate(12deg);left:calc(50% - 55px);top:28px}
-.art-library:after{transform:rotate(-9deg);left:calc(50% - 37px);top:17px;background:#e5dfd2}
-.art-library .art-symbol{z-index:1}
-.art-observer:before{content:"";position:absolute;width:230px;height:230px;border:1px solid #8b9c91;border-radius:50%;box-shadow:0 0 0 18px #dce3df,0 0 0 19px #8b9c91,0 0 0 42px #dce3df,0 0 0 43px #8b9c91}
-.art-observer .art-symbol{z-index:1;color:#435a50;text-shadow:3px 3px 0 #dce3df}
-.art-truck:before{content:"";position:absolute;width:220px;height:70px;border:2px solid #9c826b;border-radius:8px 24px 8px 8px;transform:skewX(-12deg);top:47px;left:calc(50% - 110px)}
-.art-truck:after{content:"";position:absolute;width:190px;height:1px;background:#9c826b;top:119px;left:calc(50% - 95px);box-shadow:0 10px 0 #9c826b}
-.art-truck .art-symbol{z-index:1;color:#7d5c43;font-size:50px}
-.card-body{padding:20px 22px 22px;display:flex;flex:1;flex-direction:column}
-.card-meta{display:flex;justify-content:space-between;align-items:center;font-size:10px;letter-spacing:.14em;color:var(--muted);font-weight:800}
-.status{border:1px solid var(--line);padding:4px 7px;border-radius:20px;letter-spacing:.03em;font-size:10px}
-.card h3{font-size:22px;letter-spacing:-.04em;margin:14px 0 8px}
-.card p{font-size:13px;line-height:1.7;color:var(--muted);margin:0;max-width:460px}
-.card-foot{margin-top:auto;padding-top:20px;display:flex;justify-content:space-between;align-items:center;font-size:12px;font-weight:800}
-.arrow{font-size:20px;color:var(--orange);transition:transform .2s}
-.card:hover .arrow{transform:translate(3px,-3px)}
-.footer{border-top:1px solid var(--line);padding:24px 0 34px;display:flex;justify-content:space-between;gap:16px;color:var(--muted);font-size:11px}
-.footer a{text-decoration:none;border-bottom:1px solid #b9b2a7}
-@media(max-width:680px){.shell{width:min(100% - 32px,520px)}.topbar{height:64px}.top-note{font-size:10px}.hero{padding:54px 0 42px;grid-template-columns:1fr}.hero-stamp{display:none}.hero-copy{font-size:14px}.grid{grid-template-columns:1fr;gap:13px;padding-bottom:52px}.card{min-height:270px}.card-art{height:130px}.section-head p{max-width:150px;text-align:right;line-height:1.5}.footer{flex-direction:column}}
+:root{color-scheme:light;--paper:#f2efe7;--ink:#24231f;--muted:#77746c;--line:#d8d2c6;--orange:#c66a3d}
+*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--paper);color:var(--ink);font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Noto Sans KR",sans-serif}a{color:inherit}.shell{width:min(1120px,calc(100% - 44px));margin:auto}
+.topbar{height:76px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between}.brand{display:flex;align-items:center;gap:11px;text-decoration:none;font-size:14px;font-weight:850}.brand-mark{width:31px;height:31px;background:var(--ink);color:var(--paper);display:grid;place-items:center;border-radius:9px;font-family:Georgia,serif;font-size:19px}.top-note{font-size:11px;color:var(--muted);letter-spacing:.12em}
+.hero{padding:70px 0 55px;display:grid;grid-template-columns:1fr auto;align-items:end;gap:30px}.eyebrow{font-size:11px;font-weight:850;letter-spacing:.19em;color:var(--orange);margin:0 0 18px}h1{font-family:Georgia,"Noto Serif KR",serif;font-size:clamp(44px,7vw,76px);line-height:1.08;letter-spacing:-.06em;font-weight:600;margin:0}h1 em{font-style:normal;color:var(--orange)}.hero-copy{max-width:510px;color:var(--muted);font-size:15px;line-height:1.9;margin:21px 0 0}.hero-stamp{width:112px;height:112px;border:1px solid #c8bfb0;border-radius:50%;display:grid;place-items:center;text-align:center;transform:rotate(8deg);color:var(--orange);font:13px/1.4 Georgia,serif}.hero-stamp span{display:block;font:9px ui-sans-serif,sans-serif;letter-spacing:.12em;margin-top:5px}
+.section-head{display:flex;align-items:baseline;justify-content:space-between;border-top:1px solid var(--ink);padding:18px 0 22px}.section-head h2{font-size:13px;letter-spacing:.1em;margin:0}.section-head p{font-size:12px;color:var(--muted);margin:0}.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px;padding-bottom:60px}
+.card{border:1px solid var(--line);background:#f8f6f0;text-decoration:none;display:flex;flex-direction:column;overflow:hidden;min-width:0;transition:transform .2s,border-color .2s,box-shadow .2s}.card:hover{transform:translateY(-4px);border-color:#aaa294;box-shadow:0 12px 30px #39312612}
+.card-art{height:190px;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;text-align:center;padding:18px}.art-stock{background:repeating-linear-gradient(0deg,#171326 0 3px,#211a37 3px 6px);color:#fff0b7}.art-stock:before{content:"";position:absolute;inset:0;background:radial-gradient(ellipse at center,#47345c88,transparent 68%)}.stock-title{position:relative;z-index:1;font-weight:950;font-size:clamp(34px,5vw,57px);letter-spacing:-.09em;line-height:1.05;color:#ffe9a1;text-shadow:0 5px 0 #bd853b,0 9px 0 #24162f,4px 12px 0 #090812}.stock-sub{display:block;font-size:10px;letter-spacing:.22em;color:#9e9ac1;margin-top:17px;text-shadow:none}
+.art-truck{background:#fff5dc;color:#292033}.truck-kicker{font-weight:950;font-size:clamp(20px,3vw,31px);color:#1499d1;letter-spacing:-.07em;text-shadow:3px 4px 0 #202033}.truck-title{font-weight:1000;font-size:clamp(30px,4.4vw,50px);line-height:1.08;letter-spacing:-.09em;color:#e83b4b;text-shadow:4px 5px 0 #251a2b}.truck-copy{font-size:clamp(10px,1.5vw,14px);line-height:1.55;margin-top:14px;letter-spacing:-.04em}.truck-copy strong{font-weight:950}
+.art-library{background:#f1f1ed;color:#17171a;justify-content:flex-start;text-align:left;padding:24px 28px}.library-small{font-size:clamp(11px,1.5vw,15px);color:#606168;margin-bottom:12px}.library-title{font-family:Georgia,"Noto Serif KR",serif;font-weight:950;font-size:clamp(33px,5vw,53px);letter-spacing:-.09em;line-height:1.1}.library-desc{font-size:clamp(12px,1.7vw,18px);color:#66666b;margin-top:14px;letter-spacing:-.04em}
+.card-body{padding:19px 22px 21px;display:flex;flex:1;flex-direction:column}.card-meta{display:flex;justify-content:space-between;align-items:center;font-size:10px;letter-spacing:.14em;color:var(--muted);font-weight:850}.status{border:1px solid var(--line);padding:4px 7px;border-radius:20px;letter-spacing:.03em;font-size:10px}.card h3{font-size:22px;letter-spacing:-.04em;margin:13px 0 7px}.card p{font-size:13px;line-height:1.7;color:var(--muted);margin:0}.card-foot{margin-top:auto;padding-top:19px;display:flex;justify-content:space-between;align-items:center;font-size:12px;font-weight:850}.arrow{font-size:20px;color:var(--orange);transition:transform .2s}.card:hover .arrow{transform:translate(3px,-3px)}
+.social{margin:0 0 66px;padding:25px 28px;background:#e9e4d9;border:1px solid #d6cdbf;display:flex;align-items:center;justify-content:space-between;gap:20px}.social-kicker{font-size:10px;letter-spacing:.17em;color:#9a6247;font-weight:900;margin:0 0 7px}.social h2{font-size:21px;letter-spacing:-.04em;margin:0 0 6px}.social p{font-size:13px;color:#706b63;margin:0;line-height:1.6}.social-link{flex:none;text-decoration:none;background:#29251f;color:#fff9ee;padding:13px 18px;font-size:12px;font-weight:850;border-radius:3px}.footer{border-top:1px solid var(--line);padding:23px 0 34px;display:flex;justify-content:space-between;gap:16px;color:var(--muted);font-size:11px}.footer a{text-decoration:none;border-bottom:1px solid #b9b2a7}
+@media(max-width:680px){.shell{width:min(100% - 32px,520px)}.topbar{height:64px}.top-note{font-size:9px}.hero{padding:52px 0 40px;grid-template-columns:1fr}.hero-stamp{display:none}.hero-copy{font-size:14px}.grid{grid-template-columns:1fr;gap:13px;padding-bottom:42px}.card-art{height:175px}.section-head p{max-width:145px;text-align:right;line-height:1.5}.social{padding:21px;align-items:flex-start;flex-direction:column;margin-bottom:48px}.social-link{width:100%;text-align:center}.footer{flex-direction:column}}
 @media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important}}
 </style>
 </head>
 <body>
-<header class="shell topbar">
-  <a class="brand" href="./"><span class="brand-mark">W</span><span>WORKROOM / 작업실</span></a>
-  <div class="top-note">IDEAS INTO WORLDS · SINCE 2026</div>
-</header>
+<header class="shell topbar"><a class="brand" href="./"><span class="brand-mark">N</span><span>NAMUL / 나물의 작업실</span></a><div class="top-note">GAMES · COMICS · CREATIVE TOOLS</div></header>
 <main class="shell">
-  <section class="hero">
-    <div>
-      <p class="eyebrow">PERSONAL PROJECT ARCHIVE</p>
-      <h1>만들고 있는 세계를<br><em>한곳에.</em></h1>
-      <p class="hero-copy">창작을 돕는 도구부터 직접 만든 게임까지. 지금까지 만든 작업물을 모아 둔 작은 작업실입니다. 카드를 선택해 각 프로젝트를 둘러보세요.</p>
-    </div>
-    <div class="hero-stamp">A PLACE FOR<br>MAKING THINGS<span>PROJECT INDEX · 01</span></div>
-  </section>
-  <section aria-labelledby="projects-title">
-    <div class="section-head">
-      <h2 id="projects-title">PROJECTS / 작업물</h2>
-      <p>현재 공개된 프로젝트 3개</p>
-    </div>
-    <div class="grid">
-      <a class="card" href="https://isekaipp.netlify.app/" target="_blank" rel="noopener noreferrer">
-        <div class="card-art art-observer"><span class="art-symbol">観</span></div>
-        <div class="card-body">
-          <div class="card-meta"><span>01 · GAME</span><span class="status">WEB PLAY</span></div>
-          <h3>이세계 주시자</h3>
-          <p>픽셀 감성의 판타지 세계를 탐험하는 웹 게임 프로젝트.</p>
-          <div class="card-foot"><span>프로젝트 열기</span><span class="arrow">↗</span></div>
-        </div>
-      </a>
-      <a class="card" href="https://isekaitk.netlify.app/" target="_blank" rel="noopener noreferrer">
-        <div class="card-art art-truck"><span class="art-symbol">↗</span></div>
-        <div class="card-body">
-          <div class="card-meta"><span>02 · GAME</span><span class="status">WEB PLAY</span></div>
-          <h3>이세계 트럭 운전사</h3>
-          <p>트럭과 이세계 전이를 소재로 만든 게임 프로젝트.</p>
-          <div class="card-foot"><span>프로젝트 열기</span><span class="arrow">↗</span></div>
-        </div>
-      </a>
-      <a class="card" href="./dictionary.html">
-        <div class="card-art art-library"><span class="art-symbol">文</span></div>
-        <div class="card-body">
-          <div class="card-meta"><span>03 · CREATIVE TOOL</span><span class="status">REFERENCE</span></div>
-          <h3>만화 클리셰 · 연출 사전</h3>
-          <p>이야기 구성과 장면 연출에 참고할 수 있는 창작 자료실.</p>
-          <div class="card-foot"><span>사전으로 이동</span><span class="arrow">↗</span></div>
-        </div>
-      </a>
-    </div>
-  </section>
+<section class="hero"><div><p class="eyebrow">PERSONAL CREATIVE WORKROOM</p><h1>나물의<br><em>작업실.</em></h1><p class="hero-copy">게임도 만들고, 만화 연출도 연구합니다. 직접 만든 작은 세계와 창작 도구들을 한곳에 모아 두었어요. 마음에 드는 작업을 골라 구경해 보세요.</p></div><div class="hero-stamp">MADE WITH<br>IMAGINATION<span>WORKS · 2026</span></div></section>
+<section aria-labelledby="projects-title"><div class="section-head"><h2 id="projects-title">PROJECTS / 작업물</h2><p>게임과 창작 도구 3개</p></div>
+<div class="grid">
+<a class="card" href="https://isekaipp.netlify.app/" target="_blank" rel="noopener noreferrer"><div class="card-art art-stock"><div><div class="stock-title">이세계 주식장</div><span class="stock-sub">ANOTHER WORLD STOCK MARKET</span></div></div><div class="card-body"><div class="card-meta"><span>01 · GAME</span><span class="status">WEB PLAY</span></div><h3>이세계 주식장</h3><p>이세계의 종목과 사건을 마주하며 시장을 움직이는 판타지 주식 게임.</p><div class="card-foot"><span>프로젝트 열기</span><span class="arrow">↗</span></div></div></a>
+<a class="card" href="https://isekaitk.netlify.app/" target="_blank" rel="noopener noreferrer"><div class="card-art art-truck"><div><div class="truck-kicker">트럭쿤</div><div class="truck-title">이세계 트럭용사</div><div class="truck-copy">DOT EDITION<br>트럭이 이세계로 와버렸다.<br><strong>몬스터를 치고, 개조하고, 달려라.</strong></div></div></div><div class="card-body"><div class="card-meta"><span>02 · GAME</span><span class="status">WEB PLAY</span></div><h3>이세계트럭용사</h3><p>트럭이 이세계로 와버렸다! 몬스터를 상대하고 트럭을 개조하며 달리는 도트 감성 게임.</p><div class="card-foot"><span>프로젝트 열기</span><span class="arrow">↗</span></div></div></a>
+<a class="card" href="./dictionary.html"><div class="card-art art-library"><div><div class="library-small">만화 전용 · 클리셰와 연출 설계 매뉴얼</div><div class="library-title">만화 클리셰 사전</div><div class="library-desc">무엇을 쓰느냐보다, 몇 컷에 어떻게 놓느냐가 결정한다</div></div></div><div class="card-body"><div class="card-meta"><span>03 · CREATIVE TOOL</span><span class="status">REFERENCE</span></div><h3>만화 클리셰 · 연출 사전</h3><p>이야기 구성과 장면 연출에 참고할 수 있는 만화 창작 자료실.</p><div class="card-foot"><span>사전으로 이동</span><span class="arrow">↗</span></div></div></a>
+</div></section>
+<section class="social"><div><p class="social-kicker">FOLLOW THE PROCESS</p><h2>작업 과정과 새로운 소식은 인스타그램에서</h2><p>나물의 작업 기록, 게임 개발 소식, 창작 메모를 공유합니다.</p></div><a class="social-link" href="https://www.instagram.com/namul.note/" target="_blank" rel="noopener noreferrer">Instagram @namul.note ↗</a></section>
 </main>
-<footer class="shell footer">
-  <span>WORKROOM — PERSONAL PROJECTS</span>
-  <a href="./dictionary.html">만화 클리셰·연출 사전 바로가기 ↗</a>
-</footer>
-</body>
-</html>
+<footer class="shell footer"><span>NAMUL'S WORKROOM — PERSONAL PROJECTS</span><a href="./dictionary.html">만화 클리셰·연출 사전 바로가기 ↗</a></footer>
+</body></html>
