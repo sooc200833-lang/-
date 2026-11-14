@@ -16,7 +16,7 @@ main{width:min(1120px,calc(100% - 32px));margin:34px auto 70px}.eyebrow{font-siz
 .caption{position:absolute;left:50%;bottom:22px;transform:translateX(-50%);width:max-content;max-width:calc(100% - 36px);padding:12px 19px;background:#f2eee5;color:#211d23;font-family:Georgia,"Noto Serif KR",serif;font-weight:900;font-size:clamp(16px,2.5vw,22px);letter-spacing:-.04em;box-shadow:5px 5px 0 #9e654f;text-align:center;pointer-events:none}
 .panel{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:18px;height:max-content}.panel h2{font-size:13px;margin:0 0 15px}.panel p{font-size:12px;color:var(--muted);line-height:1.75;margin:0 0 16px}
 button{font:inherit;cursor:pointer}.controls{display:grid;grid-template-columns:1fr 1fr;gap:8px}.controls button,.action{border:1px solid #5a505d;background:#302a34;color:var(--ink);border-radius:5px;padding:11px 9px;font-size:11px;font-weight:750}.controls button.active{background:#e2a66d;color:#211a1b;border-color:#e2a66d}.action{width:100%;margin-top:9px;background:transparent}
-.note{border-top:1px solid var(--line);margin-top:17px;padding-top:15px}.note strong{font-size:11px;color:var(--accent)}.note p{margin:7px 0 0}.filepick{display:block;width:100%;border:1px solid #b77d4d;background:#e2a66d;color:#211a1b;border-radius:5px;padding:12px 10px;font-size:12px;font-weight:850;text-align:center;margin-top:8px}.filepick.secondary{background:transparent;color:var(--ink);border-color:#5a505d}.model-status{font-size:11px;color:#cfc4d1;line-height:1.6;margin:9px 0 0;overflow-wrap:anywhere}.model-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px}.model-grid .filepick{margin-top:0;padding:10px 6px}.hidden-file{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}
+.note{border-top:1px solid var(--line);margin-top:17px;padding-top:15px}.note strong{font-size:11px;color:var(--accent)}.note p{margin:7px 0 0}.filepick{display:block;width:100%;border:1px solid #b77d4d;background:#e2a66d;color:#211a1b;border-radius:5px;padding:12px 10px;font-size:12px;font-weight:850;text-align:center;margin-top:8px}.filepick.secondary{background:transparent;color:var(--ink);border-color:#5a505d}.model-status{font-size:11px;color:#cfc4d1;line-height:1.6;margin:9px 0 0;overflow-wrap:anywhere}.model-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px} .model-grid .filepick{margin-top:0;padding:10px 6px}.model-grid .filepick.active{background:#e2a66d;color:#211a1b;border-color:#e2a66d}.hidden-file{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}
 @media(max-width:780px){.layout{grid-template-columns:1fr}.stage{min-height:470px}.panel{order:2}}@media(max-width:420px){.stage{min-height:410px}.caption{bottom:14px;padding:10px 12px}}
 </style>
 </head>
@@ -193,8 +193,8 @@ function installModel(root,label,animations=[]){
   const fittedBounds=new THREE.Box3().setFromObject(root);
   const fittedCenter=fittedBounds.getCenter(new THREE.Vector3());
   const sphere=fittedBounds.getBoundingSphere(new THREE.Sphere());
-  if(importedRoot){scene.remove(importedRoot);disposeModel(importedRoot);}
   if(activeMixer){activeMixer.stopAllAction();activeMixer=null;}
+  if(importedRoot){scene.remove(importedRoot);disposeModel(importedRoot);}
   importedRoot=root;
   scene.add(importedRoot);
   figure.visible=false;
