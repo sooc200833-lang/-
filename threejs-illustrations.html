@@ -42,7 +42,7 @@ button{font:inherit;cursor:pointer}.controls{display:grid;grid-template-columns:
 <button data-view="wide">와이드 샷</button>
 </div>
 <button class="action" id="turn">캐릭터 회전 ↻</button>
-<div class="note"><strong>내 3D 캐릭터 불러오기</strong><p>아이폰 파일 앱에 저장한 GLB 모델을 선택하면 이 장면의 인물 대신 표시돼. 모델 파일은 이 기기에서만 열리며 서버에 업로드되지 않아.</p><input class="hidden-file" id="modelFile" type="file" accept=".glb,model/gltf-binary"><button class="filepick" id="chooseModel" type="button">파일 앱에서 GLB 선택</button><button class="filepick secondary" id="resetModel" type="button">기본 캐릭터로 돌아가기</button><p class="model-status" id="modelStatus" role="status" aria-live="polite">아직 외부 모델을 불러오지 않았어. GLB 파일을 선택해 봐.</p></div>
+<div class="note"><strong>무료 오픈소스 캐릭터</strong><p>Quaternius의 CC0 캐릭터 모델을 불러와 볼 수 있어. 모델은 원본 제공처에서 직접 불러오며, 별도 설치 없이 아이폰에서도 확인할 수 있어.</p><button class="filepick" id="freeModel" type="button">무료 캐릭터 미리보기</button><p class="model-status">원본 모델: Ultimate Modular Men Pack · CC0</p><p class="model-status"><a href="https://quaternius.com/packs/ultimatemodularcharacters.html" target="_blank" rel="noopener">Quaternius 원본 및 라이선스</a></p><div class="note"><strong>내 3D 캐릭터 불러오기</strong><p>아이폰 파일 앱에 저장한 GLB 모델도 선택할 수 있어. 개인 파일은 서버에 업로드되지 않아.</p><input class="hidden-file" id="modelFile" type="file" accept=".glb,model/gltf-binary"><button class="filepick secondary" id="chooseModel" type="button">파일 앱에서 GLB 선택</button><button class="filepick secondary" id="resetModel" type="button">기본 캐릭터로 돌아가기</button><p class="model-status" id="modelStatus" role="status" aria-live="polite">아직 외부 모델을 불러오지 않았어.</p></div></div>
 <div class="note"><strong>이번 삽화의 연출 포인트</strong><p>넓은 어깨 갑옷과 길게 흩날리는 붉은 스카프, 허리의 검으로 실루엣을 잡았어. 눈·눈썹·코·입을 분리해 표정이 보이게 하고, 금속 장식과 가죽 띠를 더해 의상에 층을 만들었어.</p></div>
 <div class="note"><strong>조작</strong><p>화면을 드래그하면 장면을 회전하고, 핀치 또는 휠로 확대·축소할 수 있어.</p></div>
 </aside>
@@ -171,12 +171,42 @@ function disposeModel(root){
     });
   });
 }
+function installModel(root,label){
+  const bounds=new THREE.Box3().setFromObject(root);
+  const size=bounds.getSize(new THREE.Vector3());
+  const center=bounds.getCenter(new THREE.Vector3());
+  if(!Number.isFinite(size.y)||size.y<.001)throw new Error('모델 크기를 확인할 수 없어.');
+  const scale=3.7/size.y;
+  root.scale.setScalar(scale);
+  root.position.set(-center.x*scale,-bounds.min.y*scale,-center.z*scale);
+  if(importedRoot){scene.remove(importedRoot);disposeModel(importedRoot);}
+  importedRoot=root;
+  scene.add(importedRoot);
+  figure.visible=false;
+  turned=false;
+  importedRoot.rotation.y=0;
+  camera.position.set(5,2.9,8);
+  camera.fov=36;camera.updateProjectionMatrix();
+  controls.target.set(0,1.8,0);controls.update();
+  document.querySelectorAll('[data-view]').forEach(b=>b.classList.remove('active'));
+  modelStatus.textContent='불러오기 완료: '+label+' · 장면 크기에 맞췄어.';
+}
 function resetImportedModel(){
   if(importedRoot){scene.remove(importedRoot);disposeModel(importedRoot);importedRoot=null;}
   figure.visible=true;
   setView('low');
   modelStatus.textContent='기본 캐릭터를 표시하고 있어.';
 }
+document.getElementById('freeModel').addEventListener('click',()=>{
+  modelStatus.textContent='무료 CC0 캐릭터를 불러오는 중…';
+  const url='https://raw.githubusercontent.com/trebeljahr/quaternius-showcase/main/public/glb/modular_men/Casual.glb';
+  gltfLoader.load(url,gltf=>{
+    try{installModel(gltf.scene,'Quaternius Casual.glb (CC0)');}
+    catch(err){modelStatus.textContent='모델 배치 실패: '+err.message;}
+  },undefined,err=>{
+    modelStatus.textContent='무료 모델을 불러오지 못했어. 네트워크 연결 후 다시 시도해 줘.';
+  });
+});
 document.getElementById('chooseModel').addEventListener('click',()=>modelInput.click());
 document.getElementById('resetModel').addEventListener('click',resetImportedModel);
 modelInput.addEventListener('change',async()=>{
@@ -194,27 +224,8 @@ modelInput.addEventListener('change',async()=>{
   try{
     const buffer=await file.arrayBuffer();
     gltfLoader.parse(buffer,'',gltf=>{
-      try{
-        const root=gltf.scene;
-        const bounds=new THREE.Box3().setFromObject(root);
-        const size=bounds.getSize(new THREE.Vector3());
-        const center=bounds.getCenter(new THREE.Vector3());
-        if(!Number.isFinite(size.y)||size.y<.001)throw new Error('모델 크기를 확인할 수 없어.');
-        const scale=3.7/size.y;
-        root.scale.setScalar(scale);
-        root.position.set(-center.x*scale,-bounds.min.y*scale,-center.z*scale);
-        if(importedRoot){scene.remove(importedRoot);disposeModel(importedRoot);}
-        importedRoot=root;
-        scene.add(importedRoot);
-        figure.visible=false;
-        turned=false;
-        importedRoot.rotation.y=0;
-        camera.position.set(5,2.9,8);
-        camera.fov=36;camera.updateProjectionMatrix();
-        controls.target.set(0,1.8,0);controls.update();
-        document.querySelectorAll('[data-view]').forEach(b=>b.classList.remove('active'));
-        modelStatus.textContent='불러오기 완료: '+file.name+' · 모델 높이를 장면에 맞췄어.';
-      }catch(err){modelStatus.textContent='모델 배치 실패: '+err.message;}
+      try{installModel(gltf.scene,file.name);}
+      catch(err){modelStatus.textContent='모델 배치 실패: '+err.message;}
     },err=>{modelStatus.textContent='GLB 읽기 실패: '+(err?.message||'파일 형식을 확인해 줘.');});
   }catch(err){modelStatus.textContent='파일을 읽지 못했어: '+(err?.message||'다시 시도해 줘.');}
   modelInput.value='';
