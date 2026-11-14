@@ -267,3 +267,10 @@ arcForm, deviceId, folderMemo, gdBase, gdLast, gdLinked, ideaText, mangaDataVer,
 - 빛 조금 낮춤(반구 1.5, 해 2.4).
 - 컷 연출 사전 얼굴 칸(`CT.face`): `head3()` — `__d3Sprite({head:1, emo})`로 머리만 찍어 붙인다(`EMO3` 감정·단계 → 3D 표정). 땀·핏대·집중선·눈물 기호는 손그림으로 덧그림. 그늘(shade) 칸과 한 칸 연출 탭의 기호 얼굴은 손그림 그대로.
 - 만화 연출 문법(#grammar) 끝에 `#gram3d`(`[[MOD:gram3d]]`): 옥상의 서윤·도현을 샷 7가지·앵글 6가지로 찍은 줄, 반응 컷 예시 4컷, 「직접 돌려 보기」(샷·앵글·표정·소품·장소 고르기, 끌기·휠·두 손가락, 정면/45°/옆/뒤/위/아래). `PAGE_ON.grammar`에서 처음 열 때 만든다. 창구 `__d3Sets`·`__d3EmoKo`·`__d3PropKo`.
+
+
+## 작업실 로비 (2026-11-15)
+- GitHub Pages 루트 `index.html`은 작업물 로비다. 새 프로젝트를 추가할 때 이 화면의 카드 목록을 갱신한다.
+- 기존 만화 클리셰·연출 사전 본문은 `dictionary.html`로 보존했다. 기존 섹션 해시와 localStorage 데이터는 같은 도메인에서 계속 사용한다.
+- 로비의 프로젝트 링크: 이세계 주시자 https://isekaipp.netlify.app/ · 이세계 트럭 운전사 https://isekaitk.netlify.app/
+- 사전 주소: https://sooc200833-lang.github.io/-/dictionary.html
