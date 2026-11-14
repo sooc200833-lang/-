@@ -291,3 +291,11 @@ arcForm, deviceId, folderMemo, gdBase, gdLast, gdLinked, ideaText, mangaDataVer,
 - 사용 기술: Three.js r160 `GLTFLoader` (Three.js 프로젝트의 MIT 라이선스 기반 오픈소스 모듈). CDN에서 같은 버전으로 로드한다.
 - 테스트 주의: GitHub 커밋은 반영했지만 실제 아이폰 브라우저에서 GLB 파일을 열어 보는 런타임 검증은 아직 하지 않았다. 압축 방식에 따라 추가 디코더가 필요한 모델은 열리지 않을 수 있다.
 
+
+
+## 모바일 3D 모델 불러오기 보완 (2026-11-15)
+- `threejs-illustrations.html`에서 HTML/JS에 잘못 삽입된 문자 그대로의 `\\n` 두 곳을 실제 줄바꿈으로 수정. 이 문제는 import 선언 구문을 깨뜨릴 수 있었음.
+- Three.js r160의 `GLTFLoader`와 `OrbitControls` 기반 모바일 터치 조작을 유지.
+- iOS 파일 앱에서 GLB를 선택하는 로컬 파일 입력을 유지하며 파일은 서버로 업로드하지 않음.
+- GLB는 35MB 이하만 허용하고 모델 높이를 장면 크기에 맞춰 자동 정규화.
+- 실제 iPhone Safari 런타임 검증은 아직 수행하지 않았으므로 배포 후 기기 확인 필요.
