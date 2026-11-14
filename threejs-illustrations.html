@@ -25,12 +25,12 @@ button{font:inherit;cursor:pointer}.controls{display:grid;grid-template-columns:
 <main>
 <div class="eyebrow">THREE.JS · COMIC SCENE STUDY 001</div>
 <h1>압도적인 등장</h1>
-<p class="intro">로우 앵글과 역광으로 인물의 위압감을 만드는 장면을 3D로 구성한 첫 번째 삽화 시제품이야. 카메라 구도를 바꾸고 장면을 직접 돌려볼 수 있어.</p>
+<p class="intro">갑옷과 망토, 표정과 장비까지 입체적으로 구성한 판타지 인물 삽화 시제품이야. 카메라 구도를 바꾸고 장면을 직접 돌려볼 수 있어.</p>
 <div class="layout">
 <section class="stage" aria-label="3D 만화 삽화">
 <div id="scene"></div>
 <div class="scene-label"><b>SCENE 001 / THE ARRIVAL</b><span>LOW ANGLE · BACKLIGHT · SILHOUETTE</span></div>
-<div class="caption" id="caption">“이제부터는 내가 정한다.”</div>
+<div class="caption" id="caption">“길을 비켜라. 내가 왔다.”</div>
 </section>
 <aside class="panel">
 <h2>카메라 연출</h2>
@@ -42,7 +42,7 @@ button{font:inherit;cursor:pointer}.controls{display:grid;grid-template-columns:
 <button data-view="wide">와이드 샷</button>
 </div>
 <button class="action" id="turn">캐릭터 회전 ↻</button>
-<div class="note"><strong>이번 삽화의 연출 포인트</strong><p>인물을 화면 중앙보다 약간 아래에 두고, 아래쪽에서 올려다보는 시점으로 어깨와 코트의 실루엣을 강조했어. 뒤쪽 원형 조명은 역광 역할을 해.</p></div>
+<div class="note"><strong>이번 삽화의 연출 포인트</strong><p>넓은 어깨 갑옷과 길게 흩날리는 붉은 스카프, 허리의 검으로 실루엣을 잡았어. 눈·눈썹·코·입을 분리해 표정이 보이게 하고, 금속 장식과 가죽 띠를 더해 의상에 층을 만들었어.</p></div>
 <div class="note"><strong>조작</strong><p>화면을 드래그하면 장면을 회전하고, 핀치 또는 휠로 확대·축소할 수 있어.</p></div>
 </aside>
 </div>
@@ -68,38 +68,83 @@ const wall=mesh(new THREE.PlaneGeometry(14,9),mat(0x332936),scene,0,4,-3.8);
 const halo=new THREE.Mesh(new THREE.TorusGeometry(1.65,.045,10,80),new THREE.MeshBasicMaterial({color:0xe6a779}));halo.position.set(0,3.7,-3.65);scene.add(halo);
 const halo2=new THREE.Mesh(new THREE.CircleGeometry(1.52,64),new THREE.MeshBasicMaterial({color:0x9e6c75,transparent:true,opacity:.13}));halo2.position.set(0,3.7,-3.62);scene.add(halo2);
 const figure=new THREE.Group();scene.add(figure);
-// legs
-const legGeo=new THREE.CapsuleGeometry(.19,.9,5,10);
-const l1=mesh(legGeo,dark,figure,-.23,.72,0);l1.rotation.z=-.06;
-const l2=mesh(legGeo,dark,figure,.23,.72,.02);l2.rotation.z=.06;
-mesh(new THREE.BoxGeometry(.42,.17,.62),dark,figure,-.23,.16,.12);
-mesh(new THREE.BoxGeometry(.42,.17,.62),dark,figure,.23,.16,.12);
-// torso and coat
-const torso=mesh(new THREE.CapsuleGeometry(.48,.95,6,12),coat,figure,0,2.05,0);
-const lapel1=mesh(new THREE.ConeGeometry(.3,.95,4),dark,figure,-.22,2.32,.34);lapel1.rotation.z=.35;lapel1.rotation.x=.12;
-const lapel2=mesh(new THREE.ConeGeometry(.3,.95,4),dark,figure,.22,2.32,.34);lapel2.rotation.z=-.35;lapel2.rotation.x=.12;
-const coatTail1=mesh(new THREE.BoxGeometry(.38,1.1,.16),dark,figure,-.28,1.25,-.13);coatTail1.rotation.z=.13;
-const coatTail2=mesh(new THREE.BoxGeometry(.38,1.1,.16),dark,figure,.28,1.25,-.13);coatTail2.rotation.z=-.13;
+// Character: stylized fantasy commander, built from layered low-poly forms
+const figure=new THREE.Group();scene.add(figure);
+const ivory=mat(0xe8d8c0), leather=mat(0x241e27), red=mat(0x8e3947), steel=mat(0x777d8b), steelDark=mat(0x343946), eyeWhite=mat(0xf1e8d9), iris=mat(0x8d4a36);
+function ball(parent,m,x,y,z,sx,sy,sz,seg=16){const o=mesh(new THREE.SphereGeometry(1,seg,Math.max(8,Math.floor(seg*.7))),m,parent,x,y,z);o.scale.set(sx,sy,sz);return o;}
+function rod(parent,m,a,b,r1,r2=r1,n=10){const va=new THREE.Vector3(...a),vb=new THREE.Vector3(...b),d=new THREE.Vector3().subVectors(vb,va);const o=mesh(new THREE.CylinderGeometry(r2,r1,d.length(),n),m,parent,...va.clone().add(vb).multiplyScalar(.5).toArray());o.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),d.normalize());return o;}
+function box(parent,m,x,y,z,sx,sy,sz,rx=0,ry=0,rz=0){const o=mesh(new THREE.BoxGeometry(sx,sy,sz),m,parent,x,y,z);o.rotation.set(rx,ry,rz);return o;}
+// boots and legs
+for(const side of [-1,1]){
+ const x=side*.24;
+ rod(figure,dark,[x,.42,.02],[x*1.08,1.22,.02],.16,.21,9);
+ ball(figure,dark,x*1.08,.48,.10,.2,.14,.34);
+ box(figure,leather,x,1.08,.01,.39,.15,.25,0,0,side*.025);
+ // knee guards
+ ball(figure,steelDark,x,1.28,.19,.22,.19,.12,12);
+}
+// coat body, waist and flared tails
+const torso=mesh(new THREE.CapsuleGeometry(.48,.88,7,12),coat,figure,0,2.05,0);
+ball(figure,leather,0,1.53,.02,.43,.22,.31);
+for(const side of [-1,1]){
+ const tail=box(figure,coat,side*.29,1.17,-.05,.43,1.03,.22,0,0,side*-.14);
+ tail.rotation.x=-.08;
+ // shoulder armor and upper arms
+ ball(figure,steelDark,side*.55,2.53,0,.34,.25,.34,12);
+ ball(figure,steel,side*.56,2.56,.13,.28,.19,.24,12);
+ rod(figure,coat,[side*.62,2.39,0],[side*.78,1.87,.03],.17,.14);
+ ball(figure,leather,side*.79,1.82,.04,.16,.17,.16);
+ rod(figure,leather,[side*.79,1.76,.04],[side*.83,1.51,.13],.12,.10);
+ ball(figure,skin,side*.83,1.46,.15,.13,.15,.12);
+ // vambrace
+ rod(figure,steelDark,[side*.80,1.88,.13],[side*.84,1.60,.17],.15,.13);
+ // armor rivets
+ for(let j=0;j<3;j++) ball(figure,gold,side*(.53+j*.055),2.58,.34,.025,.025,.025,8);
+}
+// coat lapels and high collar
+const collarL=mesh(new THREE.ConeGeometry(.23,.62,4),dark,figure,-.19,2.63,.27);collarL.rotation.z=.35;collarL.rotation.x=.25;
+const collarR=mesh(new THREE.ConeGeometry(.23,.62,4),dark,figure,.19,2.63,.27);collarR.rotation.z=-.35;collarR.rotation.x=.25;
+for(let y=1.78;y<2.36;y+=.19) ball(figure,gold,0,y,.48,.035,.035,.025,8);
+// belt, buckle, diagonal chest strap
+box(figure,leather,0,1.58,.34,.82,.13,.12);
+box(figure,gold,0,1.58,.42,.17,.16,.045);
+rod(figure,leather,[-.34,2.44,.36],[.35,1.78,.37],.065,.065,8);
+for(let i=0;i<4;i++) ball(figure,gold,-.24+i*.16,2.34-i*.13,.43,.025,.025,.02,8);
 // neck and head
-mesh(new THREE.CylinderGeometry(.14,.17,.3,12),skin,figure,0,2.82,0);
-mesh(new THREE.SphereGeometry(.43,24,18),skin,figure,0,3.28,.02);
-const fringe=mesh(new THREE.SphereGeometry(.46,18,12,0,Math.PI*2,0,Math.PI*.55),hair,figure,0,3.48,.04);fringe.scale.set(1.04,.9,1.02);
-for(let i=0;i<5;i++){const spike=mesh(new THREE.ConeGeometry(.14,.48,5),hair,figure,-.32+i*.16,3.45,.18);spike.rotation.z=(i-2)*-.32;spike.rotation.x=-.2;}
-// face details
-const eyeMat=new THREE.MeshBasicMaterial({color:0x20161a});
-mesh(new THREE.SphereGeometry(.045,10,8),eyeMat,figure,-.15,3.29,.405);
-mesh(new THREE.SphereGeometry(.045,10,8),eyeMat,figure,.15,3.29,.405);
-const browMat=mat(0x39252a);
-const b1=mesh(new THREE.BoxGeometry(.17,.035,.035),browMat,figure,-.15,3.39,.405);b1.rotation.z=.18;
-const b2=mesh(new THREE.BoxGeometry(.17,.035,.035),browMat,figure,.15,3.39,.405);b2.rotation.z=-.18;
-// arms, deliberately broad silhouette
-const armGeo=new THREE.CapsuleGeometry(.16,.72,5,10);
-const a1=mesh(armGeo,coat,figure,-.62,2.05,0);a1.rotation.z=-.25;
-const a2=mesh(armGeo,coat,figure,.62,2.05,0);a2.rotation.z=.25;
-mesh(new THREE.SphereGeometry(.18,12,10),skin,figure,-.72,1.58,.08);
-mesh(new THREE.SphereGeometry(.18,12,10),skin,figure,.72,1.58,.08);
-// chest clasp
-mesh(new THREE.SphereGeometry(.09,12,10),gold,figure,0,2.45,.48);
+rod(figure,skin,[0,2.72,0],[0,3.02,0],.14,.16);
+ball(figure,skin,0,3.30,.04,.39,.49,.34,20);
+// ears
+for(const side of [-1,1]) ball(figure,skin,side*.39,3.29,.03,.09,.14,.09,12);
+// face: expressive eyes, brows, nose and mouth, facing camera +Z
+for(const side of [-1,1]){
+ ball(figure,eyeWhite,side*.145,3.34,.345,.105,.065,.045,12);
+ ball(figure,iris,side*.145,3.335,.386,.045,.05,.025,12);
+ ball(figure,eyeMat,side*.145,3.335,.407,.022,.035,.012,10);
+ const brow=box(figure,hair,side*.15,3.46,.36,.19,.045,.07,0,0,side*-.16);
+}
+ball(figure,skin,0,3.23,.39,.055,.11,.065,10);
+rod(figure,dark,[-.09,3.12,.36],[0,3.105,.39],.012,.012,6);
+rod(figure,dark,[0,3.105,.39],[.09,3.12,.36],.012,.012,6);
+// layered swept hair and locks
+ball(figure,hair,0,3.58,-.015,.43,.28,.38,16);
+for(let i=0;i<7;i++){
+ const x=-.36+i*.12;
+ const lock=mesh(new THREE.ConeGeometry(.105,.43,6),hair,figure,x,3.56,.22);
+ lock.rotation.z=-.28+(i/6)*.56;lock.rotation.x=-.12;
+}
+const sideLockL=mesh(new THREE.ConeGeometry(.12,.55,6),hair,figure,-.34,3.32,.12);sideLockL.rotation.z=-.18;
+const sideLockR=mesh(new THREE.ConeGeometry(.12,.55,6),hair,figure,.34,3.32,.12);sideLockR.rotation.z=.18;
+// long red scarf blowing behind the shoulders
+const scarf=box(figure,red,0,2.65,-.38,.25,.2,1.35,-.15,0,0);scarf.rotation.z=-.18;
+const scarfTail=mesh(new THREE.ConeGeometry(.2,1.0,5),red,figure,.22,2.15,-.9);scarfTail.rotation.x=Math.PI/2;scarfTail.rotation.z=-.35;
+// sword silhouette at the hip
+const sword=new THREE.Group();figure.add(sword);sword.position.set(.62,1.45,-.12);sword.rotation.z=-.28;
+rod(sword,leather,[0,-.16,0],[0,.17,0],.055,.055,8);
+box(sword,gold,0,.19,0,.38,.07,.1);
+rod(sword,steel,[0,.22,0],[0,1.45,0],.095,.018,6);
+const bladeTip=mesh(new THREE.ConeGeometry(.095,.24,6),steel,sword,0,1.55,0);bladeTip.rotation.z=Math.PI;
+// dramatic shoulder cape
+const cape=mesh(new THREE.ConeGeometry(.78,1.65,5,1,true),dark,figure,0,1.95,-.38);cape.rotation.x=Math.PI/2;cape.rotation.z=Math.PI;
 // dramatic graphic rays behind figure
 const rayMat=new THREE.LineBasicMaterial({color:0xc18b80,transparent:true,opacity:.22});
 for(let i=0;i<24;i++){const a=i/24*Math.PI*2;const p1=new THREE.Vector3(Math.cos(a)*2.1,3.6+Math.sin(a)*1.8,-3.5);const p2=new THREE.Vector3(Math.cos(a)*5.2,3.6+Math.sin(a)*4.1,-3.5);const geo=new THREE.BufferGeometry().setFromPoints([p1,p2]);scene.add(new THREE.Line(geo,rayMat));}
