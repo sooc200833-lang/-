@@ -16,7 +16,7 @@ main{width:min(1120px,calc(100% - 32px));margin:34px auto 70px}.eyebrow{font-siz
 .caption{position:absolute;left:50%;bottom:22px;transform:translateX(-50%);width:max-content;max-width:calc(100% - 36px);padding:12px 19px;background:#f2eee5;color:#211d23;font-family:Georgia,"Noto Serif KR",serif;font-weight:900;font-size:clamp(16px,2.5vw,22px);letter-spacing:-.04em;box-shadow:5px 5px 0 #9e654f;text-align:center;pointer-events:none}
 .panel{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:18px;height:max-content}.panel h2{font-size:13px;margin:0 0 15px}.panel p{font-size:12px;color:var(--muted);line-height:1.75;margin:0 0 16px}
 button{font:inherit;cursor:pointer}.controls{display:grid;grid-template-columns:1fr 1fr;gap:8px}.controls button,.action{border:1px solid #5a505d;background:#302a34;color:var(--ink);border-radius:5px;padding:11px 9px;font-size:11px;font-weight:750}.controls button.active{background:#e2a66d;color:#211a1b;border-color:#e2a66d}.action{width:100%;margin-top:9px;background:transparent}
-.note{border-top:1px solid var(--line);margin-top:17px;padding-top:15px}.note strong{font-size:11px;color:var(--accent)}.note p{margin:7px 0 0}.filepick{display:block;width:100%;border:1px solid #b77d4d;background:#e2a66d;color:#211a1b;border-radius:5px;padding:12px 10px;font-size:12px;font-weight:850;text-align:center;margin-top:8px}.filepick.secondary{background:transparent;color:var(--ink);border-color:#5a505d}.model-status{font-size:11px;color:#cfc4d1;line-height:1.6;margin:9px 0 0;overflow-wrap:anywhere}.hidden-file{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}
+.note{border-top:1px solid var(--line);margin-top:17px;padding-top:15px}.note strong{font-size:11px;color:var(--accent)}.note p{margin:7px 0 0}.filepick{display:block;width:100%;border:1px solid #b77d4d;background:#e2a66d;color:#211a1b;border-radius:5px;padding:12px 10px;font-size:12px;font-weight:850;text-align:center;margin-top:8px}.filepick.secondary{background:transparent;color:var(--ink);border-color:#5a505d}.model-status{font-size:11px;color:#cfc4d1;line-height:1.6;margin:9px 0 0;overflow-wrap:anywhere}.model-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px}.model-grid .filepick{margin-top:0;padding:10px 6px}.hidden-file{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}
 @media(max-width:780px){.layout{grid-template-columns:1fr}.stage{min-height:470px}.panel{order:2}}@media(max-width:420px){.stage{min-height:410px}.caption{bottom:14px;padding:10px 12px}}
 </style>
 </head>
@@ -42,7 +42,14 @@ button{font:inherit;cursor:pointer}.controls{display:grid;grid-template-columns:
 <button data-view="wide">와이드 샷</button>
 </div>
 <button class="action" id="turn">캐릭터 회전 ↻</button>
-<div class="note"><strong>무료 오픈소스 캐릭터</strong><p>Quaternius의 CC0 캐릭터 모델을 불러와 볼 수 있어. 모델은 원본 제공처에서 직접 불러오며, 별도 설치 없이 아이폰에서도 확인할 수 있어.</p><button class="filepick" id="freeModel" type="button">무료 캐릭터 미리보기</button><p class="model-status">원본 모델: Ultimate Modular Men Pack · CC0</p><p class="model-status"><a href="https://quaternius.com/packs/ultimatemodularcharacters.html" target="_blank" rel="noopener">Quaternius 원본 및 라이선스</a></p><div class="note"><strong>내 3D 캐릭터 불러오기</strong><p>아이폰 파일 앱에 저장한 GLB 모델도 선택할 수 있어. 개인 파일은 서버에 업로드되지 않아.</p><input class="hidden-file" id="modelFile" type="file" accept=".glb,model/gltf-binary"><button class="filepick secondary" id="chooseModel" type="button">파일 앱에서 GLB 선택</button><button class="filepick secondary" id="resetModel" type="button">기본 캐릭터로 돌아가기</button><p class="model-status" id="modelStatus" role="status" aria-live="polite">아직 외부 모델을 불러오지 않았어.</p></div></div>
+<div class="note"><strong>무료 오픈소스 캐릭터</strong><p>Quaternius의 CC0 캐릭터 모델을 불러와 볼 수 있어. 모델은 원본 제공처에서 직접 불러오며, 별도 설치 없이 아이폰에서도 확인할 수 있어.</p><div class="model-grid">
+<button class="filepick" data-model="men" type="button">남성 캐주얼</button>
+<button class="filepick secondary" data-model="men2" type="button">남성 캐주얼 2</button>
+<button class="filepick secondary" data-model="women" type="button">여성 캐주얼</button>
+<button class="filepick secondary" data-model="deer" type="button">사슴 모델</button>
+</div>
+<p class="model-status">Quaternius 무료 CC0 모델 4종을 골라서 볼 수 있어. 동물 모델에 애니메이션이 포함된 경우 자동 재생돼.</p>
+<p class="model-status"><a href="https://quaternius.com/packs/ultimatemodularcharacters.html" target="_blank" rel="noopener">캐릭터 원본</a> · <a href="https://quaternius.com/packs/ultimateanimatedanimals.html" target="_blank" rel="noopener">동물 원본</a></p><div class="note"><strong>내 3D 캐릭터 불러오기</strong><p>아이폰 파일 앱에 저장한 GLB 모델도 선택할 수 있어. 개인 파일은 서버에 업로드되지 않아.</p><input class="hidden-file" id="modelFile" type="file" accept=".glb,model/gltf-binary"><button class="filepick secondary" id="chooseModel" type="button">파일 앱에서 GLB 선택</button><button class="filepick secondary" id="resetModel" type="button">기본 캐릭터로 돌아가기</button><p class="model-status" id="modelStatus" role="status" aria-live="polite">아직 외부 모델을 불러오지 않았어.</p></div></div>
 <div class="note"><strong>이번 삽화의 연출 포인트</strong><p>넓은 어깨 갑옷과 길게 흩날리는 붉은 스카프, 허리의 검으로 실루엣을 잡았어. 눈·눈썹·코·입을 분리해 표정이 보이게 하고, 금속 장식과 가죽 띠를 더해 의상에 층을 만들었어.</p></div>
 <div class="note"><strong>조작</strong><p>화면을 드래그하면 장면을 회전하고, 핀치 또는 휠로 확대·축소할 수 있어.</p></div>
 </aside>
@@ -156,6 +163,8 @@ function setView(name){const v=views[name];camera.position.set(...v.p);camera.fo
 document.querySelectorAll('[data-view]').forEach(b=>b.addEventListener('click',()=>setView(b.dataset.view)));
 let turned=false;
 let importedRoot=null;
+let activeMixer=null;
+const clock=new THREE.Clock();
 const gltfLoader=new GLTFLoader();
 const modelInput=document.getElementById('modelFile');
 const modelStatus=document.getElementById('modelStatus');
@@ -171,13 +180,12 @@ function disposeModel(root){
     });
   });
 }
-function installModel(root,label){
+function installModel(root,label,animations=[]){
   root.updateMatrixWorld(true);
   const bounds=new THREE.Box3().setFromObject(root);
   const size=bounds.getSize(new THREE.Vector3());
   const center=bounds.getCenter(new THREE.Vector3());
   if(!Number.isFinite(size.y)||size.y<.001)throw new Error('모델 크기를 확인할 수 없어.');
-  // 모델 자체를 작게 정규화해 모바일 화면에서 여백을 확보
   const scale=2.65/size.y;
   root.scale.setScalar(scale);
   root.position.set(-center.x*scale,-bounds.min.y*scale,-center.z*scale);
@@ -186,6 +194,7 @@ function installModel(root,label){
   const fittedCenter=fittedBounds.getCenter(new THREE.Vector3());
   const sphere=fittedBounds.getBoundingSphere(new THREE.Sphere());
   if(importedRoot){scene.remove(importedRoot);disposeModel(importedRoot);}
+  if(activeMixer){activeMixer.stopAllAction();activeMixer=null;}
   importedRoot=root;
   scene.add(importedRoot);
   figure.visible=false;
@@ -203,23 +212,38 @@ function installModel(root,label){
   controls.minDistance=3;
   controls.maxDistance=20;
   controls.update();
+  if(animations&&animations.length){
+    activeMixer=new THREE.AnimationMixer(importedRoot);
+    activeMixer.clipAction(animations[0]).play();
+  }
   document.querySelectorAll('[data-view]').forEach(b=>b.classList.remove('active'));
-  modelStatus.textContent='불러오기 완료: '+label+' · 모바일 화면에 맞춰 전신이 보이도록 크기를 조정했어.';
+  modelStatus.textContent='불러오기 완료: '+label+(animations&&animations.length?' · 기본 애니메이션 재생 중':' · 전신 화면에 맞춤');
 }
 function resetImportedModel(){
+  if(activeMixer){activeMixer.stopAllAction();activeMixer=null;}
   if(importedRoot){scene.remove(importedRoot);disposeModel(importedRoot);importedRoot=null;}
   figure.visible=true;
   setView('low');
   modelStatus.textContent='기본 캐릭터를 표시하고 있어.';
 }
-document.getElementById('freeModel').addEventListener('click',()=>{
-  modelStatus.textContent='무료 CC0 캐릭터를 불러오는 중…';
-  const url='https://raw.githubusercontent.com/trebeljahr/quaternius-showcase/main/public/glb/modular_men/Casual.glb';
-  gltfLoader.load(url,gltf=>{
-    try{installModel(gltf.scene,'Quaternius Casual.glb (CC0)');}
-    catch(err){modelStatus.textContent='모델 배치 실패: '+err.message;}
-  },undefined,err=>{
-    modelStatus.textContent='무료 모델을 불러오지 못했어. 네트워크 연결 후 다시 시도해 줘.';
+const freeModels={
+  men:{url:'https://raw.githubusercontent.com/trebeljahr/quaternius-showcase/main/public/glb/modular_men/Casual.glb',label:'남성 캐주얼'},
+  men2:{url:'https://raw.githubusercontent.com/trebeljahr/quaternius-showcase/main/public/glb/modular_men/Casual2.glb',label:'남성 캐주얼 2'},
+  women:{url:'https://raw.githubusercontent.com/trebeljahr/quaternius-showcase/main/public/glb/modular_women/Casual.glb',label:'여성 캐주얼'},
+  deer:{url:'https://raw.githubusercontent.com/trebeljahr/quaternius-showcase/main/public/glb/animals_pack/Deer.glb',label:'사슴'}
+};
+document.querySelectorAll('[data-model]').forEach(button=>{
+  button.addEventListener('click',()=>{
+    const model=freeModels[button.dataset.model];
+    if(!model)return;
+    modelStatus.textContent=model.label+' 모델을 불러오는 중…';
+    document.querySelectorAll('[data-model]').forEach(b=>b.classList.toggle('active',b===button));
+    gltfLoader.load(model.url,gltf=>{
+      try{installModel(gltf.scene,model.label+' (Quaternius CC0)',gltf.animations);}
+      catch(err){modelStatus.textContent='모델 배치 실패: '+err.message;}
+    },undefined,err=>{
+      modelStatus.textContent='모델을 불러오지 못했어. 네트워크 연결 후 다시 시도해 줘.';
+    });
   });
 });
 document.getElementById('chooseModel').addEventListener('click',()=>modelInput.click());
@@ -250,7 +274,7 @@ document.getElementById('turn').addEventListener('click',()=>{
   const target=importedRoot||figure;
   target.rotation.y=turned?Math.PI*.72:0;
 });
-function animate(){requestAnimationFrame(animate);controls.update();renderer.render(scene,camera)}animate();
+function animate(){requestAnimationFrame(animate);const delta=clock.getDelta();if(activeMixer)activeMixer.update(delta);controls.update();renderer.render(scene,camera)}animate();
 </script>
 </body>
 </html>
