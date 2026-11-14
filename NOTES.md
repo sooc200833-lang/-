@@ -274,3 +274,10 @@ arcForm, deviceId, folderMemo, gdBase, gdLast, gdLinked, ideaText, mangaDataVer,
 - 기존 만화 클리셰·연출 사전 본문은 `dictionary.html`로 보존했다. 기존 섹션 해시와 localStorage 데이터는 같은 도메인에서 계속 사용한다.
 - 로비의 프로젝트 링크: 이세계 주시자 https://isekaipp.netlify.app/ · 이세계 트럭 운전사 https://isekaitk.netlify.app/
 - 사전 주소: https://sooc200833-lang.github.io/-/dictionary.html
+
+
+## Three.js 삽화 시제품 (2026-11-15)
+- `threejs-illustrations.html`의 첫 장면 「압도적인 등장」을 판타지 지휘관 캐릭터 중심으로 개선했다.
+- 기존 단순 캡슐형 인물에서 얼굴(눈·홍채·눈썹·코·입), 층이 있는 머리카락, 어깨 갑옷, 코트, 가죽 가슴끈·허리띠, 금속 장식, 붉은 스카프, 검과 망토를 갖춘 저폴리 3D 모델로 변경.
+- 카메라 앵글 변경·드래그 회전·확대 축소 기능은 유지. 사전 본문은 이번 시제품 작업에서 수정하지 않았다.
+- 다음 단계: 사전의 기존 3D 컷 연출 모듈과 연결하기 전에, 시제품의 모바일 렌더링과 얼굴/손/관절 품질을 확인하고 캐릭터 재사용 구조를 만든다. 기존 데이터·저장·동기화 로직은 보존한다.
