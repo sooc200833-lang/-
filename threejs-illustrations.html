@@ -41,7 +41,8 @@ button{font:inherit;cursor:pointer}.controls{display:grid;grid-template-columns:
 <button data-view="close">클로즈업</button>
 <button data-view="wide">와이드 샷</button>
 </div>
-<button class="action" id="turn">캐릭터 회전 ↻</button>\n<div class="note"><strong>내 3D 캐릭터 불러오기</strong><p>아이폰 파일 앱에 저장한 GLB 모델을 선택하면 이 장면의 인물 대신 표시돼. 모델 파일은 이 기기에서만 열리며 서버에 업로드되지 않아.</p><input class="hidden-file" id="modelFile" type="file" accept=".glb,model/gltf-binary"><button class="filepick" id="chooseModel" type="button">파일 앱에서 GLB 선택</button><button class="filepick secondary" id="resetModel" type="button">기본 캐릭터로 돌아가기</button><p class="model-status" id="modelStatus" role="status" aria-live="polite">아직 외부 모델을 불러오지 않았어. GLB 파일을 선택해 봐.</p></div>
+<button class="action" id="turn">캐릭터 회전 ↻</button>
+<div class="note"><strong>내 3D 캐릭터 불러오기</strong><p>아이폰 파일 앱에 저장한 GLB 모델을 선택하면 이 장면의 인물 대신 표시돼. 모델 파일은 이 기기에서만 열리며 서버에 업로드되지 않아.</p><input class="hidden-file" id="modelFile" type="file" accept=".glb,model/gltf-binary"><button class="filepick" id="chooseModel" type="button">파일 앱에서 GLB 선택</button><button class="filepick secondary" id="resetModel" type="button">기본 캐릭터로 돌아가기</button><p class="model-status" id="modelStatus" role="status" aria-live="polite">아직 외부 모델을 불러오지 않았어. GLB 파일을 선택해 봐.</p></div>
 <div class="note"><strong>이번 삽화의 연출 포인트</strong><p>넓은 어깨 갑옷과 길게 흩날리는 붉은 스카프, 허리의 검으로 실루엣을 잡았어. 눈·눈썹·코·입을 분리해 표정이 보이게 하고, 금속 장식과 가죽 띠를 더해 의상에 층을 만들었어.</p></div>
 <div class="note"><strong>조작</strong><p>화면을 드래그하면 장면을 회전하고, 핀치 또는 휠로 확대·축소할 수 있어.</p></div>
 </aside>
@@ -50,7 +51,8 @@ button{font:inherit;cursor:pointer}.controls{display:grid;grid-template-columns:
 <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js"}}</script>
 <script type="module">
 import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js';
-import { OrbitControls } from 'https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/controls/OrbitControls.js';\nimport { GLTFLoader } from 'https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/loaders/GLTFLoader.js';
+import { OrbitControls } from 'https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/controls/OrbitControls.js';
+import { GLTFLoader } from 'https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/loaders/GLTFLoader.js';
 const host=document.getElementById('scene');
 const scene=new THREE.Scene();scene.background=new THREE.Color(0x211c25);scene.fog=new THREE.Fog(0x211c25,12,25);
 const camera=new THREE.PerspectiveCamera(34,1,.1,100);camera.position.set(5,3.0,8);
