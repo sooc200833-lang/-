@@ -1,0 +1,197 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#17151a">
+<title>나물의 작업실 — 사전 3D 인물 실험</title>
+<style>
+:root{color-scheme:dark;--bg:#17151a;--panel:#211e25;--ink:#f1eee8;--muted:#aaa3ad;--line:#46404b;--accent:#e2a66d}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Noto Sans KR",sans-serif}
+header{height:58px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;padding:0 18px;gap:12px}
+a{color:inherit}.brand{font-size:12px;font-weight:850;letter-spacing:.04em;text-decoration:none}.back{font-size:11px;color:var(--muted);text-decoration:none}
+main{width:min(1080px,calc(100% - 24px));margin:24px auto 60px}.eyebrow{font-size:10px;letter-spacing:.18em;color:var(--accent);font-weight:900}h1{font-size:clamp(25px,5vw,38px);letter-spacing:-.055em;margin:8px 0}.intro{color:var(--muted);font-size:13px;line-height:1.75;margin:0 0 18px}
+.layout{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:12px}.stage{position:relative;min-height:540px;height:min(68vh,720px);background:radial-gradient(ellipse at 50% 38%,#51404a 0,#29232c 48%,#151319 100%);border:1px solid var(--line);border-radius:8px;overflow:hidden;touch-action:pan-y}
+#scene{position:absolute;inset:0}#scene canvas{display:block;width:100%;height:100%;touch-action:none}.stage-label{position:absolute;top:14px;left:15px;pointer-events:none}.stage-label b{display:block;font-size:10px;letter-spacing:.14em;color:#f0c59d}.stage-label span{font-size:10px;color:#d4c6c4}
+.status-pill{position:absolute;bottom:14px;left:14px;max-width:calc(100% - 28px);background:#17151add;border:1px solid #ffffff22;border-radius:20px;padding:7px 11px;color:#eee4dc;font-size:10px;pointer-events:none}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:15px;height:max-content}.panel h2{font-size:12px;margin:0 0 10px}.panel p{font-size:11px;color:var(--muted);line-height:1.7;margin:0 0 12px}
+select,button{font:inherit}select{width:100%;background:#302a34;color:var(--ink);border:1px solid #5a505d;border-radius:5px;padding:11px 9px;font-size:12px;margin:0 0 12px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:7px}.grid button,.action{border:1px solid #5a505d;background:#302a34;color:var(--ink);border-radius:5px;padding:10px 8px;font-size:11px;font-weight:750;min-height:40px}.grid button.active{background:var(--accent);color:#211a1b;border-color:var(--accent)}
+.action{width:100%;margin-top:8px;background:transparent}.section{border-top:1px solid var(--line);margin-top:14px;padding-top:13px}.section strong{font-size:10px;color:var(--accent);display:block;margin-bottom:7px}.meta{font-size:10px;color:#d2c9d4;line-height:1.7;overflow-wrap:anywhere}.bone-list{max-height:140px;overflow:auto;display:flex;flex-wrap:wrap;gap:5px}.bone{font-size:9px;padding:4px 6px;border:1px solid #4a424f;border-radius:4px;color:#cfc6d0}
+small{color:var(--muted);font-size:10px;line-height:1.6;display:block;margin-top:8px}
+@media(max-width:760px){main{margin-top:18px}.layout{grid-template-columns:1fr}.stage{height:56vh;min-height:380px;max-height:580px}.panel{order:2}.panel .two-col{display:grid;grid-template-columns:1fr 1fr;gap:12px}.bone-list{max-height:110px}}
+@media(max-width:380px){.stage{min-height:340px}.panel{padding:12px}}
+</style>
+</head>
+<body>
+<header><a class="brand" href="./">NAMUL / 나물의 작업실</a><a class="back" href="./dictionary.html">← 클리셰 사전</a></header>
+<main>
+<div class="eyebrow">DICTIONARY · CHARACTER RIG TEST 001</div>
+<h1>3D 인물 업그레이드 실험</h1>
+<p class="intro">클리셰 사전의 기존 자세 체계를 외부 3D 인물에 연결할 수 있는지 확인하는 시험판이야. 아직 본 사전에는 적용하지 않았고, 모델의 뼈대와 모바일 표시부터 점검해.</p>
+<div class="layout">
+<section class="stage" aria-label="3D 인물 시험 화면">
+<div id="scene"></div>
+<div class="stage-label"><b>CHARACTER RIG / TEST</b><span>GLB · SKELETON · PROCEDURAL POSE</span></div>
+<div class="status-pill" id="stageStatus">모델을 불러오는 중…</div>
+</section>
+<aside class="panel">
+<h2>인물 모델</h2>
+<select id="modelSelect" aria-label="인물 모델 선택">
+<option value="men">남성 캐주얼</option>
+<option value="farmer">농부 복장</option>
+<option value="worker">작업복</option>
+<option value="women">여성 캐주얼</option>
+</select>
+<p>모델은 외부 GLB로 불러와. 선택한 모델의 뼈대 이름과 애니메이션 유무도 함께 확인해.</p>
+<div class="section">
+<strong>자세 시험</strong>
+<div class="grid" id="poseButtons">
+<button data-pose="base" class="active">기본 자세</button>
+<button data-pose="tilt">고개 기울임</button>
+<button data-pose="fold">팔짱</button>
+<button data-pose="wave">손 흔들기</button>
+<button data-pose="walk">걷기</button>
+<button data-pose="sit">앉기</button>
+</div>
+<button class="action" id="resetCamera">카메라 초기화</button>
+</div>
+<div class="section">
+<strong>모델 진단</strong>
+<div class="meta" id="modelInfo">모델 정보를 기다리는 중…</div>
+<div class="bone-list" id="boneList"></div>
+<small id="poseInfo">자세를 선택하면 연결된 관절을 표시해.</small>
+</div>
+<div class="section">
+<strong>원본 및 라이선스</strong>
+<div class="meta">Quaternius Showcase의 캐릭터 모델 · CC0-1.0</div>
+<small><a href="https://github.com/trebeljahr/quaternius-showcase/blob/main/LICENSES.md" target="_blank" rel="noopener">모델별 라이선스 확인</a> · <a href="https://quaternius.com/packs/ultimatemodularcharacters.html" target="_blank" rel="noopener">원본 캐릭터 팩</a></small>
+</div>
+</aside>
+</div>
+</main>
+<script type="module">
+import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.186.1/build/three.module.js';
+import { OrbitControls } from 'https://cdn.jsdelivr.net/npm/three@0.186.1/examples/jsm/controls/OrbitControls.js';
+import { GLTFLoader } from 'https://cdn.jsdelivr.net/npm/three@0.186.1/examples/jsm/loaders/GLTFLoader.js';
+
+const host=document.getElementById('scene');
+const statusEl=document.getElementById('stageStatus');
+const infoEl=document.getElementById('modelInfo');
+const boneList=document.getElementById('boneList');
+const poseInfo=document.getElementById('poseInfo');
+const scene=new THREE.Scene();
+scene.background=new THREE.Color(0x211c25);
+const camera=new THREE.PerspectiveCamera(36,1,.05,80);
+camera.position.set(3.4,2.3,5.8);
+const renderer=new THREE.WebGLRenderer({antialias:true,alpha:false,powerPreference:'low-power'});
+renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,1.5));
+renderer.shadowMap.enabled=true;
+renderer.shadowMap.type=THREE.PCFSoftShadowMap;
+renderer.outputColorSpace=THREE.SRGBColorSpace;
+renderer.toneMapping=THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure=1.05;
+host.appendChild(renderer.domElement);
+const controls=new OrbitControls(camera,renderer.domElement);
+controls.enableDamping=true;controls.dampingFactor=.07;controls.target.set(0,1.1,0);
+controls.minDistance=2.4;controls.maxDistance=9;controls.maxPolarAngle=Math.PI*.82;
+scene.add(new THREE.HemisphereLight(0xe7e0f0,0x29212a,2.0));
+const key=new THREE.DirectionalLight(0xffe1bd,2.6);key.position.set(-3,6,4);key.castShadow=true;key.shadow.mapSize.set(768,768);scene.add(key);
+const fill=new THREE.DirectionalLight(0x9ba9db,1.0);fill.position.set(3,3,-4);scene.add(fill);
+const floorMat=new THREE.MeshStandardMaterial({color:0x35303a,roughness:1});
+const floor=new THREE.Mesh(new THREE.PlaneGeometry(20,20),floorMat);floor.rotation.x=-Math.PI/2;floor.position.y=-.025;floor.receiveShadow=true;scene.add(floor);
+const loader=new GLTFLoader();
+const models={
+ men:{url:'https://raw.githubusercontent.com/trebeljahr/quaternius-showcase/main/public/glb/modular_men/Casual.glb',label:'남성 캐주얼'},
+ farmer:{url:'https://raw.githubusercontent.com/trebeljahr/quaternius-showcase/main/public/glb/modular_men/Farmer.glb',label:'농부 복장'},
+ worker:{url:'https://raw.githubusercontent.com/trebeljahr/quaternius-showcase/main/public/glb/modular_men/Worker.glb',label:'작업복'},
+ women:{url:'https://raw.githubusercontent.com/trebeljahr/quaternius-showcase/main/public/glb/modular_women/Casual.glb',label:'여성 캐주얼'}
+};
+let currentRoot=null, bones={}, restRotations=new Map(), activeModelKey='';
+let requestToken=0;
+const deg=THREE.MathUtils.degToRad;
+function findBone(root,name){let found=null;root.traverse(o=>{if(!found&&o.isBone&&o.name===name)found=o;});return found;}
+function saveRest(root){bones={};restRotations=new Map();root.traverse(o=>{if(o.isBone){bones[o.name]=o;restRotations.set(o,o.quaternion.clone());}});}
+function resetPose(){for(const [bone,q] of restRotations)bone.quaternion.copy(q);if(currentRoot)currentRoot.updateMatrixWorld(true);}
+function rotate(name,x=0,y=0,z=0){const b=bones[name];if(!b)return false;const q=new THREE.Quaternion().setFromEuler(new THREE.Euler(deg(x),deg(y),deg(z),'XYZ'));b.quaternion.copy(restRotations.get(b)).multiply(q);return true;}
+function setPose(p){
+ if(!currentRoot)return;
+ resetPose();
+ let used=[];
+ const apply=(name,x,y,z)=>{if(rotate(name,x,y,z))used.push(name);};
+ if(p==='tilt'){apply('Head',0,0,18);apply('Neck',0,0,5);}
+ if(p==='fold'){apply('Shoulder.L',0,0,-22);apply('UpperArm.L',0,0,-55);apply('LowerArm.L',0,0,-72);apply('Shoulder.R',0,0,22);apply('UpperArm.R',0,0,55);apply('LowerArm.R',0,0,72);}
+ if(p==='wave'){apply('Shoulder.L',0,0,-25);apply('UpperArm.L',0,0,-72);apply('LowerArm.L',0,0,-28);}
+ if(p==='walk'){apply('UpperLeg.L',28,0,0);apply('LowerLeg.L',-12,0,0);apply('UpperLeg.R',-28,0,0);apply('LowerLeg.R',12,0,0);apply('UpperArm.L',-18,0,0);apply('UpperArm.R',18,0,0);}
+ if(p==='sit'){apply('UpperLeg.L',70,0,0);apply('LowerLeg.L',-78,0,0);apply('UpperLeg.R',70,0,0);apply('LowerLeg.R',-78,0,0);}
+ currentRoot.updateMatrixWorld(true);
+ const labels={base:'기본 자세',tilt:'고개 기울임',fold:'팔짱',wave:'손 흔들기',walk:'걷기',sit:'앉기'};
+ poseInfo.textContent=labels[p]+' · 연결된 관절 '+used.length+'개'+(used.length?' ('+used.join(', ')+')':' · 해당 이름의 관절을 찾지 못함');
+ document.querySelectorAll('[data-pose]').forEach(b=>b.classList.toggle('active',b.dataset.pose===p));
+ statusEl.textContent=labels[p]+' 적용';
+}
+function clearCurrent(){
+ if(!currentRoot)return;
+ scene.remove(currentRoot);
+ currentRoot.traverse(o=>{
+  if(o.isMesh){o.geometry?.dispose();const ms=Array.isArray(o.material)?o.material:[o.material];ms.forEach(m=>{if(m){for(const v of Object.values(m)){if(v&&v.isTexture)v.dispose();}m.dispose();}});}
+ });
+ currentRoot=null;bones={};restRotations.clear();
+}
+function fitModel(root){
+ root.updateMatrixWorld(true);
+ const box=new THREE.Box3().setFromObject(root);
+ const size=box.getSize(new THREE.Vector3());
+ const center=box.getCenter(new THREE.Vector3());
+ if(!Number.isFinite(size.y)||size.y<.001)throw new Error('모델 높이를 읽을 수 없어.');
+ const scale=1.85/size.y;
+ root.scale.setScalar(scale);
+ root.position.set(-center.x*scale,-box.min.y*scale,-center.z*scale);
+ root.updateMatrixWorld(true);
+ const fitted=new THREE.Box3().setFromObject(root);
+ const c=fitted.getCenter(new THREE.Vector3());
+ controls.target.copy(c);
+ camera.position.set(c.x+2.7,c.y+1.0,c.z+4.6);
+ controls.update();
+}
+function showDiagnostics(gltf,root,label){
+ const found=[];
+ root.traverse(o=>{if(o.isBone)found.push(o.name);});
+ const skinned=[];root.traverse(o=>{if(o.isSkinnedMesh)skinned.push(o.name);});
+ infoEl.textContent=label+' · 관절 '+found.length+'개 · 스킨 메시 '+skinned.length+'개 · 애니메이션 '+(gltf.animations?.length||0)+'개';
+ boneList.replaceChildren();
+ found.forEach(name=>{const tag=document.createElement('span');tag.className='bone';tag.textContent=name;boneList.appendChild(tag);});
+}
+async function loadModel(key){
+ const token=++requestToken, model=models[key];
+ statusEl.textContent=model.label+' 모델을 불러오는 중…';
+ infoEl.textContent='GLB 로딩 중…';boneList.replaceChildren();
+ try{
+  const gltf=await new Promise((resolve,reject)=>loader.load(model.url,resolve,undefined,reject));
+  if(token!==requestToken)return;
+  clearCurrent();
+  const root=gltf.scene;
+  fitModel(root);
+  currentRoot=root;scene.add(root);saveRest(root);
+  activeModelKey=key;
+  showDiagnostics(gltf,root,model.label);
+  setPose('base');
+ }catch(err){
+  if(token!==requestToken)return;
+  statusEl.textContent='모델을 불러오지 못했어.';
+  infoEl.textContent='네트워크 연결이나 원본 파일 주소를 확인해 줘.';
+  poseInfo.textContent=String(err?.message||err);
+ }
+}
+document.getElementById('modelSelect').addEventListener('change',e=>loadModel(e.target.value));
+document.querySelectorAll('[data-pose]').forEach(b=>b.addEventListener('click',()=>setPose(b.dataset.pose)));
+document.getElementById('resetCamera').addEventListener('click',()=>{if(currentRoot)fitModel(currentRoot);});
+function resize(){const w=host.clientWidth,h=host.clientHeight;if(!w||!h)return;camera.aspect=w/h;camera.updateProjectionMatrix();renderer.setSize(w,h,false);}
+if('ResizeObserver' in window)new ResizeObserver(resize).observe(host);else window.addEventListener('resize',resize);
+resize();
+function animate(){requestAnimationFrame(animate);controls.update();renderer.render(scene,camera);}
+animate();
+loadModel('men');
+</script>
+</body>
+</html>
