@@ -104,9 +104,17 @@
   read(keys.truck, 'truck-clicks');
   read(keys.dictionary, 'dictionary-clicks');
   document.querySelectorAll('[data-count-key]').forEach(link => {
-    link.addEventListener('click', () => {
+    link.addEventListener('click', (event) => {
       const key = link.getAttribute('data-count-key');
       hit(key).catch(() => {});
+      if (key === 'namul_workroom_truck_clicks_2026') {
+        event.preventDefault();
+        const useBeta = window.confirm('이세계 트럭 운전사는 베타 버전으로 하시겠습니까?');
+        const destination = useBeta
+          ? 'https://claude.ai/artifact/6TmSKjS7P119JpbrYuFvKr'
+          : link.href;
+        window.open(destination, '_blank', 'noopener,noreferrer');
+      }
     });
   });
   const today = new Date();
