@@ -1325,6 +1325,7 @@ body.dk-drag, body.dk-drag *{user-select:none!important; -webkit-user-select:non
 .sv-all{border:2px solid var(--ink-3,#999);border-radius:12px;padding:.7rem .8rem;margin:.4rem 0}
 .ct-sheet{display:grid;grid-template-columns:3.6em 1fr;gap:.1rem .4rem;margin:.3rem 0;text-align:left}.ct-sheet dt{color:var(--ink-3)}.ct-sheet dd{margin:0}
 .dck{list-style:none;padding:0;margin:.4rem 0;font-size:.82rem}.dck>li{margin:.35rem 0}.dck ul{margin:.15rem 0 0 1rem;padding:0}.dck li li{margin:.15rem 0}.dck .err{color:#b3261e}.dck .ai{color:var(--ink-2,#333)}.dck q{background:var(--soft,#f3f3f3);padding:0 .2rem;border-radius:4px}.dck button{font:inherit;font-size:.74rem;border:1px solid var(--line,#ccc);background:none;border-radius:8px;padding:0 .4rem;cursor:pointer}.dq{color:#b3261e;font-style:normal;font-weight:700}
+.sbg{display:flex;flex-wrap:wrap;align-items:center;gap:.35rem;margin:.3rem 0;font-size:.8rem}.sbg select{font:inherit;font-size:.78rem;max-width:14em}.sbg-i{height:40px;width:110px;object-fit:cover;border-radius:4px;border:1px solid var(--line,#ddd)}
 .sv-beat{font-size:.82rem;margin:.1rem 0 .3rem;color:var(--ink-2,#444)}
 .sv-img{display:block;width:100%;max-width:520px;margin:.4rem auto;border-radius:8px;border:1px solid var(--line,#ddd)}
 .sv-up{cursor:pointer}
@@ -14717,7 +14718,17 @@ function bgPick(c){ var src=(c.comp&&c.comp.bgSrc)||'auto', A=window.__ppArt, x=
   if(src==='none') return {url:'', g:null, x:x, none:1};
   if(src.indexOf('art:')===0) return {url:A?A.get(src.slice(4))||'':'', g:(c.comp&&c.comp.bgTxt)?{ko:c.comp.bgTxt}:null, x:x, own:1};
   if(src.indexOf('scene:')===0){ var a=+src.slice(6); var L=sceneList(); for(var i=0;i<L.length;i++) if(L[i].a===a){ x=L[i]; break; } }
-  var g=x&&B.sceneBg&&B.sceneBg[x.a]; return {url:g&&g.art&&A?A.get(g.art)||'':'', g:g, x:x}; }
+  var g=x&&B.sceneBg&&B.sceneBg[x.a];
+  if(g&&g.none) return {url:'', g:null, x:x, none:1};
+  if(g&&g.use){ var L2=sceneList(); for(var k=0;k<L2.length;k++) if(L2[k].a===+g.use){ x=L2[k]; g=B.sceneBg[x.a]; break; } }
+  return {url:g&&g.art&&A?A.get(g.art)||'':'', g:g, x:x}; }
+function sceneBgCtl(x, i){ var g=(B.sceneBg&&B.sceneBg[x.a])||{}, L=sceneList(), cur=g.none?'none':g.use?'use:'+g.use:'own', p=bgPick({n:x.a, comp:null});
+  return '<div class="sbg"><span class="small">배경</span>'+(p.url?'<img class="sbg-i" alt="" src="'+p.url+'">':'')+'<select data-sbg="'+x.a+'" aria-label="'+(i+1)+'번 장면 배경"><option value="own"'+(cur==='own'?' selected':'')+'>이 장면 배경'+(g.art?' (그림 있음)':g.ko?' (설정만)':' (없음)')+'</option>'+
+    L.filter(function(y){ var gy=B.sceneBg&&B.sceneBg[y.a]; return y.a!==x.a && gy && !gy.use && !gy.none && (gy.art||gy.ko); }).map(function(y){ return '<option value="use:'+y.a+'"'+(cur==='use:'+y.a?' selected':'')+'>'+cesc(dispNm(y.name||'장면'))+' 배경 같이 쓰기</option>'; }).join('')+
+    '<option value="none"'+(cur==='none'?' selected':'')+'>배경 없음</option></select><label class="chip sv-up">📥 올리기<input type="file" accept="image/*" hidden data-bgup="'+x.a+'"></label></div>'; }
+document.addEventListener('change', function(e){ var t=e.target; if(!t.dataset || !t.dataset.sbg || !B) return; var a=+t.dataset.sbg; B.sceneBg=B.sceneBg||{}; var g=B.sceneBg[a]=B.sceneBg[a]||{};
+  delete g.use; delete g.none; if(t.value==='none') g.none=1; else if(t.value.indexOf('use:')===0) g.use=+t.value.slice(4);
+  save(); try{ renderScenes(); renderBg(); renderBoard(); }catch(er){} stat('장면 배경을 바꿨다 — 이 장면 컷 전부에 적용'); });
 function bgUrlOf(c){ return bgPick(c).url; }
 function compAuto(c){ var k=c.k||'ms', Z={ls:100,fs:118,stand:118,two:130,ms:145,ots:150,bs:175,cu:215,ecu:260}[k]||140;
   var sx=(c.bgx!=null)?+c.bgx:(function(){ var x=null; try{ x=sceneOfCut(c.n); }catch(e){} var i=x?c.n-x.a:c.n, L=x?x.b-x.a+1:8; return L>1?Math.round(10+80*((i*37)%L)/(L-1)):50; })();
@@ -15574,6 +15585,7 @@ function renderBg(){ var box=document.getElementById('ct-s5'); if(!box) return;
   var L=sceneList(); if(!L.length) L=[{a:1,b:B.cuts.length,name:'전체'}];
   box.innerHTML=L.map(function(x,i){ var g=bgOf(x)||{}, au=g.art&&window.__ppArt&&window.__ppArt.get(g.art);
     return '<div class="sv-sc" data-bi="'+i+'"><h4>'+(i+1)+'. '+cesc(dispNm(x.name||'장면'))+' <span class="small">'+x.a+'–'+x.b+'컷</span></h4>'+
+      sceneBgCtl(x,i)+
       '<label class="small">장소 <input class="bg-pl" type="text" value="'+cesc(g.place||x.place||'')+'"></label>'+
       '<label class="small">배경 설정 <textarea class="bg-ko" rows="2" placeholder="예: 철망 울타리, 물탱크, 멀리 운동장">'+cesc(g.ko||'')+'</textarea></label>'+
       '<label class="small">시간·빛 <input class="bg-li" type="text" value="'+cesc(g.light||'')+'" placeholder="예: 해 질 녘, 주황빛 역광"></label>'+
@@ -15583,7 +15595,7 @@ function bgSave(card){ var L=sceneList(); if(!L.length) L=[{a:1,b:B.cuts.length}
   B.sceneBg=B.sceneBg||{}; var g=B.sceneBg[x.a]=Object.assign({}, B.sceneBg[x.a]||{}, {place:card.querySelector('.bg-pl').value.trim(), ko:card.querySelector('.bg-ko').value.trim(), light:card.querySelector('.bg-li').value.trim()});
   if(g.ko!==g._ko){ delete g.en; } g._ko=g.ko; save(); stepNav(); return x; }
 document.addEventListener('change', function(e){ var t=e.target, card=t.closest&&t.closest('#ct-s5 .sv-sc');
-  if(t.dataset && t.dataset.bgup && window.__ppArt && t.files[0]){ var a=+t.dataset.bgup; window.__ppArt.fromFile(t.files[0]).then(function(id){ B.sceneBg=B.sceneBg||{}; B.sceneBg[a]=Object.assign(B.sceneBg[a]||{}, {art:id}); save(); renderBg(); try{ renderShChk(); renderBoard(); }catch(er){} stat('배경 그림을 붙였다 — 이 장면 컷을 그릴 때 ChatGPT에 같이 첨부한다'); }); return; }
+  if(t.dataset && t.dataset.bgup && window.__ppArt && t.files[0]){ var a=+t.dataset.bgup; window.__ppArt.fromFile(t.files[0]).then(function(id){ B.sceneBg=B.sceneBg||{}; B.sceneBg[a]=Object.assign(B.sceneBg[a]||{}, {art:id}); delete B.sceneBg[a].use; delete B.sceneBg[a].none; save(); renderBg(); try{ renderScenes(); }catch(er){} try{ renderShChk(); renderBoard(); }catch(er){} stat('배경 그림을 붙였다 — 이 장면 컷을 그릴 때 ChatGPT에 같이 첨부한다'); }); return; }
   if(card) bgSave(card); });
 document.addEventListener('click', function(e){ var t=e.target;
   var b=t.closest&&t.closest('#ct-s5 [data-bg]'); if(b){ var x=bgSave(b.closest('.sv-sc')); if(!x) return; var q=bgPrompt(x,0,1); ctCopy(q); setTimeout(function(){ window.open('https://chatgpt.com/?q='+encodeURIComponent(q.slice(0,1800)),'_blank','noopener'); },200); return; }
@@ -15648,8 +15660,8 @@ function renderScenes(){
     var rows=''; for(var n=x.a;n<=x.b;n++){ var c=B.cuts[n-1]; if(!c) continue;
       rows+='<li><b>'+n+'</b><span>'+cesc(shotName(c.k))+' · '+(c.scr?cesc(c.scr):'<i>화면 미정</i>')+(c.line?'<span class="sv-l">'+String(c.line).split('\n').filter(Boolean).map(function(l){ var p=lnParse(l), w=ctWho(c); return p.who?'<b>'+cesc(p.who)+'</b>: '+cesc(p.say):(p.kind==='bare'&&w.length!==1?'<em class="dq">?</em> ':(w.length===1?'<b>'+cesc(w[0])+'</b>: ':''))+cesc(p.say); }).join(' / ')+'</span>':'')+'</span><button type="button" data-ed="'+n+'" aria-label="'+n+'번 컷 고치기">✎</button></li>'; }
     var bgu=(function(){ var g=B.sceneBg&&B.sceneBg[x.a]; return g&&g.art&&window.__ppArt?window.__ppArt.get(g.art):''; })();
-    return '<div class="sv-sc" data-i="'+i+'">'+(bgu?'<img class="sv-bg" alt="'+(i+1)+'번 장면 배경" src="'+bgu+'">':'')+'<h4>'+(i+1)+'. '+cesc(dispNm(x.name||'장면'))+' <span class="small">'+x.a+'–'+x.b+'컷</span></h4>'+
-      '<p class="sv-m">'+[who,x.place].filter(Boolean).map(cesc).join(' · ')+(x.desc||x.sum?(who||x.place?' — ':'')+cesc(x.desc||x.sum):'')+'</p>'+(function(){ var ap=B.scenePr&&B.scenePr[x.a]; return ap?'<p class="sv-beat">🧠 '+cesc(ap.beat||'연출 읽음')+'</p>':''; })()+'<ul class="sv-cuts">'+rows+'</ul>'+
+    return '<div class="sv-sc" data-i="'+i+'"><h4>'+(i+1)+'. '+cesc(dispNm(x.name||'장면'))+' <span class="small">'+x.a+'–'+x.b+'컷</span></h4>'+
+      '<p class="sv-m">'+[who,x.place].filter(Boolean).map(cesc).join(' · ')+(x.desc||x.sum?(who||x.place?' — ':'')+cesc(x.desc||x.sum):'')+'</p>'+sceneBgCtl(x,i)+(function(){ var ap=B.scenePr&&B.scenePr[x.a]; return ap?'<p class="sv-beat">🧠 '+cesc(ap.beat||'연출 읽음')+'</p>':''; })()+'<ul class="sv-cuts">'+rows+'</ul>'+
       (function(){ var aid=B.sceneArt&&B.sceneArt[x.a], au=aid&&window.__ppArt&&window.__ppArt.get(aid); return au?'<img class="sv-img" alt="'+(i+1)+'번 장면 러프 콘티" src="'+au+'">':''; })()+'<div class="sv-act"><button class="chip" type="button" data-sp="ai">🧠 콘티 읽고 연출 짜기</button><button class="chip" type="button" data-sp="page">✏ 장면 러프 콘티 그리기</button><button class="chip" type="button" data-sp="copy">🖌 컷별 완성 그림</button><button class="chip" type="button" data-sp="show">프롬프트 보기</button><label class="chip sv-up">그림 올리기<input type="file" accept="image/*" hidden data-sup="'+x.a+'"></label></div><pre class="sv-pr" hidden></pre></div>'; }).join('');
 }
 document.addEventListener('click', function(e){ var t=e.target; if(!t.closest) return;
