@@ -1344,6 +1344,8 @@ body.dk-drag, body.dk-drag *{user-select:none!important; -webkit-user-select:non
 .se-prev{margin:.4rem 0}.se-prev figure{cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px}.se-prev img{height:84px;max-width:96px}.se-emo{font:inherit;font-size:.68rem;max-width:4.6em}
 .se-wrap{border:1px solid var(--line,#ddd);border-radius:8px;overflow:hidden;background:repeating-conic-gradient(#ddd 0 25%,#fff 0 50%) 0 0/16px 16px}.se-ctl .se-orig{display:block}.se-cv{display:block;width:100%;height:auto;touch-action:none;cursor:crosshair}
 .ct-cutsl{display:flex;flex-wrap:wrap;gap:.3rem;align-items:flex-end;margin:.3rem 0}.ct-cutsl>span{width:100%}.ct-cutsl figure{margin:0;text-align:center}.ct-cutsl img{height:64px;width:auto;max-width:72px;object-fit:contain;background:repeating-conic-gradient(#eee 0 25%,#fff 0 50%) 0 0/10px 10px;border-radius:4px;cursor:zoom-in}.ct-cutsl figcaption{font-size:.66rem;color:var(--ink-3)}
+.allsh-list,.gq-list{display:grid;gap:.4rem;margin:.4rem 0}.pl-item{border:1px solid var(--line,#ddd);border-radius:8px;padding:.35rem .5rem}.pl-h{display:flex;justify-content:space-between;align-items:center;gap:.4rem}.pl-item pre{white-space:pre-wrap;font-size:.72rem;max-height:9em;overflow:auto;margin:.3rem 0 0;background:var(--soft,#f6f6f6);padding:.4rem;border-radius:6px}
+.pk-l{display:flex;flex-wrap:wrap;gap:.2rem .8rem;margin:.3rem 0;font-size:.84rem}.pk-pr{width:100%;font:inherit;font-size:.78rem;margin-top:.3rem}
 .ct-shin{border-style:dashed}.ct-shrow{display:grid;gap:.3rem;border-top:1px solid var(--line,#eee);padding:.4rem 0}.ct-shrow select,.ct-shnew{font:inherit;font-size:.84rem}
 .ct-grp{border:1px solid var(--line,#ddd);border-radius:10px;padding:.5rem .6rem;margin:.4rem 0}
 .ct-zoom{position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:9999;display:grid;place-items:center;padding:1rem;cursor:zoom-out}.ct-zoom img{max-width:100%;max-height:100%}
@@ -2811,6 +2813,7 @@ button.pl-card[disabled]{cursor:default}
   <h3>2. 캐릭터 시트</h3>
   <p class="small">AI가 이야기를 읽고 <b>주연·조연</b> 시트(성격·말투·원하는 것·생김새)와 <b>엑스트라·동물·사물</b>을 만든다. 「시트 점검」으로 이야기와 어긋난 곳·겹치는 외모를 찾는다.</p>
   <div class="filterbar"><button class="chip ct-go" id="ct-sheet" type="button">🧠 AI로 캐릭터 시트 짜기</button><button class="chip" id="ct-findch" type="button">🔎 이야기에서 인물 찾기</button><button class="chip" id="ct-chk" type="button">🔍 시트 점검</button><button class="chip" id="ct-chgpt" type="button">🖌 GPT로 시트 한번에 (주연·조연·엑스트라·동물·사물)</button></div>
+  <div class="ct-grp ct-allsh"><b>📦 모든 시트 프롬프트 한 번에</b> <span class="small">라인업 → 인물별 시트 → 엑스트라·동물·사물 → 장면 배경 파노라마를 한 요청문으로. ChatGPT에서 「다음」마다 한 장씩.</span><div class="sv-act"><button class="chip ct-go" type="button" data-allsh="go">📦 전부 한 번에 GPT로</button><button class="chip" type="button" data-allsh="list">📋 하나씩 나열해서 복사</button><button class="chip" type="button" data-allsh="show">한 덩어리로 보기·고치기</button></div><div class="allsh-list" hidden></div><textarea class="allsh-pr pk-pr" rows="10" hidden></textarea></div>
   <div class="ct-grp ct-shin"><b>📥 GPT로 받은 시트 그림 넣기</b> <span class="small">인물이 아직 없어도 된다. 그림을 고르고 누구 시트인지 정한다.</span><div class="filterbar"><label class="chip sv-up ct-go">그림 고르기<input type="file" accept="image/*" multiple hidden id="ct-shfile"></label></div><div id="ct-shq"></div></div>
   <div class="filterbar"><button class="chip" id="ct-fromcast" type="button">등장인물 페이지에서 가져오기</button><button class="chip" id="ct-addch" type="button">＋ 인물 추가</button></div>
   <div id="ct-chkout"></div>
@@ -14970,12 +14973,14 @@ document.addEventListener('click', function(e){ var t=e.target; if(!B) return;
   sendGpt(k==='all'?all():clipPrompt(C[+a.dataset.i],1,1), refImgs(cuts)); });
 
 function renderGptQ(){ var box=document.getElementById('ct-gptq'); if(!box) return; var Q=gptQ();
-  box.innerHTML='<div class="sv-all ce-q"><b>🔴 GPT로 하기 '+Q.length+'컷</b> <span class="small">컷 그림의 「GPT로 하기」로 표시한다</span>'+(Q.length?'<ul class="gq-l">'+Q.map(function(c){ return '<li><b>'+c.n+'번</b> <button type="button" class="gq-ed" data-gqe="'+c.n+'">🎛</button><p class="small">'+cesc(c.scr||'')+'</p><p class="gq-d">'+cesc(compDesc(c).ko)+'</p><input type="text" class="gq-note" data-gqn="'+c.n+'" placeholder="연출 메모 (예: 눈을 내리깐다, 손에 쥔 편지를 강조)" value="'+cesc(c.cnote||'')+'"></li>'; }).join('')+'</ul><div class="sv-act"><button class="chip ct-go" type="button" data-gq="send">📤 시트·배경 그림과 같이 GPT로 보내기</button><button class="chip" type="button" data-gq="go">요청문만 GPT로</button><button class="chip" type="button" data-gq="copy">요청문 복사</button><button class="chip" type="button" data-gq="png">구성 그림 저장 (첨부용)</button><button class="chip" type="button" data-gq="show">모아 보기</button><button class="chip" type="button" data-gq="clear">표시 모두 지우기</button></div><pre class="sv-pr" hidden></pre><p class="small">폰에서는 공유 창에서 <b>ChatGPT</b>를 고르면 시트·배경·구성 그림과 요청문이 같이 붙는다. 컴퓨터에서는 참고 그림 한 장이 저장되니 ChatGPT에 첨부한다. 한 컷을 그리면 「다음」. 받은 그림은 7단계에서 컷마다 올린다.</p>':'')+'</div>'; }
+  box.innerHTML='<div class="sv-all ce-q"><b>🔴 GPT로 하기 '+Q.length+'컷</b> <span class="small">컷 그림의 「GPT로 하기」로 표시한다</span>'+(Q.length?'<ul class="gq-l">'+Q.map(function(c){ return '<li><b>'+c.n+'번</b> <button type="button" class="gq-ed" data-gqe="'+c.n+'">🎛</button><p class="small">'+cesc(c.scr||'')+'</p><p class="gq-d">'+cesc(compDesc(c).ko)+'</p><input type="text" class="gq-note" data-gqn="'+c.n+'" placeholder="연출 메모 (예: 눈을 내리깐다, 손에 쥔 편지를 강조)" value="'+cesc(c.cnote||'')+'"></li>'; }).join('')+'</ul><div class="sv-act"><button class="chip ct-go" type="button" data-gq="send">📤 시트·배경 그림과 같이 GPT로 보내기</button><button class="chip" type="button" data-gq="go">요청문만 GPT로</button><button class="chip" type="button" data-gq="copy">요청문 복사</button><button class="chip" type="button" data-gq="png">구성 그림 저장 (첨부용)</button><button class="chip" type="button" data-gq="list">📋 컷마다 나열해서 복사</button><button class="chip" type="button" data-gq="show">한 덩어리로 보기</button><button class="chip" type="button" data-gq="clear">표시 모두 지우기</button></div><div class="gq-list" hidden></div><pre class="sv-pr" hidden></pre><p class="small">폰에서는 공유 창에서 <b>ChatGPT</b>를 고르면 시트·배경·구성 그림과 요청문이 같이 붙는다. 컴퓨터에서는 참고 그림 한 장이 저장되니 ChatGPT에 첨부한다. 한 컷을 그리면 「다음」. 받은 그림은 7단계에서 컷마다 올린다.</p>':'')+'</div>'; }
 document.addEventListener('input', function(e){ var t=e.target; if(t.dataset && t.dataset.gqn && B){ var c=B.cuts[+t.dataset.gqn-1]; if(c){ c.cnote=t.value.slice(0,200); save(); } } });
 document.addEventListener('click', function(e){ var g=e.target.closest&&e.target.closest('[data-gqe]'); if(g&&B){ ceOpen(+g.dataset.gqe); } });
 document.addEventListener('click', function(e){ var b=e.target.closest&&e.target.closest('[data-gq]'); if(!b||!B) return; var k=b.dataset.gq;
   if(k==='clear'){ B.cuts.forEach(function(c){ c.gpt=0; }); save(); renderBoard(); renderGptQ(); return; }
   if(k==='png'){ saveQPng(); return; }
+  if(k==='list'){ var bx=b.closest('.sv-all').querySelector('.gq-list'), Q0=gptQ(); bx.hidden=!bx.hidden; if(bx.hidden) return; var L0=Q0.map(function(c){ return [c.n+'번 컷', ctCompPrompt(c,1,1)]; }); bx.__L=L0;
+    bx.innerHTML=L0.map(function(m,i){ return '<div class="pl-item"><div class="pl-h"><b>'+cesc(m[0])+'</b><button type="button" class="chip" data-plc="'+i+'">복사</button></div><pre>'+cesc(m[1])+'</pre></div>'; }).join('')+'<button type="button" class="chip" data-plc="all">전부 이어서 복사</button>'; return; }
   if(k==='send'){ var Q=gptQ(), q0=gptQText(); if(!q0) return; stat('그림을 모으는 중…'); Promise.all(Q.map(function(c){ return compPng(c,800); })).then(function(cs){ var L=refImgs(Q); cs.forEach(function(cv,i){ L.push({name:'PANEL '+(i+1)+' 구성 (cut '+Q[i].n+')', u:cv.toDataURL('image/png')}); }); sendGpt(q0.replace('Attached reference images:','Attached reference images (character sheets, background panoramas, and one layout image per panel):'), L); }); return; }
   var q=gptQText(); if(!q) return;
   if(k==='show'){ var pr=b.closest('.sv-all').querySelector('.sv-pr'); pr.textContent=q; pr.hidden=!pr.hidden; return; }
@@ -15265,14 +15270,14 @@ var SFSYS='너는 웹툰 콘티 검수자다. 콘티에 나오는 엑스트라(�
 document.addEventListener('click', function(e){ var t=e.target; if(!B) return;
   if(t.id==='ct-shgo'||t.id==='ct-shall'){ var q=shBatch(t.id==='ct-shall'); if(!q) return stat('빠진 시트가 없다');
     ctCopy(q); setTimeout(function(){ window.open('https://chatgpt.com/?q='+encodeURIComponent(q.length>1800?'다음 메시지로 시트 요청문을 붙여 넣을게. 받으면 첫 그림부터 그려줘.':q),'_blank','noopener'); },200); return; }
-  if(t.id==='ct-shfind'){ if(!aiReady()) return stat('AI 연결에서 키를 넣어야 쓸 수 있다.'); t.disabled=true; stat('AI가 콘티에서 빠진 엑스트라·동물·사물을 찾는 중…');
+  if(t.id==='ct-shfind'||(t.dataset&&t.dataset.pfind)){ if(!aiReady()) return stat('AI 연결에서 키를 넣어야 쓸 수 있다.'); t.disabled=true; stat('AI가 콘티에서 빠진 엑스트라·동물·사물을 찾는 중…');
     aiAsk(SFSYS, '[이미 있는 목록]\n'+(((B.props||[]).map(function(x){ return x.kind+': '+x.name; }).join('\n'))||'없음')+'\n[주요 인물 — 여기 넣지 않는다]\n'+chars().map(function(x){ return x.name; }).join(', ')+
       '\n\n[콘티]\n'+B.cuts.filter(function(c){ return c.scr; }).slice(0,120).map(function(c){ return c.n+'. '+cutText(c); }).join('\n').slice(0,7000)+
       '\n\n두 컷 이상 나오거나 이야기에 중요한 것만. 형식: [{"kind":"엑스트라|동물|사물","name":"이름","look":"생김새(한국어)","lookEn":"appearance in English"}] (없으면 [])', 1600, {json:true, temperature:0.3}).then(function(r){ t.disabled=false;
       if(aiIsErr(r)) return stat(r); var j=[]; try{ var m=String(r).match(/\[[\s\S]*\]/); j=JSON.parse(m?m[0]:r); }catch(er){}
       B.props=B.props||[]; var add=0; (Array.isArray(j)?j:[]).forEach(function(x){ if(!x||!x.name) return; if(B.props.some(function(y){ return y.name===x.name; })) return;
         B.props.push({kind:/동물/.test(x.kind)?'동물':/사물|소품/.test(x.kind)?'사물':'엑스트라', name:String(x.name).slice(0,20), look:String(x.look||'').slice(0,160), lookEn:String(x.lookEn||'').slice(0,200)}); add++; });
-      save(); renderShChk(); try{ renderProps(); }catch(er){} stat(add?add+'개를 목록에 넣었다':'빠진 것이 없다'); }); }
+      save(); try{ renderShChk(); }catch(er){} try{ renderProps(); }catch(er){} stat(add?add+'개를 목록에 넣었다':'빠진 것이 없다'); }); }
 });
 function renderSteps(){ stepNav(); try{ if(window.__ppArt) setTimeout(chAutoSlice, 600); }catch(e){} try{ renderDlg(); }catch(e){} try{ renderProps(); }catch(e){} try{ renderBg(); }catch(e){} try{ renderKey(); }catch(e){} try{ renderS4(); }catch(e){} try{ renderShChk(); }catch(e){} try{ renderGptQ(); }catch(e){} try{ renderS8(); }catch(e){ try{ console.warn('renderS8', e); }catch(er){} } }
 
@@ -15304,13 +15309,50 @@ document.addEventListener('click', function(e){ var t=e.target; if(!t.id) return
 
 // ---- 2. 엑스트라·동물·사물 + 시트 점검
 var PK={'엑스트라':'👥','동물':'🐾','사물':'📦'};
+
+// 엑스트라·동물·사물 모아서 프롬프트 (2단계)
+function propUseTxt(x){ var u=[]; try{ u=propUse(x); }catch(e){} if(!u.length||!B.cuts) return ''; return u.slice(0,3).map(function(n){ return (B.cuts[n-1]||{}).scr||''; }).filter(Boolean).join(' / ').slice(0,160); }
+function propPrompt(kinds, pick){ var P=(B.props||[]).filter(function(x,i){ return kinds.indexOf(x.kind)>-1 && (!pick || pick[i]!==false); }); if(!P.length) return '';
+  var out=[]; ['엑스트라','동물','사물'].forEach(function(k){ var it=P.filter(function(x){ return x.kind===k; }); if(!it.length) return;
+    var body=PSP[k](it); var use=it.map(function(x){ var t=propUseTxt(x); return t?'- '+x.name+' appears in: '+t:''; }).filter(Boolean);
+    out.push(body+(use.length?'\nHow they are used in the story (draw poses/angles that fit):\n'+use.join('\n'):'')); });
+  return (out.length>1?'I will give you '+out.length+' sheets. Draw ONLY the first now; when I reply "다음", draw the next. Same Korean webtoon art style for all.\n\n':'')+out.map(function(q,i){ return (out.length>1?'=== SHEET '+(i+1)+' ===\n':'')+q; }).join('\n\n'); }
+var PPICK={};
+// 모든 시트 한 번에: 라인업 → 인물별 → 엑스트라·동물·사물 → 장면 배경 파노라마
+function allSheetsList(){ var imgs=[], cs=chars().filter(function(x){ return x&&x.name; });
+  if(cs.length>1) imgs.push(['LINEUP','Draw ONE image: a character lineup of '+cs.length+' characters standing side by side, full body, front view, same scale (show height differences), TRANSPARENT background (or flat pure white), Korean webtoon style, clean line art, flat colors. NO text, NO names.\nFrom left to right:\n'+cs.map(function(x,i){ return (i+1)+'. '+x.name+(x.role?' ('+x.role+')':'')+': '+chLookEn(x); }).join('\n')]);
+  cs.forEach(function(x,i){ imgs.push([x.name+' SHEET', chGptOne(x,i+1,cs.length)]); });
+  var P=(B&&B.props)||[]; ['엑스트라','동물','사물'].forEach(function(k){ var it=P.filter(function(x,i){ return x.kind===k && PPICK[i]!==false; }); if(it.length){ var use=it.map(function(x){ var t=propUseTxt(x); return t?'- '+x.name+' appears in: '+t:''; }).filter(Boolean); imgs.push([k==='엑스트라'?'EXTRAS':k==='동물'?'ANIMALS':'PROPS', PSP[k](it)+(use.length?'\nHow they are used in the story:\n'+use.join('\n'):'')]); } });
+  if(B&&B.cuts&&B.cuts.length){ var L=sceneList(); if(!L.length) L=[{a:1,b:B.cuts.length,name:'전체'}]; L.forEach(function(x,i){ imgs.push(['BACKGROUND '+dispNm(x.name||''), bgPrompt(x,i,1)]); }); }
+  return imgs; }
+function allSheetsPrompt(){ var imgs=allSheetsList();
+  if(!imgs.length) return '';
+  return 'I will give you '+imgs.length+' images to draw for one webtoon. Draw ONLY image 1 now. Each time I reply "다음", draw the next one. Keep every design identical across images and use the same Korean webtoon art style.\n\n'+imgs.map(function(m,i){ return '=== IMAGE '+(i+1)+': '+m[0]+' ===\n'+m[1]; }).join('\n\n'); }
+document.addEventListener('click', function(e){ var c=e.target.closest&&e.target.closest('[data-plc]'); if(!c) return; var box=c.closest('.allsh-list,.gq-list'), L=box&&box.__L||[]; var t=c.dataset.plc==='all'?L.map(function(m,i){ return (i+1)+'. '+m[0]+'\n'+m[1]; }).join('\n\n------\n\n'):(L[+c.dataset.plc]||[])[1]; if(!t) return; ctCopy(t); c.textContent='✓ 복사됨'; setTimeout(function(){ c.textContent=c.dataset.plc==='all'?'전부 이어서 복사':'복사'; },1500); });
+document.addEventListener('click', function(e){ var b=e.target.closest&&e.target.closest('[data-allsh]'); if(!b||!B) return; var q=allSheetsPrompt(); if(!q) return stat('인물·엑스트라·사물이 아직 없다 — 「AI로 캐릭터 시트 짜기」부터');
+  if(b.dataset.allsh==='show'){ var ta=document.querySelector('.allsh-pr'); if(ta){ ta.value=q; ta.hidden=!ta.hidden; } return; }
+  if(b.dataset.allsh==='list'){ var box=document.querySelector('.allsh-list'), L=allSheetsList(); box.hidden=!box.hidden; if(box.hidden) return;
+    box.innerHTML=L.map(function(m,i){ return '<div class="pl-item"><div class="pl-h"><b>'+(i+1)+'. '+cesc(m[0])+'</b><button type="button" class="chip" data-plc="'+i+'">복사</button></div><pre>'+cesc(m[1])+'</pre></div>'; }).join('')+'<button type="button" class="chip" data-plc="all">전부 이어서 복사</button>';
+    box.__L=L; return; } var ta2=document.querySelector('.allsh-pr'); if(ta2 && !ta2.hidden && ta2.value.trim()) q=ta2.value; sendGpt(q, []); });
+
 function renderProps(){ var box=document.getElementById('ct-props'); if(!box) return; var L=(B&&B.props)||[];
   var A=window.__ppArt, img=function(id,alt){ var u=id&&A&&A.get(id); return u?'<img class="ct-shimg" data-zoom="1" alt="'+cesc(alt)+'" src="'+u+'">':''; }, up=function(key,has){ return '<label class="chip sv-up">'+(has?'바꾸기':'📥 그림 넣기')+'<input type="file" accept="image/*" hidden data-shk="'+key+'"></label>'; };
   var G=(B&&B.sheetArts)||{}, h='';
   if(chars().length>1 || G.lineup) h+='<div class="ct-grp"><b>라인업</b> <span class="small">인물 전원을 한 장에 나란히 — 키 차이·외모 구분 확인용</span>'+img(G.lineup,'라인업')+up('lineup',G.lineup)+'</div>';
   ['엑스트라','동물','사물'].forEach(function(k){ var it=L.filter(function(x){ return x.kind===k; }); if(!it.length) return;
     h+='<div class="ct-grp"><b>'+PK[k]+' '+k+' 시트</b><ul class="ct-pl">'+it.map(function(x){ var i=L.indexOf(x); return '<li><b>'+cesc(x.name)+'</b><br><span class="small">'+cesc(x.look||'')+'</span> <button type="button" class="ct-pdel" data-pdel="'+i+'" aria-label="'+cesc(x.name)+' 지우기">✕</button></li>'; }).join('')+'</ul>'+img(G[k], k+' 시트')+up(k,G[k])+'</div>'; });
-  box.innerHTML=h?'<h4 class="ct-reft">GPT로 받은 시트 그림</h4><p class="small">인물 카드의 「시트 그림 넣기」와 여기에 넣는다. 넣은 시트는 주요 컷을 그릴 때 첨부할 그림으로 안내된다.</p>'+h:''; }
+  var pk='<div class="ct-grp ct-pk"><b>👥🐾📦 엑스트라·동물·사물 프롬프트</b> <span class="small">'+L.length+'개 · 고른 것만 모아 시트 요청문을 만든다</span>'+
+    (L.length?'<div class="pk-l">'+L.map(function(x,i){ return '<label><input type="checkbox" data-pk="'+i+'"'+(PPICK[i]===false?'':' checked')+'> '+(PK[x.kind]||'')+' '+cesc(x.name)+'</label>'; }).join('')+'</div>'+
+      '<div class="sv-act"><button class="chip ct-go" type="button" data-pp="all">📤 고른 것 모아서 GPT로</button><button class="chip" type="button" data-pp="k:엑스트라">엑스트라만</button><button class="chip" type="button" data-pp="k:동물">동물만</button><button class="chip" type="button" data-pp="k:사물">사물만</button><button class="chip" type="button" data-pp="show">프롬프트 보기</button></div><textarea class="pk-pr" rows="8" hidden></textarea>'
+      :'<p class="small">아직 없다. 캐릭터 시트를 짜면 같이 생기고, 콘티가 있으면 AI가 찾아 준다.</p>')+
+    '<div class="sv-act"><button class="chip" type="button" data-pfind="1">🧠 콘티에서 엑스트라·사물 찾기</button></div></div>';
+  box.innerHTML=pk+(h?'<h4 class="ct-reft">GPT로 받은 시트 그림</h4><p class="small">인물 카드의 「시트 그림 넣기」와 여기에 넣는다. 넣은 시트는 주요 컷을 그릴 때 첨부할 그림으로 안내된다.</p>'+h:''); }
+document.addEventListener('change', function(e){ var t=e.target; if(t.dataset && t.dataset.pk!=null){ PPICK[+t.dataset.pk]=t.checked; } });
+document.addEventListener('click', function(e){ var b=e.target.closest&&e.target.closest('[data-pp]'); if(!b||!B||!b.closest('.ct-pk')) return; var v=b.dataset.pp, box=b.closest('.ct-pk'), kinds=['엑스트라','동물','사물'];
+  var q=v.indexOf('k:')===0?propPrompt([v.slice(2)]):propPrompt(kinds, PPICK); if(!q) return stat('고른 엑스트라·동물·사물이 없다');
+  if(v==='show'){ var ta=box.querySelector('.pk-pr'); ta.value=q; ta.hidden=!ta.hidden; return; }
+  var ta2=box.querySelector('.pk-pr'); if(ta2 && !ta2.hidden && ta2.value.trim()) q=ta2.value;
+  sendGpt(q, []); });
 document.addEventListener('change', function(e){ var t=e.target; if(!t.dataset || !(t.dataset.shup!=null || t.dataset.shk) || !t.files[0] || !window.__ppArt || !B) return;
   window.__ppArt.fromFile(t.files[0]).then(function(id){
     if(t.dataset.shup!=null){ var ch=chars()[+t.dataset.shup]; if(ch){ ch.sheetArt=id; chSlice(ch,id); } }
