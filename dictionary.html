@@ -18677,7 +18677,7 @@ function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g,function(c){ ret
 function LG(k,d){ try{ var v=localStorage.getItem(k); return v==null?d:JSON.parse(v); }catch(e){ return d; } }
 function LS(k,v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} }
 function PL(){ return window.__play.state(); }
-var SET=Object.assign({wt:true, swipe:true}, LG('ppSet',{}));
+var SET=Object.assign({wt:false, swipe:false}, LG('ppSet2',{}));
 var EMO=['n','smile','grin','shy','panic','shock','angry','sad','cry','smirk','think','menace','blank','hurt'];
 var EMN={n:'보통',smile:'미소',grin:'활짝',shy:'수줍',panic:'당황',shock:'충격',angry:'화남',sad:'슬픔',cry:'울음',smirk:'비웃음',think:'생각',menace:'위압',blank:'멍',hurt:'상처'};
 var EMEN={n:'neutral calm face',smile:'warm gentle smile',grin:'big open-mouth grin',shy:'shy, blushing, looking away',panic:'flustered, panicking, sweat drop',shock:'shocked, eyes wide, mouth open',angry:'angry, furrowed brows',sad:'sad, downcast',cry:'crying, tears streaming',smirk:'smug smirk',think:'thinking, hand on chin',menace:'menacing cold glare, shadowed upper face',blank:'blank dazed stare',hurt:'hurt, trembling lip'};
@@ -18825,7 +18825,7 @@ function onSheetInput(e){ var t=e.target; if(t.dataset.f==='look'){ var a=LG('pp
 function onSheetChange(e){ var t=e.target;
   if(t.id==='pp-file' && t.files[0]){ loadCanvas(t.files[0]).then(function(c){ U.src=c; reslice(); }, function(er){ toast(er.message); }); return; }
   if(t.dataset.as!=null){ U.as[+t.dataset.as]=t.value; return; }
-  if(t.classList.contains('pp-style')){ SET.style=+t.value; LS('ppSet',SET); }
+  if(t.classList.contains('pp-style')){ SET.style=+t.value; LS('ppSet2',SET); }
   if(t.classList.contains('pp-ratio')){ cutSave(+t.dataset.n,{h:+t.value}); deco(); } }
 function onSheet(e){ var b=e.target.closest('[data-pp]'); if(!b) return; var a=b.dataset.pp, p=PL();
   if(a==='close') return close();
@@ -18965,8 +18965,8 @@ root.addEventListener('click', function(e){ var b=e.target.closest('[data-ppt]')
   if(a==='artx'){ var id=gameKey()+'_'+n; delete ART[id]; del('art',id).then(deco); return; }
 });
 root.addEventListener('change', function(e){ var t=e.target;
-  if(t.classList.contains('pp-wt')){ SET.wt=t.checked; LS('ppSet',SET); rerender(); }
-  if(t.classList.contains('pp-sw')){ SET.swipe=t.checked; LS('ppSet',SET); rerender(); }
+  if(t.classList.contains('pp-wt')){ SET.wt=t.checked; LS('ppSet2',SET); rerender(); }
+  if(t.classList.contains('pp-sw')){ SET.swipe=t.checked; LS('ppSet2',SET); rerender(); }
   if(t.classList.contains('pp-ratio')){ cutSave(+t.dataset.n,{h:+t.value}); deco(); } });
 // 말풍선 끌기
 var DR=null;
