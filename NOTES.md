@@ -332,3 +332,11 @@ arcForm, deviceId, folderMemo, gdBase, gdLast, gdLinked, ideaText, mangaDataVer,
 - 2026-11-21 캐릭터 시트 우선 흐름: 2단계에 '🧠 AI로 캐릭터 시트 짜기'(makeSheets: 성격·말투·원함·약점·관계·생김새(한/영)·fig 플래그 → B.chars[].sheet, ppProf[이름].look=lookEn). 콘티 쓰기 프롬프트의 [등장인물]은 chLine으로 시트 전체를 넣고 말투·성격대로 쓰라고 지시. ctLook은 시트 영어 생김새 우선
 - 2026-11-21 '🖌 GPT로 등장인물 시트 한번에'(#ct-chgpt): 1장 라인업 + '다음'마다 인물별 레퍼런스 시트(턴어라운드 4 + 표정 6). 인물 카드마다 '🖌 GPT 시트'(data-cg). 생김새는 sheet.lookEn 우선
 - 2026-11-21 대사 배정 점검(장면별 보기 위 #sv-dckb): 규칙(화자 없음·등장인물에 없는 화자·화면에 없는 화자·무음 컷 대사·풍선 3개 초과·40자 초과·한 사람 5연속) + AI(모호한 화자·흐름상 틀린 화자·말투 불일치 → '이름: 대사' 수정안, 바꾸기 단추). 컷 목록에 화자 굵게/모호하면 빨간 ?. 콘티 쓰기 프롬프트에 화자 필수 지시
+- 2026-11-21 콘티 구성기 7단계 흐름(goStep/CSTEP, localStorage ctStep, #ct-steps 단추·✓ 완료 표시, 단계 끝 ←/다음 단추):
+  1 이야기 구체화(#ct-expand → 고친 뒤 바꾸기/덧붙이기/되돌리기, B.expanded)
+  2 캐릭터 시트(makeSheets가 주연·조연 chars + 엑스트라·동물·사물 B.props, 🔍 시트 점검 = 규칙+AI 수정안 적용, GPT 한번에 = 라인업+인물별+엑스트라(눈 안 보이게)·동물·소품 시트)
+  3 대사 배정(#ct-dlgfind: 규칙 추출 + AI 화자 추천 → B.dlg, select로 확정; cutPrompt에 [대사 배정] 블록)
+  4 콘티 생성(기존 ct-write, 요약 #ct-s4sum)
+  5 장면·배경(B.sceneBg[a]={place,ko,en,light,art}, AI로 짜기, GPT 배경 한번에/장면별, 배경 올리기 → 컷 프롬프트에 배경+첨부 안내)
+  6 다듬기(장면별 보기·대사 배정 점검·연출 짜기·컷 그림판; ✎는 어디서든 6단계로)
+  7 주요 컷(autoKey: 훅·가로/세로 큰 컷·집중선·장면 끝, c.key로 넣고 빼기 → GPT 한번에 '다음' 순차, 컷마다 그림 올리기 c.art; 장면 러프 콘티는 접어 둠)

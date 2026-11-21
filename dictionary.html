@@ -1311,7 +1311,7 @@ body.dk-drag, body.dk-drag *{user-select:none!important; -webkit-user-select:non
 
 #conti .ct-adv{margin:.3rem 0 .6rem} #conti .ct-adv>summary{cursor:pointer;color:var(--ink-3)}
 #conti #ct-plan{display:none}
-#conti.v-s #ct-board,#conti.v-s .ct-gptbar{display:none}
+#conti.v-s #ct-board,#conti.v-s .ct-bhelp{display:none}
 #conti.v-b #ct-sv{display:none}
 .ct-vwbar{margin:.4rem 0}
 .sv-sc{border:1px solid var(--line,#ddd);border-radius:12px;padding:.7rem .8rem;margin:.6rem 0;background:var(--paper,#fff)}
@@ -1329,6 +1329,21 @@ body.dk-drag, body.dk-drag *{user-select:none!important; -webkit-user-select:non
 .sv-img{display:block;width:100%;max-width:520px;margin:.4rem auto;border-radius:8px;border:1px solid var(--line,#ddd)}
 .sv-up{cursor:pointer}
 .sv-pr{margin:.4rem 0 0;font-size:.74rem;white-space:pre-wrap;max-height:11em;overflow:auto;background:var(--soft,#f6f6f6);border-radius:8px;padding:.5rem}
+.ct-steps{display:flex;flex-wrap:wrap;gap:.3rem;margin:.6rem 0;padding:.2rem 0}
+.ct-stb{font:inherit;font-size:.8rem;border:1px solid var(--line,#ccc);background:none;border-radius:999px;padding:.2rem .6rem .2rem .25rem;cursor:pointer;display:inline-flex;align-items:center;gap:.3rem;color:var(--ink-2,#444)}
+.ct-stb i{font-style:normal;display:inline-grid;place-items:center;width:1.4em;height:1.4em;border-radius:50%;background:var(--soft,#eee);font-size:.75rem}
+.ct-stb.done i{background:#2e7d32;color:#fff}.ct-stb.on{border-color:var(--ink,#111);color:var(--ink,#111);font-weight:700}.ct-stb.on i{background:var(--ink,#111);color:#fff}
+.ct-step h3{margin-top:.4rem}.ct-nx{margin-top:1rem;justify-content:space-between}
+.ct-exta{width:100%;font:inherit;font-size:.86rem;margin:.4rem 0}
+.ct-kind{font-size:.7rem;border:1px solid var(--line,#ccc);border-radius:6px;padding:0 .3rem;color:var(--ink-3)}
+.ct-pl{list-style:none;padding:0;display:grid;gap:.35rem}.ct-pl li{border:1px solid var(--line,#ddd);border-radius:8px;padding:.35rem .5rem;position:relative}.ct-pdel{position:absolute;right:.3rem;top:.2rem;border:none;background:none;cursor:pointer;color:var(--ink-3)}
+.dg{list-style:none;padding:0;display:grid;gap:.3rem;font-size:.84rem}.dg li{display:grid;grid-template-columns:7.5em 1fr auto;gap:.4rem;align-items:center;border-bottom:1px dashed var(--line,#ddd);padding:.2rem 0}
+.dg li.ok select{border-color:#2e7d32}.dg select{font:inherit;font-size:.8rem;max-width:7.5em}.dg-r{grid-column:2;font-size:.72rem;color:#b26a00;font-style:normal}.dg button{border:none;background:none;cursor:pointer;color:var(--ink-3)}
+#ct-s5 label{display:block;margin:.25rem 0}#ct-s5 input,#ct-s5 textarea{width:100%;font:inherit;font-size:.84rem}
+.kc-pick{display:grid;gap:.3rem;margin:.4rem 0}.kc-sc{display:flex;flex-wrap:wrap;gap:.25rem;align-items:center}.kc-sc>span{min-width:5em}
+.kc{font:inherit;font-size:.76rem;min-width:2.2em;border:1px solid var(--line,#ccc);background:none;border-radius:6px;cursor:pointer;padding:.1rem .3rem}.kc.on{background:var(--ink,#111);color:#fff;border-color:var(--ink,#111)}
+.kc-l{list-style:none;padding:0;display:grid;gap:.5rem}.kc-l li{display:grid;grid-template-columns:96px 1fr;gap:.6rem;border:1px solid var(--line,#ddd);border-radius:10px;padding:.5rem}.kc-l img{width:96px;border-radius:6px}.kc-ph{display:grid;place-items:center;width:96px;height:72px;background:var(--soft,#f2f2f2);border-radius:6px;font-size:.7rem;color:var(--ink-3)}.kc-l p{margin:.2rem 0}
+.ct-s4l{margin:.3rem 0 0 1.2rem}
 .ct-more{margin:.3rem 0 .4rem}
 .ct-more>summary,.ct-help>summary{cursor:pointer; color:var(--ink-3)}
 .ct-scm{position:relative; display:inline-block}
@@ -2734,11 +2749,17 @@ button.pl-card[disabled]{cursor:default}
 
 <section class="blk" id="conti">
   <h2 class="big">콘티 구성기</h2>
-  <p class="lede"><b>이야기를 적고 「AI로 콘티 쓰기」</b>만 누르면 된다. AI가 먼저 이야기를 장면으로 나누고(장면 배정표), 장면마다 어울리는 구도를 깐 뒤 컷마다 화면·대사·나레이션을 쓴다.</p>
-  <h3>1. 대강 이야기</h3>
-  <label class="small ct-lab" for="ct-story">줄거리·웹소설·컷별 콘티 무엇이든 된다. 글쓰기 결과가 있으면 빈 칸일 때만 들어온다.</label>
+  <p class="lede">위에서부터 <b>한 단계씩</b> 진행한다. 단계마다 AI가 먼저 만들어 주고, 고친 다음 「다음 단계」로 넘어간다.</p>
+  <nav class="ct-steps" id="ct-steps" aria-label="콘티 단계"></nav>
+  <p class="small" id="ct-stat" role="status"></p>
+
+  <div class="ct-step" data-st="1">
+  <h3>1. 이야기 구체화</h3>
+  <label class="small ct-lab" for="ct-story">대강 적어도 된다. 줄거리·웹소설·컷별 콘티 무엇이든 된다.</label>
   <textarea id="ct-story" rows="9" placeholder="예) 서윤은 졸업식 날 옥상에서 도현에게 고백하려 한다. 그런데 도현이 먼저 전학 소식을 꺼낸다…"></textarea>
   <div class="filterbar" id="ct-storybar" hidden></div>
+  <div class="filterbar"><button class="chip ct-go" id="ct-expand" type="button">🧠 AI로 이야기 구체화</button></div>
+  <div id="ct-expout"></div>
   <details class="ct-adv"><summary class="small">옵션 — 함께 볼 글·분량</summary>
   <h4 class="ct-reft">글 보관함에서 함께 볼 글</h4>
   <p class="small">줄거리·웹소설·컷별 콘티를 고르면 함께 검토해 장면을 나눈다(하나만 골라도 된다).</p>
@@ -2746,24 +2767,62 @@ button.pl-card[disabled]{cursor:default}
   <div class="filterbar"><label class="small">분량 <select id="ct-total"></select></label><span class="count" id="ct-srcinfo"></span></div>
   </details>
   <div id="ct-plan"></div>
-  <h3>2. 등장인물</h3>
-  <p class="small"><b>먼저 캐릭터 시트를 짜면</b> AI가 성격·말투·원하는 것·생김새를 정하고, 콘티는 그 시트대로 대사와 행동을 쓴다. 그림 프롬프트에도 그 생김새가 들어간다.</p>
-  <details class="ct-help"><summary class="small">자세히</summary><p class="small">인물을 적어 두면 콘티 그림에 <b>이름표</b>와 <b>생김새</b>(머리·안경·모자·흉터·체격)가 붙는다. 이야기에 적힌 특징만 넣고, 적혀 있지 않은 건 미정으로 둔다. 컷마다 누가 나오는지는 AI가 쓴 글의 이름을 보고 정한다. 직접 바꾸려면 컷을 눌러 「인물」 칸에 이름을 적는다.</p></details>
-  <div class="filterbar"><button class="chip ct-go" id="ct-sheet" type="button">🧠 AI로 캐릭터 시트 짜기</button><button class="chip" id="ct-chgpt" type="button">🖌 GPT로 등장인물 시트 한번에</button><button class="chip" id="ct-fromcast" type="button">등장인물에서 가져오기</button><button class="chip" id="ct-findch" type="button">이야기에서 인물 찾기</button><button class="chip" id="ct-addch" type="button">인물 추가</button></div>
+  </div>
+
+  <div class="ct-step" data-st="2">
+  <h3>2. 캐릭터 시트</h3>
+  <p class="small">AI가 이야기를 읽고 <b>주연·조연</b> 시트(성격·말투·원하는 것·생김새)와 <b>엑스트라·동물·사물</b>을 만든다. 「시트 점검」으로 이야기와 어긋난 곳·겹치는 외모를 찾는다.</p>
+  <div class="filterbar"><button class="chip ct-go" id="ct-sheet" type="button">🧠 AI로 캐릭터 시트 짜기</button><button class="chip" id="ct-chk" type="button">🔍 시트 점검</button><button class="chip" id="ct-chgpt" type="button">🖌 GPT로 시트 한번에 (주연·조연·엑스트라·동물·사물)</button></div>
+  <div id="ct-chkout"></div>
   <div id="ct-chars"></div>
-  <h3>3. 콘티</h3>
+  <div id="ct-props"></div>
+  <details class="ct-help"><summary class="small">직접 넣기</summary>
+  <div class="filterbar"><button class="chip" id="ct-fromcast" type="button">등장인물에서 가져오기</button><button class="chip" id="ct-findch" type="button">이야기에서 인물 찾기</button><button class="chip" id="ct-addch" type="button">인물 추가</button></div>
+  </details>
+  </div>
+
+  <div class="ct-step" data-st="3">
+  <h3>3. 대사 배정</h3>
+  <p class="small">이야기 속 대사를 찾아 <b>말할 사람을 추천</b>한다. 추천이 틀리면 고르고, 콘티는 이 배정대로 쓴다.</p>
+  <div class="filterbar"><button class="chip ct-go" id="ct-dlgfind" type="button">💬 대사 찾고 화자 추천</button><button class="chip" id="ct-dlgok" type="button">추천 모두 확정</button></div>
+  <div id="ct-dlg"></div>
+  </div>
+
+  <div class="ct-step" data-st="4">
+  <h3>4. 콘티 생성</h3>
+  <p class="small">구체화한 이야기·캐릭터 시트·대사 배정을 모두 읽고 AI가 장면을 나눈 뒤 컷마다 구도·화면·대사를 쓴다.</p>
   <div class="filterbar ct-main"><button class="chip ct-go" id="ct-write" type="button">AI로 콘티 쓰기</button><button class="chip" id="ct-resume" type="button" hidden>이어서 쓰기</button><button class="chip" id="ct-scenego" type="button" title="쓰기 전에 장면만 먼저 나눠 보고 고칠 때">이야기로 장면 나누기</button><a class="small ct-stlink" id="ct-stlink" href="#contis"></a></div>
-  <details class="ct-more"><summary class="small">더 보기 — 뼈대·그림·내보내기·저장소</summary>
+  <details class="ct-more"><summary class="small">더 보기 — 뼈대·내보내기·저장소</summary>
   <div class="filterbar"><button class="chip" id="ct-skel" type="button" title="이야기 없이 무작위로 연습용 뼈대를 깐다. 누를 때마다 다르다">뼈대만 깔기 (무작위)</button><button class="chip" id="ct-redraw" type="button">선 다시 긋기</button><button class="chip" id="ct-copy" type="button">글로 복사</button><button class="chip" id="ct-png" type="button">그림으로 저장</button></div>
   <div id="ct-saved" class="ct-saved"></div>
-  <p class="small">컷을 누르면 구도·앵글·화면·대사를 고칠 수 있다. 순서는 컷을 끌어 옮긴다(폰은 길게 눌러 끌기, 키보드는 Alt+화살표, 편집기의 ◀ ▶). 빨간 테두리는 넘김 훅, 「무음」은 대사 없는 컷이다. 그림은 Rough.js(MIT)로 그린다.</p>
   </details>
-  <div class="filterbar ct-gptbar"><button class="chip" id="ct-gptall" type="button">🖌 GPT로 전체 콘티 그리기</button><button class="chip" id="ct-faces" type="button">🎭 표정 시트</button><span class="small">컷을 눌러 편집기에서 「GPT로 이 컷 그리기」·「그림 올리기」</span></div>
-  <p class="small" id="ct-stat" role="status"></p>
+  <div id="ct-s4sum"></div>
+  </div>
+
+  <div class="ct-step" data-st="5">
+  <h3>5. 장면·배경</h3>
+  <p class="small">장면마다 장소와 <b>배경 설정</b>을 정한다. 배경은 그림 프롬프트에 들어가고, GPT로 배경 그림을 먼저 받아 두면 컷 그릴 때 같이 첨부해 같은 배경을 유지한다.</p>
+  <div class="filterbar"><button class="chip ct-go" id="ct-bgai" type="button">🧠 AI로 장면 배경 짜기</button><button class="chip" id="ct-bggpt" type="button">🖌 GPT로 배경 한번에</button></div>
+  <div id="ct-s5"></div>
+  </div>
+
+  <div class="ct-step" data-st="6">
+  <h3>6. 대사·화면 다듬기</h3>
+  <p class="small">배경과 캐릭터 시트를 바탕으로 <b>대사 배정 점검</b>, 장면별 <b>연출 짜기</b>를 하고, ✎로 컷을 고친다.</p>
   <div class="filterbar ct-vwbar"><button class="chip on" id="ct-vw-s" type="button">장면별 보기</button><button class="chip" id="ct-vw-b" type="button">컷 그림판</button></div>
   <div id="ct-sv"></div>
   <div id="ct-board"></div>
+  <p class="small ct-bhelp">컷을 누르면 구도·앵글·화면·대사를 고칠 수 있다. 순서는 컷을 끌어 옮긴다(폰은 길게 눌러 끌기, 키보드는 Alt+화살표). 그림은 Rough.js(MIT)로 그린다.</p>
+  </div>
+
+  <div class="ct-step" data-st="7">
+  <h3>7. 주요 컷 그리기</h3>
+  <p class="small">AI가 고른 <b>주요 컷</b>(훅·큰 컷·감정 정점·장면 끝)을 확인하고 GPT로 한 번에 그린다. 받은 그림은 컷마다 올린다.</p>
+  <div id="ct-s7"></div>
+  <div class="filterbar ct-gptbar"><button class="chip" id="ct-gptall" type="button">🖌 GPT로 전체 콘티 그리기</button><button class="chip" id="ct-faces" type="button">🎭 표정 시트</button></div>
+  </div>
 </section>
+
 
 <section class="blk" id="play">
   <h2 class="big">클리셰 플레이</h2>
@@ -13390,7 +13449,7 @@ function renderChars(){
     cv.dataset.who=JSON.stringify([{name:ch.name, look:ch.look||{}}]); cv.setAttribute('role','img'); cv.setAttribute('aria-label', ch.name+' 생김새');
     if(ro) ro.observe(cv); else setTimeout(function(){ queue(cv); },0);
     f.appendChild(cv);
-    f.insertAdjacentHTML('beforeend','<b>'+cesc(ch.name)+'</b>'+(ch.role?'<span class="small">'+cesc(ch.role)+'</span>':'')+
+    f.insertAdjacentHTML('beforeend','<b>'+cesc(ch.name)+'</b>'+(ch.sheet&&ch.sheet.kind?' <span class="ct-kind">'+ch.sheet.kind+'</span>':'')+(ch.role?'<span class="small">'+cesc(ch.role)+'</span>':'')+
       '<div class="ct-tags">'+lookTags(ch.look)+'</div>'+(ch.sheet?'<dl class="ct-sheet small">'+[['성격','pers'],['말투','speech'],['원함','want'],['약점','fear'],['관계','rel'],['생김새','look']].map(function(r){ return ch.sheet[r[1]]?'<dt>'+r[0]+'</dt><dd>'+cesc(ch.sheet[r[1]])+'</dd>':''; }).join('')+'</dl>':(ch.note?'<span class="small">'+cesc(ch.note)+'</span>':''))+
       '<div class="filterbar"><button class="chip" type="button" data-ce="'+i+'">고치기</button>'+
       (window.__castUpsert?'<button class="chip" type="button" data-cs="'+i+'">'+(window.__castFind&&window.__castFind(ch.name)?'등장인물에 반영':'등장인물에 넣기')+'</button>':'')+
@@ -13432,26 +13491,27 @@ function makeSheets(){
   var have=chars().map(function(x){ return x.name+(x.role?'('+x.role+')':''); }).join(', ');
   setBusy(true); stat('이야기를 읽고 캐릭터 시트를 짜는 중…');
   aiAsk(SHSYS, '[이야기]\n'+story.slice(0,6000)+(have?'\n\n[이미 있는 인물 — 이 이름은 꼭 포함]\n'+have:'')+
-    '\n\n주요 인물 많아야 6명. 형식:\n[{"name":"이름","role":"이야기 속 역할","pers":"성격 핵심 2~3개","speech":"말투(어미·버릇, 예시 대사 한 줄 포함)","want":"이 이야기에서 원하는 것","fear":"두려움이나 약점","rel":"다른 인물과의 관계 한 줄",'+
+    '\n\n주연·조연 많아야 6명(chars)과, 이야기에 필요한 엑스트라(이름 없는 무리·단역)·동물·중요한 사물(others)을 만든다. 형식:\n{"chars":[{"name":"이름","kind":"주연|조연","role":"이야기 속 역할","pers":"성격 핵심 2~3개","speech":"말투(어미·버릇, 예시 대사 한 줄 포함)","want":"이 이야기에서 원하는 것","fear":"두려움이나 약점","rel":"다른 인물과의 관계 한 줄",'+
     '"look":"생김새(한국어): 나이대·키·체형·머리 모양과 색·눈·옷·소품·특징","lookEn":"same appearance in English, comma separated, for an illustrator",'+
-    '"hair":"짧은|긴|묶은|삐죽|민머리","dark":true/false,"glasses":true/false,"hat":true/false,"scar":true/false,"build":"작음|보통|큼"}]', 2600, {temperature:0.7}).then(function(t){
+    '"hair":"짧은|긴|묶은|삐죽|민머리","dark":true/false,"glasses":true/false,"hat":true/false,"scar":true/false,"build":"작음|보통|큼"}],"others":[{"kind":"엑스트라|동물|사물","name":"이름(예: 반 친구들, 길고양이, 깨진 거울)","look":"생김새(한국어)","lookEn":"appearance in English"}]}', 3400, {json:true, temperature:0.7}).then(function(t){
     setBusy(false);
     if(aiIsErr(t)){ stat(String(t).slice(0,90)); return; }
-    var j=null; try{ var m=String(t).match(/\[[\s\S]*\]/); j=JSON.parse(m?m[0]:t); }catch(e){}
+    var j=null, oth=[]; try{ var m=String(t).match(/\{[\s\S]*\}/); var o=JSON.parse(m?m[0]:t); if(Array.isArray(o)) j=o; else { j=o.chars; oth=o.others||[]; } }catch(e){ try{ var m2=String(t).match(/\[[\s\S]*\]/); j=JSON.parse(m2[0]); }catch(e2){} }
     if(!Array.isArray(j) || !j.length){ stat('캐릭터 시트를 읽지 못했다. 다시 눌러 본다.'); return; }
+    B.props=(Array.isArray(oth)?oth:[]).filter(function(x){ return x && x.name; }).slice(0,12).map(function(x){ return {kind:/동물/.test(x.kind)?'동물':/사물|소품/.test(x.kind)?'사물':'엑스트라', name:String(x.name).slice(0,20), look:String(x.look||'').slice(0,160), lookEn:String(x.lookEn||'').slice(0,200)}; });
     var prof={}; try{ prof=JSON.parse(localStorage.getItem('ppProf')||'{}'); }catch(e){}
     var made=0;
     j.forEach(function(x){ if(!x||!x.name) return; var nm=String(x.name).trim().slice(0,20), ch=null;
       B.chars.forEach(function(c){ if(c.name===nm) ch=c; }); if(!ch){ ch={name:nm, role:'', look:{}, note:''}; B.chars.push(ch); }
       if(x.role) ch.role=String(x.role).slice(0,30);
-      ch.sheet={pers:String(x.pers||'').slice(0,80), speech:String(x.speech||'').slice(0,120), want:String(x.want||'').slice(0,80), fear:String(x.fear||'').slice(0,80), rel:String(x.rel||'').slice(0,100), look:String(x.look||'').slice(0,200), lookEn:String(x.lookEn||'').slice(0,240)};
+      ch.sheet={kind:/조연/.test(x.kind||'')?'조연':'주연', pers:String(x.pers||'').slice(0,80), speech:String(x.speech||'').slice(0,120), want:String(x.want||'').slice(0,80), fear:String(x.fear||'').slice(0,80), rel:String(x.rel||'').slice(0,100), look:String(x.look||'').slice(0,200), lookEn:String(x.lookEn||'').slice(0,240)};
       var lk=figClean({hair:x.hair, build:x.build, dark:x.dark===true, glasses:x.glasses===true, hat:x.hat===true, scar:x.scar===true}); ch.look=Object.assign({}, ch.look||{}, lk);
       ch.note=ch.sheet.look.slice(0,80);
       if(ch.sheet.lookEn){ prof[nm]=Object.assign({}, prof[nm]||{}, {look:ch.sheet.lookEn}); }
       made++; });
     try{ localStorage.setItem('ppProf', JSON.stringify(prof)); }catch(e){}
-    save(); renderChars(); renderBoard();
-    stat('캐릭터 시트 '+made+'명을 짰다. 이제 「AI로 콘티 쓰기」를 누르면 이 성격·말투·생김새대로 콘티를 쓴다.');
+    save(); renderChars(); renderBoard(); try{ renderProps(); stepNav(); }catch(e){}
+    stat('캐릭터 시트 '+made+'명, 엑스트라·동물·사물 '+B.props.length+'개를 짰다. 「🔍 시트 점검」으로 확인한다.');
   });
 }
 var CHSYS='당신은 원고에서 등장인물을 정리하는 편집자다. 원고에 적힌 내용만 쓴다. 적혀 있지 않은 외모는 지어내지 않는다. JSON만 출력한다.';
@@ -14719,7 +14779,7 @@ function ctPagePrompt(x, idx, tot){
     'NO speech bubbles, NO text, NO numbers.\n\n'+
     'SCENE: '+dispNm(x.name||'')+((x.desc||x.sum)?' — '+(x.desc||x.sum):'')+'\n'+(x.place?'Location: '+x.place+' (same background in all panels)\n':'')+
     (names.length?'Characters (keep identical across panels):\n'+names.map(function(nm){ return '- '+nm+': '+(ctLook(nm)||''); }).join('\n')+'\n':'')+
-    (AIP?'Setting: '+(AIP.setting||'')+'\nLighting & mood: '+(AIP.light||'')+'\n':'')+
+    (bgOf(x)?bgLine(x):'')+(AIP?(bgOf(x)?'':'Setting: '+(AIP.setting||'')+'\n')+'Lighting & mood: '+(AIP.light||'')+'\n':'')+
     '\nPANELS:\n'+cuts.map(function(c,i){ var ap=AIP&&(AIP.panels||[]).filter(function(q){ return +q.n===c.n; })[0];
       if(ap){ var sh2=SHOTS.filter(function(q){ return q[0]===c.k; })[0], an2=ANGS.filter(function(q){ return q[0]===(c.ang||''); })[0], fc=ap.faces||{};
         return (i+1)+'. '+szw(c)+gap(c)+', '+(sh2?sh2[1]:'medium shot')+(an2&&an2[0]?', '+an2[2]:'')+(c.focus?', focus lines':'')+(c.flash?', flashback tint':'')+' — '+(ap.see||'')+(ap.staging?' | Staging: '+ap.staging:'')+
@@ -14806,12 +14866,189 @@ document.addEventListener('click', function(e){ var t=e.target; if(!t.closest ||
     if(!c||!hit) return; var L=String(c.line||'').split('\n'); L[+q[1]]=String(hit.fix); c.line=L.join('\n'); save(); hit.done=1;
     var rest=ai.filter(function(x){ return !x.done; }); renderScenes(); dlgRender(dlgCheck(), rest); stat(q[0]+'번 컷 대사를 바꿨다'); }
 });
+// ===== 단계 진행 (2026-11-21): 구체화 → 캐릭터 시트 → 대사 배정 → 콘티 → 장면·배경 → 다듬기 → 주요 컷 =====
+var STEPS=[[1,'이야기'],[2,'캐릭터'],[3,'대사 배정'],[4,'콘티'],[5,'장면·배경'],[6,'다듬기'],[7,'주요 컷']];
+var CSTEP=(function(){ try{ return +localStorage.getItem('ctStep')||1; }catch(e){ return 1; } })();
+function stepDone(n){ var st=(document.getElementById('ct-story')||{}).value||'';
+  if(n===1) return !!(B&&B.expanded) || st.length>400;
+  if(n===2) return !!(B&&B.chars&&B.chars.some(function(x){ return x.sheet; }));
+  if(n===3) return !!(B&&B.dlg&&B.dlg.length&&B.dlg.every(function(d){ return d.ok; }));
+  if(n===4) return !!(B&&B.cuts&&B.cuts.some(function(c){ return c.scr; }));
+  if(n===5) return !!(B&&B.sceneBg&&Object.keys(B.sceneBg).length);
+  if(n===6) return !!(B&&B.scenePr&&Object.keys(B.scenePr).length);
+  if(n===7) return !!(B&&B.cuts&&B.cuts.some(function(c){ return c.key && c.art; }));
+  return false; }
+function stepNav(){ var nv=document.getElementById('ct-steps'); if(!nv) return;
+  nv.innerHTML=STEPS.map(function(s){ return '<button type="button" class="ct-stb'+(s[0]===CSTEP?' on':'')+(stepDone(s[0])?' done':'')+'" data-step="'+s[0]+'"'+(s[0]===CSTEP?' aria-current="step"':'')+'><i>'+(stepDone(s[0])&&s[0]!==CSTEP?'✓':s[0])+'</i>'+s[1]+'</button>'; }).join(''); }
+function goStep(n, noScroll){ CSTEP=Math.max(1,Math.min(7,+n||1)); try{ localStorage.setItem('ctStep',CSTEP); }catch(e){}
+  document.querySelectorAll('#conti .ct-step').forEach(function(d){ d.hidden=+d.dataset.st!==CSTEP; });
+  document.querySelectorAll('#conti .ct-step').forEach(function(d){ if(d.querySelector('.ct-nx')) return; var k=+d.dataset.st, f=document.createElement('div'); f.className='filterbar ct-nx';
+    f.innerHTML=(k>1?'<button class="chip" type="button" data-step="'+(k-1)+'">← '+STEPS[k-2][1]+'</button>':'')+(k<7?'<button class="chip ct-go" type="button" data-step="'+(k+1)+'">다음: '+STEPS[k][1]+' →</button>':''); d.appendChild(f); });
+  stepNav();
+  if(CSTEP===6){ try{ ctView(); if(CTV==='b') renderBoard(); }catch(e){} }
+  try{ renderSteps(); }catch(e){}
+  if(!noScroll){ var nv=document.getElementById('ct-steps'); if(nv) try{ window.scrollTo({top:nv.getBoundingClientRect().top+window.scrollY-70, behavior:'smooth'}); }catch(e){} } }
+document.addEventListener('click', function(e){ var t=e.target.closest&&e.target.closest('#conti [data-step]'); if(t){ goStep(+t.dataset.step); } });
+function renderSteps(){ stepNav(); try{ renderDlg(); }catch(e){} try{ renderProps(); }catch(e){} try{ renderBg(); }catch(e){} try{ renderKey(); }catch(e){} try{ renderS4(); }catch(e){} }
+
+// ---- 1. 이야기 구체화
+var EXSYS='너는 웹툰 각본가다. 작가가 대강 적은 이야기를 콘티로 옮기기 좋게 구체화한다. 적힌 설정·사건·인물·결말은 바꾸지 않고, 빈 곳만 이야기 톤에 맞게 채운다. 결과는 한국어 산문.';
+document.addEventListener('click', function(e){ var t=e.target; if(!t.id) return;
+  if(t.id==='ct-expand'){ var st=document.getElementById('ct-story'), v=st.value.trim(); if(!v) return stat('이야기 칸이 비어 있다');
+    if(!aiReady()) return stat('AI 연결에서 키를 넣어야 쓸 수 있다.');
+    t.disabled=true; stat('이야기를 구체화하는 중…');
+    aiAsk(EXSYS, '[대강 이야기]\n'+v.slice(0,6000)+'\n\n다음 순서로 1500~2500자로 쓴다. 제목 줄 없이:\n'+
+      '배경: 시대·장소·분위기 한두 줄\n인물: 주요 인물마다 「이름 — 역할, 원하는 것」 한 줄\n'+
+      '장면: 「#1 장소 — 무슨 일이 일어나고 감정이 어떻게 바뀌는지」 형식으로 장면마다 문단. 장면 안 핵심 대사는 「이름: 대사」로 넣는다.\n'+
+      '훅: 마지막 장면이 남기는 궁금증 한 줄', 3200, {temperature:0.7}).then(function(r){ t.disabled=false;
+      if(aiIsErr(r)) return stat(r);
+      var o=document.getElementById('ct-expout'); o.innerHTML='<div class="sv-all"><b>구체화한 이야기</b> <span class="small">고친 뒤 적용한다</span><textarea class="ct-exta" rows="14"></textarea><div class="sv-act"><button class="chip ct-go" type="button" id="ct-exok">이걸로 바꾸기</button><button class="chip" type="button" id="ct-exadd">아래에 덧붙이기</button><button class="chip" type="button" id="ct-exno">닫기</button></div></div>';
+      o.querySelector('textarea').value=String(r).trim(); stat('구체화했다 — 확인하고 「이걸로 바꾸기」'); }); }
+  if(t.id==='ct-exok'||t.id==='ct-exadd'){ var st2=document.getElementById('ct-story'), nv=document.querySelector('#ct-expout textarea').value.trim(); ensureB();
+    B.storyOld=st2.value; st2.value=t.id==='ct-exok'?nv:st2.value.trim()+'\n\n'+nv; B.expanded=1; B.story=st2.value; save();
+    st2.dispatchEvent(new Event('input',{bubbles:true})); document.getElementById('ct-expout').innerHTML='<p class="small">적용했다. <button class="chip" type="button" id="ct-exundo">되돌리기</button></p>'; stepNav(); }
+  if(t.id==='ct-exundo' && B && B.storyOld!=null){ var st3=document.getElementById('ct-story'); st3.value=B.storyOld; B.expanded=0; B.story=st3.value; save(); st3.dispatchEvent(new Event('input',{bubbles:true})); document.getElementById('ct-expout').innerHTML=''; stepNav(); }
+  if(t.id==='ct-exno') document.getElementById('ct-expout').innerHTML='';
+});
+
+// ---- 2. 엑스트라·동물·사물 + 시트 점검
+var PK={'엑스트라':'👥','동물':'🐾','사물':'📦'};
+function renderProps(){ var box=document.getElementById('ct-props'); if(!box) return; var L=(B&&B.props)||[];
+  box.innerHTML=L.length?'<h4 class="ct-reft">엑스트라·동물·사물</h4><ul class="ct-pl">'+L.map(function(x,i){ return '<li><b>'+(PK[x.kind]||'•')+' '+cesc(x.name)+'</b> <span class="small">'+cesc(x.kind)+'</span><br><span class="small">'+cesc(x.look||'')+'</span> <button type="button" class="ct-pdel" data-pdel="'+i+'" aria-label="'+cesc(x.name)+' 지우기">✕</button></li>'; }).join('')+'</ul>':''; }
+document.addEventListener('click', function(e){ var t=e.target.closest&&e.target.closest('[data-pdel]'); if(t&&B&&B.props){ B.props.splice(+t.dataset.pdel,1); save(); renderProps(); } });
+var CKSYS='너는 웹툰 캐릭터 시트 검수자다. 이야기와 시트를 비교해 문제만 짚는다. JSON만 답한다.';
+function sheetRule(){ var out=[], cs=chars(), hs={};
+  cs.forEach(function(x){ var h=x.sheet||{}; if(!x.sheet) out.push({name:x.name, why:'시트가 없다'}); else ['pers','speech','look'].forEach(function(k){ if(!h[k]) out.push({name:x.name, why:({pers:'성격',speech:'말투',look:'생김새'})[k]+'이 비어 있다'}); });
+    var key=[x.look&&x.look.hair, x.look&&x.look.dark, x.look&&x.look.build].join('/'); if(x.sheet && hs[key]) out.push({name:x.name, why:hs[key]+'와 머리·체격 태그가 같다 — 실루엣을 달리한다'}); hs[key]=x.name; });
+  return out; }
+document.addEventListener('click', function(e){ var t=e.target; if(t.id!=='ct-chk') return; ensureB();
+  var o=document.getElementById('ct-chkout'), rule=sheetRule(), show=function(ai){ var all=rule.concat(ai||[]);
+    o.innerHTML=all.length?'<div class="sv-all"><b>시트 점검</b><ul class="dck">'+all.map(function(r,i){ return '<li class="'+(r.fix?'ai':'warn')+'"><b>'+cesc(r.name||'')+'</b> '+cesc(r.why||'')+(r.fix&&r.field?'<br>→ '+cesc(({pers:'성격',speech:'말투',want:'원함',fear:'약점',rel:'관계',look:'생김새',lookEn:'영어 생김새',role:'역할'})[r.field]||r.field)+': <q>'+cesc(r.fix)+'</q> <button type="button" data-cfix="'+i+'">적용</button>':'')+'</li>'; }).join('')+'</ul></div>':'<p class="small">✅ 시트 점검 — 문제 없음</p>'; o.__all=all; };
+  show(null); if(!aiReady() || !chars().length) return;
+  t.disabled=true; stat('AI가 이야기와 시트를 비교하는 중…');
+  aiAsk(CKSYS, '[이야기]\n'+String(document.getElementById('ct-story').value).slice(0,5000)+'\n\n[시트]\n'+chars().map(chLine).join('\n')+'\n[기타]\n'+((B.props||[]).map(function(x){ return x.kind+' '+x.name+': '+x.look; }).join('\n')||'없음')+
+    '\n\n점검: ① 이야기에 나오는데 시트에 없는 인물 ② 이야기와 어긋나는 설정 ③ 생김새가 서로 비슷해 구분이 어려운 인물 ④ 말투가 서로 구분되지 않는 인물 ⑤ 비어 있거나 모호한 항목.\n'+
+    '형식: [{"name":"인물","why":"문제 한 줄","field":"pers|speech|want|fear|rel|look|lookEn|role 중 하나(고칠 항목, 없으면 빈칸)","fix":"고친 값(없으면 빈칸)"}]', 2000, {json:true, temperature:0.3}).then(function(r){ t.disabled=false; stat('시트 점검 끝');
+    if(aiIsErr(r)) return stat(r); var j=[]; try{ var m=String(r).match(/\[[\s\S]*\]/); j=JSON.parse(m?m[0]:r); }catch(er){} show(Array.isArray(j)?j:[]); }); });
+document.addEventListener('click', function(e){ var t=e.target.closest&&e.target.closest('[data-cfix]'); if(!t) return; var o=document.getElementById('ct-chkout'), r=(o.__all||[])[+t.dataset.cfix]; if(!r) return;
+  var ch=null; chars().forEach(function(x){ if(x.name===r.name) ch=x; }); if(!ch){ B.chars.push(ch={name:r.name, role:'', look:{}, note:''}); }
+  if(r.field==='role') ch.role=r.fix; else { ch.sheet=ch.sheet||{}; ch.sheet[r.field]=r.fix; if(r.field==='look') ch.note=String(r.fix).slice(0,80); }
+  save(); renderChars(); t.outerHTML='<span class="small">적용함</span>'; stepNav(); });
+
+// ---- 3. 대사 배정
+function dlgRule(text){ var out=[], names=chars().map(function(x){ return x.name; });
+  String(text||'').split('\n').forEach(function(ln){ var m=ln.match(/^\s*([^:：\s]{1,10})\s*[:：]\s*(.+)$/); if(m && names.indexOf(m[1])>-1){ out.push({line:m[2].trim(), who:m[1], why:'이름이 붙어 있음'}); return; }
+    var re=/[“"「]([^”"」]{2,80})[”"」]/g, q; while((q=re.exec(ln))){ var before=ln.slice(Math.max(0,q.index-40), q.index), who='';
+      names.forEach(function(nm){ var k=before.lastIndexOf(nm); if(k>-1 && (who==='' || k>before.lastIndexOf(who))) who=nm; });
+      out.push({line:q[1], who:who, why:who?'앞 문장에 나온 사람':'' }); } });
+  return out; }
+var DGSYS='너는 웹툰 대사 편집자다. 이야기에서 대사를 모두 찾아 말한 사람을 정한다. 캐릭터 시트의 말투·성격과 문맥으로 판단한다. JSON만 답한다.';
+function renderDlg(){ var box=document.getElementById('ct-dlg'); if(!box) return; var L=(B&&B.dlg)||[];
+  if(!L.length){ box.innerHTML='<p class="small">「대사 찾고 화자 추천」을 누르면 이야기 속 대사가 여기에 나온다.</p>'; return; }
+  var opts=chars().map(function(x){ return x.name; }).concat(['나레이션','화면 밖 목소리']);
+  box.innerHTML='<ul class="dg">'+L.map(function(d,i){ return '<li class="'+(d.ok?'ok':'')+'"><select data-dg="'+i+'" aria-label="'+(i+1)+'번 대사 화자">'+(d.who?'':'<option value="">? 미정</option>')+opts.concat(opts.indexOf(d.who)<0&&d.who?[d.who]:[]).map(function(o){ return '<option'+(o===d.who?' selected':'')+'>'+cesc(o)+'</option>'; }).join('')+'</select>'+
+    '<span class="dg-l">'+cesc(d.line)+'</span>'+(d.ok?'':'<em class="dg-r">'+(d.who?'추천':'미정')+(d.why?' · '+cesc(d.why):'')+'</em>')+'<button type="button" data-dgx="'+i+'" aria-label="빼기">✕</button></li>'; }).join('')+'</ul>'+
+    '<p class="small">'+L.filter(function(d){ return d.ok; }).length+'/'+L.length+' 확정 · 화자를 고르면 확정된다</p>'; }
+document.addEventListener('change', function(e){ var t=e.target; if(t.dataset && t.dataset.dg!=null && B && B.dlg){ var d=B.dlg[+t.dataset.dg]; d.who=t.value; d.ok=1; save(); renderDlg(); stepNav(); } });
+document.addEventListener('click', function(e){ var t=e.target;
+  if(t.closest && t.closest('[data-dgx]') && B && B.dlg){ B.dlg.splice(+t.closest('[data-dgx]').dataset.dgx,1); save(); renderDlg(); return; }
+  if(t.id==='ct-dlgok' && B && B.dlg){ B.dlg.forEach(function(d){ if(d.who) d.ok=1; }); save(); renderDlg(); stepNav(); stat('추천 화자를 확정했다 (미정은 그대로)'); return; }
+  if(t.id!=='ct-dlgfind') return; ensureB(); var story=document.getElementById('ct-story').value.trim(); if(!story) return stat('이야기 칸이 비어 있다');
+  var rule=dlgRule(story); B.dlg=rule; save(); renderDlg();
+  if(!aiReady()){ stat('AI 키가 없어 문장 규칙으로만 찾았다 ('+rule.length+'줄)'); return; }
+  t.disabled=true; stat('AI가 대사와 화자를 찾는 중…');
+  aiAsk(DGSYS, '[등장인물]\n'+(chars().map(chLine).join('\n')||'없음')+'\n\n[이야기]\n'+story.slice(0,6000)+'\n\n이야기에 나오는 대사(따옴표 안·「이름: 」 줄·속마음)를 순서대로 모두 뽑는다. 많아야 60줄. 대사 글자는 바꾸지 않는다.\n형식: [{"line":"대사","who":"말한 인물 이름(등장인물 목록의 이름, 나레이션이면 \\"나레이션\\", 모르면 빈칸)","why":"판단 근거 짧게"}]', 3000, {json:true, temperature:0.2}).then(function(r){ t.disabled=false;
+    if(aiIsErr(r)) return stat(r); var j=[]; try{ var m=String(r).match(/\[[\s\S]*\]/); j=JSON.parse(m?m[0]:r); }catch(er){}
+    if(Array.isArray(j) && j.length){ B.dlg=j.filter(function(x){ return x && x.line; }).map(function(x){ return {line:String(x.line).slice(0,120), who:String(x.who||''), why:String(x.why||'').slice(0,40)}; }); save(); }
+    renderDlg(); stat('대사 '+B.dlg.length+'줄 — 추천 화자를 확인한다'); stepNav(); }); });
+function dlgBlock(){ var L=(B&&B.dlg||[]).filter(function(d){ return d.who; }); if(!L.length) return '';
+  return '[대사 배정 — 이야기의 이 대사는 이 사람이 말한다. 콘티에서도 화자를 바꾸지 않는다]\n'+L.slice(0,60).map(function(d){ return d.who+': '+d.line; }).join('\n'); }
+
+// ---- 4. 콘티 요약
+function renderS4(){ var box=document.getElementById('ct-s4sum'); if(!box) return;
+  if(!B||!B.cuts||!B.cuts.length){ box.innerHTML=''; return; }
+  var done=B.cuts.filter(function(c){ return c.scr; }).length, L=sceneList();
+  box.innerHTML='<p class="small">'+done+'/'+B.cuts.length+'컷 작성 · 장면 '+L.length+'개</p><ol class="ct-s4l small">'+L.map(function(x){ return '<li>'+cesc(dispNm(x.name||'장면'))+' <span>('+x.a+'–'+x.b+'컷)</span></li>'; }).join('')+'</ol>'; }
+
+// ---- 5. 장면·배경
+var BGSYS='너는 웹툰 배경 미술 감독이다. 장면마다 배경 설정을 정한다. 같은 장소면 같은 설정을 쓴다. JSON만 답한다.';
+function bgOf(x){ return (B&&B.sceneBg&&B.sceneBg[x.a])||null; }
+function bgPrompt(x, i, n){ var g=bgOf(x)||{};
+  return (n>1?'=== BACKGROUND '+(i+1)+': '+dispNm(x.name||'')+' ===\n':'')+'Draw ONE image: a background art for a Korean webtoon scene. NO characters, NO people, NO text. Wide establishing view, clean line art, full color, consistent perspective so it can be reused across panels.\n'+
+    'Location: '+(g.place||x.place||'')+'\nDetails: '+(g.en||g.ko||'')+'\nTime & lighting: '+(g.light||''); }
+function renderBg(){ var box=document.getElementById('ct-s5'); if(!box) return;
+  if(!B||!B.cuts||!B.cuts.length){ box.innerHTML='<p class="small">4단계에서 콘티를 먼저 만든다.</p>'; return; }
+  var L=sceneList(); if(!L.length) L=[{a:1,b:B.cuts.length,name:'전체'}];
+  box.innerHTML=L.map(function(x,i){ var g=bgOf(x)||{}, au=g.art&&window.__ppArt&&window.__ppArt.get(g.art);
+    return '<div class="sv-sc" data-bi="'+i+'"><h4>'+(i+1)+'. '+cesc(dispNm(x.name||'장면'))+' <span class="small">'+x.a+'–'+x.b+'컷</span></h4>'+
+      '<label class="small">장소 <input class="bg-pl" type="text" value="'+cesc(g.place||x.place||'')+'"></label>'+
+      '<label class="small">배경 설정 <textarea class="bg-ko" rows="2" placeholder="예: 철망 울타리, 물탱크, 멀리 운동장">'+cesc(g.ko||'')+'</textarea></label>'+
+      '<label class="small">시간·빛 <input class="bg-li" type="text" value="'+cesc(g.light||'')+'" placeholder="예: 해 질 녘, 주황빛 역광"></label>'+
+      (au?'<img class="sv-img" alt="'+(i+1)+'번 장면 배경" src="'+au+'">':'')+
+      '<div class="sv-act"><button class="chip" type="button" data-bg="gpt">🖌 GPT로 배경 그리기</button><label class="chip sv-up">배경 올리기<input type="file" accept="image/*" hidden data-bgup="'+x.a+'"></label></div></div>'; }).join(''); }
+function bgSave(card){ var L=sceneList(); if(!L.length) L=[{a:1,b:B.cuts.length}]; var x=L[+card.dataset.bi]; if(!x) return null;
+  B.sceneBg=B.sceneBg||{}; var g=B.sceneBg[x.a]=Object.assign({}, B.sceneBg[x.a]||{}, {place:card.querySelector('.bg-pl').value.trim(), ko:card.querySelector('.bg-ko').value.trim(), light:card.querySelector('.bg-li').value.trim()});
+  if(g.ko!==g._ko){ delete g.en; } g._ko=g.ko; save(); stepNav(); return x; }
+document.addEventListener('change', function(e){ var t=e.target, card=t.closest&&t.closest('#ct-s5 .sv-sc');
+  if(t.dataset && t.dataset.bgup && window.__ppArt && t.files[0]){ var a=+t.dataset.bgup; window.__ppArt.fromFile(t.files[0]).then(function(id){ B.sceneBg=B.sceneBg||{}; B.sceneBg[a]=Object.assign(B.sceneBg[a]||{}, {art:id}); save(); renderBg(); stat('배경 그림을 붙였다 — 이 장면 컷을 그릴 때 ChatGPT에 같이 첨부한다'); }); return; }
+  if(card) bgSave(card); });
+document.addEventListener('click', function(e){ var t=e.target;
+  var b=t.closest&&t.closest('#ct-s5 [data-bg]'); if(b){ var x=bgSave(b.closest('.sv-sc')); if(!x) return; var q=bgPrompt(x,0,1); ctCopy(q); setTimeout(function(){ window.open('https://chatgpt.com/?q='+encodeURIComponent(q.slice(0,1800)),'_blank','noopener'); },200); return; }
+  if(t.id==='ct-bggpt' && B && B.cuts && B.cuts.length){ var L=sceneList(); if(!L.length) L=[{a:1,b:B.cuts.length,name:'전체'}];
+    var q2=(L.length>1?'I will give you '+L.length+' backgrounds. Draw ONLY the first now; when I reply "다음", draw the next.\n\n':'')+L.map(function(x,i){ return bgPrompt(x,i,L.length); }).join('\n\n');
+    ctCopy(q2); setTimeout(function(){ window.open('https://chatgpt.com/?q='+encodeURIComponent(q2.length>1800?'다음 메시지로 배경 요청문을 붙여 넣을게. 받으면 첫 배경부터 그려줘.':q2),'_blank','noopener'); },200); return; }
+  if(t.id==='ct-bgai'){ if(!B||!B.cuts||!B.cuts.length) return stat('콘티를 먼저 만든다'); if(!aiReady()) return stat('AI 연결에서 키를 넣어야 쓸 수 있다.');
+    var L3=sceneList(); if(!L3.length) L3=[{a:1,b:B.cuts.length,name:'전체'}]; t.disabled=true; stat('AI가 장면 배경을 짜는 중…');
+    aiAsk(BGSYS, '[이야기]\n'+String(document.getElementById('ct-story').value).slice(0,3000)+'\n\n[장면]\n'+L3.map(function(x,i){ var cs=[]; for(var n=x.a;n<=x.b&&cs.length<6;n++){ var c=B.cuts[n-1]; if(c&&c.scr) cs.push(c.scr); }
+      return i+'. '+dispNm(x.name||'')+(x.place?' / 장소: '+x.place:'')+(x.desc||x.sum?' / '+(x.desc||x.sum):'')+'\n  컷: '+cs.join(' · ').slice(0,300); }).join('\n')+
+      '\n\n형식: [{"i":장면번호,"place":"장소(한국어 짧게)","ko":"배경 설정(한국어): 공간 구조·눈에 띄는 사물·분위기","en":"same background in English for an illustrator","light":"시간·빛(한국어)"}]', 2400, {json:true, temperature:0.5}).then(function(r){ t.disabled=false;
+      if(aiIsErr(r)) return stat(r); var j=[]; try{ var m=String(r).match(/\[[\s\S]*\]/); j=JSON.parse(m?m[0]:r); }catch(er){}
+      B.sceneBg=B.sceneBg||{}; var k=0; (Array.isArray(j)?j:[]).forEach(function(g){ var x=L3[+g.i]; if(!x) return; var old=B.sceneBg[x.a]||{}; B.sceneBg[x.a]=Object.assign(old,{place:String(g.place||x.place||''), ko:String(g.ko||''), en:String(g.en||''), light:String(g.light||'')}); B.sceneBg[x.a]._ko=B.sceneBg[x.a].ko; k++; });
+      save(); renderBg(); stepNav(); stat('장면 '+k+'개 배경을 짰다'); }); }
+});
+function bgLine(x){ var g=bgOf(x); if(!g) return ''; return 'Background (keep identical in all panels of this scene): '+[g.place, g.en||g.ko, g.light].filter(Boolean).join(' / ')+'\n'+(g.art?'(A background reference image is attached — match it.)\n':''); }
+
+// ---- 7. 주요 컷
+function sceneOfCut(n){ var L=sceneList(); for(var i=0;i<L.length;i++) if(n>=L[i].a && n<=L[i].b) return L[i]; return null; }
+function autoKey(c){ if(c.key===1) return true; if(c.key===0) return false; var z=''; try{ z=cutSize(c); }catch(e){}
+  var x=sceneOfCut(c.n); return !!(c.hook || z==='wide' || z==='tall' || (c.focus && c.scr) || (x && x.b===c.n && c.scr && c.n>1)); }
+function ctKeyPrompt(c, k, n){ var x=sceneOfCut(c.n)||{a:1,b:B.cuts.length,name:''}, ap=B.scenePr&&B.scenePr[x.a], pp=ap&&(ap.panels||[]).filter(function(q){ return +q.n===c.n; })[0];
+  var sh=SHOTS.filter(function(q){ return q[0]===c.k; })[0], an=ANGS.filter(function(q){ return q[0]===(c.ang||''); })[0], z=''; try{ z=cutSize(c); }catch(e){}
+  var w=ctWho(c), fc=(pp&&pp.faces)||{};
+  return (n>1?'=== PANEL '+k+' of '+n+' (cut '+c.n+') ===\n':'')+'Draw ONE finished webtoon panel. Korean webtoon style, clean line art, cel shading, full color. NO speech bubbles, NO text, NO panel border. Leave empty space for speech bubbles.\n'+
+    'Aspect ratio '+(z==='wide'?'2:1':z==='tall'?'9:16':z==='half'?'3:4':'4:3')+'. Shot: '+(sh?sh[1]:'medium shot')+(an&&an[0]?', '+an[2]:'')+(c.focus?', focus lines':'')+(c.flash?', flashback tint':'')+'.\n'+
+    'Scene: '+dispNm(x.name||'')+'\n'+bgLine(x)+'What we see: '+((pp&&pp.see)||c.scr||'')+'\n'+(pp&&pp.staging?'Staging: '+pp.staging+'\n':'')+
+    (w.length?'Characters:\n'+w.map(function(nm){ return '- '+nm+': '+(ctLookSafe(nm)||'')+(fc[nm]?'; expression: '+fc[nm]:''); }).join('\n')+'\n':'')+
+    (c.line?'Mood from dialogue (do NOT draw text): '+String(c.line).replace(/\n/g,' / ')+'\n':'')+(pp&&pp.emph?'Emphasis: '+pp.emph+'\n':''); }
+function keyCuts(){ return (B&&B.cuts||[]).filter(function(c){ return c.scr && autoKey(c); }); }
+function renderKey(){ var box=document.getElementById('ct-s7'); if(!box) return;
+  if(!B||!B.cuts||!B.cuts.length){ box.innerHTML='<p class="small">4단계에서 콘티를 먼저 만든다.</p>'; return; }
+  var K=keyCuts(), L=sceneList(); if(!L.length) L=[{a:1,b:B.cuts.length,name:'전체'}];
+  box.innerHTML='<div class="sv-all"><b>주요 컷 '+K.length+'개</b> <span class="small">눌러서 넣고 뺀다</span><div class="kc-pick">'+L.map(function(x){ var h='<div class="kc-sc"><span class="small">'+cesc(dispNm(x.name||''))+'</span>'; for(var n=x.a;n<=x.b;n++){ var c=B.cuts[n-1]; if(!c||!c.scr) continue; h+='<button type="button" class="kc'+(autoKey(c)?' on':'')+'" data-kc="'+n+'" title="'+cesc(c.scr)+'" aria-pressed="'+autoKey(c)+'">'+n+'</button>'; } return h+'</div>'; }).join('')+'</div>'+
+    '<div class="sv-act"><button class="chip ct-go" type="button" data-ka="go">🖌 주요 컷 GPT로 한번에</button><button class="chip" type="button" data-ka="copy">복사</button><button class="chip" type="button" data-ka="show">모아 보기</button></div><pre class="sv-pr" hidden></pre>'+
+    '<p class="small">ChatGPT가 한 컷을 그리면 「다음」이라고 답해 다음 컷을 받는다. 5단계에서 배경 그림을 받아 뒀다면 같이 첨부한다.</p></div>'+
+    '<ul class="kc-l">'+K.map(function(c){ var au=c.art&&window.__ppArt&&window.__ppArt.get(c.art);
+      return '<li>'+(au?'<img alt="'+c.n+'번 컷 그림" src="'+au+'">':'<span class="kc-ph">그림 없음</span>')+'<div><b>'+c.n+'번</b> <span class="small">'+cesc(shotName(c.k))+'</span><p class="small">'+cesc(c.scr)+'</p><div class="sv-act"><button class="chip" type="button" data-k1="'+c.n+'">🖌 이 컷만</button><label class="chip sv-up">그림 올리기<input type="file" accept="image/*" hidden data-kup="'+c.n+'"></label><button class="chip" type="button" data-ed="'+c.n+'">✎</button></div></div></li>'; }).join('')+'</ul>'+
+    '<details class="ct-more"><summary class="small">장면 러프 콘티(장면마다 한 장)</summary><div class="sv-act"><button class="chip" type="button" data-sa="ai">🧠 전체 콘티 읽고 연출 짜기</button><button class="chip" type="button" data-sa="go">✏ 전체 러프 콘티 그리기</button><button class="chip" type="button" data-sa="copy">복사</button><button class="chip" type="button" data-sa="show">모아 보기</button></div><pre class="sv-pr" hidden></pre></details>'; }
+function keyAll(){ var K=keyCuts(); if(!K.length) return ''; var seen={}, nm=[]; K.forEach(function(c){ ctWho(c).forEach(function(n){ if(!seen[n]){ seen[n]=1; nm.push(n); } }); });
+  return (K.length>1?'I will give you '+K.length+' key panels of one webtoon episode. Draw ONLY panel 1 now. Each time I reply "다음", draw the next panel. Keep every character and background design identical across panels.\n':'')+
+    (nm.length?'Character reference:\n'+nm.map(function(n){ return '- '+n+': '+(ctLookSafe(n)||''); }).join('\n')+'\n':'')+'\n'+K.map(function(c,i){ return ctKeyPrompt(c,i+1,K.length); }).join('\n\n'); }
+document.addEventListener('click', function(e){ var t=e.target; if(!t.closest || !B) return;
+  var kc=t.closest('[data-kc]'); if(kc){ var c=B.cuts[+kc.dataset.kc-1]; c.key=autoKey(c)?0:1; save(); renderKey(); return; }
+  var k1=t.closest('[data-k1]'); if(k1){ var q=ctKeyPrompt(B.cuts[+k1.dataset.k1-1],1,1); ctCopy(q); setTimeout(function(){ window.open('https://chatgpt.com/?q='+encodeURIComponent(q.slice(0,1800)),'_blank','noopener'); },200); return; }
+  var ka=t.closest('[data-ka]'); if(ka){ var qa=keyAll(); if(!qa) return stat('주요 컷이 없다');
+    if(ka.dataset.ka==='show'){ var pr=ka.closest('.sv-all').querySelector('.sv-pr'); pr.textContent=qa; pr.hidden=!pr.hidden; return; }
+    ctCopy(qa); if(ka.dataset.ka==='go') setTimeout(function(){ window.open('https://chatgpt.com/?q='+encodeURIComponent(qa.length>1800?'다음 메시지로 웹툰 주요 컷 요청문을 붙여 넣을게. 받으면 1번 컷부터 그려줘.':qa),'_blank','noopener'); },200); return; }
+});
+document.addEventListener('change', function(e){ var t=e.target; if(!t.dataset || !t.dataset.kup || !B || !window.__ppArt || !t.files[0]) return; var c=B.cuts[+t.dataset.kup-1];
+  window.__ppArt.fromFile(t.files[0]).then(function(id){ c.art=id; c.key=1; save(); renderKey(); stepNav(); stat(c.n+'번 컷 그림을 붙였다'); }); });
+
 function renderScenes(){
   var box=document.getElementById('ct-sv'); if(!box) return; ctView();
   if(!B || !B.cuts || !B.cuts.length){ box.innerHTML='<p class="small">이야기를 적고 「AI로 콘티 쓰기」를 누르면 장면별로 여기에 나온다.</p>'; return; }
   var L=sceneList(); if(!L.length) L=[{a:1,b:B.cuts.length,name:'전체'}];
-  var top='<div class="sv-all"><b>콘티 → 그림 프롬프트</b> <span class="small">장면 '+L.length+'개 · 장면마다 한 장의 러프 콘티로</span><div class="sv-act"><button class="chip" type="button" data-sa="ai">🧠 전체 콘티 읽고 연출 짜기</button><button class="chip ct-go" type="button" data-sa="go">✏ 전체 러프 콘티 그리기 (ChatGPT)</button><button class="chip" type="button" data-sa="copy">전체 프롬프트 복사</button><button class="chip" type="button" data-sa="show">모아 보기</button></div><pre class="sv-pr" hidden></pre><p class="small">ChatGPT가 1장면을 그리면 「다음」이라고 답해 다음 장면을 받는다. 받은 그림은 장면 카드의 「그림 올리기」로.</p></div>'+
-    '<div class="sv-all"><b>💬 대사 배정 점검</b> <span class="small">누가 말하는지·화면에 있는지·말투가 맞는지</span><div class="sv-act"><button class="chip ct-go" type="button" id="sv-dckb">점검하기</button></div><div id="sv-dck"></div></div>';
+  var top='<div class="sv-all"><b>💬 대사 배정 점검</b> <span class="small">누가 말하는지·화면에 있는지·말투가 맞는지</span><div class="sv-act"><button class="chip ct-go" type="button" id="sv-dckb">점검하기</button></div><div id="sv-dck"></div></div>';
+  try{ renderSteps(); }catch(e){}
   box.innerHTML=top+L.map(function(x,i){ var who=''; try{ who=sceneWho(x); }catch(e){}
     var rows=''; for(var n=x.a;n<=x.b;n++){ var c=B.cuts[n-1]; if(!c) continue;
       rows+='<li><b>'+n+'</b><span>'+cesc(shotName(c.k))+' · '+(c.scr?cesc(c.scr):'<i>화면 미정</i>')+(c.line?'<span class="sv-l">'+String(c.line).split('\n').filter(Boolean).map(function(l){ var p=lnParse(l), w=ctWho(c); return p.who?'<b>'+cesc(p.who)+'</b>: '+cesc(p.say):(p.kind==='bare'&&w.length!==1?'<em class="dq">?</em> ':(w.length===1?'<b>'+cesc(w[0])+'</b>: ':''))+cesc(p.say); }).join(' / ')+'</span>':'')+'</span><button type="button" data-ed="'+n+'" aria-label="'+n+'번 컷 고치기">✎</button></li>'; }
@@ -14821,7 +15058,7 @@ function renderScenes(){
 }
 document.addEventListener('click', function(e){ var t=e.target; if(!t.closest) return;
   if(t.id==='ct-vw-s'||t.id==='ct-vw-b'){ ctView(t.id==='ct-vw-s'?'s':'b'); if(CTV==='b') try{ renderBoard(); }catch(er){} return; }
-  var ed=t.closest('[data-ed]'); if(ed && ed.closest('#ct-sv')){ var n=+ed.dataset.ed; ctView('b'); try{ renderBoard(); }catch(er){}
+  var ed=t.closest('[data-ed]'); if(ed && ed.closest('#conti')){ var n=+ed.dataset.ed; if(CSTEP!==6) goStep(6,true); ctView('b'); try{ renderBoard(); }catch(er){}
     setTimeout(function(){ var f=root.querySelector('.ct-cut[data-n="'+n+'"]'); if(f){ if(!f.querySelector('.ct-ed')) openEdit(f); try{ f.scrollIntoView({block:'center'}); }catch(er){} } },60); return; }
   var sa=t.closest('[data-sa]'); if(sa && B && sa.dataset.sa==='ai'){ var LL=sceneList(), k=0, ok=0; if(!LL.length) LL=[0]; sa.disabled=true;
     (function nx(){ if(k>=LL.length){ sa.disabled=false; renderScenes(); stat('장면 '+ok+'/'+LL.length+'개 연출을 짰다 — 이제 「전체 러프 콘티 그리기」'); return; } stat('콘티 읽는 중… '+(k+1)+'/'+LL.length+' 장면');
@@ -14851,11 +15088,18 @@ function chGptOne(x, k, n){
     'Korean webtoon style, clean line art, flat colors, plain white background, NO text, NO names, NO labels. Keep outfit and colors identical in every view.';
 }
 function chGptAll(list){
-  var cs=(list||chars()).filter(function(x){ return x && x.name; }); if(!cs.length) return '';
+  var cs=(list||chars()).filter(function(x){ return x && x.name; }).sort(function(a,b){ return ((a.sheet&&a.sheet.kind)==='조연')-((b.sheet&&b.sheet.kind)==='조연'); }); if(!cs.length) return '';
   var n=cs.length;
   var lineup='Draw ONE image: a character lineup of '+n+' characters standing side by side, full body, front view, same scale (show height differences), plain white background, Korean webtoon style, clean line art, flat colors. NO text, NO names.\nFrom left to right:\n'+
     cs.map(function(x,i){ return (i+1)+'. '+x.name+(x.role?' ('+x.role+')':'')+': '+chLookEn(x); }).join('\n')+'\nEvery character must look clearly different (silhouette, hair, colors).';
-  if(n===1) return chGptOne(cs[0],1,1);
+  var P=(B&&B.props)||[], ex=P.filter(function(x){ return x.kind==='엑스트라'; }), an=P.filter(function(x){ return x.kind==='동물'; }), ob=P.filter(function(x){ return x.kind==='사물'; }), more=[];
+  if(ex.length) more.push('EXTRAS SHEET: Draw ONE image of background extras for this webtoon, several bust-up and full-body figures in a grid. Their EYES ARE NOT VISIBLE (hidden by hair shadow or blank), simple designs so they never compete with main characters. Plain white background, NO text.\n'+ex.map(function(x){ return '- '+x.name+': '+(x.lookEn||x.look); }).join('\n'));
+  if(an.length) more.push('ANIMAL SHEET: Draw ONE image, each animal in front / side / 3 expressions. Plain white background, NO text.\n'+an.map(function(x){ return '- '+x.name+': '+(x.lookEn||x.look); }).join('\n'));
+  if(ob.length) more.push('PROP SHEET: Draw ONE image of these key props, each from 2 angles with a close-up detail. Plain white background, NO text.\n'+ob.map(function(x){ return '- '+x.name+': '+(x.lookEn||x.look); }).join('\n'));
+  if(n===1 && !more.length) return chGptOne(cs[0],1,1);
+  var tot=(n>1?1:0)+n+more.length;
+  return 'I will give you '+tot+' images to draw. Draw ONLY the first one now. Each time I reply "다음", draw the next one. Keep every design identical across images. Korean webtoon style, clean line art, flat colors.\n\n'+(n>1?'=== IMAGE 1: LINEUP ===\n'+lineup+'\n\n':'')+
+    cs.map(function(x,i){ return '=== IMAGE '+(i+(n>1?2:1))+': '+x.name+' ===\n'+chGptOne(x,i+1,n); }).join('\n\n')+more.map(function(m,i){ return '\n\n=== IMAGE '+((n>1?1:0)+n+i+1)+' ===\n'+m; }).join('');
   return 'I will give you '+(n+1)+' images to draw. Draw ONLY the first one now. Each time I reply "다음", draw the next one. Keep every character design identical to the lineup.\n\n=== IMAGE 1: LINEUP ===\n'+lineup+'\n\n'+
     cs.map(function(x,i){ return '=== IMAGE '+(i+2)+': '+x.name+' ===\n'+chGptOne(x,i+1,n); }).join('\n\n');
 }
@@ -14865,6 +15109,7 @@ document.addEventListener('click', function(e){ var t=e.target; if(!t.closest) r
   ctCopy(q); stat('등장인물 시트 요청문을 복사했다 — ChatGPT에 붙여 넣고, 그린 뒤 「다음」이라고 답하면 다음 인물을 그린다.');
   setTimeout(function(){ window.open('https://chatgpt.com/?q='+encodeURIComponent(q.length>1800?'다음 메시지로 등장인물 시트 요청문을 붙여 넣을게. 받으면 첫 그림부터 그려줘.':q),'_blank','noopener'); },200);
 });
+setTimeout(function(){ try{ goStep(CSTEP,true); }catch(e){} },0);
 document.addEventListener('pp-art-ready', function(){ if(B) try{ renderBoard(); }catch(e){} });
 function ctCopy(t){ (navigator.clipboard&&navigator.clipboard.writeText?navigator.clipboard.writeText(t):Promise.reject()).then(function(){ stat('그림 요청문을 복사했다 — ChatGPT에 붙여 넣고, 받은 그림은 컷 편집기 「그림 올리기」'); }, function(){ stat('복사하지 못했다'); }); }
 document.addEventListener('click', function(e){ var t=e.target;
@@ -15657,6 +15902,8 @@ function cutPrompt(ch){
     rows.push(n+' · 추천 '+compText(c)+(c.silent?' · 무음':'')+(c.hook?' · 넘김 훅':'')+(PG_TURN[n]?' · 쪽 넘김 자리':'')+(c.hint?' · 컷 역할: '+c.hint:''));
   }
   L.push('[컷 배정표]\n'+rows.join('\n'));
+  try{ var dB=dlgBlock(); if(dB) L.push(dB); }catch(e){}
+  try{ if(B.props&&B.props.length) L.push('[엑스트라·동물·사물]\n'+B.props.map(function(x){ return x.kind+' '+x.name+': '+x.look; }).join('\n')); }catch(e){}
   if(chars().length) L.push('[등장인물]\n'+chars().map(chLine).join('\n')+(chars().some(function(x){ return x.sheet; })?'\n→ 대사는 각 인물의 말투로, 행동과 반응은 성격·원하는 것·약점에 맞게 쓴다. 화면 묘사에는 생김새(옷·소품·특징)를 살린다.':'')+'\n→ 대사 줄마다 반드시 「이름: 대사」로 말한 사람을 붙인다(속마음은 「이름: (속마음)」). 말하는 사람은 그 컷 화면에 나오게 쓰고, 화면 밖 목소리면 화면 칸에 그렇게 적는다.');
   var pa=ch.prev?Math.max(1,ch.prev.a,ch.a-20):Math.max(1,ch.a-3);   // 앞 묶음 전체(20줄까지)
   var prev=[]; for(var p=pa;p<ch.a;p++){ var q=B.cuts[p-1]; if(q&&q.scr) prev.push(cutRow(q)); }
