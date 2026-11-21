@@ -307,3 +307,9 @@ arcForm, deviceId, folderMemo, gdBase, gdLast, gdLinked, ideaText, mangaDataVer,
 - GLB에 애니메이션 클립이 포함된 경우 첫 번째 클립을 AnimationMixer로 자동 재생하고, 모델 교체/초기화 시 믹서를 정리한다.
 - 모델 높이를 기준으로 크기를 정규화하고 화면 종횡비에 따른 카메라 거리 계산으로 전신이 보이도록 배치한다.
 - 주의: GitHub 트리에서 모델 파일 경로를 확인했지만 iPhone Safari에서 실제 렌더링/애니메이션 실행은 아직 확인하지 않았다.
+
+## 웹툰 선택지 스튜디오 (2026-11-21) — `studio/`
+- 주소 https://sooc200833-lang.github.io/-/studio/ · 로비 카드와 사전 「클리셰 플레이」 위 링크로 연결
+- 여러 파일: `index.html`(화면), `app.js`(ink 대본→웹툰 컷 렌더·플레이·맵·자동 테스트), `ext.js`(클리셰 탭·클리셰 플레이·쉬운 추가 시트), `sprite.js`(GPT 프로필·표정 시트 요청문, 시트 업로드→배경 제거·칸 자르기·표정 배정, 컷 그림 요청문·컷 그림 저장), `story-seoyun.js`(서윤양 7엔딩), `cliches.js`(trope-engine-korea MIT 1000개), `directing.js`(연출 템플릿), `lib/`(inkjs, scrollama, embla, comical, manpu_doodle 기호)
+- 대본 확장 문법: `@panel 배경 높이비 효과…`, `@art 그림키`(컷 그림), `@bub 배율`(말풍선 크기), `@mark 기호 x y 크기`, 대사 끝 ` @x,y`(말풍선 위치)
+- 올린 표정 시트·컷 그림은 브라우저 IndexedDB `wt_sprites`(c, a)에만 저장. 기기 간 동기화 없음
