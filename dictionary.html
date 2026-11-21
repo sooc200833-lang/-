@@ -1335,6 +1335,7 @@ body.dk-drag, body.dk-drag *{user-select:none!important; -webkit-user-select:non
 .ct-stb.done i{background:#2e7d32;color:#fff}.ct-stb.on{border-color:var(--ink,#111);color:var(--ink,#111);font-weight:700}.ct-stb.on i{background:var(--ink,#111);color:#fff}
 .ct-step h3{margin-top:.4rem}.ct-nx{margin-top:1rem;justify-content:space-between}
 .ct-shimg{display:block;width:100%;max-width:360px;margin:.3rem 0;border-radius:8px;border:1px solid var(--line,#ddd);cursor:zoom-in}
+.ct-cutsl{display:flex;flex-wrap:wrap;gap:.3rem;align-items:flex-end;margin:.3rem 0}.ct-cutsl>span{width:100%}.ct-cutsl figure{margin:0;text-align:center}.ct-cutsl img{height:64px;width:auto;max-width:72px;object-fit:contain;background:repeating-conic-gradient(#eee 0 25%,#fff 0 50%) 0 0/10px 10px;border-radius:4px;cursor:zoom-in}.ct-cutsl figcaption{font-size:.66rem;color:var(--ink-3)}
 .ct-shin{border-style:dashed}.ct-shrow{display:grid;gap:.3rem;border-top:1px solid var(--line,#eee);padding:.4rem 0}.ct-shrow select,.ct-shnew{font:inherit;font-size:.84rem}
 .ct-grp{border:1px solid var(--line,#ddd);border-radius:10px;padding:.5rem .6rem;margin:.4rem 0}
 .ct-zoom{position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:9999;display:grid;place-items:center;padding:1rem;cursor:zoom-out}.ct-zoom img{max-width:100%;max-height:100%}
@@ -13458,6 +13459,7 @@ function renderChars(){
     if(ro) ro.observe(cv); else setTimeout(function(){ queue(cv); },0);
     f.appendChild(cv);
     if(ch.sheetArt && window.__ppArt){ var su=window.__ppArt.get(ch.sheetArt); if(su) f.insertAdjacentHTML('beforeend','<img class="ct-shimg" data-zoom="1" alt="'+cesc(ch.name)+' 시트 그림" src="'+su+'">'); }
+    try{ var cx=chCuts(ch); if(cx) f.insertAdjacentHTML('beforeend', cx); }catch(e){}
     f.insertAdjacentHTML('beforeend','<b>'+cesc(ch.name)+'</b>'+(ch.sheet&&ch.sheet.kind?' <span class="ct-kind">'+ch.sheet.kind+'</span>':'')+(ch.role?'<span class="small">'+cesc(ch.role)+'</span>':'')+
       '<div class="ct-tags">'+lookTags(ch.look)+'</div>'+(ch.sheet?'<dl class="ct-sheet small">'+[['성격','pers'],['말투','speech'],['원함','want'],['약점','fear'],['관계','rel'],['생김새','look']].map(function(r){ return ch.sheet[r[1]]?'<dt>'+r[0]+'</dt><dd>'+cesc(ch.sheet[r[1]])+'</dd>':''; }).join('')+'</dl>':(ch.note?'<span class="small">'+cesc(ch.note)+'</span>':''))+
       '<div class="filterbar"><button class="chip" type="button" data-ce="'+i+'">고치기</button>'+
@@ -14937,12 +14939,24 @@ function renderProps(){ var box=document.getElementById('ct-props'); if(!box) re
   box.innerHTML=h?'<h4 class="ct-reft">GPT로 받은 시트 그림</h4><p class="small">인물 카드의 「시트 그림 넣기」와 여기에 넣는다. 넣은 시트는 주요 컷을 그릴 때 첨부할 그림으로 안내된다.</p>'+h:''; }
 document.addEventListener('change', function(e){ var t=e.target; if(!t.dataset || !(t.dataset.shup!=null || t.dataset.shk) || !t.files[0] || !window.__ppArt || !B) return;
   window.__ppArt.fromFile(t.files[0]).then(function(id){
-    if(t.dataset.shup!=null){ var ch=chars()[+t.dataset.shup]; if(ch){ ch.sheetArt=id; stat(ch.name+' 시트 그림을 넣었다'); } }
+    if(t.dataset.shup!=null){ var ch=chars()[+t.dataset.shup]; if(ch){ ch.sheetArt=id; chSlice(ch,id); } }
     else { B.sheetArts=B.sheetArts||{}; B.sheetArts[t.dataset.shk]=id; stat((t.dataset.shk==='lineup'?'라인업':t.dataset.shk+' 시트')+' 그림을 넣었다'); }
     save(); renderChars(); renderProps(); try{ renderKey(); }catch(er){} }); });
 document.addEventListener('click', function(e){ var t=e.target; if(!(t.dataset && t.dataset.zoom)) return; var d=document.createElement('div'); d.className='ct-zoom'; d.innerHTML='<img alt="" src="'+t.src+'">'; d.addEventListener('click', function(){ d.remove(); }); document.body.appendChild(d); });
 
 // 시트 그림 넣기 (인물이 없어도): 그림마다 누구 시트인지 고른다
+
+// 시트 그림 → 전신·표정 자동 자르기
+function chSlice(ch, id){ var F=window.__ppFix, A=window.__ppArt; if(!F||!F.importCharSheet||!A||!ch) return Promise.resolve();
+  var u=A.get(id); if(!u) return Promise.resolve(); stat(ch.name+' 시트를 자르는 중…');
+  return F.importCharSheet(ch.name, u, {fear:!!(ch.sheet&&ch.sheet.fear)}).then(function(r){
+    var ps=(r.bodies||[]).map(function(bu,i){ var bid='b'+Date.now().toString(36)+i; return A.put(bid,bu).then(function(){ return bid; }); });
+    return Promise.all(ps).then(function(ids){ if(ids.length) ch.bodies=ids; save(); renderChars(); try{ renderKey(); }catch(e){}
+      stat(ch.name+' — 전신 '+ids.length+'개 · 표정 '+(r.faceN||0)+'개를 잘랐다'+((r.faceN||0)<6||ids.length<4?' (일부를 못 찾았다 — 「🎭 표정 시트」에서 직접 고칠 수 있다)':'')); }); }).catch(function(){ stat('시트를 자르지 못했다'); }); }
+function chCuts(ch){ var F=window.__ppFix, A=window.__ppArt, h='', fm=F&&F.spr&&F.spr[ch.name];
+  if(ch.bodies&&A){ h+='<div class="ct-cutsl"><span class="small">전신</span>'+ch.bodies.map(function(id,i){ var u=A.get(id); return u?'<figure><img data-zoom="1" alt="'+cesc(ch.name)+' '+(['정면','3/4','옆','뒤'][i]||'')+'" src="'+u+'"><figcaption>'+(['정면','3/4','옆','뒤'][i]||'')+'</figcaption></figure>':''; }).join('')+'</div>'; }
+  if(fm && Object.keys(fm).length) h+='<div class="ct-cutsl"><span class="small">표정</span>'+Object.keys(fm).map(function(k){ return '<figure><img data-zoom="1" alt="'+cesc(ch.name)+' '+((F.EMN||{})[k]||k)+'" src="'+fm[k]+'"><figcaption>'+((F.EMN||{})[k]||k)+'</figcaption></figure>'; }).join('')+'</div>';
+  return h; }
 var SHQ=[];
 function shqRender(){ var box=document.getElementById('ct-shq'); if(!box) return; var A=window.__ppArt;
   if(!SHQ.length){ box.innerHTML=''; return; }
@@ -14952,10 +14966,11 @@ document.addEventListener('change', function(e){ var t=e.target;
   if(t.id==='ct-shfile' && t.files.length && window.__ppArt){ var fs=[].slice.call(t.files); stat('그림을 읽는 중…');
     Promise.all(fs.map(function(f){ return window.__ppArt.fromFile(f); })).then(function(ids){ SHQ=SHQ.concat(ids); shqRender(); stat('누구 시트인지 고르고 「넣기」를 누른다'); t.value=''; }); return; }
   if(t.dataset && t.dataset.shq!=null){ var nn=document.querySelector('[data-shqn="'+t.dataset.shq+'"]'); if(nn){ nn.hidden=t.value!=='new'; if(t.value==='new') nn.focus(); } } });
+document.addEventListener('click', function(e){ var r=e.target.closest&&e.target.closest('[data-reslice]'); if(r){ var ch=chars()[+r.dataset.reslice]; if(ch&&ch.sheetArt) chSlice(ch,ch.sheetArt); } });
 document.addEventListener('click', function(e){ var b=e.target.closest&&e.target.closest('[data-shqok]'); if(!b) return; var i=+b.dataset.shqok, sel=document.querySelector('[data-shq="'+i+'"]'), v=sel&&sel.value, id=SHQ[i];
   if(!v) return stat('누구 시트인지 먼저 고른다'); ensureB();
-  if(v==='new'){ var nm=(document.querySelector('[data-shqn="'+i+'"]').value||'').trim().slice(0,20); if(!nm) return stat('새 인물 이름을 적는다'); var ex=null; B.chars.forEach(function(x){ if(x.name===nm) ex=x; }); if(!ex){ ex={name:nm, role:'', look:{}, note:''}; B.chars.push(ex); } ex.sheetArt=id; stat(nm+' 시트를 넣었다'); }
-  else if(v.indexOf('c:')===0){ var n2=v.slice(2); chars().forEach(function(x){ if(x.name===n2) x.sheetArt=id; }); stat(n2+' 시트를 넣었다'); }
+  if(v==='new'){ var nm=(document.querySelector('[data-shqn="'+i+'"]').value||'').trim().slice(0,20); if(!nm) return stat('새 인물 이름을 적는다'); var ex=null; B.chars.forEach(function(x){ if(x.name===nm) ex=x; }); if(!ex){ ex={name:nm, role:'', look:{}, note:''}; B.chars.push(ex); } ex.sheetArt=id; chSlice(ex,id); }
+  else if(v.indexOf('c:')===0){ var n2=v.slice(2); chars().forEach(function(x){ if(x.name===n2){ x.sheetArt=id; chSlice(x,id); } }); }
   else { B.sheetArts=B.sheetArts||{}; B.sheetArts[v.slice(2)]=id; stat('시트를 넣었다'); }
   SHQ.splice(i,1); save(); renderChars(); renderProps(); shqRender(); try{ renderKey(); stepNav(); }catch(er){} });
 function sheetRefs(names){ var A=window.__ppArt, out=[]; if(!A||!B) return out; chars().forEach(function(x){ if(x.sheetArt && (!names || names.indexOf(x.name)>-1)) out.push(x.name+' 시트'); });
@@ -15129,7 +15144,7 @@ function chGptOne(x, k, n){
   var h=x.sheet||{};
   return (n>1?'[Character '+k+' of '+n+'] ':'')+'Draw ONE image: a character reference sheet for '+x.name+'.\n'+
     'Appearance: '+chLookEn(x)+'\n'+(h.pers?'Personality (show it in posture and expressions): '+h.pers+'\n':'')+(x.role?'Role: '+x.role+'\n':'')+
-    'LAYOUT: top row = full body turnaround (front, 3/4, side, back), same height. Bottom row = 6 bust-up expressions: neutral, smile, angry, sad, surprised, '+(h.fear?'scared':'embarrassed')+'.\n'+
+    'LAYOUT (exactly 2 rows): TOP ROW = 4 full-body figures (front, 3/4, side, back), same height. BOTTOM ROW = 6 head-and-shoulders expressions in this order: neutral, smile, angry, sad, surprised, '+(h.fear?'scared':'embarrassed')+'. Every figure and head is separated by wide clear white gaps — nothing touches or overlaps, no ground shadows.\n'+
     'Korean webtoon style, clean line art, flat colors, plain white background, NO text, NO names, NO labels. Keep outfit and colors identical in every view.';
 }
 function chGptAll(list){
@@ -19505,7 +19520,33 @@ root.addEventListener('pointerup', function(){ if(!DR) return; if(DR.x!=null){ v
 
 window.__ppArt={get:function(id){ return ART[id]; }, put:function(id,u){ ART[id]=u; return put('art',{id:id,u:u}); }, fromFile:function(file){ return loadCanvas(file).then(function(c){ var k=Math.min(1,1100/c.width), o=document.createElement('canvas'); o.width=Math.round(c.width*k); o.height=Math.round(c.height*k); o.getContext('2d').drawImage(c,0,0,o.width,o.height); var id='x'+Date.now().toString(36), u=o.toDataURL('image/jpeg',.86); ART[id]=u; return put('art',{id:id,u:u}).then(function(){ return id; }); }); }};
 window.__ppDeco=function(){ try{ deco(); }catch(e){ console.error(e); } };
-window.__ppFix={allPrompt:allPrompt, manuscript:manuscript, cutPrompt:cutPrompt, sheetPrompt:sheetPrompt, slice:slice, removeBg:removeBg, openFaces:openFaces, spr:SPR};
+
+// 캐릭터 시트 한 장(윗줄 전신 4 · 아랫줄 표정 6) → 전신·표정 자동 자르기 (2026-11-21)
+function urlCanvas(u){ return new Promise(function(res,rej){ var im=new Image(); im.onload=function(){ var k=Math.min(1,1800/Math.max(im.width,im.height)), c=document.createElement('canvas'); c.width=Math.round(im.width*k); c.height=Math.round(im.height*k); c.getContext('2d').drawImage(im,0,0,c.width,c.height); res(c); }; im.onerror=rej; im.src=u; }); }
+function cropBox(c,d,w,X0,X1,Y0,Y1,max){ var x0=X1,y0=Y1,x1=X0,y1=Y0,any=false;
+  for(var j=Y0;j<=Y1;j++) for(var i=X0;i<=X1;i++) if(d[(j*w+i)*4+3]>40){ any=true; if(i<x0)x0=i; if(i>x1)x1=i; if(j<y0)y0=j; if(j>y1)y1=j; }
+  if(!any) return null; var bw=x1-x0+1, bh=y1-y0+1, k=Math.min(1,(max||520)/Math.max(bw,bh)), o=document.createElement('canvas'); o.width=Math.max(1,Math.round(bw*k)); o.height=Math.max(1,Math.round(bh*k));
+  o.getContext('2d').drawImage(c,x0,y0,bw,bh,0,0,o.width,o.height); return {u:o.toDataURL('image/png'), w:bw, h:bh}; }
+function sliceRows(c){ var w=c.width,h=c.height,d=c.getContext('2d',{willReadFrequently:true}).getImageData(0,0,w,h).data, row=new Array(h).fill(0);
+  for(var j=0;j<h;j++) for(var i=0;i<w;i++) if(d[(j*w+i)*4+3]>30) row[j]++;
+  var ys=runs(row,Math.max(6,h*0.012));
+  return ys.map(function(yy){ var col=new Array(w).fill(0); for(var j=yy[0];j<=yy[1];j++) for(var i=0;i<w;i++) if(d[(j*w+i)*4+3]>30) col[i]++;
+    var xs=runs(col,Math.max(4,w*0.008)).filter(function(xx){ return xx[1]-xx[0]>w*0.03; });
+    return {h:yy[1]-yy[0], cells:xs.map(function(xx){ return cropBox(c,d,w,xx[0],xx[1],yy[0],yy[1]); }).filter(Boolean)}; }).filter(function(r){ return r.cells.length; }); }
+var BODY_NM=['정면','3/4','옆','뒤'];
+function importCharSheet(name, src, opt){ opt=opt||{};
+  return (typeof src==='string'?urlCanvas(src):loadCanvas(src)).then(function(c){
+    var rows=sliceRows(removeBg(c, opt.tol||34)); if(!rows.length) return {faces:{}, bodies:[], rows:0};
+    var face=null, body=null;
+    if(rows.length===1){ if(rows[0].cells.length>=5) face=rows[0]; else body=rows[0]; }
+    else { var srt=rows.slice().sort(function(a,b){ return b.cells.length-a.cells.length; }); face=srt[0]; body=srt.filter(function(r){ return r!==face; }).sort(function(a,b){ return b.h-a.h; })[0];
+      if(face.cells.length===body.cells.length && face.h>body.h){ var t=face; face=body; body=t; } }
+    var EX=['n','smile','angry','sad','shock', opt.fear?'panic':'shy'], m=Object.assign({}, SPR[name]||{});
+    if(face) face.cells.slice(0,EX.length).forEach(function(cc,i){ m[EX[i]]=cc.u; });
+    var bodies=body?body.cells.slice(0,4).map(function(cc){ return cc.u; }):[];
+    if(face && face.cells.length){ SPR[name]=m; }
+    return put('spr',{id:name,m:SPR[name]||m}).then(function(){ try{ rerender(); }catch(e){} return {faces:face?m:{}, faceN:face?Math.min(face.cells.length,6):0, bodies:bodies, rows:rows.length}; }); }); }
+window.__ppFix={importCharSheet:importCharSheet, EMN:EMN, allPrompt:allPrompt, manuscript:manuscript, cutPrompt:cutPrompt, sheetPrompt:sheetPrompt, slice:slice, removeBg:removeBg, openFaces:openFaces, spr:SPR};
 idb().then(function(){ return all('spr'); }).then(function(L){ L.forEach(function(r){ SPR[r.id]=r.m; }); return all('art'); }).then(function(L){ L.forEach(function(r){ ART[r.id]=r.u; }); rerender(); deco(); try{ document.dispatchEvent(new Event('pp-art-ready')); }catch(e){} });
 deco();
 })();

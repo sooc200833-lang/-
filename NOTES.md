@@ -343,3 +343,4 @@ arcForm, deviceId, folderMemo, gdBase, gdLast, gdLinked, ideaText, mangaDataVer,
 - 2026-11-21 이야기 구체화: 미리보기 상자 없이 결과를 이야기 칸에 바로 넣음(테두리 반짝·스크롤), 진행/키 없음/오류를 단추 아래에 바로 표시, 원래대로·원래 글 아래에 남기기
 - 2026-11-21 GPT 시트 그림 올리기: 인물 카드 '📥 시트 그림 넣기'(ch.sheetArt), 라인업·엑스트라·동물·사물 시트(B.sheetArts[lineup|엑스트라|동물|사물]), 눌러서 크게 보기. 7단계에 '📎 같이 첨부할 그림' 안내, 주요 컷 프롬프트에 시트 첨부 지시
 - 2026-11-21 2단계 상단 '📥 GPT로 받은 시트 그림 넣기'(#ct-shfile, 여러 장): 인물이 없어도 그림마다 누구 시트(기존 인물·새 인물·라인업·엑스트라·동물·사물)인지 골라 넣기
+- 2026-11-21 시트 그림 자동 자르기: __ppFix.importCharSheet(name,src,{fear}) = 배경 제거 → 줄(row) 찾기 → 줄마다 칸 찾기, 칸 많은 줄=표정(n,smile,angry,sad,shock,shy|panic → SPR/IndexedDB spr, 클리셰 플레이에도 반영), 다른 줄=전신 4(정면·3/4·옆·뒤 → ch.bodies art id). 콘티 인물 카드에 전신·표정 줄, ✂ 다시 자르기. GPT 시트 프롬프트를 '정확히 2줄, 넓은 흰 간격'으로
