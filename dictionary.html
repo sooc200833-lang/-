@@ -1325,6 +1325,7 @@ body.dk-drag, body.dk-drag *{user-select:none!important; -webkit-user-select:non
 .sv-all{border:2px solid var(--ink-3,#999);border-radius:12px;padding:.7rem .8rem;margin:.4rem 0}
 .ct-sheet{display:grid;grid-template-columns:3.6em 1fr;gap:.1rem .4rem;margin:.3rem 0;text-align:left}.ct-sheet dt{color:var(--ink-3)}.ct-sheet dd{margin:0}
 .dck{list-style:none;padding:0;margin:.4rem 0;font-size:.82rem}.dck>li{margin:.35rem 0}.dck ul{margin:.15rem 0 0 1rem;padding:0}.dck li li{margin:.15rem 0}.dck .err{color:#b3261e}.dck .ai{color:var(--ink-2,#333)}.dck q{background:var(--soft,#f3f3f3);padding:0 .2rem;border-radius:4px}.dck button{font:inherit;font-size:.74rem;border:1px solid var(--line,#ccc);background:none;border-radius:8px;padding:0 .4rem;cursor:pointer}.dq{color:#b3261e;font-style:normal;font-weight:700}
+.st-warn{background:#fff3e0;border:1px solid #e0a100;border-radius:8px;padding:.45rem .6rem;font-size:.82rem;margin:.3rem 0}
 .ch5{display:flex;flex-wrap:wrap;gap:.3rem;align-items:center;margin:.4rem 0;font-size:.82rem}
 .sbg{display:flex;flex-wrap:wrap;align-items:center;gap:.35rem;margin:.3rem 0;font-size:.8rem}.sbg select{font:inherit;font-size:.78rem;max-width:14em}.sbg-i{height:40px;width:110px;object-fit:cover;border-radius:4px;border:1px solid var(--line,#ddd)}
 .sv-beat{font-size:.82rem;margin:.1rem 0 .3rem;color:var(--ink-2,#444)}
@@ -14715,11 +14716,19 @@ function srcUrl(nm, src){ src=String(src||'b0'); if(src.indexOf('f:')===0) retur
 function srcOpts(nm){ var o=[], ch=chOf(nm), F=window.__ppFix, m=F&&F.spr&&F.spr[nm]; if(ch&&ch.bodies) ['b0','b1','b2','b3'].forEach(function(k,i){ if(ch.bodies[i]) o.push([k,'전신 '+VIEWN[k]]); });
   if(m) Object.keys(m).forEach(function(k){ o.push(['f:'+k,'얼굴 '+((F.EMN||{})[k]||k)]); }); return o; }
 function hasArt(nm){ return srcOpts(nm).length>0; }
+
+function sbgFind(x){ if(!x||!B||!B.sceneBg) return null; var g=B.sceneBg[x.a]; if(g) return g; var nm=dispNm(x.name||''), pl=String(x.place||''), hit=null;
+  Object.keys(B.sceneBg).forEach(function(k){ var q=B.sceneBg[k]; if(hit||!q) return; if((q.nm && q.nm===nm) || (pl && q.place===pl)) hit=q; }); return hit; }
+function artMissing(id){ return !!(id && window.__ppArt && window.__ppReady && !window.__ppArt.has(id)); }
+function storeWarn(){ var A=window.__ppArt; if(!A||!window.__ppReady) return ''; var miss=0, all=0; if(B){ Object.keys(B.sceneBg||{}).forEach(function(k){ var g=B.sceneBg[k]; if(g&&g.art){ all++; if(artMissing(g.art)) miss++; } }); (B.chars||[]).forEach(function(c){ if(c.sheetArt){ all++; if(artMissing(c.sheetArt)) miss++; } }); (B.cuts||[]).forEach(function(c){ if(c.art){ all++; if(artMissing(c.art)) miss++; } }); }
+  if(!A.ok()) return '<p class="st-warn">⚠ 이 브라우저는 그림 저장소(IndexedDB)를 못 쓴다 — 올린 그림이 새로고침하면 사라진다. 카카오톡 등 앱 안 브라우저·시크릿 창이면 크롬·사파리 일반 창으로 연다.</p>';
+  if(miss) return '<p class="st-warn">⚠ 올렸던 그림 '+miss+'/'+all+'장이 이 브라우저에 없다. 다른 브라우저·기기에서 올렸거나, 브라우저가 저장소를 지운 경우다. 그림은 기기마다 따로 저장되고 드라이브 동기화로 옮겨지지 않는다 — 그 브라우저에서 열거나 다시 올린다.</p>';
+  return ''; }
 function bgPick(c){ var src=(c.comp&&c.comp.bgSrc)||'auto', A=window.__ppArt, x=null; try{ x=sceneOfCut(c.n); }catch(e){}
   if(src==='none') return {url:'', g:null, x:x, none:1};
   if(src.indexOf('art:')===0) return {url:A?A.get(src.slice(4))||'':'', g:(c.comp&&c.comp.bgTxt)?{ko:c.comp.bgTxt}:null, x:x, own:1};
   if(src.indexOf('scene:')===0){ var a=+src.slice(6); var L=sceneList(); for(var i=0;i<L.length;i++) if(L[i].a===a){ x=L[i]; break; } }
-  var g=x&&B.sceneBg&&B.sceneBg[x.a];
+  var g=x&&sbgFind(x);
   if(g&&g.none) return {url:'', g:null, x:x, none:1};
   if(g&&g.use){ var L2=sceneList(); for(var k=0;k<L2.length;k++) if(L2[k].a===+g.use){ x=L2[k]; g=B.sceneBg[x.a]; break; } }
   return {url:g&&g.art&&A?A.get(g.art)||'':'', g:g, x:x}; }
@@ -15279,7 +15288,7 @@ function stepDone(n){ var st=(document.getElementById('ct-story')||{}).value||''
   if(n===7) return !!(B&&B.cuts&&B.cuts.some(function(c){ return c.key && c.art; }));
   if(n===8) return !!(B&&B.exported);
   return false; }
-function stepNav(){ var nv=document.getElementById('ct-steps'); if(!nv) return; var gm=gptMode();
+function stepNav(){ var nv=document.getElementById('ct-steps'); if(!nv) return; var gm=gptMode(); try{ var w=document.getElementById('ct-stwarn'); if(!w){ w=document.createElement('div'); w.id='ct-stwarn'; nv.after(w); } w.innerHTML=storeWarn(); }catch(e){}
   nv.innerHTML='<span class="ct-gm small">GPT에 시트 여러 장 보낼 때 (컷은 늘 한 장씩) <button type="button" class="chip'+(gm==='all'?' on':'')+'" data-gm="all">한 번에 모두</button><button type="button" class="chip'+(gm==='step'?' on':'')+'" data-gm="step">한 장씩 (「다음」)</button></span>'+STEPS.map(function(s){ return '<button type="button" class="ct-stb'+(s[0]===CSTEP?' on':'')+(stepDone(s[0])?' done':'')+'" data-step="'+s[0]+'"'+(s[0]===CSTEP?' aria-current="step"':'')+'><i>'+(stepDone(s[0])&&s[0]!==CSTEP?'✓':s[0])+'</i>'+s[1]+'</button>'; }).join(''); }
 function goStep(n, noScroll){ CSTEP=Math.max(1,Math.min(8,+n||1)); try{ localStorage.setItem('ctStep',CSTEP); }catch(e){}
   document.querySelectorAll('#conti .ct-step').forEach(function(d){ d.hidden=+d.dataset.st!==CSTEP; });
@@ -15583,7 +15592,7 @@ function renderS4(){ var box=document.getElementById('ct-s4sum'); if(!box) retur
 
 // ---- 5. 장면·배경
 var BGSYS='너는 웹툰 배경 미술 감독이다. 장면마다 배경 설정을 정한다. 같은 장소면 같은 설정을 쓴다. JSON만 답한다.';
-function bgOf(x){ return (B&&B.sceneBg&&B.sceneBg[x.a])||null; }
+function bgOf(x){ return sbgFind(x); }
 function bgPrompt(x, i, n){ var g=bgOf(x)||{};
   return (n>1?'=== BACKGROUND '+(i+1)+': '+dispNm(x.name||'')+' ===\n':'')+'Draw ONE image: a wide PANORAMA background for a Korean webtoon scene, aspect ratio 3:1 (very wide), one continuous 180-degree view of the whole place from eye level.\n'+
     'It will be cropped into many panels (wide shots and close-ups), so: keep the horizon at about 45% height across the whole width, straight vertical lines, even detail everywhere, and spread distinct areas from left to right (e.g. entrance, main area, window/view, corner details) so each crop looks different.\n'+
@@ -15601,10 +15610,10 @@ function renderBg(){ var box=document.getElementById('ct-s5'); if(!box) return;
       (au?'<img class="sv-img" alt="'+(i+1)+'번 장면 배경" src="'+au+'">':'')+
       '<div class="sv-act"><button class="chip" type="button" data-bg="gpt">🖌 GPT로 배경 그리기</button><label class="chip sv-up">배경 올리기<input type="file" accept="image/*" hidden data-bgup="'+x.a+'"></label></div></div>'; }).join(''); }
 function bgSave(card){ var L=sceneList(); if(!L.length) L=[{a:1,b:B.cuts.length}]; var x=L[+card.dataset.bi]; if(!x) return null;
-  B.sceneBg=B.sceneBg||{}; var g=B.sceneBg[x.a]=Object.assign({}, B.sceneBg[x.a]||{}, {place:card.querySelector('.bg-pl').value.trim(), ko:card.querySelector('.bg-ko').value.trim(), light:card.querySelector('.bg-li').value.trim()});
+  B.sceneBg=B.sceneBg||{}; var g=B.sceneBg[x.a]=Object.assign({}, B.sceneBg[x.a]||{}, {nm:dispNm(x.name||''), place:card.querySelector('.bg-pl').value.trim(), ko:card.querySelector('.bg-ko').value.trim(), light:card.querySelector('.bg-li').value.trim()});
   if(g.ko!==g._ko){ delete g.en; } g._ko=g.ko; save(); stepNav(); return x; }
 document.addEventListener('change', function(e){ var t=e.target, card=t.closest&&t.closest('#ct-s5 .sv-sc');
-  if(t.dataset && t.dataset.bgup && window.__ppArt && t.files[0]){ var a=+t.dataset.bgup; window.__ppArt.fromFile(t.files[0]).then(function(id){ B.sceneBg=B.sceneBg||{}; B.sceneBg[a]=Object.assign(B.sceneBg[a]||{}, {art:id}); delete B.sceneBg[a].use; delete B.sceneBg[a].none; save(); renderBg(); try{ renderScenes(); }catch(er){} try{ renderShChk(); renderBoard(); }catch(er){} stat('배경 그림을 붙였다 — 이 장면 컷을 그릴 때 ChatGPT에 같이 첨부한다'); }); return; }
+  if(t.dataset && t.dataset.bgup && window.__ppArt && t.files[0]){ var a=+t.dataset.bgup; window.__ppArt.fromFile(t.files[0]).then(function(id){ B.sceneBg=B.sceneBg||{}; B.sceneBg[a]=Object.assign(B.sceneBg[a]||{}, {art:id}, (function(){ var L=sceneList(); for(var i=0;i<L.length;i++) if(L[i].a===a) return {nm:dispNm(L[i].name||'')}; return {}; })()); delete B.sceneBg[a].use; delete B.sceneBg[a].none; save(); renderBg(); try{ renderScenes(); }catch(er){} try{ renderShChk(); renderBoard(); }catch(er){} stat('배경 그림을 붙였다 — 이 장면 컷을 그릴 때 ChatGPT에 같이 첨부한다'); }); return; }
   if(card) bgSave(card); });
 document.addEventListener('click', function(e){ var t=e.target;
   var b=t.closest&&t.closest('#ct-s5 [data-bg]'); if(b){ var x=bgSave(b.closest('.sv-sc')); if(!x) return; var q=bgPrompt(x,0,1); ctCopy(q); setTimeout(function(){ window.open('https://chatgpt.com/?q='+encodeURIComponent(q.slice(0,1800)),'_blank','noopener'); },200); return; }
@@ -15617,7 +15626,7 @@ document.addEventListener('click', function(e){ var t=e.target;
       return i+'. '+dispNm(x.name||'')+(x.place?' / 장소: '+x.place:'')+(x.desc||x.sum?' / '+(x.desc||x.sum):'')+'\n  컷: '+cs.join(' · ').slice(0,300); }).join('\n')+
       '\n\n형식: [{"i":장면번호,"place":"장소(한국어 짧게)","ko":"배경 설정(한국어): 공간 구조·눈에 띄는 사물·분위기","en":"same background in English for an illustrator","light":"시간·빛(한국어)"}]', 2400, {json:true, temperature:0.5}).then(function(r){ t.disabled=false;
       if(aiIsErr(r)) return stat(r); var j=[]; try{ var m=String(r).match(/\[[\s\S]*\]/); j=JSON.parse(m?m[0]:r); }catch(er){}
-      B.sceneBg=B.sceneBg||{}; var k=0; (Array.isArray(j)?j:[]).forEach(function(g){ var x=L3[+g.i]; if(!x) return; var old=B.sceneBg[x.a]||{}; B.sceneBg[x.a]=Object.assign(old,{place:String(g.place||x.place||''), ko:String(g.ko||''), en:String(g.en||''), light:String(g.light||'')}); B.sceneBg[x.a]._ko=B.sceneBg[x.a].ko; k++; });
+      B.sceneBg=B.sceneBg||{}; var k=0; (Array.isArray(j)?j:[]).forEach(function(g){ var x=L3[+g.i]; if(!x) return; var old=B.sceneBg[x.a]||{}; B.sceneBg[x.a]=Object.assign(old,{nm:dispNm(x.name||''), place:String(g.place||x.place||''), ko:String(g.ko||''), en:String(g.en||''), light:String(g.light||'')}); B.sceneBg[x.a]._ko=B.sceneBg[x.a].ko; k++; });
       save(); renderBg(); stepNav(); stat('장면 '+k+'개 배경을 짰다'); }); }
 });
 function cutBgLine(c, x){ var p=bgPick(c); if(p.none) return 'Background: plain, simple (no detailed background).\n'; if(p.own) return 'Background: as in the attached background image for this panel'+(p.g&&p.g.ko?' ('+p.g.ko+')':'')+'.\n'; return bgLine(p.x||x); }
@@ -19791,7 +19800,7 @@ var MOB='엑스트라';
 
 /* ---------- 저장소 ---------- */
 var DB=null, SPR={}, ART={};
-function idb(){ return new Promise(function(res){ try{ var r=indexedDB.open('pp',1); r.onupgradeneeded=function(){ r.result.createObjectStore('spr',{keyPath:'id'}); r.result.createObjectStore('art',{keyPath:'id'}); }; r.onsuccess=function(){ DB=r.result; res(); }; r.onerror=function(){ res(); }; }catch(e){ res(); } }); }
+function idb(){ try{ if(navigator.storage && navigator.storage.persist) navigator.storage.persist(); }catch(e){} return new Promise(function(res){ try{ var r=indexedDB.open('pp',1); r.onupgradeneeded=function(){ r.result.createObjectStore('spr',{keyPath:'id'}); r.result.createObjectStore('art',{keyPath:'id'}); }; r.onsuccess=function(){ DB=r.result; res(); }; r.onerror=function(){ res(); }; }catch(e){ res(); } }); }
 function all(st){ return new Promise(function(res){ if(!DB) return res([]); try{ var q=DB.transaction(st).objectStore(st).getAll(); q.onsuccess=function(){ res(q.result||[]); }; q.onerror=function(){ res([]); }; }catch(e){ res([]); } }); }
 function put(st,o){ return new Promise(function(res){ if(!DB) return res(); try{ var t=DB.transaction(st,'readwrite'); t.objectStore(st).put(o); t.oncomplete=res; t.onerror=res; }catch(e){ res(); } }); }
 function del(st,id){ return new Promise(function(res){ if(!DB) return res(); try{ var t=DB.transaction(st,'readwrite'); t.objectStore(st).delete(id); t.oncomplete=res; t.onerror=res; }catch(e){ res(); } }); }
@@ -20079,7 +20088,7 @@ root.addEventListener('pointerdown', function(e){ var b=e.target.closest('.pp-bb
 root.addEventListener('pointermove', function(e){ if(!DR) return; var x=Math.max(5,Math.min(95,(e.clientX-DR.fr.left)/DR.fr.width*100)), y=Math.max(2,Math.min(92,(e.clientY-DR.fr.top)/DR.fr.height*100)); DR.b.style.left=x+'%'; DR.b.style.top=y+'%'; DR.x=x; DR.y=y; });
 root.addEventListener('pointerup', function(){ if(!DR) return; if(DR.x!=null){ var n=+DR.b.dataset.n, cs=cutSet(n), pos=Object.assign({},cs.pos||{}); pos[DR.b.dataset.i]={x:Math.round(DR.x),y:Math.round(DR.y)}; cutSave(n,{pos:pos}); } DR=null; });
 
-window.__ppArt={get:function(id){ return ART[id]; }, put:function(id,u){ ART[id]=u; return put('art',{id:id,u:u}); }, fromFile:function(file){ return loadCanvas(file).then(function(c){ var k=Math.min(1,1100/c.width), o=document.createElement('canvas'); o.width=Math.round(c.width*k); o.height=Math.round(c.height*k); o.getContext('2d').drawImage(c,0,0,o.width,o.height); var id='x'+Date.now().toString(36), u=o.toDataURL('image/jpeg',.86); ART[id]=u; return put('art',{id:id,u:u}).then(function(){ return id; }); }); }};
+window.__ppArt={ok:function(){ return !!DB; }, has:function(id){ return !!ART[id]; }, get:function(id){ return ART[id]; }, put:function(id,u){ ART[id]=u; return put('art',{id:id,u:u}); }, fromFile:function(file){ return loadCanvas(file).then(function(c){ var k=Math.min(1,1100/c.width), o=document.createElement('canvas'); o.width=Math.round(c.width*k); o.height=Math.round(c.height*k); o.getContext('2d').drawImage(c,0,0,o.width,o.height); var id='x'+Date.now().toString(36), u=o.toDataURL('image/jpeg',.86); ART[id]=u; return put('art',{id:id,u:u}).then(function(){ return id; }); }); }};
 window.__ppDeco=function(){ try{ deco(); }catch(e){ console.error(e); } };
 
 // 캐릭터 시트 한 장(윗줄 전신 4 · 아랫줄 표정 6) → 전신·표정 자동 자르기 (2026-11-21)
