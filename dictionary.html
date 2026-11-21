@@ -1326,6 +1326,7 @@ body.dk-drag, body.dk-drag *{user-select:none!important; -webkit-user-select:non
 .ct-sheet{display:grid;grid-template-columns:3.6em 1fr;gap:.1rem .4rem;margin:.3rem 0;text-align:left}.ct-sheet dt{color:var(--ink-3)}.ct-sheet dd{margin:0}
 .dck{list-style:none;padding:0;margin:.4rem 0;font-size:.82rem}.dck>li{margin:.35rem 0}.dck ul{margin:.15rem 0 0 1rem;padding:0}.dck li li{margin:.15rem 0}.dck .err{color:#b3261e}.dck .ai{color:var(--ink-2,#333)}.dck q{background:var(--soft,#f3f3f3);padding:0 .2rem;border-radius:4px}.dck button{font:inherit;font-size:.74rem;border:1px solid var(--line,#ccc);background:none;border-radius:8px;padding:0 .4rem;cursor:pointer}.dq{color:#b3261e;font-style:normal;font-weight:700}
 .st-warn{background:#fff3e0;border:1px solid #e0a100;border-radius:8px;padding:.45rem .6rem;font-size:.82rem;margin:.3rem 0}
+.aa-f{display:grid;gap:.35rem;margin-top:.4rem;font-size:.84rem}.aa-f select{font:inherit;font-size:.8rem;max-width:100%}.aa-q{display:flex;flex-wrap:wrap;gap:.25rem}.aa-t{width:100%;font:inherit;font-size:.84rem}
 .ch5{display:flex;flex-wrap:wrap;gap:.3rem;align-items:center;margin:.4rem 0;font-size:.82rem}
 .sbg{display:flex;flex-wrap:wrap;align-items:center;gap:.35rem;margin:.3rem 0;font-size:.8rem}.sbg select{font:inherit;font-size:.78rem;max-width:14em}.sbg-i{height:40px;width:110px;object-fit:cover;border-radius:4px;border:1px solid var(--line,#ddd)}
 .sv-beat{font-size:.82rem;margin:.1rem 0 .3rem;color:var(--ink-2,#444)}
@@ -2854,6 +2855,7 @@ button.pl-card[disabled]{cursor:default}
   <div class="ct-step" data-st="6">
   <h3>6. 대사·화면 다듬기</h3>
   <p class="small">배경과 캐릭터 시트를 바탕으로 <b>대사 배정 점검</b>, 장면별 <b>연출 짜기</b>를 하고, ✎로 컷을 고친다.</p>
+  <div id="ct-aiadd"></div>
   <div id="ct-shchk"></div>
   <div id="ct-gptq"></div>
   <div class="filterbar ct-vwbar"><button class="chip on" id="ct-vw-s" type="button">장면별 보기</button><button class="chip" id="ct-vw-b" type="button">컷 그림판</button><label class="small"><input type="checkbox" id="ct-colon" checked> GPT 배경·인물로 보기</label></div>
@@ -15351,7 +15353,7 @@ document.addEventListener('click', function(e){ var t=e.target; if(!B) return;
         B.props.push({kind:/동물/.test(x.kind)?'동물':/사물|소품/.test(x.kind)?'사물':'엑스트라', name:String(x.name).slice(0,20), look:String(x.look||'').slice(0,160), lookEn:String(x.lookEn||'').slice(0,200)}); add++; });
       save(); try{ renderShChk(); }catch(er){} try{ renderProps(); }catch(er){} stat(add?add+'개를 목록에 넣었다':'빠진 것이 없다'); }); }
 });
-function renderSteps(){ stepNav(); try{ if(window.__ppArt) setTimeout(chAutoSlice, 600); }catch(e){} try{ renderDlg(); }catch(e){} try{ renderProps(); }catch(e){} try{ renderBg(); }catch(e){} try{ renderKey(); }catch(e){} try{ renderS4(); }catch(e){} try{ renderShChk(); }catch(e){} try{ renderGptQ(); }catch(e){} try{ renderS8(); }catch(e){ try{ console.warn('renderS8', e); }catch(er){} } }
+function renderSteps(){ stepNav(); try{ if(window.__ppArt) setTimeout(chAutoSlice, 600); }catch(e){} try{ renderDlg(); }catch(e){} try{ renderProps(); }catch(e){} try{ renderBg(); }catch(e){} try{ renderKey(); }catch(e){} try{ renderS4(); }catch(e){} try{ renderAdd(); }catch(e){} try{ renderShChk(); }catch(e){} try{ renderGptQ(); }catch(e){} try{ renderS8(); }catch(e){ try{ console.warn('renderS8', e); }catch(er){} } }
 
 // ---- 1. 이야기 구체화
 var EXSYS='너는 웹툰 각본가다. 작가가 대강 적은 이야기를 콘티로 옮기기 좋게 구체화한다. 적힌 설정·사건·인물·결말은 바꾸지 않고, 빈 곳만 이야기 톤에 맞게 채운다. 결과는 한국어 산문.';
@@ -15680,6 +15682,39 @@ document.addEventListener('click', function(e){ var t=e.target; if(!t.closest ||
 document.addEventListener('change', function(e){ var t=e.target; if(!t.dataset || !t.dataset.kup || !B || !window.__ppArt || !t.files[0]) return; var c=B.cuts[+t.dataset.kup-1];
   window.__ppArt.fromFile(t.files[0]).then(function(id){ c.art=id; c.key=1; save(); renderKey(); stepNav(); stat(c.n+'번 컷 그림을 붙였다'); }); });
 
+// ===== AI로 컷 추가 (6단계): 위치·컷 수·무엇을 → 앞뒤 콘티·캐릭터 시트·이야기를 읽고 같은 형식으로 써서 끼워 넣는다 =====
+var ADDQ=[['리액션 컷','앞 컷의 대사·사건에 대한 인물들의 반응 컷'],['회상','짧은 회상 장면 (화면 톤을 회상으로)'],['감정 여운','감정이 가라앉는 여운 컷, 대사 줄이고 표정·풍경으로'],['액션 늘리기','앞 액션을 더 잘게 나눈 동작 컷'],['장면 전환','다음 장면으로 넘어가는 전환 컷 (장소·시간 알림)'],['다음 화 훅','이번 화 끝에서 다음 화가 궁금해지는 훅 컷']];
+function renderAdd(){ var box=document.getElementById('ct-aiadd'); if(!box) return; if(!B||!B.cuts||!B.cuts.length){ box.innerHTML=''; return; }
+  var at=box.dataset.at||String(B.cuts.length);
+  box.innerHTML='<details class="sv-all"'+(box.dataset.open?' open':'')+'><summary><b>🧠 AI로 컷 추가</b> <span class="small">앞뒤 콘티·캐릭터 시트·이야기를 읽고 같은 형식으로 끼워 넣는다</span></summary>'+
+    '<div class="aa-f"><label>위치 <select class="aa-at"><option value="0"'+(at==='0'?' selected':'')+'>맨 앞</option>'+B.cuts.map(function(c){ return '<option value="'+c.n+'"'+(String(c.n)===at?' selected':'')+'>'+c.n+'번 뒤 — '+cesc(String(c.scr||'').slice(0,18))+'</option>'; }).join('')+'</select></label>'+
+    '<label>컷 수 <input class="aa-n" type="number" min="0" max="20" value="3" inputmode="numeric"> <span class="small">0이면 AI가 정함</span></label>'+
+    '<div class="aa-q">'+ADDQ.map(function(q,i){ return '<button type="button" class="chip" data-aaq="'+i+'">'+q[0]+'</button>'; }).join('')+'</div>'+
+    '<textarea class="aa-t" rows="4" placeholder="내용을 대강 적는다. 대사는 누가 했는지 몰라도 된다 — AI가 인물에게 나눠 준다.\n예: 도현이 편지를 돌려준다. 미안 이건 못 받아. 서윤은 웃으며 괜찮다고 한다. 둘 다 말이 없다."></textarea>'+
+    '<div class="sv-act"><button type="button" class="chip ct-go" data-aa="go">🧠 AI로 추가</button></div><p class="small">넣은 뒤 「되돌리기」로 뺄 수 있다.</p></div></details>'; }
+function aiAddCuts(btn){ var box=document.getElementById('ct-aiadd'), at=+box.querySelector('.aa-at').value, n=Math.max(0,Math.min(20,+box.querySelector('.aa-n').value||0)), what=box.querySelector('.aa-t').value.trim();
+  if(!what) return stat('무엇을 넣을지 적거나 위 단추를 고른다'); if(!aiReady()) return stat('AI 연결에서 키를 넣어야 쓸 수 있다.');
+  var prev=[], next=[]; for(var p=Math.max(1,at-8);p<=at;p++){ var q=B.cuts[p-1]; if(q&&q.scr) prev.push(cutRow(q)); } for(var k=at+1;k<=Math.min(B.cuts.length,at+3);k++){ var q2=B.cuts[k-1]; if(q2&&q2.scr) next.push(cutRow(q2)); }
+  var x=null; try{ x=sceneOfCut(Math.max(1,at)); }catch(e){} var g=x&&sbgFind(x);
+  var L=['[이야기]\n'+String(document.getElementById('ct-story').value||'').slice(0,2500)];
+  if(chars().length) L.push('[등장인물]\n'+chars().map(chLine).join('\n'));
+  try{ if(B.props&&B.props.length) L.push('[엑스트라·동물·사물]\n'+B.props.map(function(y){ return y.kind+' '+y.name+': '+y.look; }).join('\n')); }catch(e){}
+  if(x) L.push('[지금 장면] '+dispNm(x.name||'')+(x.place?' / 장소: '+x.place:'')+(g&&g.ko?' / 배경: '+g.ko:''));
+  L.push('[바로 앞 컷 — 번호|구도|인물|화면|대사|나레이션]\n'+(prev.join('\n')||'(맨 앞이다)'));
+  L.push('[바로 뒤 컷]\n'+(next.join('\n')||'(맨 끝이다)'));
+  L.push('[넣을 내용 — 작가가 대강 적은 것] '+what+'\n이 내용을 컷으로 나누고, 내용 속 대사·말은 누가 한 말인지 문맥과 인물 말투로 정해 「이름: 대사」로 그 인물에게 붙인다. 적힌 대사는 뜻을 바꾸지 않는다.\n'+(n?'정확히 '+n+'컷.':'필요한 만큼, 많아야 10컷.')+' 앞 컷에서 자연스럽게 이어지고 뒤 컷으로 매끄럽게 넘어가게 쓴다. 대사는 「이름: 대사」로 화자를 붙이고 인물 말투를 지킨다. 이미 나온 사건을 되풀이하지 않는다.');
+  L.push('형식: 한 줄에 한 컷, 번호는 1부터. 번호|구도|인물|화면|대사|나레이션 (칸이 비어도 | 는 모두 쓴다). 예:\n'+CEX.slice(0,4).join('\n')+'\n줄만 쓴다. 설명·제목·마크다운 없이.');
+  btn.disabled=true; stat('AI가 넣을 컷을 쓰는 중…');
+  aiAsk(csys(), L.join('\n\n'), 2400, {temperature:0.7}).then(function(r){ btn.disabled=false; if(aiIsErr(r)) return stat(r);
+    var specs=[]; String(r).split('\n').forEach(function(line){ var q=lineParse(line); if(!q) return; var cp=parseComp(q.comp), sp={k:cp.k, ang:cp.ang, focus:cp.focus, flash:cp.flash, who:q.who, wp:q.wp, scr:q.scr, line:q.line}; if(q.nar&&q.nar.nar){ sp.nar=q.nar.nar; sp.narPos=q.nar.pos; } if(cp.size) sp.size=cp.size; if(cp.gap!=null) sp.gap=cp.gap; if(sp.scr) specs.push(sp); });
+    if(n) specs=specs.slice(0,n); else specs=specs.slice(0,10);
+    if(!specs.length) return stat('AI 답을 컷으로 읽지 못했다. 다시 누른다');
+    insertCuts(specs, {at:at, label:'AI 추가'}); box.dataset.at=String(at+specs.length); try{ renderScenes(); }catch(e){} }); }
+document.addEventListener('click', function(e){ var t=e.target; if(!B) return; var q=t.closest&&t.closest('[data-aaq]'); if(q){ var ta=document.querySelector('#ct-aiadd .aa-t'); ta.value=ADDQ[+q.dataset.aaq][1]+(ta.value?' — '+ta.value:''); return; }
+  var a=t.closest&&t.closest('[data-aa]'); if(a){ aiAddCuts(a); return; }
+  var s2=t.closest&&t.closest('[data-aaat]'); if(s2){ var box=document.getElementById('ct-aiadd'); box.dataset.at=s2.dataset.aaat; box.dataset.open='1'; renderAdd(); try{ box.scrollIntoView({block:'start', behavior:'smooth'}); }catch(er){} setTimeout(function(){ var ta=box.querySelector('.aa-t'); if(ta) ta.focus(); },300); } });
+document.addEventListener('toggle', function(e){ if(e.target.closest && e.target.closest('#ct-aiadd')){ var box=document.getElementById('ct-aiadd'); if(e.target.open) box.dataset.open='1'; else delete box.dataset.open; } }, true);
+
 function renderScenes(){
   var box=document.getElementById('ct-sv'); if(!box) return; ctView();
   if(!B || !B.cuts || !B.cuts.length){ box.innerHTML='<p class="small">이야기를 적고 「AI로 콘티 쓰기」를 누르면 장면별로 여기에 나온다.</p>'; return; }
@@ -15692,7 +15727,7 @@ function renderScenes(){
     var bgu=(function(){ var g=B.sceneBg&&B.sceneBg[x.a]; return g&&g.art&&window.__ppArt?window.__ppArt.get(g.art):''; })();
     return '<div class="sv-sc" data-i="'+i+'"><h4>'+(i+1)+'. '+cesc(dispNm(x.name||'장면'))+' <span class="small">'+x.a+'–'+x.b+'컷</span></h4>'+
       '<p class="sv-m">'+[who,x.place].filter(Boolean).map(cesc).join(' · ')+(x.desc||x.sum?(who||x.place?' — ':'')+cesc(x.desc||x.sum):'')+'</p>'+sceneBgCtl(x,i)+(function(){ var ap=B.scenePr&&B.scenePr[x.a]; return ap?'<p class="sv-beat">🧠 '+cesc(ap.beat||'연출 읽음')+'</p>':''; })()+'<ul class="sv-cuts">'+rows+'</ul>'+
-      (function(){ var aid=B.sceneArt&&B.sceneArt[x.a], au=aid&&window.__ppArt&&window.__ppArt.get(aid); return au?'<img class="sv-img" alt="'+(i+1)+'번 장면 러프 콘티" src="'+au+'">':''; })()+'<div class="sv-act"><button class="chip" type="button" data-sp="ai">🧠 콘티 읽고 연출 짜기</button><button class="chip" type="button" data-sp="page">✏ 장면 러프 콘티 그리기</button><button class="chip" type="button" data-sp="copy">🖌 컷별 완성 그림</button><button class="chip" type="button" data-sp="show">프롬프트 보기</button><label class="chip sv-up">그림 올리기<input type="file" accept="image/*" hidden data-sup="'+x.a+'"></label></div><pre class="sv-pr" hidden></pre></div>'; }).join('');
+      (function(){ var aid=B.sceneArt&&B.sceneArt[x.a], au=aid&&window.__ppArt&&window.__ppArt.get(aid); return au?'<img class="sv-img" alt="'+(i+1)+'번 장면 러프 콘티" src="'+au+'">':''; })()+'<div class="sv-act"><button class="chip" type="button" data-aaat="'+x.b+'">＋ 이 장면 끝에 AI로 컷 추가</button><button class="chip" type="button" data-sp="ai">🧠 콘티 읽고 연출 짜기</button><button class="chip" type="button" data-sp="page">✏ 장면 러프 콘티 그리기</button><button class="chip" type="button" data-sp="copy">🖌 컷별 완성 그림</button><button class="chip" type="button" data-sp="show">프롬프트 보기</button><label class="chip sv-up">그림 올리기<input type="file" accept="image/*" hidden data-sup="'+x.a+'"></label></div><pre class="sv-pr" hidden></pre></div>'; }).join('');
 }
 document.addEventListener('click', function(e){ var t=e.target; if(!t.closest) return;
   if(t.id==='ct-vw-s'||t.id==='ct-vw-b'){ ctView(t.id==='ct-vw-s'?'s':'b'); if(CTV==='b') try{ renderBoard(); }catch(er){} return; }
