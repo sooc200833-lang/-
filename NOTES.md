@@ -316,3 +316,8 @@ arcForm, deviceId, folderMemo, gdBase, gdLast, gdLinked, ideaText, mangaDataVer,
 - 컷 그림: 「🖌 GPT로 이 컷 그리기」/「GPT로 전체 컷 그리기」는 요청문 복사 + chatgpt.com/?q= 열기. 「그림 올리기」는 IndexedDB `pp.art`, 비율 자동
 - 원고 복사: 읽기용/연출 포함(`__ppFix.manuscript`)
 - 플레이 모듈 수정 3곳: 형식에 `emo`, 규칙 한 줄, `paint`에서 `__ppCut`, `render` 끝에서 `__ppDeco`. 주의: `__ctCutData`가 canvas dataset을 지우므로 턴 번호는 `.pl-turn` 순서로 센다
+
+## 캐스팅 플레이 (2026-11-21) — 섹션 `castplay`, `[[MOD:castplay]]` (메인 스크립트 안, MOD:play 바로 뒤 — aiAsk·aiReady가 그 스크립트 안에서만 보인다)
+- 장르 → 시작 소재(MOTIFDATA 후보·검색·직접 적기) → 클리셰 최대 5장(ROWS) → 주인공(등장인물 또는 직접) → 조연·엑스트라 AI 미리 생성(4/6/8명, extra 표시, 고치기·등장인물에 저장 `__castUpsert`) → 길이 → `__play.startWith`로 #play에서 진행. 초안 `cpDraft`
+- 플레이 모듈 추가: `__play.startWith(o)`, PL.mode='cast'·seed·cast, 프롬프트에 [시작 소재]·[미리 만든 등장인물], 미리 만든 인물은 npcs에서 빠지지 않게
+- playplus 추가: 턴마다 「📐 구도 잡기」(숏·앵글·비율·인물 2명·표정·그림 설명·자세, ★ 중요 장면, 미리보기, GPT 그리기) → `ppCut[게임][턴].pan`, `__ppCut`·`panOf`가 반영. `__ppSeedProf`가 조연 생김새를 표정 시트·그림 요청문에. extra 인물은 「엑스트라」 시트로
