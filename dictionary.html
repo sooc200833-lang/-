@@ -1322,6 +1322,10 @@ body.dk-drag, body.dk-drag *{user-select:none!important; -webkit-user-select:non
 .sv-cuts b{color:var(--ink-3)} .sv-cuts .sv-l{display:block;color:var(--ink-3);font-size:.78rem}
 .sv-cuts button{font:inherit;font-size:.74rem;border:1px solid var(--line,#ddd);background:none;border-radius:8px;padding:.1rem .4rem;cursor:pointer}
 .sv-act{display:flex;flex-wrap:wrap;gap:.4rem;margin-top:.4rem}
+.sv-all{border:2px solid var(--ink-3,#999);border-radius:12px;padding:.7rem .8rem;margin:.4rem 0}
+.sv-beat{font-size:.82rem;margin:.1rem 0 .3rem;color:var(--ink-2,#444)}
+.sv-img{display:block;width:100%;max-width:520px;margin:.4rem auto;border-radius:8px;border:1px solid var(--line,#ddd)}
+.sv-up{cursor:pointer}
 .sv-pr{margin:.4rem 0 0;font-size:.74rem;white-space:pre-wrap;max-height:11em;overflow:auto;background:var(--soft,#f6f6f6);border-radius:8px;padding:.5rem}
 .ct-more{margin:.3rem 0 .4rem}
 .ct-more>summary,.ct-help>summary{cursor:pointer; color:var(--ink-3)}
@@ -14641,7 +14645,7 @@ function ctLook(nm){ var pr=null; try{ pr=(JSON.parse(localStorage.getItem('ppPr
   var ch=null; (B&&B.chars||[]).forEach(function(x){ if(x.name===nm) ch=x; }); if(ch){ var l=ch.look||{}; return [l.hair&&(l.hair+' hair'), l.dark&&'dark hair', l.glasses&&'glasses', l.hat&&'hat', l.scar&&'scar', l.build&&(l.build+' build'), ch.note].filter(Boolean).join(', '); } return ''; }
 function ctGptPrompt(cuts){
   var one=function(c){ var who=(c.who&&c.who.length?c.who:(function(){ try{ return whoOf(c).map(function(w){ return w.name; }); }catch(e){ return []; } })()).filter(Boolean).slice(0,3), sh=SHOTS.filter(function(s){ return s[0]===c.k; })[0], an=ANGS.filter(function(a){ return a[0]===(c.ang||''); })[0];
-    var wp=c.wp||{}, ratio=c.sz==='wide'?'2:1 wide':c.sz==='tall'?'9:16 tall':c.sz==='half'?'3:4':'4:3';
+    var wp=c.wp||{}, z0=(function(){ try{ return cutSize(c); }catch(e){ return c.sz; } })(), ratio=z0==='wide'?'2:1 wide':z0==='tall'?'9:16 tall':z0==='half'?'3:4':'4:3';
     return 'Aspect ratio '+ratio+'.\nShot: '+(sh?sh[1]+' ('+sh[2]+')':'medium shot')+(an&&an[0]?', angle '+an[2]:'')+(c.focus?', speed/focus lines':'')+(c.flash?', flashback border look':'')+'.\n'+
       'What we see: '+(c.scr||'')+'\n'+(c.line?'Mood from dialogue (do NOT draw text): '+String(c.line).replace(/\n/g,' / ')+'\n':'')+
       (who.length?'Characters (left to right, keep designs consistent):\n'+who.map(function(nm){ var w=wp[nm]||{}; return '- '+nm+': '+(ctLook(nm)||'')+(w.pose?'; pose '+w.pose:'')+(w.face?'; facing '+w.face:''); }).join('\n'):'No characters.'); };
@@ -14663,26 +14667,88 @@ function ctScenePrompt(x){
     (names.length?'Characters in this scene (identical design in every panel):\n'+names.map(function(nm){ return '- '+nm+': '+(ctLook(nm)||''); }).join('\n')+'\n':'')+'\n';
   return h+ctGptPrompt(cuts);
 }
+
+// 장면 한 장 러프 콘티 (컷을 한 그림 안에 나눠 그림) + 전체 모음
+function ctCutsOf(x){ var a=[]; for(var n=x.a;n<=x.b;n++){ var c=B.cuts[n-1]; if(c && (c.scr||c.hint)) a.push(c); } return a; }
+function ctWho(c){ return (c.who&&c.who.length?c.who:(function(){ try{ return whoOf(c).map(function(w){ return w.name; }); }catch(e){ return []; } })()).filter(Boolean).slice(0,3); }
+function ctPagePrompt(x, idx, tot){
+  var cuts=ctCutsOf(x); if(!cuts.length) return ''; var AIP=B.scenePr&&B.scenePr[x.a];
+  var seen={}, names=[]; cuts.forEach(function(c){ ctWho(c).forEach(function(nm){ if(!seen[nm]){ seen[nm]=1; names.push(nm); } }); });
+  var szw=function(c){ var z=''; try{ z=cutSize(c); }catch(e){} return z==='wide'?'WIDE full-width panel':z==='tall'?'TALL panel':z==='half'?'small panel':(c.hook?'BIG panel':'normal panel'); };
+  var gap=function(c){ return c.gap==3?' (leave a large blank gap above it)':''; };
+  return (tot>1?'[Scene '+(idx+1)+' of '+tot+']\n':'')+
+    'Draw ONE image: a rough storyboard page (Korean vertical webtoon, '+cuts.length+' panels stacked top to bottom, read top to bottom). '+
+    'Rough pencil sketch / simple grayscale conti style, loose lines, quick but clear poses and camera angles. Thin black panel borders, white gutters. '+
+    'NO speech bubbles, NO text, NO numbers.\n\n'+
+    'SCENE: '+dispNm(x.name||'')+((x.desc||x.sum)?' — '+(x.desc||x.sum):'')+'\n'+(x.place?'Location: '+x.place+' (same background in all panels)\n':'')+
+    (names.length?'Characters (keep identical across panels):\n'+names.map(function(nm){ return '- '+nm+': '+(ctLook(nm)||''); }).join('\n')+'\n':'')+
+    (AIP?'Setting: '+(AIP.setting||'')+'\nLighting & mood: '+(AIP.light||'')+'\n':'')+
+    '\nPANELS:\n'+cuts.map(function(c,i){ var ap=AIP&&(AIP.panels||[]).filter(function(q){ return +q.n===c.n; })[0];
+      if(ap){ var sh2=SHOTS.filter(function(q){ return q[0]===c.k; })[0], an2=ANGS.filter(function(q){ return q[0]===(c.ang||''); })[0], fc=ap.faces||{};
+        return (i+1)+'. '+szw(c)+gap(c)+', '+(sh2?sh2[1]:'medium shot')+(an2&&an2[0]?', '+an2[2]:'')+(c.focus?', focus lines':'')+(c.flash?', flashback tint':'')+' — '+(ap.see||'')+(ap.staging?' | Staging: '+ap.staging:'')+
+          (Object.keys(fc).length?' | Faces: '+Object.keys(fc).map(function(k){ return k+' '+fc[k]; }).join('; '):'')+(ap.emph?' | Emphasis: '+ap.emph:''); } var sh=SHOTS.filter(function(q){ return q[0]===c.k; })[0], an=ANGS.filter(function(q){ return q[0]===(c.ang||''); })[0], w=ctWho(c);
+      return (i+1)+'. '+szw(c)+gap(c)+', '+(sh?sh[1]:'medium shot')+(an&&an[0]?', '+an[2]:'')+(c.focus?', focus lines':'')+(c.flash?', flashback tint':'')+' — '+(c.scr||c.hint)+
+        (w.length?' ['+w.join(', ')+']':'')+(c.line?' (mood: '+String(c.line).replace(/\n/g,' / ')+')':''); }).join('\n');
+}
+function ctAllPages(){ var L=sceneList(); if(!L.length && B && B.cuts.length) L=[{a:1,b:B.cuts.length,name:'전체'}];
+  var P=L.map(function(x,i){ return ctPagePrompt(x,i,L.length); }).filter(Boolean);
+  if(!P.length) return '';
+  return (P.length>1?'I will give you '+P.length+' scenes. Draw ONLY Scene 1 now. When I reply "다음", draw the next scene. Keep every character design identical across all scenes.\n\n':'')+P.join('\n\n------\n\n'); }
+
+// AI가 콘티(이야기·앞뒤 장면·대사·나레이션)를 읽고 장면 그림 연출을 짠다 → B.scenePr[a]
+var SPSYS='너는 웹툰 콘티를 읽고 그림 작가에게 넘길 연출 지시를 쓰는 연출가다. 콘티에 적힌 사건·대사·나레이션의 감정을 읽어 각 컷에서 무엇이 보여야 하는지 구체적인 시각 묘사로 바꾼다. 콘티에 없는 사건은 지어내지 않는다. 대사의 글자는 그리지 않는다. JSON만 답한다.';
+function ctSceneCtx(x, i, L){
+  var story=''; try{ story=(document.getElementById('ct-story')||{}).value||''; }catch(e){}
+  var cuts=ctCutsOf(x), seen={}, names=[]; cuts.forEach(function(c){ ctWho(c).forEach(function(nm){ if(!seen[nm]){ seen[nm]=1; names.push(nm); } }); });
+  return '[전체 이야기 요약]\n'+story.replace(/\s+/g,' ').slice(0,1800)+
+    '\n\n[장면 흐름]\n'+L.map(function(y,j){ return (j===i?'▶ ':'  ')+(j+1)+'. '+dispNm(y.name||'')+(y.desc||y.sum?' — '+(y.desc||y.sum):''); }).join('\n')+
+    '\n\n[이번 장면] '+dispNm(x.name||'')+(x.place?' / 장소: '+x.place:'')+
+    '\n[인물 생김새]\n'+(names.map(function(nm){ return nm+': '+(ctLook(nm)||'미정'); }).join('\n')||'없음')+
+    '\n\n[컷]\n'+cuts.map(function(c){ var sh=SHOTS.filter(function(q){ return q[0]===c.k; })[0], z=''; try{ z=cutSize(c); }catch(e){}
+      return c.n+'번 | '+(sh?sh[2]:c.k)+(c.ang?' '+angName(c.ang):'')+(z?' | '+SIZE_NM[z]:'')+(c.hook?' | 훅':'')+'\n 화면: '+(c.scr||c.hint||'')+(c.line?'\n 대사: '+String(c.line).replace(/\n/g,' / '):'')+(c.nar?'\n 나레이션: '+c.nar:'')+'\n 인물: '+(ctWho(c).join(', ')||'없음'); }).join('\n')+
+    '\n\n형식(JSON, 값은 영어):\n{"beat":"이 장면의 감정 변화 한 줄(한국어)","setting":"background description","light":"time of day, lighting, color mood","panels":[{"n":컷번호,"see":"what is visible: action, body language, props","faces":{"인물이름":"facial expression"},"staging":"who is where in frame, foreground/background","emph":"what this panel must make the reader feel/notice"}]}';
+}
+function ctAiScene(i){ var L=sceneList(); if(!L.length) L=[{a:1,b:B.cuts.length,name:'전체'}]; var x=L[i];
+  if(!x || !ctCutsOf(x).length) return Promise.resolve(false);
+  if(typeof aiReady==='function' && !aiReady()){ stat('AI 키가 없어서 콘티를 읽지 못한다 — 설정에서 키를 넣으면 된다'); return Promise.resolve(false); }
+  return aiAsk(SPSYS, ctSceneCtx(x,i,L), 2400, {json:true, temperature:0.5}).then(function(t){
+    if(aiIsErr(t)){ stat(t); return false; }
+    var j=null; try{ j=JSON.parse(String(t).replace(/^[^{]*/,'').replace(/[^}]*$/,'')); }catch(e){}
+    if(!j || !j.panels){ stat((i+1)+'번 장면: AI 답을 읽지 못했다'); return false; }
+    B.scenePr=B.scenePr||{}; B.scenePr[x.a]=j; save(); return true; });
+}
 function renderScenes(){
   var box=document.getElementById('ct-sv'); if(!box) return; ctView();
   if(!B || !B.cuts || !B.cuts.length){ box.innerHTML='<p class="small">이야기를 적고 「AI로 콘티 쓰기」를 누르면 장면별로 여기에 나온다.</p>'; return; }
   var L=sceneList(); if(!L.length) L=[{a:1,b:B.cuts.length,name:'전체'}];
-  box.innerHTML=L.map(function(x,i){ var who=''; try{ who=sceneWho(x); }catch(e){}
+  var top='<div class="sv-all"><b>콘티 → 그림 프롬프트</b> <span class="small">장면 '+L.length+'개 · 장면마다 한 장의 러프 콘티로</span><div class="sv-act"><button class="chip" type="button" data-sa="ai">🧠 전체 콘티 읽고 연출 짜기</button><button class="chip ct-go" type="button" data-sa="go">✏ 전체 러프 콘티 그리기 (ChatGPT)</button><button class="chip" type="button" data-sa="copy">전체 프롬프트 복사</button><button class="chip" type="button" data-sa="show">모아 보기</button></div><pre class="sv-pr" hidden></pre><p class="small">ChatGPT가 1장면을 그리면 「다음」이라고 답해 다음 장면을 받는다. 받은 그림은 장면 카드의 「그림 올리기」로.</p></div>';
+  box.innerHTML=top+L.map(function(x,i){ var who=''; try{ who=sceneWho(x); }catch(e){}
     var rows=''; for(var n=x.a;n<=x.b;n++){ var c=B.cuts[n-1]; if(!c) continue;
       rows+='<li><b>'+n+'</b><span>'+cesc(shotName(c.k))+' · '+(c.scr?cesc(c.scr):'<i>화면 미정</i>')+(c.line?'<span class="sv-l">'+cesc(c.line).replace(/\n/g,' / ')+'</span>':'')+'</span><button type="button" data-ed="'+n+'" aria-label="'+n+'번 컷 고치기">✎</button></li>'; }
     return '<div class="sv-sc" data-i="'+i+'"><h4>'+(i+1)+'. '+cesc(dispNm(x.name||'장면'))+' <span class="small">'+x.a+'–'+x.b+'컷</span></h4>'+
-      '<p class="sv-m">'+[who,x.place].filter(Boolean).map(cesc).join(' · ')+(x.desc||x.sum?(who||x.place?' — ':'')+cesc(x.desc||x.sum):'')+'</p><ul class="sv-cuts">'+rows+'</ul>'+
-      '<div class="sv-act"><button class="chip" type="button" data-sp="copy">🖌 이 장면 GPT 프롬프트 복사</button><button class="chip" type="button" data-sp="gpt">ChatGPT 열기</button><button class="chip" type="button" data-sp="show">프롬프트 보기</button></div><pre class="sv-pr" hidden></pre></div>'; }).join('');
+      '<p class="sv-m">'+[who,x.place].filter(Boolean).map(cesc).join(' · ')+(x.desc||x.sum?(who||x.place?' — ':'')+cesc(x.desc||x.sum):'')+'</p>'+(function(){ var ap=B.scenePr&&B.scenePr[x.a]; return ap?'<p class="sv-beat">🧠 '+cesc(ap.beat||'연출 읽음')+'</p>':''; })()+'<ul class="sv-cuts">'+rows+'</ul>'+
+      (function(){ var aid=B.sceneArt&&B.sceneArt[x.a], au=aid&&window.__ppArt&&window.__ppArt.get(aid); return au?'<img class="sv-img" alt="'+(i+1)+'번 장면 러프 콘티" src="'+au+'">':''; })()+'<div class="sv-act"><button class="chip" type="button" data-sp="ai">🧠 콘티 읽고 연출 짜기</button><button class="chip" type="button" data-sp="page">✏ 장면 러프 콘티 그리기</button><button class="chip" type="button" data-sp="copy">🖌 컷별 완성 그림</button><button class="chip" type="button" data-sp="show">프롬프트 보기</button><label class="chip sv-up">그림 올리기<input type="file" accept="image/*" hidden data-sup="'+x.a+'"></label></div><pre class="sv-pr" hidden></pre></div>'; }).join('');
 }
 document.addEventListener('click', function(e){ var t=e.target; if(!t.closest) return;
   if(t.id==='ct-vw-s'||t.id==='ct-vw-b'){ ctView(t.id==='ct-vw-s'?'s':'b'); if(CTV==='b') try{ renderBoard(); }catch(er){} return; }
   var ed=t.closest('[data-ed]'); if(ed && ed.closest('#ct-sv')){ var n=+ed.dataset.ed; ctView('b'); try{ renderBoard(); }catch(er){}
     setTimeout(function(){ var f=root.querySelector('.ct-cut[data-n="'+n+'"]'); if(f){ if(!f.querySelector('.ct-ed')) openEdit(f); try{ f.scrollIntoView({block:'center'}); }catch(er){} } },60); return; }
+  var sa=t.closest('[data-sa]'); if(sa && B && sa.dataset.sa==='ai'){ var LL=sceneList(), k=0, ok=0; if(!LL.length) LL=[0]; sa.disabled=true;
+    (function nx(){ if(k>=LL.length){ sa.disabled=false; renderScenes(); stat('장면 '+ok+'/'+LL.length+'개 연출을 짰다 — 이제 「전체 러프 콘티 그리기」'); return; } stat('콘티 읽는 중… '+(k+1)+'/'+LL.length+' 장면');
+      ctAiScene(k).then(function(r){ if(r) ok++; k++; nx(); }); })(); return; }
+  var sa=t.closest('[data-sa]'); if(sa && B){ var qa=ctAllPages(); if(!qa) return stat('화면이 적힌 컷이 없다');
+    if(sa.dataset.sa==='show'){ var pa=sa.closest('.sv-all').querySelector('.sv-pr'); pa.textContent=qa; pa.hidden=!pa.hidden; return; }
+    ctCopy(qa); if(sa.dataset.sa==='go') setTimeout(function(){ window.open('https://chatgpt.com/?q='+encodeURIComponent(qa.length>1800?'다음 메시지로 콘티 프롬프트를 붙여 넣을게. 받으면 1장면부터 그려줘.':qa),'_blank','noopener'); },200); return; }
   var sp=t.closest('[data-sp]'); if(sp && sp.closest('#ct-sv') && B){ var card=sp.closest('.sv-sc'), x=sceneList()[+card.dataset.i], q=x?ctScenePrompt(x):'';
     if(!q) return stat('이 장면은 화면이 아직 없어서 프롬프트를 못 만든다');
-    if(sp.dataset.sp==='show'){ var pr=card.querySelector('.sv-pr'); pr.textContent=q; pr.hidden=!pr.hidden; return; }
-    ctCopy(q); if(sp.dataset.sp==='gpt') setTimeout(function(){ window.open('https://chatgpt.com/?q='+encodeURIComponent(q.slice(0,1800)),'_blank','noopener'); },200); }
+    if(sp.dataset.sp==='ai'){ sp.disabled=true; stat('콘티 읽는 중…'); ctAiScene(+card.dataset.i).then(function(r){ sp.disabled=false; if(r){ renderScenes(); stat('연출을 짰다 — 「장면 러프 콘티 그리기」에 반영된다'); } }); return; }
+    var L2=sceneList(); if(sp.dataset.sp!=='copy') q=ctPagePrompt(x, +card.dataset.i, 1);
+    if(sp.dataset.sp==='show'){ var pr=card.querySelector('.sv-pr'); pr.textContent=q+'\n\n====== 컷별 완성 그림 ======\n\n'+ctScenePrompt(x); pr.hidden=!pr.hidden; return; }
+    ctCopy(q); if(sp.dataset.sp==='page'||sp.dataset.sp==='copy') setTimeout(function(){ window.open('https://chatgpt.com/?q='+encodeURIComponent(q.slice(0,1800)),'_blank','noopener'); },200); }
 });
+
+document.addEventListener('change', function(e){ var t=e.target; if(!t.dataset || !t.dataset.sup || !B || !window.__ppArt || !t.files[0]) return;
+  window.__ppArt.fromFile(t.files[0]).then(function(id){ B.sceneArt=B.sceneArt||{}; B.sceneArt[t.dataset.sup]=id; save(); renderScenes(); stat('장면 그림을 붙였다'); }); });
 document.addEventListener('pp-art-ready', function(){ if(B) try{ renderBoard(); }catch(e){} });
 function ctCopy(t){ (navigator.clipboard&&navigator.clipboard.writeText?navigator.clipboard.writeText(t):Promise.reject()).then(function(){ stat('그림 요청문을 복사했다 — ChatGPT에 붙여 넣고, 받은 그림은 컷 편집기 「그림 올리기」'); }, function(){ stat('복사하지 못했다'); }); }
 document.addEventListener('click', function(e){ var t=e.target;
