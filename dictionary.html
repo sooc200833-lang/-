@@ -13441,6 +13441,7 @@ function syncCast(){
   all.forEach(function(m){
     var ex=null; B.chars.forEach(function(c){ if(c.name===m.name) ex=c; });
     if(ex){ ex.look=m.look; if(!ex.role) ex.role=m.role; if(!ex.note && m.desc) ex.note=String(m.desc).slice(0,80); return; }   // 생김새는 등장인물 페이지가 기준
+    if(B.removed && B.removed[m.name]) return;   // 콘티에서 지운 인물은 다시 넣지 않는다
     if([m.name].concat(m.alias||[]).some(function(n){ return n && n.length>=2 && text.indexOf(n)>-1; })){
       B.chars.push({name:m.name, role:m.role, look:m.look, note:String(m.desc||'').slice(0,80)}); add++; }
   });
@@ -13526,7 +13527,7 @@ function makeSheets(){
     var prof={}; try{ prof=JSON.parse(localStorage.getItem('ppProf')||'{}'); }catch(e){}
     var made=0;
     j.forEach(function(x){ if(!x||!x.name) return; var nm=String(x.name).trim().slice(0,20), ch=null;
-      B.chars.forEach(function(c){ if(c.name===nm) ch=c; }); if(!ch){ ch={name:nm, role:'', look:{}, note:''}; B.chars.push(ch); }
+      B.chars.forEach(function(c){ if(c.name===nm) ch=c; }); if(!ch){ ch={name:nm, role:'', look:{}, note:''}; B.chars.push(ch); } if(B.removed) delete B.removed[nm];
       if(x.role) ch.role=String(x.role).slice(0,30);
       ch.sheet={kind:/조연/.test(x.kind||'')?'조연':'주연', pers:String(x.pers||'').slice(0,80), speech:String(x.speech||'').slice(0,120), want:String(x.want||'').slice(0,80), fear:String(x.fear||'').slice(0,80), rel:String(x.rel||'').slice(0,100), look:String(x.look||'').slice(0,200), lookEn:String(x.lookEn||'').slice(0,240)};
       var lk=figClean({hair:x.hair, build:x.build, dark:x.dark===true, glasses:x.glasses===true, hat:x.hat===true, scar:x.scar===true}); ch.look=Object.assign({}, ch.look||{}, lk);
@@ -13558,7 +13559,7 @@ function findChars(){
       var lk=figClean({hair:x.hair, build:x.build, dark:x.dark===true, glasses:x.glasses===true, hat:x.hat===true, scar:x.scar===true}), gl=castFigGuess(String(x.looktext||'')+' '+String(x.note||''));
       FIG_KEYS.forEach(function(k){ if(!lk[k] && gl[k]) lk[k]=gl[k]; }); FIG_BOOL.forEach(function(k){ if(gl[k]) lk[k]=true; });
       if(ex && ex.name===nm){ kept++; return; }
-      B.chars.push({name:nm, role:String(x.role||'').slice(0,30), look:lk, note:String(x.note||'').slice(0,80)}); added++;
+      B.chars.push({name:nm, role:String(x.role||'').slice(0,30), look:lk, note:String(x.note||'').slice(0,80)}); added++; if(B.removed) delete B.removed[nm];
     });
     save(); renderChars(); renderBoard();
     stat('인물 '+added+'명을 넣었다.'+(kept?' 이미 있던 '+kept+'명은 그대로 뒀다.':'')+' 생김새는 「고치기」로 바꿀 수 있다.');
@@ -15133,7 +15134,7 @@ document.addEventListener('change', function(e){ var t=e.target;
 document.addEventListener('click', function(e){ var r=e.target.closest&&e.target.closest('[data-reslice]'); if(r){ var ch=chars()[+r.dataset.reslice]; if(ch&&ch.sheetArt) chSlice(ch,ch.sheetArt); } });
 document.addEventListener('click', function(e){ var b=e.target.closest&&e.target.closest('[data-shqok]'); if(!b) return; var i=+b.dataset.shqok, sel=document.querySelector('[data-shq="'+i+'"]'), v=sel&&sel.value, id=SHQ[i];
   if(!v) return stat('누구 시트인지 먼저 고른다'); ensureB();
-  if(v==='new'){ var nm=(document.querySelector('[data-shqn="'+i+'"]').value||'').trim().slice(0,20); if(!nm) return stat('새 인물 이름을 적는다'); var ex=null; B.chars.forEach(function(x){ if(x.name===nm) ex=x; }); if(!ex){ ex={name:nm, role:'', look:{}, note:''}; B.chars.push(ex); } ex.sheetArt=id; chSlice(ex,id); }
+  if(v==='new'){ var nm=(document.querySelector('[data-shqn="'+i+'"]').value||'').trim().slice(0,20); if(!nm) return stat('새 인물 이름을 적는다'); var ex=null; B.chars.forEach(function(x){ if(x.name===nm) ex=x; }); if(!ex){ ex={name:nm, role:'', look:{}, note:''}; B.chars.push(ex); } if(B.removed) delete B.removed[nm]; ex.sheetArt=id; chSlice(ex,id); }
   else if(v.indexOf('c:')===0){ var n2=v.slice(2); chars().forEach(function(x){ if(x.name===n2){ x.sheetArt=id; chSlice(x,id); } }); }
   else { B.sheetArts=B.sheetArts||{}; B.sheetArts[v.slice(2)]=id; stat('시트를 넣었다'); }
   SHQ.splice(i,1); save(); renderChars(); renderProps(); shqRender(); try{ renderKey(); stepNav(); }catch(er){} });
@@ -17026,7 +17027,7 @@ document.getElementById('ct-chars').addEventListener('click', function(e){
   if(t.dataset.ce!=null) editChar(+t.dataset.ce);
   if(t.dataset.cs!=null && window.__castUpsert){ var cc=chars()[+t.dataset.cs]; if(cc){ var r=window.__castUpsert({name:cc.name, role:cc.role, desc:cc.note, fig:cc.look});
     stat(r==='new'?'「'+cc.name+'」을(를) 등장인물 페이지에 넣었다.':'등장인물 페이지의 「'+cc.name+'」 생김새를 맞췄다.'); renderChars(); } }
-  if(t.dataset.cd!=null){ if(t.dataset.arm){ B.chars.splice(+t.dataset.cd,1); save(); renderChars(); renderBoard(); } else { t.dataset.arm='1'; t.textContent='한 번 더'; } }
+  if(t.dataset.cd!=null){ if(t.dataset.arm){ var gone=B.chars.splice(+t.dataset.cd,1)[0]; if(gone){ B.removed=B.removed||{}; B.removed[gone.name]=1; } save(); renderChars(); renderBoard(); } else { t.dataset.arm='1'; t.textContent='한 번 더'; } }
 });
 document.getElementById('ct-skel').addEventListener('click', function(){
   if(boardHasWork() || (B && ((B.scenes&&B.scenes.length) || (B.skScenes||[]).some(function(x){ return x.ed; })))) snapUndo('뼈대 깔기 전으로 되돌리기', '뼈대를 깔기 전 판으로 되돌렸다.');
