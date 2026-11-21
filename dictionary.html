@@ -1330,6 +1330,7 @@ body.dk-drag, body.dk-drag *{user-select:none!important; -webkit-user-select:non
 .sv-up{cursor:pointer}
 .sv-pr{margin:.4rem 0 0;font-size:.74rem;white-space:pre-wrap;max-height:11em;overflow:auto;background:var(--soft,#f6f6f6);border-radius:8px;padding:.5rem}
 .ct-steps{display:flex;flex-wrap:wrap;gap:.3rem;margin:.6rem 0;padding:.2rem 0}
+.ct-gm{display:flex;flex-wrap:wrap;align-items:center;gap:.3rem;width:100%;margin-bottom:.2rem}.ct-gm .chip{font-size:.74rem}.ct-gm .chip.on{background:var(--ink,#111);color:#fff}
 .ct-stb{font:inherit;font-size:.8rem;border:1px solid var(--line,#ccc);background:none;border-radius:999px;padding:.2rem .6rem .2rem .25rem;cursor:pointer;display:inline-flex;align-items:center;gap:.3rem;color:var(--ink-2,#444)}
 .ct-stb i{font-style:normal;display:inline-grid;place-items:center;width:1.4em;height:1.4em;border-radius:50%;background:var(--soft,#eee);font-size:.75rem}
 .ct-stb.done i{background:#2e7d32;color:#fff}.ct-stb.on{border-color:var(--ink,#111);color:var(--ink,#111);font-weight:700}.ct-stb.on i{background:var(--ink,#111);color:#fff}
@@ -14805,10 +14806,12 @@ function compDesc(c){ var cp=compOf(c), z=''; try{ z=cutSize(c); }catch(e){} var
     (cp.ppl.length?' | '+cp.ppl.map(function(p,i){ return p.nm+'('+viewOf(p).ko+', '+posKo(p.x)+', '+cropOf(p).ko+(depth[i]?', '+dk[depth[i]]:'')+')'; }).join(' · '):'')+(bal?' | 말풍선 자리 '+({'top right':'오른쪽 위','top left':'왼쪽 위','top':'위'})[free]:'');
   return {en:en.join('\n'), ko:ko}; }
 function ctCompPrompt(c, k, n){ return ctKeyPrompt(c,k,n)+compDesc(c).en+'\n(A layout reference image for this panel may be attached — follow its placement.)\n'; }
+function gptMode(){ try{ return localStorage.getItem('gptMode')||'all'; }catch(e){ return 'all'; } }
+function gptHead(){ return gptMode()==='all'?'Draw ALL of them now in this one reply — one separate image for each, in order, without waiting for me. ':'Draw ONLY the first now. Each time I reply "다음", draw the next one. '; }
 function gptQ(){ return (B&&B.cuts||[]).filter(function(c){ return c.gpt; }); }
 function gptQText(){ var Q=gptQ(); if(!Q.length) return ''; var seen={}, nm=[]; Q.forEach(function(c){ compOf(c).ppl.forEach(function(p){ if(!seen[p.nm]){ seen[p.nm]=1; nm.push(p.nm); } }); });
   var att=sheetRefs(nm).concat(Object.keys(B.sceneBg||{}).filter(function(k){ return B.sceneBg[k].art; }).length?['scene background panoramas']:[]);
-  return (Q.length>1?'I will give you '+Q.length+' webtoon panels. Draw ONLY panel 1 now. Each time I reply "다음", draw the next panel. Keep every character and background identical across panels.\n':'')+
+  return (Q.length>1?'I will give you '+Q.length+' webtoon panels. '+gptHead()+' Keep every character and background identical across panels.\n':'')+
     (att.length?'Attached reference images: '+att.join(', ')+'. Copy characters and backgrounds exactly from them.\n':'')+'\n'+Q.map(function(c,i){ return ctCompPrompt(c,i+1,Q.length); }).join('\n\n'); }
 // 구성 그림(PNG) — GPT에 첨부할 배치 참고 그림
 function loadImg(u){ return new Promise(function(res){ var im=new Image(); im.onload=function(){ res(im); }; im.onerror=function(){ res(null); }; im.src=u; }); }
@@ -15127,7 +15130,7 @@ function ctPagePrompt(x, idx, tot){
 function ctAllPages(){ var L=sceneList(); if(!L.length && B && B.cuts.length) L=[{a:1,b:B.cuts.length,name:'전체'}];
   var P=L.map(function(x,i){ return ctPagePrompt(x,i,L.length); }).filter(Boolean);
   if(!P.length) return '';
-  return (P.length>1?'I will give you '+P.length+' scenes. Draw ONLY Scene 1 now. When I reply "다음", draw the next scene. Keep every character design identical across all scenes.\n\n':'')+P.join('\n\n------\n\n'); }
+  return (P.length>1?'I will give you '+P.length+' scenes. '+gptHead()+' Keep every character design identical across all scenes.\n\n':'')+P.join('\n\n------\n\n'); }
 
 // AI가 콘티(이야기·앞뒤 장면·대사·나레이션)를 읽고 장면 그림 연출을 짠다 → B.scenePr[a]
 var SPSYS='너는 웹툰 콘티를 읽고 그림 작가에게 넘길 연출 지시를 쓰는 연출가다. 콘티에 적힌 사건·대사·나레이션의 감정을 읽어 각 컷에서 무엇이 보여야 하는지 구체적인 시각 묘사로 바꾼다. 콘티에 없는 사건은 지어내지 않는다. 대사의 글자는 그리지 않는다. JSON만 답한다.';
@@ -15216,8 +15219,8 @@ function stepDone(n){ var st=(document.getElementById('ct-story')||{}).value||''
   if(n===7) return !!(B&&B.cuts&&B.cuts.some(function(c){ return c.key && c.art; }));
   if(n===8) return !!(B&&B.exported);
   return false; }
-function stepNav(){ var nv=document.getElementById('ct-steps'); if(!nv) return;
-  nv.innerHTML=STEPS.map(function(s){ return '<button type="button" class="ct-stb'+(s[0]===CSTEP?' on':'')+(stepDone(s[0])?' done':'')+'" data-step="'+s[0]+'"'+(s[0]===CSTEP?' aria-current="step"':'')+'><i>'+(stepDone(s[0])&&s[0]!==CSTEP?'✓':s[0])+'</i>'+s[1]+'</button>'; }).join(''); }
+function stepNav(){ var nv=document.getElementById('ct-steps'); if(!nv) return; var gm=gptMode();
+  nv.innerHTML='<span class="ct-gm small">GPT에 여러 장 보낼 때 <button type="button" class="chip'+(gm==='all'?' on':'')+'" data-gm="all">한 번에 모두</button><button type="button" class="chip'+(gm==='step'?' on':'')+'" data-gm="step">한 장씩 (「다음」)</button></span>'+STEPS.map(function(s){ return '<button type="button" class="ct-stb'+(s[0]===CSTEP?' on':'')+(stepDone(s[0])?' done':'')+'" data-step="'+s[0]+'"'+(s[0]===CSTEP?' aria-current="step"':'')+'><i>'+(stepDone(s[0])&&s[0]!==CSTEP?'✓':s[0])+'</i>'+s[1]+'</button>'; }).join(''); }
 function goStep(n, noScroll){ CSTEP=Math.max(1,Math.min(8,+n||1)); try{ localStorage.setItem('ctStep',CSTEP); }catch(e){}
   document.querySelectorAll('#conti .ct-step').forEach(function(d){ d.hidden=+d.dataset.st!==CSTEP; });
   document.querySelectorAll('#conti .ct-step').forEach(function(d){ if(d.querySelector('.ct-nx')) return; var k=+d.dataset.st, f=document.createElement('div'); f.className='filterbar ct-nx';
@@ -15226,7 +15229,7 @@ function goStep(n, noScroll){ CSTEP=Math.max(1,Math.min(8,+n||1)); try{ localSto
   if(CSTEP===6){ try{ ctView(); if(CTV==='b') renderBoard(); }catch(e){} }
   try{ renderSteps(); }catch(e){}
   if(!noScroll){ var nv=document.getElementById('ct-steps'); if(nv) try{ window.scrollTo({top:nv.getBoundingClientRect().top+window.scrollY-70, behavior:'smooth'}); }catch(e){} } }
-document.addEventListener('click', function(e){ var t=e.target.closest&&e.target.closest('#conti [data-step]'); if(t){ goStep(+t.dataset.step); } });
+document.addEventListener('click', function(e){ var t=e.target.closest&&e.target.closest('#conti [data-step]'); if(t){ goStep(+t.dataset.step); } var m=e.target.closest&&e.target.closest('[data-gm]'); if(m){ try{ localStorage.setItem('gptMode', m.dataset.gm); }catch(er){} stepNav(); stat(m.dataset.gm==='all'?'이제 여러 장을 한 번에 모두 그려 달라고 보낸다':'이제 한 장씩 그리고 「다음」을 기다리게 보낸다'); } });
 
 // 6단계: 엑스트라·동물·사물·배경 시트 점검 + 빠진 것 GPT로 한번에
 var PSP={'엑스트라':function(it){ return '⚠ OUTPUT: a PNG with a FULLY TRANSPARENT background (alpha channel) — no background color, no floor, no shadow. This is a cut-out sheet.\nEXTRAS SHEET: Draw ONE image of background extras for this webtoon, several bust-up and full-body figures in a grid. Their EYES ARE NOT VISIBLE (hidden by hair shadow or blank), simple designs so they never compete with main characters. TRANSPARENT background (PNG with alpha channel; if transparency is impossible, use flat pure white #FFFFFF with no texture, no shadow, no gradient), wide empty gaps, NO text.\n'+it.map(function(x){ return '- '+x.name+': '+(x.lookEn||x.look); }).join('\n'); },
@@ -15253,7 +15256,7 @@ function shBatch(all){ var P=B.props||[], G=B.sheetArts||{}, out=[];
   var L=sceneList(); if(!L.length) L=[{a:1,b:B.cuts.length,name:'전체'}];
   L.forEach(function(x,i){ var g=B.sceneBg&&B.sceneBg[x.a]; if(all || !(g&&g.art)) out.push(bgPrompt(x,i,1).replace(/^/, 'BACKGROUND — '+dispNm(x.name||'')+'\n')); });
   if(!out.length) return '';
-  return (out.length>1?'I will give you '+out.length+' sheets to draw for one webtoon. Draw ONLY the first now. Each time I reply "다음", draw the next. Same art style for all (Korean webtoon, clean line art, flat colors).\n\n':'')+out.map(function(q,i){ return (out.length>1?'=== IMAGE '+(i+1)+' ===\n':'')+q; }).join('\n\n'); }
+  return (out.length>1?'I will give you '+out.length+' sheets to draw for one webtoon. '+gptHead()+' Same art style for all (Korean webtoon, clean line art, flat colors).\n\n':'')+out.map(function(q,i){ return (out.length>1?'=== IMAGE '+(i+1)+' ===\n':'')+q; }).join('\n\n'); }
 var SFSYS='너는 웹툰 콘티 검수자다. 콘티에 나오는 엑스트라(이름 없는 무리·단역)·동물·중요한 사물 중 목록에 없는 것을 찾는다. JSON만 답한다.';
 document.addEventListener('click', function(e){ var t=e.target; if(!B) return;
   if(t.id==='ct-shgo'||t.id==='ct-shall'){ var q=shBatch(t.id==='ct-shall'); if(!q) return stat('빠진 시트가 없다');
@@ -15304,7 +15307,7 @@ function propPrompt(kinds, pick){ var P=(B.props||[]).filter(function(x,i){ retu
   var out=[]; ['엑스트라','동물','사물'].forEach(function(k){ var it=P.filter(function(x){ return x.kind===k; }); if(!it.length) return;
     var body=PSP[k](it); var use=it.map(function(x){ var t=propUseTxt(x); return t?'- '+x.name+' appears in: '+t:''; }).filter(Boolean);
     out.push(body+(use.length?'\nHow they are used in the story (draw poses/angles that fit):\n'+use.join('\n'):'')); });
-  return (out.length>1?'I will give you '+out.length+' sheets. Draw ONLY the first now; when I reply "다음", draw the next. Same Korean webtoon art style for all.\n\n':'')+out.map(function(q,i){ return (out.length>1?'=== SHEET '+(i+1)+' ===\n':'')+q; }).join('\n\n'); }
+  return (out.length>1?'I will give you '+out.length+' sheets. '+gptHead()+' Same Korean webtoon art style for all.\n\n':'')+out.map(function(q,i){ return (out.length>1?'=== SHEET '+(i+1)+' ===\n':'')+q; }).join('\n\n'); }
 var PPICK={};
 // 모든 시트 한 번에: 라인업 → 인물별 → 엑스트라·동물·사물 → 장면 배경 파노라마
 function allSheetsList(){ var imgs=[], cs=chars().filter(function(x){ return x&&x.name; });
@@ -15315,13 +15318,13 @@ function allSheetsList(){ var imgs=[], cs=chars().filter(function(x){ return x&&
   return imgs; }
 function allSheetsPrompt(){ var imgs=allSheetsList();
   if(!imgs.length) return '';
-  return 'I will give you '+imgs.length+' images to draw for one webtoon. Draw ONLY image 1 now. Each time I reply "다음", draw the next one. Keep every design identical across images and use the same Korean webtoon art style. EVERY character/extra/animal/prop sheet must be a PNG with a fully transparent background (backgrounds/panoramas are the only images with a full scene).\n\n'+imgs.map(function(m,i){ return '=== IMAGE '+(i+1)+': '+m[0]+' ===\n'+m[1]; }).join('\n\n'); }
+  return 'I will give you '+imgs.length+' images to draw for one webtoon. '+gptHead()+' Keep every design identical across images and use the same Korean webtoon art style. EVERY character/extra/animal/prop sheet must be a PNG with a fully transparent background (backgrounds/panoramas are the only images with a full scene).\n\n'+imgs.map(function(m,i){ return '=== IMAGE '+(i+1)+': '+m[0]+' ===\n'+m[1]; }).join('\n\n'); }
 document.addEventListener('click', function(e){ var c=e.target.closest&&e.target.closest('[data-plc]'); if(!c) return; var box=c.closest('.allsh-list,.gq-list'), L=box&&box.__L||[]; var t=c.dataset.plc==='all'?L.map(function(m,i){ return (i+1)+'. '+m[0]+'\n'+m[1]; }).join('\n\n------\n\n'):(L[+c.dataset.plc]||[])[1]; if(!t) return; ctCopy(t); c.textContent='✓ 복사됨'; setTimeout(function(){ c.textContent=c.dataset.plc==='all'?'전부 이어서 복사':'복사'; },1500); });
 document.addEventListener('click', function(e){ var b=e.target.closest&&e.target.closest('[data-allsh]'); if(!b||!B) return; var q=allSheetsPrompt(); if(!q) return stat('인물·엑스트라·사물이 아직 없다 — 「AI로 캐릭터 시트 짜기」부터');
-  if(b.dataset.allsh==='show'){ var ta=document.querySelector('.allsh-pr'); if(ta){ ta.value=q; ta.hidden=!ta.hidden; } return; }
+  if(b.dataset.allsh==='show'){ var ta=document.querySelector('.allsh-pr'); if(ta){ ta.value=q; delete ta.dataset.dirty; ta.hidden=!ta.hidden; } return; }
   if(b.dataset.allsh==='list'){ var box=document.querySelector('.allsh-list'), L=allSheetsList(); box.hidden=!box.hidden; if(box.hidden) return;
     box.innerHTML=L.map(function(m,i){ return '<div class="pl-item"><div class="pl-h"><b>'+(i+1)+'. '+cesc(m[0])+'</b><button type="button" class="chip" data-plc="'+i+'">복사</button></div><pre>'+cesc(m[1])+'</pre></div>'; }).join('')+'<button type="button" class="chip" data-plc="all">전부 이어서 복사</button>';
-    box.__L=L; return; } var ta2=document.querySelector('.allsh-pr'); if(ta2 && !ta2.hidden && ta2.value.trim()) q=ta2.value; sendGpt(q, []); });
+    box.__L=L; return; } var ta2=document.querySelector('.allsh-pr'); if(ta2 && !ta2.hidden && ta2.dataset.dirty && ta2.value.trim()) q=ta2.value; sendGpt(q, []); });
 
 function renderProps(){ var box=document.getElementById('ct-props'); if(!box) return; var L=(B&&B.props)||[];
   var A=window.__ppArt, img=function(id,alt){ var u=id&&A&&A.get(id); return u?'<img class="ct-shimg" data-zoom="1" alt="'+cesc(alt)+'" src="'+u+'">':''; }, up=function(key,has){ return '<label class="chip sv-up">'+(has?'바꾸기':'📥 그림 넣기')+'<input type="file" accept="image/*" hidden data-shk="'+key+'"></label>'; };
@@ -15336,10 +15339,11 @@ function renderProps(){ var box=document.getElementById('ct-props'); if(!box) re
     '<div class="sv-act"><button class="chip" type="button" data-pfind="1">🧠 콘티에서 엑스트라·사물 찾기</button></div></div>';
   box.innerHTML=pk+(h?'<h4 class="ct-reft">GPT로 받은 시트 그림</h4><p class="small">인물 카드의 「시트 그림 넣기」와 여기에 넣는다. 넣은 시트는 주요 컷을 그릴 때 첨부할 그림으로 안내된다.</p>'+h:''); }
 document.addEventListener('change', function(e){ var t=e.target; if(t.dataset && t.dataset.pk!=null){ PPICK[+t.dataset.pk]=t.checked; } });
+document.addEventListener('input', function(e){ if(e.target.classList && e.target.classList.contains('pk-pr')) e.target.dataset.dirty='1'; });
 document.addEventListener('click', function(e){ var b=e.target.closest&&e.target.closest('[data-pp]'); if(!b||!B||!b.closest('.ct-pk')) return; var v=b.dataset.pp, box=b.closest('.ct-pk'), kinds=['엑스트라','동물','사물'];
   var q=v.indexOf('k:')===0?propPrompt([v.slice(2)]):propPrompt(kinds, PPICK); if(!q) return stat('고른 엑스트라·동물·사물이 없다');
-  if(v==='show'){ var ta=box.querySelector('.pk-pr'); ta.value=q; ta.hidden=!ta.hidden; return; }
-  var ta2=box.querySelector('.pk-pr'); if(ta2 && !ta2.hidden && ta2.value.trim()) q=ta2.value;
+  if(v==='show'){ var ta=box.querySelector('.pk-pr'); ta.value=q; delete ta.dataset.dirty; ta.hidden=!ta.hidden; return; }
+  var ta2=box.querySelector('.pk-pr'); if(ta2 && !ta2.hidden && ta2.dataset.dirty && ta2.value.trim()) q=ta2.value;
   sendGpt(q, []); });
 document.addEventListener('change', function(e){ var t=e.target; if(!t.dataset || !(t.dataset.shup!=null || t.dataset.shk) || !t.files[0] || !window.__ppArt || !B) return;
   window.__ppArt.fromFile(t.files[0]).then(function(id){
@@ -15544,7 +15548,7 @@ document.addEventListener('change', function(e){ var t=e.target, card=t.closest&
 document.addEventListener('click', function(e){ var t=e.target;
   var b=t.closest&&t.closest('#ct-s5 [data-bg]'); if(b){ var x=bgSave(b.closest('.sv-sc')); if(!x) return; var q=bgPrompt(x,0,1); ctCopy(q); setTimeout(function(){ window.open('https://chatgpt.com/?q='+encodeURIComponent(q.slice(0,1800)),'_blank','noopener'); },200); return; }
   if(t.id==='ct-bggpt' && B && B.cuts && B.cuts.length){ var L=sceneList(); if(!L.length) L=[{a:1,b:B.cuts.length,name:'전체'}];
-    var q2=(L.length>1?'I will give you '+L.length+' backgrounds. Draw ONLY the first now; when I reply "다음", draw the next.\n\n':'')+L.map(function(x,i){ return bgPrompt(x,i,L.length); }).join('\n\n');
+    var q2=(L.length>1?'I will give you '+L.length+' backgrounds. '+gptHead()+' \n\n':'')+L.map(function(x,i){ return bgPrompt(x,i,L.length); }).join('\n\n');
     ctCopy(q2); setTimeout(function(){ window.open('https://chatgpt.com/?q='+encodeURIComponent(q2.length>1800?'다음 메시지로 배경 요청문을 붙여 넣을게. 받으면 첫 배경부터 그려줘.':q2),'_blank','noopener'); },200); return; }
   if(t.id==='ct-bgai'){ if(!B||!B.cuts||!B.cuts.length) return stat('콘티를 먼저 만든다'); if(!aiReady()) return stat('AI 연결에서 키를 넣어야 쓸 수 있다.');
     var L3=sceneList(); if(!L3.length) L3=[{a:1,b:B.cuts.length,name:'전체'}]; t.disabled=true; stat('AI가 장면 배경을 짜는 중…');
@@ -15580,7 +15584,7 @@ function renderKey(){ var box=document.getElementById('ct-s7'); if(!box) return;
       return '<li>'+(au?'<img alt="'+c.n+'번 컷 그림" src="'+au+'">':'<span class="kc-ph">그림 없음</span>')+'<div><b>'+c.n+'번</b> <span class="small">'+cesc(shotName(c.k))+'</span><p class="small">'+cesc(c.scr)+'</p><div class="sv-act"><button class="chip" type="button" data-k1="'+c.n+'">🖌 이 컷만</button><label class="chip sv-up">그림 올리기<input type="file" accept="image/*" hidden data-kup="'+c.n+'"></label><button class="chip" type="button" data-ed="'+c.n+'">✎</button></div></div></li>'; }).join('')+'</ul>'+
     '<details class="ct-more"><summary class="small">장면 러프 콘티(장면마다 한 장)</summary><div class="sv-act"><button class="chip" type="button" data-sa="ai">🧠 전체 콘티 읽고 연출 짜기</button><button class="chip" type="button" data-sa="go">✏ 전체 러프 콘티 그리기</button><button class="chip" type="button" data-sa="copy">복사</button><button class="chip" type="button" data-sa="show">모아 보기</button></div><pre class="sv-pr" hidden></pre></details>'; }
 function keyAll(){ var K=keyCuts(); if(!K.length) return ''; var seen={}, nm=[]; K.forEach(function(c){ ctWho(c).forEach(function(n){ if(!seen[n]){ seen[n]=1; nm.push(n); } }); });
-  return (K.length>1?'I will give you '+K.length+' key panels of one webtoon episode. Draw ONLY panel 1 now. Each time I reply "다음", draw the next panel. Keep every character and background design identical across panels.\n':'')+
+  return (K.length>1?'I will give you '+K.length+' key panels of one webtoon episode. '+gptHead()+' Keep every character and background design identical across panels.\n':'')+
     (nm.length?'Character reference:\n'+nm.map(function(n){ return '- '+n+': '+(ctLookSafe(n)||''); }).join('\n')+'\n':'')+(sheetRefs(nm).length?'Character sheet images are attached ('+sheetRefs(nm).length+'). Copy each character EXACTLY from the attached sheets.\n':'')+'\n'+K.map(function(c,i){ return ctKeyPrompt(c,i+1,K.length); }).join('\n\n'); }
 document.addEventListener('click', function(e){ var t=e.target; if(!t.closest || !B) return;
   var kc=t.closest('[data-kc]'); if(kc){ var c=B.cuts[+kc.dataset.kc-1]; c.key=autoKey(c)?0:1; save(); renderKey(); return; }
@@ -15649,9 +15653,9 @@ function chGptAll(list){
   if(ob.length) more.push('⚠ OUTPUT: a PNG with a FULLY TRANSPARENT background (alpha channel) — no background color, no floor, no shadow. This is a cut-out sheet.\nPROP SHEET: Draw ONE image of these key props, each from 2 angles with a close-up detail. TRANSPARENT background (PNG with alpha channel; if transparency is impossible, use flat pure white #FFFFFF with no texture, no shadow, no gradient), NO text.\n'+ob.map(function(x){ return '- '+x.name+': '+(x.lookEn||x.look); }).join('\n'));
   if(n===1 && !more.length) return chGptOne(cs[0],1,1);
   var tot=(n>1?1:0)+n+more.length;
-  return 'I will give you '+tot+' images to draw. Draw ONLY the first one now. Each time I reply "다음", draw the next one. Keep every design identical across images. Korean webtoon style, clean line art, flat colors.\n\n'+(n>1?'=== IMAGE 1: LINEUP ===\n'+lineup+'\n\n':'')+
+  return 'I will give you '+tot+' images to draw. '+gptHead()+' Keep every design identical across images. Korean webtoon style, clean line art, flat colors.\n\n'+(n>1?'=== IMAGE 1: LINEUP ===\n'+lineup+'\n\n':'')+
     cs.map(function(x,i){ return '=== IMAGE '+(i+(n>1?2:1))+': '+x.name+' ===\n'+chGptOne(x,i+1,n); }).join('\n\n')+more.map(function(m,i){ return '\n\n=== IMAGE '+((n>1?1:0)+n+i+1)+' ===\n'+m; }).join('');
-  return 'I will give you '+(n+1)+' images to draw. Draw ONLY the first one now. Each time I reply "다음", draw the next one. Keep every character design identical to the lineup.\n\n=== IMAGE 1: LINEUP ===\n'+lineup+'\n\n'+
+  return 'I will give you '+(n+1)+' images to draw. '+gptHead()+' Keep every character design identical to the lineup.\n\n=== IMAGE 1: LINEUP ===\n'+lineup+'\n\n'+
     cs.map(function(x,i){ return '=== IMAGE '+(i+2)+': '+x.name+' ===\n'+chGptOne(x,i+1,n); }).join('\n\n');
 }
 document.addEventListener('click', function(e){ var t=e.target; if(!t.closest) return;
