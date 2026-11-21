@@ -14713,7 +14713,12 @@ function srcUrl(nm, src){ src=String(src||'b0'); if(src.indexOf('f:')===0) retur
 function srcOpts(nm){ var o=[], ch=chOf(nm), F=window.__ppFix, m=F&&F.spr&&F.spr[nm]; if(ch&&ch.bodies) ['b0','b1','b2','b3'].forEach(function(k,i){ if(ch.bodies[i]) o.push([k,'전신 '+VIEWN[k]]); });
   if(m) Object.keys(m).forEach(function(k){ o.push(['f:'+k,'얼굴 '+((F.EMN||{})[k]||k)]); }); return o; }
 function hasArt(nm){ return srcOpts(nm).length>0; }
-function bgUrlOf(c){ var x=null; try{ x=sceneOfCut(c.n); }catch(e){} var g=x&&B.sceneBg&&B.sceneBg[x.a], A=window.__ppArt; return g&&g.art&&A?A.get(g.art):''; }
+function bgPick(c){ var src=(c.comp&&c.comp.bgSrc)||'auto', A=window.__ppArt, x=null; try{ x=sceneOfCut(c.n); }catch(e){}
+  if(src==='none') return {url:'', g:null, x:x, none:1};
+  if(src.indexOf('art:')===0) return {url:A?A.get(src.slice(4))||'':'', g:(c.comp&&c.comp.bgTxt)?{ko:c.comp.bgTxt}:null, x:x, own:1};
+  if(src.indexOf('scene:')===0){ var a=+src.slice(6); var L=sceneList(); for(var i=0;i<L.length;i++) if(L[i].a===a){ x=L[i]; break; } }
+  var g=x&&B.sceneBg&&B.sceneBg[x.a]; return {url:g&&g.art&&A?A.get(g.art)||'':'', g:g, x:x}; }
+function bgUrlOf(c){ return bgPick(c).url; }
 function compAuto(c){ var k=c.k||'ms', Z={ls:100,fs:118,stand:118,two:130,ms:145,ots:150,bs:175,cu:215,ecu:260}[k]||140;
   var sx=(c.bgx!=null)?+c.bgx:(function(){ var x=null; try{ x=sceneOfCut(c.n); }catch(e){} var i=x?c.n-x.a:c.n, L=x?x.b-x.a+1:8; return L>1?Math.round(10+80*((i*37)%L)/(L-1)):50; })();
   var a=cutAssets(c), n=a.people.length, X=n===1?[50]:n===2?[30,70]:[20,50,80];
@@ -14758,7 +14763,11 @@ function ceOpen(n){ var c=B.cuts[n-1]; if(!c) return; if(!c.comp) c.comp=JSON.pa
     save(); cePaint(); });
   m.addEventListener('input', function(e){ var t=e.target, cp=c.comp; if(t.dataset.bg){ cp.bg[t.dataset.bg]=+t.value; } else if(t.dataset.pp){ var p=cp.ppl[+t.dataset.i]; if(!p) return; p[t.dataset.pp]=t.type==='checkbox'?t.checked:(t.tagName==='SELECT'?t.value:+t.value); }
     else if(t.classList.contains('ce-3d')){ c.use3d=t.checked?1:0; } else return; save(); ceLive(); });
-  m.addEventListener('change', function(e){ var t=e.target; if(t.tagName==='SELECT' && t.dataset.pp){ c.comp.ppl[+t.dataset.i].src=t.value; save(); ceLive(); } if(t.classList.contains('ce-3d')) cePaint(); });
+  m.addEventListener('change', function(e){ var t=e.target;
+    if(t.dataset.bgsrc){ c.comp.bgSrc=t.value; save(); cePaint(); return; }
+    if(t.dataset.cebg && t.files[0] && window.__ppArt){ window.__ppArt.fromFile(t.files[0]).then(function(id){ c.comp.bgSrc='art:'+id; c.comp.bg=Object.assign(c.comp.bg||{}, {x:50,y:50,z:100}); save(); cePaint(); }); return; }
+    if(t.dataset.bgtxt){ c.comp.bgTxt=t.value.slice(0,120); save(); return; }
+    if(t.tagName==='SELECT' && t.dataset.pp){ c.comp.ppl[+t.dataset.i].src=t.value; save(); ceLive(); } if(t.classList.contains('ce-3d')) cePaint(); });
   var pv=m.querySelector('.ce-prev'), drag=null;
   pv.addEventListener('pointerdown', function(e){ var im=e.target.closest('img[data-pi]'); if(!im) return; e.preventDefault(); CE.sel=+im.dataset.pi; var r=pv.getBoundingClientRect(), p=c.comp.ppl[CE.sel]; drag={r:r, sx:e.clientX, sy:e.clientY, x:p.x, y:p.y}; try{ pv.setPointerCapture(e.pointerId); }catch(er){} cePaintCtl(); });
   pv.addEventListener('pointermove', function(e){ if(!drag) return; var p=c.comp.ppl[CE.sel]; p.x=Math.round(drag.x+(e.clientX-drag.sx)/drag.r.width*100); p.y=Math.round(drag.y+(e.clientY-drag.sy)/drag.r.height*100); ceLive(true); });
@@ -14771,7 +14780,10 @@ function cePaintCtl(){ var c=CE.c, cp=c.comp, rng=function(lab,attr,v,min,max,st
   var others=chars().filter(function(x){ return hasArt(x.name); }).map(function(x){ return x.name; });
   var h='<label class="ce-chk"><input type="checkbox" class="ce-3d"'+(c.use3d?' checked':'')+'> 이 컷은 3D로 구성</label>'+(c.use3d?'<p class="small">이 컷은 3D 인형으로 그린다. <button type="button" class="chip" data-ce="open3d">3D 카메라·배경 설정 열기</button></p>':'');
   if(!c.use3d){
-    h+='<fieldset><legend>배경</legend>'+(bgUrlOf(c)?rng('가로 위치','data-bg="x"',cp.bg.x,0,100)+rng('세로 위치','data-bg="y"',cp.bg.y,0,100)+rng('확대','data-bg="z"',cp.bg.z,100,320,5)+rng('흐림','data-bg="blur"',cp.bg.blur||0,0,12):'<p class="small">이 장면 배경 그림이 없다 — 5단계에서 넣는다.</p>')+'</fieldset>';
+    var Ls=sceneList(), cur=(cp.bgSrc)||'auto';
+    h+='<fieldset><legend>배경</legend><label>배경 그림 <select data-bgsrc="1"><option value="auto"'+(cur==='auto'?' selected':'')+'>이 장면 배경 (자동)</option>'+Ls.filter(function(x){ var g=B.sceneBg&&B.sceneBg[x.a]; return g&&(g.art||g.ko||g.en); }).map(function(x){ return '<option value="scene:'+x.a+'"'+(cur==='scene:'+x.a?' selected':'')+'>'+cesc(dispNm(x.name||'장면'))+' 배경</option>'; }).join('')+(cur.indexOf('art:')===0?'<option value="'+cur+'" selected>이 컷만 올린 그림</option>':'')+'<option value="none"'+(cur==='none'?' selected':'')+'>배경 없음 (흰 바탕)</option></select></label>'+
+      '<div class="filterbar"><label class="chip sv-up">📥 이 컷만 배경 올리기<input type="file" accept="image/*" hidden data-cebg="1"></label></div>'+
+      (cur.indexOf('art:')===0?'<label>배경 설명 <input type="text" data-bgtxt="1" value="'+cesc(cp.bgTxt||'')+'" placeholder="예: 비 오는 골목, 네온사인"></label>':'')+(bgUrlOf(c)?rng('가로 위치','data-bg="x"',cp.bg.x,0,100)+rng('세로 위치','data-bg="y"',cp.bg.y,0,100)+rng('확대','data-bg="z"',cp.bg.z,100,320,5)+rng('흐림','data-bg="blur"',cp.bg.blur||0,0,12):'<p class="small">이 장면 배경 그림이 없다 — 5단계에서 넣는다.</p>')+'</fieldset>';
     h+='<fieldset><legend>인물</legend><div class="ce-tabs">'+cp.ppl.map(function(p,i){ return '<button type="button" class="chip'+(i===CE.sel?' on':'')+'" data-ce="sel" data-i="'+i+'">'+cesc(p.nm)+'</button>'; }).join('')+'</div>';
     var p=cp.ppl[CE.sel];
     if(p){ var o=srcOpts(p.nm); h+='<label>그림 <select data-pp="src" data-i="'+CE.sel+'">'+o.map(function(q){ return '<option value="'+q[0]+'"'+(q[0]===p.src?' selected':'')+'>'+q[1]+'</option>'; }).join('')+'</select></label>'+
@@ -14799,11 +14811,11 @@ function compDesc(c){ var cp=compOf(c), z=''; try{ z=cutSize(c); }catch(e){} var
   var bal=String(c.line||'').split('\n').filter(Boolean).length, free=(function(){ var xs=cp.ppl.map(function(p){ return p.x; }), l=xs.filter(function(x){ return x<50; }).length, r=xs.length-l; return l>r?'top right':r>l?'top left':'top'; })();
   var rel=''; if(cp.ppl.length===2){ var A=cp.ppl[0], Bp=cp.ppl[1], L=A.x<=Bp.x?A:Bp, R=L===A?Bp:A; rel=L.nm+' on the left, '+R.nm+' on the right'+((L.src==='b2'||L.src==='b1')&&(R.src==='b2'||R.src==='b1')?', facing each other':'')+'.'; }
   var en=['CAMERA & FRAMING:','- Panel aspect ratio '+ar+'. '+sh+', '+an+', '+lens+'.'];
-  if(hasBg) en.push('- Background: '+(bg.x<30?'left':bg.x>70?'right':'middle')+' part of the scene panorama'+(bg.blur?', softly blurred (shallow depth of field)':', in focus')+'.');
+  var bpk=bgPick(c); if(bpk.none) en.push('- Background: plain and simple, no detailed scenery.'); else if(hasBg) en.push('- Background: '+(bpk.own?'the attached background image for this panel':(bg.x<30?'left':bg.x>70?'right':'middle')+' part of the '+(bpk.x?'"'+dispNm(bpk.x.name||'')+'" ':'')+'scene panorama')+(bg.blur?', softly blurred (shallow depth of field)':', in focus')+'.');
   cp.ppl.forEach(function(p,i){ var v=viewOf(p), cr=cropOf(p); en.push('- '+p.nm+': '+v.en+', '+posWord(p.x)+' of the frame ('+Math.round(p.x)+'% from left)'+(depth[i]?', '+depth[i]:'')+', '+cr.en+', about '+Math.round(p.s)+'% of panel height.'); });
   if(rel) en.push('- '+rel); if(bal) en.push('- Leave empty space at the '+free+' for '+bal+' speech bubble'+(bal>1?'s':'')+' (do not draw bubbles).');
   if(c.cnote) en.push('- Director note: '+c.cnote);
-  var ko=shk+' · '+ank+' · '+({'wide lens, lots of environment':'넓게','normal lens':'보통','telephoto feel, background compressed':'당겨서'})[lens]+(hasBg?' · 배경 '+(bg.x<30?'왼쪽':bg.x>70?'오른쪽':'가운데')+(bg.blur?' 흐림':''):'')+
+  var ko=shk+' · '+ank+' · '+({'wide lens, lots of environment':'넓게','normal lens':'보통','telephoto feel, background compressed':'당겨서'})[lens]+(bpk.none?' · 배경 없음':hasBg?' · 배경 '+(bpk.own?'이 컷 그림':(bpk.x&&(c.comp&&c.comp.bgSrc||'').indexOf('scene:')===0?dispNm(bpk.x.name||'')+' ':'')+(bg.x<30?'왼쪽':bg.x>70?'오른쪽':'가운데'))+(bg.blur?' 흐림':''):'')+
     (cp.ppl.length?' | '+cp.ppl.map(function(p,i){ return p.nm+'('+viewOf(p).ko+', '+posKo(p.x)+', '+cropOf(p).ko+(depth[i]?', '+dk[depth[i]]:'')+')'; }).join(' · '):'')+(bal?' | 말풍선 자리 '+({'top right':'오른쪽 위','top left':'왼쪽 위','top':'위'})[free]:'');
   return {en:en.join('\n'), ko:ko}; }
 function ctCompPrompt(c, k, n){ return ctKeyPrompt(c,k,n)+compDesc(c).en+'\n(A layout reference image for this panel may be attached — follow its placement.)\n'; }
@@ -14829,7 +14841,7 @@ function saveQPng(){ var Q=gptQ(); if(!Q.length) return stat('GPT로 하기 표�
 // ChatGPT로 그림까지 같이 보내기: 폰은 공유 창(ChatGPT 앱 고르면 그림+요청문이 함께 붙음), 안 되면 참고 그림 한 장 저장 + 요청문 복사
 function refImgs(Q){ var A=window.__ppArt, seen={}, out=[]; if(!A) return out;
   Q.forEach(function(c){ compOf(c).ppl.forEach(function(p){ if(seen[p.nm]) return; seen[p.nm]=1; var ch=chOf(p.nm); if(ch&&ch.sheetArt){ var u=A.get(ch.sheetArt); if(u) out.push({name:p.nm+' 시트', u:u}); } }); });
-  var bs={}; Q.forEach(function(c){ var x=null; try{ x=sceneOfCut(c.n); }catch(e){} if(!x||bs[x.a]) return; bs[x.a]=1; var u=bgUrlOf(c); if(u) out.push({name:dispNm(x.name||'장면')+' 배경', u:u}); });
+  var bs={}; Q.forEach(function(c){ var p=bgPick(c), key=p.own?'own'+c.n:(p.x?p.x.a:'?'); if(p.none||!p.url||bs[key]) return; bs[key]=1; out.push({name:p.own?c.n+'번 컷 배경':dispNm((p.x&&p.x.name)||'장면')+' 배경', u:p.url}); });
   var G=B.sheetArts||{}; if(G.lineup && A.get(G.lineup) && Object.keys(seen).length>1) out.push({name:'라인업', u:A.get(G.lineup)});
   return out; }
 function dataFile(u, name){ return fetch(u).then(function(r){ return r.blob(); }).then(function(b){ return new File([b], name.replace(/[^\w가-힣.-]+/g,'_')+(b.type==='image/png'?'.png':'.jpg'), {type:b.type||'image/png'}); }); }
@@ -15587,6 +15599,7 @@ document.addEventListener('click', function(e){ var t=e.target;
       B.sceneBg=B.sceneBg||{}; var k=0; (Array.isArray(j)?j:[]).forEach(function(g){ var x=L3[+g.i]; if(!x) return; var old=B.sceneBg[x.a]||{}; B.sceneBg[x.a]=Object.assign(old,{place:String(g.place||x.place||''), ko:String(g.ko||''), en:String(g.en||''), light:String(g.light||'')}); B.sceneBg[x.a]._ko=B.sceneBg[x.a].ko; k++; });
       save(); renderBg(); stepNav(); stat('장면 '+k+'개 배경을 짰다'); }); }
 });
+function cutBgLine(c, x){ var p=bgPick(c); if(p.none) return 'Background: plain, simple (no detailed background).\n'; if(p.own) return 'Background: as in the attached background image for this panel'+(p.g&&p.g.ko?' ('+p.g.ko+')':'')+'.\n'; return bgLine(p.x||x); }
 function bgLine(x){ var g=bgOf(x); if(!g) return ''; return 'Background (keep identical in all panels of this scene): '+[g.place, g.en||g.ko, g.light].filter(Boolean).join(' / ')+'\n'+(g.art?'(A background reference image is attached — match it.)\n':''); }
 
 // ---- 7. 주요 컷
@@ -15598,7 +15611,7 @@ function ctKeyPrompt(c, k, n){ var x=sceneOfCut(c.n)||{a:1,b:B.cuts.length,name:
   var w=ctWho(c), fc=(pp&&pp.faces)||{};
   return (n>1?'=== PANEL '+k+' of '+n+' (cut '+c.n+') ===\n':'')+'Draw ONE finished webtoon panel. Korean webtoon style, clean line art, cel shading, full color. NO speech bubbles, NO text, NO panel border. Leave empty space for speech bubbles.\n'+
     'Aspect ratio '+(z==='wide'?'2:1':z==='tall'?'9:16':z==='half'?'3:4':'4:3')+'. Shot: '+(sh?sh[1]:'medium shot')+(an&&an[0]?', '+an[2]:'')+(c.focus?', focus lines':'')+(c.flash?', flashback tint':'')+'.\n'+
-    (n===1&&sheetRefs(w).length?'Character sheet images are attached — copy the characters exactly.\n':'')+'Scene: '+dispNm(x.name||'')+'\n'+bgLine(x)+'What we see: '+((pp&&pp.see)||c.scr||'')+'\n'+(pp&&pp.staging?'Staging: '+pp.staging+'\n':'')+
+    (n===1&&sheetRefs(w).length?'Character sheet images are attached — copy the characters exactly.\n':'')+'Scene: '+dispNm(x.name||'')+'\n'+cutBgLine(c, x)+'What we see: '+((pp&&pp.see)||c.scr||'')+'\n'+(pp&&pp.staging?'Staging: '+pp.staging+'\n':'')+
     (w.length?'Characters:\n'+w.map(function(nm){ return '- '+nm+': '+(ctLookSafe(nm)||'')+(fc[nm]?'; expression: '+fc[nm]:''); }).join('\n')+'\n':'')+
     (c.line?'Mood from dialogue (do NOT draw text): '+String(c.line).replace(/\n/g,' / ')+'\n':'')+(pp&&pp.emph?'Emphasis: '+pp.emph+'\n':''); }
 function keyCuts(){ return (B&&B.cuts||[]).filter(function(c){ return c.scr && autoKey(c); }); }
