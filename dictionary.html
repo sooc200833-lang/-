@@ -14974,8 +14974,8 @@ function shotSit(c){ var x=null; try{ x=sceneOfCut(c.n); }catch(e){} var ap=x&&B
 function shotComp(c){ return compDesc(c).en.split('\n').slice(1).map(function(l){ return l.replace(/^- /,'').replace(/^Panel aspect ratio [^.]*\.\s*/,''); }).filter(function(l){ return !/^Director note|^Leave empty space/.test(l); }).join(' ')+(c.cnote?' Director note: '+c.cnote+'.':''); }
 function clipPrompt(cl, k, n){ var t=0, seen={}, nm=[]; cl.cuts.forEach(function(o){ compOf(o.c).ppl.forEach(function(p){ if(!seen[p.nm]){ seen[p.nm]=1; nm.push(p.nm); } }); ctWho(o.c).forEach(function(w){ if(!seen[w]){ seen[w]=1; nm.push(w); } }); });
   var x=cl.scene, g=x&&B.sceneBg&&B.sceneBg[x.a];
-  var tl=cl.cuts.map(function(o,i){ var c=o.c, a=t, b2=t+o.sec; t=b2; var L=String(c.line||'').split('\n').filter(Boolean).map(function(l,j){ var p=lnParse(l), ja=(c.ja||[])[j]; return jaName(p.who||'narrator')+' says in Japanese (anime voice acting): "'+(ja||p.say)+'"'+(ja?'':' (translate this Korean line into natural Japanese anime dialogue and speak it in Japanese)'); });
-    return 'SHOT '+(i+1)+' ['+a.toFixed(1)+'s–'+b2.toFixed(1)+'s] (match attached image "shot'+(i+1)+'"), camera move: '+MOVE(c,i)+'.\n  Composition: '+shotComp(c)+'\n  Situation: '+shotSit(c)+(L.length?'\n  Audio: '+L.join(' '):'\n  Audio: no dialogue')+(c.nar?' Narrator voice-over in Japanese: "'+(c.narJa||c.nar)+'"'+(c.narJa?'':' (translate to Japanese)'):''); });
+  var tl=cl.cuts.map(function(o,i){ var c=o.c, a=t, b2=t+o.sec; t=b2; var L=String(c.line||'').split('\n').filter(Boolean).map(function(l,j){ var p=lnParse(l), ja=(c.ja||[])[j]; return ja?jaName(p.who||'narrator')+' says in Japanese (anime voice acting): "'+ja+'"':''; }).filter(Boolean);
+    return 'SHOT '+(i+1)+' ['+a.toFixed(1)+'s–'+b2.toFixed(1)+'s] (match attached image "shot'+(i+1)+'"), camera move: '+MOVE(c,i)+'.\n  Composition: '+shotComp(c)+'\n  Situation: '+shotSit(c)+(L.length?'\n  Audio: '+L.join(' '):'\n  Audio: no dialogue')+(c.narJa?' Narrator voice-over in Japanese: "'+c.narJa+'"':''); });
   return (n>1?'[Clip '+k+'/'+n+'] ':'')+'15-second video, 2D Korean webtoon anime style, '+(cl.cuts.length>1?cl.cuts.length+' shots with hard cuts in this order':'one continuous shot')+'. The attached images are the final panels for each shot (shot1 = first frame) — keep their composition, characters and background, and animate between them.\n'+
     (((g&&(g.place||g.en||g.ko))?'Setting: '+[g.place,g.en||g.ko,g.light].filter(Boolean).join(', ')+'.\n':x&&x.place?'Setting: '+x.place+'.\n':''))+
     (nm.length?'Characters: '+nm.map(function(n){ return n+' — '+(ctLookSafe(n)||''); }).join('; ')+'.\n':'')+tl.join('\n')+'\nAll spoken lines are in JAPANESE, Japanese anime voice acting with emotion matching the scene. No subtitles, no on-screen text. Natural lip-sync, light ambient sound.'; }
@@ -14988,19 +14988,21 @@ function sendGrok(cl, k, n){ var text=clipPrompt(cl,k,n); ctCopy(text); stat('�
 // 일본어 대사(그록 음성용) + 자막 모음
 function jaName(n){ return (B&&B.jaNames&&B.jaNames[n])||n; }
 var JASYS='너는 한국 웹툰을 일본 애니메이션으로 옮기는 번역가다. 대사를 자연스러운 일본 애니 말투로 옮기고, 인물 성격·말투를 살린다. 이름은 가타카나로. JSON만 답한다.';
-function jaTranslate(btn){ if(!aiReady()) return stat('AI 연결에서 키를 넣어야 쓸 수 있다.'); var items=[];
+function jaMissing(){ var m=0; (B.cuts||[]).forEach(function(c){ String(c.line||'').split('\n').filter(Boolean).forEach(function(l,j){ if(!(c.ja||[])[j]) m++; }); if(c.nar && !c.narJa) m++; }); return m; }
+function jaTranslate(btn, cb){ if(!aiReady()) return stat('AI 연결에서 키를 넣어야 일본어 대사를 만들 수 있다.'); var items=[];
   B.cuts.forEach(function(c){ String(c.line||'').split('\n').filter(Boolean).forEach(function(l,j){ var p=lnParse(l); items.push({n:c.n,i:j,who:p.who||'',ko:p.say}); }); if(c.nar) items.push({n:c.n,i:-1,who:'나레이션',ko:c.nar}); });
-  if(!items.length) return stat('대사가 없다'); btn.disabled=true; stat('대사 '+items.length+'줄을 일본어로 옮기는 중…');
+  if(!items.length){ if(cb) cb(); return stat('대사가 없다'); } if(btn) btn.disabled=true; stat('대사 '+items.length+'줄을 일본어로 옮기는 중…');
   aiAsk(JASYS, '[인물 말투]\n'+chars().map(chLine).join('\n')+'\n\n[대사]\n'+items.slice(0,220).map(function(x,k){ return k+'. '+(x.who?x.who+': ':'')+x.ko; }).join('\n')+
-    '\n\n형식: {"names":{"한국 이름":"カタカナ"}, "lines":[{"k":번호,"ja":"일본어 대사"}]} — 모든 줄을 빠짐없이.', 6000, {json:true, temperature:0.3}).then(function(r){ btn.disabled=false;
+    '\n\n형식: {"names":{"한국 이름":"カタカナ"}, "lines":[{"k":번호,"ja":"일본어 대사"}]} — 모든 줄을 빠짐없이.', 6000, {json:true, temperature:0.3}).then(function(r){ if(btn) btn.disabled=false;
     if(aiIsErr(r)) return stat(r); var j=null; try{ var m=String(r).match(/\{[\s\S]*\}/); j=JSON.parse(m?m[0]:r); }catch(e){}
     if(!j||!j.lines) return stat('번역을 읽지 못했다. 다시 누른다');
     B.jaNames=Object.assign(B.jaNames||{}, j.names||{}); var got=0;
     j.lines.forEach(function(q){ var x=items[+q.k]; if(!x||!q.ja) return; var c=B.cuts[x.n-1]; if(x.i<0) c.narJa=String(q.ja); else { c.ja=c.ja||[]; c.ja[x.i]=String(q.ja); } got++; });
-    save(); renderS8(); stat('일본어 대사 '+got+'/'+items.length+'줄'); }); }
+    save(); renderS8(); stat('일본어 대사 '+got+'/'+items.length+'줄'); if(cb) cb(); }); }
+function withJa(fn){ if(!jaMissing()) return fn(); stat('일본어 대사를 먼저 만드는 중…'); jaTranslate(null, function(){ if(jaMissing()) stat('일본어로 못 옮긴 대사 '+jaMissing()+'줄은 요청문에서 빠진다 — 「🇯🇵 대사 일본어로 옮기기」를 다시 누른다'); fn(); }); }
 function subBox(){ var tot=0, done=0; B.cuts.forEach(function(c){ var n=String(c.line||'').split('\n').filter(Boolean).length; tot+=n+(c.nar?1:0); done+=(c.ja||[]).filter(Boolean).length+(c.nar&&c.narJa?1:0); });
   return '<div class="sub-box"><b>🗣 대사·자막</b> <span class="small">그록 음성은 일본어 · 일본어 '+done+'/'+tot+'줄</span><div class="sv-act"><button class="chip'+(done<tot?' ct-go':'')+'" type="button" data-sub="tr">🇯🇵 대사 일본어로 옮기기 (AI)</button><button class="chip" type="button" data-sub="ja">🇯🇵 일본어 대사 모음 복사</button><button class="chip" type="button" data-sub="ko">🇰🇷 한글 대사 모음 복사</button><button class="chip" type="button" data-sub="srtja">일본어 자막 .srt</button><button class="chip" type="button" data-sub="srtko">한글 자막 .srt</button></div>'+
-    (done<tot?'<p class="small">아직 옮기지 않은 줄은 그록에게 「한국어를 일본어로 옮겨 말해 달라」고 보낸다. 미리 옮겨 두면 자막과 음성이 맞는다.</p>':'')+'</div>'; }
+    (done<tot?'<p class="small">그록 요청문에는 <b>일본어 대사만</b> 들어간다. 아직 옮기지 않은 대사가 있으면 「Grok으로」·「요청문 복사」를 누를 때 먼저 AI로 옮긴다.</p>':'')+'</div>'; }
 function subLines(lang){ var C=animClips(), out=[]; C.forEach(function(cl,ci){ var t=0; cl.cuts.forEach(function(o){ var c=o.c, a=t, b2=t+o.sec; t=b2;
     String(c.line||'').split('\n').filter(Boolean).forEach(function(l,j){ var p=lnParse(l), tx=lang==='ja'?((c.ja||[])[j]||''):p.say; if(!tx) return; out.push({clip:ci+1, a:a, b:b2, who:lang==='ja'?jaName(p.who||''):(p.who||''), tx:tx.replace(/^\((.*)\)$/,'$1')}); });
     if(c.nar){ var nt=lang==='ja'?(c.narJa||''):c.nar; if(nt) out.push({clip:ci+1, a:a, b:b2, who:'', tx:nt, nar:1}); } }); });
@@ -15025,8 +15027,9 @@ document.addEventListener('click', function(e){ var t=e.target; if(!B) return;
   var a=t.closest&&t.closest('[data-an]'); if(!a) return; var C=animClips(), k=a.dataset.an;
   var all=function(){ return C.map(function(cl,i){ return clipPrompt(cl,i+1,C.length); }).join('\n\n------\n\n'); };
   if(k==='copy'){ ctCopy(all()); return; }
-  if(k==='one'){ ctCopy(clipPrompt(C[+a.dataset.i],+a.dataset.i+1,C.length)); return; }
-  if(k==='grok'){ sendGrok(C[+a.dataset.i], +a.dataset.i+1, C.length); return; }
+  if(k==='one'){ withJa(function(){ var C2=animClips(); ctCopy(clipPrompt(C2[+a.dataset.i],+a.dataset.i+1,C2.length)); }); return; }
+  if(k==='grok'){ withJa(function(){ var C2=animClips(); sendGrok(C2[+a.dataset.i], +a.dataset.i+1, C2.length); }); return; }
+  if(k==='list' && jaMissing() && !a.dataset.jaok){ withJa(function(){ a.dataset.jaok='1'; var nb=document.querySelector('[data-an="list"]'); if(nb){ nb.dataset.jaok='1'; nb.click(); } }); return; }
   if(k==='list'){ var bx=a.closest('.sv-all').querySelector('.gq-list'); if(!bx){ bx=document.createElement('div'); bx.className='gq-list'; a.closest('.sv-act').after(bx); } else bx.hidden=!bx.hidden; if(bx.hidden) return; var L0=C.map(function(cl,i){ return ['클립 '+(i+1)+' ('+cl.cuts.map(function(o){ return o.c.n; }).join(', ')+'번 컷)', clipPrompt(cl,i+1,C.length)]; }); bx.__L=L0;
     bx.innerHTML=L0.map(function(m,i){ return '<div class="pl-item"><div class="pl-h"><b>'+cesc(m[0])+'</b><button type="button" class="chip" data-plc="'+i+'">복사</button></div><pre>'+cesc(m[1])+'</pre></div>'; }).join(''); return; }
   var cuts=k==='all'?B.cuts.filter(function(c){ return c.scr; }):C[+a.dataset.i].cuts.map(function(o){ return o.c; });
