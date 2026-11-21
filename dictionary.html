@@ -1551,6 +1551,7 @@ body.dk-drag, body.dk-drag *{user-select:none!important; -webkit-user-select:non
 .ct-cut.ct-gmark canvas,.ct-cut.ct-gmark .ct-col{outline:3px solid #e53935;outline-offset:-3px}
 .ce-box .ce-prev{position:relative;width:100%;border:1px solid var(--line,#ccc);touch-action:none}.ce-prev img{cursor:grab}
 .ce-ctl{display:grid;gap:.4rem;font-size:.82rem}.ce-ctl fieldset{border:1px solid var(--line,#ddd);border-radius:8px;padding:.4rem .6rem;display:grid;gap:.25rem}.ce-ctl label{display:grid;grid-template-columns:5.5em 1fr;align-items:center;gap:.4rem}.ce-ctl .ce-chk{display:inline-flex;gap:.3rem}
+.gq-l{list-style:none;padding:0;margin:.4rem 0;display:grid;gap:.4rem}.gq-l li{border:1px solid var(--line,#ddd);border-left:3px solid #e53935;border-radius:8px;padding:.35rem .5rem}.gq-l p{margin:.15rem 0}.gq-d{font-size:.8rem;color:var(--ink-2,#333)}.gq-note{width:100%;font:inherit;font-size:.8rem}.gq-ed{border:none;background:none;cursor:pointer}
 .ce-tabs{display:flex;flex-wrap:wrap;gap:.25rem}.ce-red{background:#e53935!important;color:#fff!important;border-color:#e53935!important}.ce-scr{margin:.2rem 0}
 .ct-colb{position:absolute;max-width:42%;background:#fff;border:1.5px solid #222;border-radius:999px;padding:.15rem .5rem;font-size:.68rem;line-height:1.3;color:#111;z-index:2}.ct-colb.th{border-style:dashed}.ct-coln{position:absolute;left:3%;bottom:3%;max-width:70%;background:#fffbe6;border:1px solid #222;padding:.1rem .4rem;font-size:.64rem;color:#111;z-index:2}
 .shc{list-style:none;padding:0;margin:.4rem 0;display:grid;gap:.4rem;font-size:.84rem}.shc>li{border-left:3px solid #2e7d32;padding:.2rem .5rem}.shc>li.warn{border-left-color:#e0a100}.shc ul{margin:.2rem 0 .3rem 1rem;padding:0}.shc-no{color:#b3261e}
@@ -14760,14 +14761,34 @@ function cePaintCtl(){ var c=CE.c, cp=c.comp, rng=function(lab,attr,v,min,max,st
       '<label class="ce-chk"><input type="checkbox" data-pp="flip" data-i="'+CE.sel+'"'+(p.flip?' checked':'')+'> 좌우 뒤집기</label> <button type="button" class="chip" data-ce="del" data-i="'+CE.sel+'">이 인물 빼기</button>'; }
     h+='<div class="filterbar"><select class="ce-addnm"><option value="">인물 추가…</option>'+others.map(function(nm){ return '<option>'+cesc(nm)+'</option>'; }).join('')+'</select><button type="button" class="chip" data-ce="add">추가</button></div>'+(others.length?'':'<p class="small">시트 그림을 딴 인물만 넣을 수 있다 — 2단계에서 시트를 따 둔다.</p>')+'</fieldset>'; }
   h+='<div class="filterbar"><button type="button" class="chip'+(c.gpt?' ce-red':'')+'" data-ce="gpt">'+(c.gpt?'🔴 GPT로 하기 (표시됨)':'GPT로 하기 표시')+'</button><button type="button" class="chip" data-ce="reset">자동 구성으로</button><button type="button" class="chip ct-go" data-ce="close">닫기</button></div>';
+  h+='<p class="small gq-d">구도: '+cesc(compDesc(c).ko)+'</p>';
   CE.m.querySelector('.ce-ctl').innerHTML=h; }
 // 구성 → GPT 요청문
 function posWord(x){ return x<25?'far left':x<42?'left':x<58?'center':x<75?'right':'far right'; }
-function ctCompPrompt(c, k, n){ var cp=compOf(c), base=ctKeyPrompt(c,k,n), L=[];
-  if(bgUrlOf(c)){ var b=cp.bg; L.push('- Background: the '+(b.x<30?'left':b.x>70?'right':'middle')+' part of the attached scene panorama, '+(b.z<=110?'wide view':b.z<=160?'medium crop':'tight crop (close)')+', '+(b.y>60?'looking slightly down':b.y<35?'looking slightly up':'eye level')+'. '+(b.blur?'Background softly blurred (shallow depth of field, '+(b.blur>6?'strong':'light')+').':'Background in focus.')); }
-  cp.ppl.forEach(function(p){ var v=p.src.indexOf('f:')===0?'head-and-shoulders close-up, expression: '+(EMOEN[p.src.slice(2)]||p.src.slice(2)):VIEWEN[p.src]||'full body';
-    L.push('- '+p.nm+': '+v+(p.flip?', mirrored (facing the other way)':'')+', placed '+posWord(p.x)+' (center at '+Math.round(p.x)+'% from left, '+Math.round(p.y)+'% from top), figure height about '+Math.round(p.s)+'% of the panel height'+(p.s>100?' (cropped by the frame)':'')+'.'); });
-  return base+'COMPOSITION (follow this layout; a layout reference image for this panel may be attached):\n'+L.join('\n')+'\n'; }
+var SHOTEN={els:'extreme long shot',ls:'long shot',fs:'full shot',ms:'medium shot',bs:'bust shot',cu:'close-up',ecu:'extreme close-up',two:'two-shot',ots:'over-the-shoulder shot',stand:'full shot',back:'shot from behind'};
+var ANGEN={'':'eye-level camera',high:'high angle (camera looking down)',low:'low angle (camera looking up)',dutch:'dutch angle (tilted frame)'};
+function cropOf(p){ if(p.src.indexOf('f:')===0) return {en:'head and shoulders', ko:'얼굴·어깨'}; var top=p.y-p.s/2, bot=p.y+p.s/2, vis=(Math.min(100,bot)-Math.max(0,top))/p.s;
+  if(bot<=102 && top>=-2) return {en:'whole body visible', ko:'전신'}; if(bot>100){ var f=(100-top)/p.s; return f>.85?{en:'cropped at the knees',ko:'무릎에서 잘림'}:f>.6?{en:'cropped at the waist',ko:'허리에서 잘림'}:f>.4?{en:'cropped at the chest',ko:'가슴에서 잘림'}:{en:'only head and shoulders in frame',ko:'얼굴만'}; }
+  return vis<.7?{en:'partly out of frame at the top',ko:'위가 잘림'}:{en:'mostly visible',ko:'대부분 보임'}; }
+function viewOf(p){ var f=p.src.indexOf('f:')===0, e=p.src.slice(2), F=window.__ppFix||{};
+  return f?{en:'facing the viewer, expression: '+(EMOEN[e]||e), ko:'얼굴 '+((F.EMN||{})[e]||e)}:{en:({b0:'front view',b1:'3/4 view',b2:'side profile',b3:'back to the viewer'})[p.src]+(p.flip?' (mirrored)':''), ko:({b0:'정면',b1:'3/4',b2:'옆모습',b3:'뒷모습'})[p.src]+(p.flip?'(뒤집음)':'')}; }
+function posKo(x){ return x<25?'맨 왼쪽':x<42?'왼쪽':x<58?'가운데':x<75?'오른쪽':'맨 오른쪽'; }
+function compDesc(c){ var cp=compOf(c), z=''; try{ z=cutSize(c); }catch(e){} var ar=z==='wide'?'2:1 wide':z==='tall'?'9:16 tall':z==='half'?'3:4':'4:3';
+  var sh=SHOTEN[c.k]||'medium shot', shk=(SHOTS.filter(function(q){ return q[0]===c.k; })[0]||[])[2]||'미디엄숏', an=ANGEN[c.ang||'']||ANGEN[''], ank=(ANGS.filter(function(q){ return q[0]===(c.ang||''); })[0]||[])[2]||'앵글 보통';
+  var bg=cp.bg, hasBg=!!bgUrlOf(c), lens=bg.z<=110?'wide lens, lots of environment':bg.z<=170?'normal lens':'telephoto feel, background compressed';
+  var ord=cp.ppl.map(function(p,i){ return {p:p,i:i}; }).sort(function(a,b){ return b.p.s-a.p.s; }), depth={}; ord.forEach(function(o,r){ depth[o.i]=ord.length===1?'':r===0?'foreground':r===ord.length-1?'background':'midground'; });
+  var dk={foreground:'앞',midground:'중간',background:'뒤'};
+  var bal=String(c.line||'').split('\n').filter(Boolean).length, free=(function(){ var xs=cp.ppl.map(function(p){ return p.x; }), l=xs.filter(function(x){ return x<50; }).length, r=xs.length-l; return l>r?'top right':r>l?'top left':'top'; })();
+  var rel=''; if(cp.ppl.length===2){ var A=cp.ppl[0], Bp=cp.ppl[1], L=A.x<=Bp.x?A:Bp, R=L===A?Bp:A; rel=L.nm+' on the left, '+R.nm+' on the right'+((L.src==='b2'||L.src==='b1')&&(R.src==='b2'||R.src==='b1')?', facing each other':'')+'.'; }
+  var en=['CAMERA & FRAMING:','- Panel aspect ratio '+ar+'. '+sh+', '+an+', '+lens+'.'];
+  if(hasBg) en.push('- Background: '+(bg.x<30?'left':bg.x>70?'right':'middle')+' part of the scene panorama'+(bg.blur?', softly blurred (shallow depth of field)':', in focus')+'.');
+  cp.ppl.forEach(function(p,i){ var v=viewOf(p), cr=cropOf(p); en.push('- '+p.nm+': '+v.en+', '+posWord(p.x)+' of the frame ('+Math.round(p.x)+'% from left)'+(depth[i]?', '+depth[i]:'')+', '+cr.en+', about '+Math.round(p.s)+'% of panel height.'); });
+  if(rel) en.push('- '+rel); if(bal) en.push('- Leave empty space at the '+free+' for '+bal+' speech bubble'+(bal>1?'s':'')+' (do not draw bubbles).');
+  if(c.cnote) en.push('- Director note: '+c.cnote);
+  var ko=shk+' · '+ank+' · '+({'wide lens, lots of environment':'넓게','normal lens':'보통','telephoto feel, background compressed':'당겨서'})[lens]+(hasBg?' · 배경 '+(bg.x<30?'왼쪽':bg.x>70?'오른쪽':'가운데')+(bg.blur?' 흐림':''):'')+
+    (cp.ppl.length?' | '+cp.ppl.map(function(p,i){ return p.nm+'('+viewOf(p).ko+', '+posKo(p.x)+', '+cropOf(p).ko+(depth[i]?', '+dk[depth[i]]:'')+')'; }).join(' · '):'')+(bal?' | 말풍선 자리 '+({'top right':'오른쪽 위','top left':'왼쪽 위','top':'위'})[free]:'');
+  return {en:en.join('\n'), ko:ko}; }
+function ctCompPrompt(c, k, n){ return ctKeyPrompt(c,k,n)+compDesc(c).en+'\n(A layout reference image for this panel may be attached — follow its placement.)\n'; }
 function gptQ(){ return (B&&B.cuts||[]).filter(function(c){ return c.gpt; }); }
 function gptQText(){ var Q=gptQ(); if(!Q.length) return ''; var seen={}, nm=[]; Q.forEach(function(c){ compOf(c).ppl.forEach(function(p){ if(!seen[p.nm]){ seen[p.nm]=1; nm.push(p.nm); } }); });
   var att=sheetRefs(nm).concat(Object.keys(B.sceneBg||{}).filter(function(k){ return B.sceneBg[k].art; }).length?['scene background panoramas']:[]);
@@ -14801,7 +14822,9 @@ function sendGpt(text, list, note){ ctCopy(text);
       stat((list.length?'참고 그림 '+list.length+'장을 한 장으로 저장했다 — ChatGPT에 첨부하고 ':'')+'요청문을 붙여 넣는다 (복사됨)'); window.open('https://chatgpt.com/'+(text.length<1800?'?q='+encodeURIComponent(text):''),'_blank','noopener'); });
   }).catch(function(){ stat('그림을 준비하지 못했다. 요청문은 복사돼 있다'); }); }
 function renderGptQ(){ var box=document.getElementById('ct-gptq'); if(!box) return; var Q=gptQ();
-  box.innerHTML='<div class="sv-all ce-q"><b>🔴 GPT로 하기 '+Q.length+'컷</b> <span class="small">컷 그림의 「GPT로 하기」로 표시한다</span>'+(Q.length?'<p class="small">'+Q.map(function(c){ return c.n+'번'; }).join(', ')+'</p><div class="sv-act"><button class="chip ct-go" type="button" data-gq="send">📤 시트·배경 그림과 같이 GPT로 보내기</button><button class="chip" type="button" data-gq="go">요청문만 GPT로</button><button class="chip" type="button" data-gq="copy">요청문 복사</button><button class="chip" type="button" data-gq="png">구성 그림 저장 (첨부용)</button><button class="chip" type="button" data-gq="show">모아 보기</button><button class="chip" type="button" data-gq="clear">표시 모두 지우기</button></div><pre class="sv-pr" hidden></pre><p class="small">폰에서는 공유 창에서 <b>ChatGPT</b>를 고르면 시트·배경·구성 그림과 요청문이 같이 붙는다. 컴퓨터에서는 참고 그림 한 장이 저장되니 ChatGPT에 첨부한다. 한 컷을 그리면 「다음」. 받은 그림은 7단계에서 컷마다 올린다.</p>':'')+'</div>'; }
+  box.innerHTML='<div class="sv-all ce-q"><b>🔴 GPT로 하기 '+Q.length+'컷</b> <span class="small">컷 그림의 「GPT로 하기」로 표시한다</span>'+(Q.length?'<ul class="gq-l">'+Q.map(function(c){ return '<li><b>'+c.n+'번</b> <button type="button" class="gq-ed" data-gqe="'+c.n+'">🎛</button><p class="small">'+cesc(c.scr||'')+'</p><p class="gq-d">'+cesc(compDesc(c).ko)+'</p><input type="text" class="gq-note" data-gqn="'+c.n+'" placeholder="연출 메모 (예: 눈을 내리깐다, 손에 쥔 편지를 강조)" value="'+cesc(c.cnote||'')+'"></li>'; }).join('')+'</ul><div class="sv-act"><button class="chip ct-go" type="button" data-gq="send">📤 시트·배경 그림과 같이 GPT로 보내기</button><button class="chip" type="button" data-gq="go">요청문만 GPT로</button><button class="chip" type="button" data-gq="copy">요청문 복사</button><button class="chip" type="button" data-gq="png">구성 그림 저장 (첨부용)</button><button class="chip" type="button" data-gq="show">모아 보기</button><button class="chip" type="button" data-gq="clear">표시 모두 지우기</button></div><pre class="sv-pr" hidden></pre><p class="small">폰에서는 공유 창에서 <b>ChatGPT</b>를 고르면 시트·배경·구성 그림과 요청문이 같이 붙는다. 컴퓨터에서는 참고 그림 한 장이 저장되니 ChatGPT에 첨부한다. 한 컷을 그리면 「다음」. 받은 그림은 7단계에서 컷마다 올린다.</p>':'')+'</div>'; }
+document.addEventListener('input', function(e){ var t=e.target; if(t.dataset && t.dataset.gqn && B){ var c=B.cuts[+t.dataset.gqn-1]; if(c){ c.cnote=t.value.slice(0,200); save(); } } });
+document.addEventListener('click', function(e){ var g=e.target.closest&&e.target.closest('[data-gqe]'); if(g&&B){ ceOpen(+g.dataset.gqe); } });
 document.addEventListener('click', function(e){ var b=e.target.closest&&e.target.closest('[data-gq]'); if(!b||!B) return; var k=b.dataset.gq;
   if(k==='clear'){ B.cuts.forEach(function(c){ c.gpt=0; }); save(); renderBoard(); renderGptQ(); return; }
   if(k==='png'){ saveQPng(); return; }

@@ -358,3 +358,4 @@ arcForm, deviceId, folderMemo, gdBase, gdLast, gdLinked, ideaText, mangaDataVer,
 - 2026-11-21 6단계 컷 구성(.ct-col + 🎛 구성 창): c.comp={bg:{x,y,z,blur}, ppl:[{nm,src:b0~b3|f:감정,x,y,s,flip}]}(없으면 compAuto), 인물 끌어 옮기기·그림 바꾸기·크기·반전·추가·빼기, '이 컷은 3D로 구성'(c.use3d) 체크 때만 3D. 'GPT로 하기'(c.gpt, 빨간 테두리) → #ct-gptq에서 표시한 컷만 구성 기반 요청문(COMPOSITION 줄) 차례대로·복사·모아 보기, '구성 그림 저장'(표시 컷 배치 PNG 한 장, 첨부용)
 - 시트 요청문 표정 줄을 상반신(허리 위, 양 어깨·팔 안 잘리게)으로 — 캐릭터 시트와 🎭 표정 시트 둘 다
 - 2026-11-21 '📤 시트·배경 그림과 같이 GPT로 보내기'(6단계 GPT로 하기 칸·7단계 주요 컷): 컷에 나오는 인물 시트·장면 배경·라인업(+6단계는 컷별 구성 그림)을 모아, 폰은 navigator.share(files+text)로 공유 창(ChatGPT 앱 선택), 안 되면 이름 붙인 참고 그림 한 장(gpt-참고그림.png) 저장 + 요청문 복사 + ChatGPT 열기
+- 2026-11-21 GPT로 하기 요청문에 CAMERA & FRAMING(비율·샷·앵글·렌즈 느낌·배경 부분/흐림·인물별 방향/위치/앞뒤/잘리는 곳/크기·두 인물 관계·말풍선 빈자리·연출 메모 c.cnote). 6단계 목록에 컷마다 한국어 배치·구도 요약 + 연출 메모 칸 + 🎛, 구성 창에도 구도 요약
