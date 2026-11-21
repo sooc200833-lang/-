@@ -1541,7 +1541,8 @@ body.dk-drag, body.dk-drag *{user-select:none!important; -webkit-user-select:non
 .pp-cprev{width:100%;border:2px solid #1c1716;overflow:hidden;margin:10px 0;background:#fff}
 .pp-cprev canvas{width:100%!important;height:100%!important;object-fit:cover;border:0}
 .ct-cut{position:relative}
-.ct-col{position:absolute;z-index:1;overflow:hidden;pointer-events:none;background:#fff center/cover no-repeat;border-radius:2px}
+.ct-col{position:absolute;z-index:1;overflow:hidden;pointer-events:none;background-color:#fff;background-repeat:no-repeat;border-radius:2px}
+.ct-colpan{position:absolute;bottom:4px;right:4px;z-index:3;display:flex;gap:2px;pointer-events:auto}.ct-colpan button{font-size:.7rem;border:none;border-radius:6px;background:rgba(0,0,0,.6);color:#fff;padding:.1rem .4rem;cursor:pointer}
 .ct-col img{position:absolute;transform:translateX(-50%);width:auto;max-width:none;filter:drop-shadow(0 1px 1px rgba(0,0,0,.25))}
 .ct-colb{position:absolute;max-width:42%;background:#fff;border:1.5px solid #222;border-radius:999px;padding:.15rem .5rem;font-size:.68rem;line-height:1.3;color:#111;z-index:2}.ct-colb.th{border-style:dashed}.ct-coln{position:absolute;left:3%;bottom:3%;max-width:70%;background:#fffbe6;border:1px solid #222;padding:.1rem .4rem;font-size:.64rem;color:#111;z-index:2}
 .shc{list-style:none;padding:0;margin:.4rem 0;display:grid;gap:.4rem;font-size:.84rem}.shc>li{border-left:3px solid #2e7d32;padding:.2rem .5rem}.shc>li.warn{border-left-color:#e0a100}.shc ul{margin:.2rem 0 .3rem 1rem;padding:0}.shc-no{color:#b3261e}
@@ -2821,7 +2822,7 @@ button.pl-card[disabled]{cursor:default}
 
   <div class="ct-step" data-st="5">
   <h3>5. 장면·배경</h3>
-  <p class="small">장면마다 장소와 <b>배경 설정</b>을 정한다. 배경은 그림 프롬프트에 들어가고, GPT로 배경 그림을 먼저 받아 두면 컷 그릴 때 같이 첨부해 같은 배경을 유지한다.</p>
+  <p class="small">장면마다 장소와 <b>배경 설정</b>을 정한다. GPT 배경은 <b>3:1 파노라마</b>로 그려서, 컷마다 다른 부분을 잘라 쓴다(롱숏은 넓게, 클로즈업은 확대). 컷 그림판에서 ◀ ▶로 컷마다 보이는 곳을 옮긴다.</p>
   <div class="filterbar"><button class="chip ct-go" id="ct-bgai" type="button">🧠 AI로 장면 배경 짜기</button><button class="chip" id="ct-bggpt" type="button">🖌 GPT로 배경 한번에</button></div>
   <div id="ct-s5"></div>
   </div>
@@ -14679,7 +14680,9 @@ function cutAssets(c){ var x=null; try{ x=sceneOfCut(c.n); }catch(e){} var g=x&&
   return {bg:bg, people:people}; }
 function collage(c){ if(c.art) return null; var a=cutAssets(c); if(!a.bg && !a.people.length) return null;
   var d=document.createElement('div'); d.className='ct-col k-'+(c.k||'ms'); d.setAttribute('aria-hidden','true');
-  if(a.bg) d.style.backgroundImage='url("'+a.bg+'")';
+  if(a.bg){ d.style.backgroundImage='url("'+a.bg+'")'; var k0=c.k||'ms', Z={ls:100,fs:118,stand:118,two:130,ms:145,ots:150,bs:175,cu:215,ecu:260}[k0]||140;
+    var sx=(c.bgx!=null)?+c.bgx:(function(){ var x=null; try{ x=sceneOfCut(c.n); }catch(e){} var i=x?c.n-x.a:c.n, L=x?x.b-x.a+1:8; return L>1?Math.round(10+80*((i*37)%L)/(L-1)):50; })();
+    var sy=c.ang==='high'?70:c.ang==='low'?25:45; d.style.backgroundSize='auto '+Z+'%'; d.style.backgroundPosition=sx+'% '+sy+'%'; d.dataset.bgx=sx; }
   var n=a.people.length, X=n===1?[.5]:n===2?[.3,.7]:[.2,.5,.8];
   a.people.forEach(function(p,i){ var im=document.createElement('img'); im.src=p.u; im.alt=''; var k=c.k||'ms';
     var H=p.isFace?(k==='cu'||k==='ecu'?115:k==='bs'?85:55):(k==='ls'?42:k==='fs'||k==='stand'?82:k==='ms'||k==='two'?150:k==='bs'?210:95);
@@ -14690,7 +14693,10 @@ function collage(c){ if(c.art) return null; var a=cutAssets(c); if(!a.bg && !a.p
   String(c.line||'').split('\n').map(function(l){ return l.trim(); }).filter(Boolean).slice(0,3).forEach(function(l,i){ var p=lnParse(l), b=document.createElement('span'); b.className='ct-colb'+(p.kind==='think'||/^\(/.test(p.say)?' th':''); b.textContent=p.say.replace(/^\((.*)\)$/,'$1');
     var sp=p.who, ix=sp?a.people.map(function(q){ return q.nm; }).indexOf(sp):-1; b.style.left=Math.max(3,Math.min(60,(ix>-1?(n===1?.5:n===2?[.3,.7][ix]:[.2,.5,.8][ix]):[.08,.55,.2][i])*100-18))+'%'; b.style.top=(4+i*17)+'%'; d.appendChild(b); });
   if(c.nar){ var nb=document.createElement('span'); nb.className='ct-coln'; nb.textContent=c.nar; d.appendChild(nb); }
+  if(a.bg){ var pn=document.createElement('span'); pn.className='ct-colpan'; pn.innerHTML='<button type="button" data-bgx="-12" aria-label="'+c.n+'번 컷 배경 왼쪽으로">◀ 배경</button><button type="button" data-bgx="12" aria-label="'+c.n+'번 컷 배경 오른쪽으로">▶</button>'; d.appendChild(pn); }
   return d; }
+document.addEventListener('click', function(e){ var b=e.target.closest&&e.target.closest('.ct-col [data-bgx]'); if(!b||!B) return; e.stopPropagation(); e.preventDefault(); var f=b.closest('.ct-cut'), c=f&&B.cuts[+f.dataset.n-1]; if(!c) return; var d=b.closest('.ct-col');
+  c.bgx=Math.max(0,Math.min(100,(+d.dataset.bgx||50)+(+b.dataset.bgx))); d.dataset.bgx=c.bgx; d.style.backgroundPosition=c.bgx+'% '+(d.style.backgroundPosition.split(' ')[1]||'45%'); save(); }, true);
 function placeCol(f){ var d=f.querySelector('.ct-col'), cv=f.querySelector('canvas'); if(!d||!cv) return; d.style.top=cv.offsetTop+'px'; d.style.left=cv.offsetLeft+'px'; d.style.width=cv.offsetWidth+'px'; d.style.height=cv.offsetHeight+'px'; }
 function colOn(){ try{ return localStorage.getItem('ctCol')!=='0'; }catch(e){ return true; } }
 function cutFill(f,c){
@@ -15201,7 +15207,9 @@ function renderS4(){ var box=document.getElementById('ct-s4sum'); if(!box) retur
 var BGSYS='너는 웹툰 배경 미술 감독이다. 장면마다 배경 설정을 정한다. 같은 장소면 같은 설정을 쓴다. JSON만 답한다.';
 function bgOf(x){ return (B&&B.sceneBg&&B.sceneBg[x.a])||null; }
 function bgPrompt(x, i, n){ var g=bgOf(x)||{};
-  return (n>1?'=== BACKGROUND '+(i+1)+': '+dispNm(x.name||'')+' ===\n':'')+'Draw ONE image: a background art for a Korean webtoon scene. NO characters, NO people, NO text. Wide establishing view, clean line art, full color, consistent perspective so it can be reused across panels.\n'+
+  return (n>1?'=== BACKGROUND '+(i+1)+': '+dispNm(x.name||'')+' ===\n':'')+'Draw ONE image: a wide PANORAMA background for a Korean webtoon scene, aspect ratio 3:1 (very wide), one continuous 180-degree view of the whole place from eye level.\n'+
+    'It will be cropped into many panels (wide shots and close-ups), so: keep the horizon at about 45% height across the whole width, straight vertical lines, even detail everywhere, and spread distinct areas from left to right (e.g. entrance, main area, window/view, corner details) so each crop looks different.\n'+
+    'NO characters, NO people, NO text. Clean line art, full color, consistent lighting.\n'+
     'Location: '+(g.place||x.place||'')+'\nDetails: '+(g.en||g.ko||'')+'\nTime & lighting: '+(g.light||''); }
 function renderBg(){ var box=document.getElementById('ct-s5'); if(!box) return;
   if(!B||!B.cuts||!B.cuts.length){ box.innerHTML='<p class="small">4단계에서 콘티를 먼저 만든다.</p>'; return; }
