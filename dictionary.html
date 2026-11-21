@@ -1308,6 +1308,21 @@ body.dk-drag, body.dk-drag *{user-select:none!important; -webkit-user-select:non
 .ct-main{align-items:center}
 .ct-main .ct-go{font-weight:700; border-color:var(--ink); background:var(--ink); color:var(--paper)}
 .ct-main .ct-go:disabled{opacity:.6}
+
+#conti .ct-adv{margin:.3rem 0 .6rem} #conti .ct-adv>summary{cursor:pointer;color:var(--ink-3)}
+#conti #ct-plan{display:none}
+#conti.v-s #ct-board,#conti.v-s .ct-gptbar{display:none}
+#conti.v-b #ct-sv{display:none}
+.ct-vwbar{margin:.4rem 0}
+.sv-sc{border:1px solid var(--line,#ddd);border-radius:12px;padding:.7rem .8rem;margin:.6rem 0;background:var(--paper,#fff)}
+.sv-sc h4{margin:0 0 .15rem;font-size:1rem}
+.sv-sc .sv-m{font-size:.78rem;color:var(--ink-3);margin:0 0 .4rem}
+.sv-cuts{list-style:none;margin:.3rem 0;padding:0;display:grid;gap:.3rem}
+.sv-cuts li{display:grid;grid-template-columns:2.2em 1fr auto;gap:.4rem;font-size:.84rem;line-height:1.45;align-items:start}
+.sv-cuts b{color:var(--ink-3)} .sv-cuts .sv-l{display:block;color:var(--ink-3);font-size:.78rem}
+.sv-cuts button{font:inherit;font-size:.74rem;border:1px solid var(--line,#ddd);background:none;border-radius:8px;padding:.1rem .4rem;cursor:pointer}
+.sv-act{display:flex;flex-wrap:wrap;gap:.4rem;margin-top:.4rem}
+.sv-pr{margin:.4rem 0 0;font-size:.74rem;white-space:pre-wrap;max-height:11em;overflow:auto;background:var(--soft,#f6f6f6);border-radius:8px;padding:.5rem}
 .ct-more{margin:.3rem 0 .4rem}
 .ct-more>summary,.ct-help>summary{cursor:pointer; color:var(--ink-3)}
 .ct-scm{position:relative; display:inline-block}
@@ -2718,13 +2733,15 @@ button.pl-card[disabled]{cursor:default}
   <label class="small ct-lab" for="ct-story">줄거리·웹소설·컷별 콘티 무엇이든 된다. 글쓰기 결과가 있으면 빈 칸일 때만 들어온다.</label>
   <textarea id="ct-story" rows="9" placeholder="예) 서윤은 졸업식 날 옥상에서 도현에게 고백하려 한다. 그런데 도현이 먼저 전학 소식을 꺼낸다…"></textarea>
   <div class="filterbar" id="ct-storybar" hidden></div>
+  <details class="ct-adv"><summary class="small">옵션 — 함께 볼 글·분량</summary>
   <h4 class="ct-reft">글 보관함에서 함께 볼 글</h4>
   <p class="small">줄거리·웹소설·컷별 콘티를 고르면 함께 검토해 장면을 나눈다(하나만 골라도 된다).</p>
   <div class="ct-refs" id="ct-refs"></div>
   <div class="filterbar"><label class="small">분량 <select id="ct-total"></select></label><span class="count" id="ct-srcinfo"></span></div>
+  </details>
   <div id="ct-plan"></div>
   <h3>2. 등장인물</h3>
-  <p class="small"><a href="#cast">등장인물</a> 페이지의 인물은 이야기에 이름이 나오면 저절로 들어오고, 그 생김새대로 그린다.</p>
+  <p class="small">인물은 이야기에 이름이 나오면 저절로 들어온다.</p>
   <details class="ct-help"><summary class="small">자세히</summary><p class="small">인물을 적어 두면 콘티 그림에 <b>이름표</b>와 <b>생김새</b>(머리·안경·모자·흉터·체격)가 붙는다. 이야기에 적힌 특징만 넣고, 적혀 있지 않은 건 미정으로 둔다. 컷마다 누가 나오는지는 AI가 쓴 글의 이름을 보고 정한다. 직접 바꾸려면 컷을 눌러 「인물」 칸에 이름을 적는다.</p></details>
   <div class="filterbar"><button class="chip" id="ct-fromcast" type="button">등장인물에서 가져오기</button><button class="chip" id="ct-findch" type="button">이야기에서 인물 찾기</button><button class="chip" id="ct-addch" type="button">인물 추가</button></div>
   <div id="ct-chars"></div>
@@ -2737,6 +2754,8 @@ button.pl-card[disabled]{cursor:default}
   </details>
   <div class="filterbar ct-gptbar"><button class="chip" id="ct-gptall" type="button">🖌 GPT로 전체 콘티 그리기</button><button class="chip" id="ct-faces" type="button">🎭 표정 시트</button><span class="small">컷을 눌러 편집기에서 「GPT로 이 컷 그리기」·「그림 올리기」</span></div>
   <p class="small" id="ct-stat" role="status"></p>
+  <div class="filterbar ct-vwbar"><button class="chip on" id="ct-vw-s" type="button">장면별 보기</button><button class="chip" id="ct-vw-b" type="button">컷 그림판</button></div>
+  <div id="ct-sv"></div>
   <div id="ct-board"></div>
 </section>
 
@@ -14555,13 +14574,14 @@ function renderBoard(){
   var done=B.cuts.filter(function(c){ return c.scr; }).length;
   if(!document.getElementById('ct-stat').textContent) stat(done?done+'/'+B.cuts.length+'컷 작성됨':'');
   try{ npActs(); }catch(e){}
+  try{ renderScenes(); }catch(e){}
 }
 function refreshCut(n){
   var f=root.querySelector('.ct-cut[data-n="'+n+'"]'), c=B.cuts[n-1]; if(!f||!c) return;
   var old=f.querySelector('canvas'); if(ro&&old) ro.unobserve(old);
-  f.innerHTML=''; f.className=cutCls(c); cutFill(f,c);
+  f.innerHTML=''; f.className=cutCls(c); cutFill(f,c); try{ renderScenes(); }catch(e){}
 }
-function renderAll(){ renderPlan(); renderChars(); renderBoard(); }
+function renderAll(){ renderPlan(); renderChars(); renderBoard(); try{ renderScenes(); }catch(e){} }
 
 /* ---------- 컷 고치기 ---------- */
 var WP_FACE=[['','구도대로'],['front','정면'],['left45','왼쪽 45도'],['right45','오른쪽 45도'],['left','왼쪽'],['right','오른쪽'],['back','뒤']];
@@ -14620,7 +14640,7 @@ function ctLook(nm){ var pr=null; try{ pr=(JSON.parse(localStorage.getItem('ppPr
   var m=window.__castFind?window.__castFind(nm):null; if(m) return [m.look&&typeof m.look==='string'?m.look:'', m.desc, m.memo].filter(Boolean).join(', ').slice(0,200);
   var ch=null; (B&&B.chars||[]).forEach(function(x){ if(x.name===nm) ch=x; }); if(ch){ var l=ch.look||{}; return [l.hair&&(l.hair+' hair'), l.dark&&'dark hair', l.glasses&&'glasses', l.hat&&'hat', l.scar&&'scar', l.build&&(l.build+' build'), ch.note].filter(Boolean).join(', '); } return ''; }
 function ctGptPrompt(cuts){
-  var one=function(c){ var who=(c.who&&c.who.length?c.who:(typeof whoOf==='function'?[]:[])).filter(Boolean).slice(0,3), sh=SHOTS.filter(function(s){ return s[0]===c.k; })[0], an=ANGS.filter(function(a){ return a[0]===(c.ang||''); })[0];
+  var one=function(c){ var who=(c.who&&c.who.length?c.who:(function(){ try{ return whoOf(c).map(function(w){ return w.name; }); }catch(e){ return []; } })()).filter(Boolean).slice(0,3), sh=SHOTS.filter(function(s){ return s[0]===c.k; })[0], an=ANGS.filter(function(a){ return a[0]===(c.ang||''); })[0];
     var wp=c.wp||{}, ratio=c.sz==='wide'?'2:1 wide':c.sz==='tall'?'9:16 tall':c.sz==='half'?'3:4':'4:3';
     return 'Aspect ratio '+ratio+'.\nShot: '+(sh?sh[1]+' ('+sh[2]+')':'medium shot')+(an&&an[0]?', angle '+an[2]:'')+(c.focus?', speed/focus lines':'')+(c.flash?', flashback border look':'')+'.\n'+
       'What we see: '+(c.scr||'')+'\n'+(c.line?'Mood from dialogue (do NOT draw text): '+String(c.line).replace(/\n/g,' / ')+'\n':'')+
@@ -14629,6 +14649,40 @@ function ctGptPrompt(cuts){
   if(cuts.length===1) return 'Draw ONE webtoon panel image. '+head+one(cuts[0]);
   return 'Draw these '+cuts.length+' webtoon panels ONE BY ONE as separate images, in order. Before each image write only the panel number. Keep every character design identical.\n'+head+cuts.map(function(c){ return '=== PANEL '+c.n+' ===\n'+one(c); }).join('\n\n');
 }
+
+// 장면별 보기 + 장면마다 GPT 컷 프롬프트 (2026-11-21)
+var CTV=(function(){ try{ return localStorage.getItem('ctView')||'s'; }catch(e){ return 's'; } })();
+function ctView(v){ if(v) { CTV=v; try{ localStorage.setItem('ctView',v); }catch(e){} }
+  var sec=document.getElementById('conti'); if(!sec) return; sec.classList.toggle('v-s',CTV==='s'); sec.classList.toggle('v-b',CTV==='b');
+  var a=document.getElementById('ct-vw-s'), b=document.getElementById('ct-vw-b'); if(a) a.classList.toggle('on',CTV==='s'); if(b) b.classList.toggle('on',CTV==='b'); }
+function ctScenePrompt(x){
+  var cuts=[]; for(var n=x.a;n<=x.b;n++){ var c=B.cuts[n-1]; if(c && (c.scr||c.hint)) cuts.push(Object.assign({}, c, {scr:c.scr||c.hint})); }
+  if(!cuts.length) return '';
+  var seen={}, names=[]; cuts.forEach(function(c){ (c.who&&c.who.length?c.who:(function(){ try{ return whoOf(c).map(function(w){ return w.name; }); }catch(e){ return []; } })()).forEach(function(nm){ if(nm && !seen[nm]){ seen[nm]=1; names.push(nm); } }); });
+  var h='SCENE: '+dispNm(x.name||'')+(x.desc||x.sum?' — '+(x.desc||x.sum):'')+'\n'+(x.place?'Location: '+x.place+' (keep the same background design in every panel)\n':'')+
+    (names.length?'Characters in this scene (identical design in every panel):\n'+names.map(function(nm){ return '- '+nm+': '+(ctLook(nm)||''); }).join('\n')+'\n':'')+'\n';
+  return h+ctGptPrompt(cuts);
+}
+function renderScenes(){
+  var box=document.getElementById('ct-sv'); if(!box) return; ctView();
+  if(!B || !B.cuts || !B.cuts.length){ box.innerHTML='<p class="small">이야기를 적고 「AI로 콘티 쓰기」를 누르면 장면별로 여기에 나온다.</p>'; return; }
+  var L=sceneList(); if(!L.length) L=[{a:1,b:B.cuts.length,name:'전체'}];
+  box.innerHTML=L.map(function(x,i){ var who=''; try{ who=sceneWho(x); }catch(e){}
+    var rows=''; for(var n=x.a;n<=x.b;n++){ var c=B.cuts[n-1]; if(!c) continue;
+      rows+='<li><b>'+n+'</b><span>'+cesc(shotName(c.k))+' · '+(c.scr?cesc(c.scr):'<i>화면 미정</i>')+(c.line?'<span class="sv-l">'+cesc(c.line).replace(/\n/g,' / ')+'</span>':'')+'</span><button type="button" data-ed="'+n+'" aria-label="'+n+'번 컷 고치기">✎</button></li>'; }
+    return '<div class="sv-sc" data-i="'+i+'"><h4>'+(i+1)+'. '+cesc(dispNm(x.name||'장면'))+' <span class="small">'+x.a+'–'+x.b+'컷</span></h4>'+
+      '<p class="sv-m">'+[who,x.place].filter(Boolean).map(cesc).join(' · ')+(x.desc||x.sum?(who||x.place?' — ':'')+cesc(x.desc||x.sum):'')+'</p><ul class="sv-cuts">'+rows+'</ul>'+
+      '<div class="sv-act"><button class="chip" type="button" data-sp="copy">🖌 이 장면 GPT 프롬프트 복사</button><button class="chip" type="button" data-sp="gpt">ChatGPT 열기</button><button class="chip" type="button" data-sp="show">프롬프트 보기</button></div><pre class="sv-pr" hidden></pre></div>'; }).join('');
+}
+document.addEventListener('click', function(e){ var t=e.target; if(!t.closest) return;
+  if(t.id==='ct-vw-s'||t.id==='ct-vw-b'){ ctView(t.id==='ct-vw-s'?'s':'b'); if(CTV==='b') try{ renderBoard(); }catch(er){} return; }
+  var ed=t.closest('[data-ed]'); if(ed && ed.closest('#ct-sv')){ var n=+ed.dataset.ed; ctView('b'); try{ renderBoard(); }catch(er){}
+    setTimeout(function(){ var f=root.querySelector('.ct-cut[data-n="'+n+'"]'); if(f){ if(!f.querySelector('.ct-ed')) openEdit(f); try{ f.scrollIntoView({block:'center'}); }catch(er){} } },60); return; }
+  var sp=t.closest('[data-sp]'); if(sp && sp.closest('#ct-sv') && B){ var card=sp.closest('.sv-sc'), x=sceneList()[+card.dataset.i], q=x?ctScenePrompt(x):'';
+    if(!q) return stat('이 장면은 화면이 아직 없어서 프롬프트를 못 만든다');
+    if(sp.dataset.sp==='show'){ var pr=card.querySelector('.sv-pr'); pr.textContent=q; pr.hidden=!pr.hidden; return; }
+    ctCopy(q); if(sp.dataset.sp==='gpt') setTimeout(function(){ window.open('https://chatgpt.com/?q='+encodeURIComponent(q.slice(0,1800)),'_blank','noopener'); },200); }
+});
 document.addEventListener('pp-art-ready', function(){ if(B) try{ renderBoard(); }catch(e){} });
 function ctCopy(t){ (navigator.clipboard&&navigator.clipboard.writeText?navigator.clipboard.writeText(t):Promise.reject()).then(function(){ stat('그림 요청문을 복사했다 — ChatGPT에 붙여 넣고, 받은 그림은 컷 편집기 「그림 올리기」'); }, function(){ stat('복사하지 못했다'); }); }
 document.addEventListener('click', function(e){ var t=e.target;

@@ -327,3 +327,4 @@ arcForm, deviceId, folderMemo, gdBase, gdLast, gdLinked, ideaText, mangaDataVer,
 - 콘티 구성기: 판 위 「🖌 GPT로 전체 콘티 그리기」(`ct-gptall`, 화면 글 있는 컷 30개까지)·「🎭 표정 시트」, 컷 편집기 줄 `.ct-gpt`(GPT로 이 컷 그리기·요청문만·그림 올리기/빼기). `ctGptPrompt`, 인물 생김새 `ctLook`(ppProf → 등장인물 → B.chars.look). 그림 id는 컷의 `c.art`, 이미지는 `__ppArt`(IndexedDB pp.art), `cutFill`이 canvas 위에 `.ct-artimg`로 얹는다. `pp-art-ready` 이벤트로 다시 그림
 - 캐릭터 시트 생성기(섹션 `charsheet`, 도구, `[[MOD:charsheet]]` 파일 끝 별도 script): 인물(등장인물/새) → ✦ 생김새(`__lookAsk`) → 시트 7종(턴어라운드·표정·얼굴 각도·의상·포즈·컬러·한 장 모델 시트) 요청문/GPT 열기/그림 올리기. 표정 시트는 🎭(playplus)로 잘라 표정으로. 저장 `csDraft`, `csIndex{이름:{종류:art id}}`, 생김새는 `ppProf`와 공유
 - 2026-11-21 저녁: 사용자가 웹툰 보기의 일정한 칸 구조를 싫어해 웹툰 보기·밀어서 선택 기본값을 끔(설정 키 ppSet2). 켜면 예전처럼 쓸 수 있다
+- 2026-11-21 콘티 구성기 간소화: 기본 화면을 '장면별 보기'(장면 카드+컷 목록+장면별 GPT 프롬프트 복사/ChatGPT 열기/보기)로, 기존 컷 그림판은 '컷 그림판' 단추로 전환(localStorage ctView). 함께 볼 글·분량은 옵션으로 접음, 장면 배정표 숨김
