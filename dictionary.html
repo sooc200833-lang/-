@@ -14873,26 +14873,49 @@ function animClips(){ var cuts=B.cuts.filter(function(c){ return c.scr; }), clip
 var MOVE=function(c,i,n){ return c.focus?'quick push-in':/^(cu|ecu)$/.test(c.k)?'slow push-in':/^(ls|els)$/.test(c.k)?'slow pan':c.ang==='high'?'slow tilt down':c.ang==='low'?'slow tilt up':c.dyn?'handheld shake':'subtle camera drift'; };
 function clipPrompt(cl, k, n){ var t=0, seen={}, nm=[]; cl.cuts.forEach(function(o){ compOf(o.c).ppl.forEach(function(p){ if(!seen[p.nm]){ seen[p.nm]=1; nm.push(p.nm); } }); ctWho(o.c).forEach(function(w){ if(!seen[w]){ seen[w]=1; nm.push(w); } }); });
   var x=cl.scene, g=x&&B.sceneBg&&B.sceneBg[x.a];
-  var tl=cl.cuts.map(function(o,i){ var c=o.c, a=t, b2=t+o.sec; t=b2; var L=String(c.line||'').split('\n').filter(Boolean).map(function(l){ var p=lnParse(l); return (p.who||'(narration)')+': "'+p.say+'"'; });
-    return a.toFixed(1)+'s–'+b2.toFixed(1)+'s | '+(SHOTEN[c.k]||'medium shot')+', '+(ANGEN[c.ang||'']||'eye level')+', camera: '+MOVE(c,i)+' | '+(c.scr||'')+(L.length?' | dialogue (Korean voice, lip-sync): '+L.join(' / '):' | no dialogue')+(c.nar?' | narration voice-over: "'+c.nar+'"':''); });
-  return (n>1?'[CLIP '+k+' of '+n+']\n':'')+'Create a 15-second animated video clip (exactly 15.0 seconds total). Korean webtoon / anime style, consistent character designs, cinematic cuts in this order:\n'+
-    ((g&&(g.place||g.en||g.ko))?'Location: '+[g.place,g.en||g.ko,g.light].filter(Boolean).join(' / ')+'\n':x&&x.place?'Location: '+x.place+'\n':'')+
-    (nm.length?'Characters (match attached sheets):\n'+nm.map(function(n){ return '- '+n+': '+(ctLookSafe(n)||''); }).join('\n')+'\n':'')+
-    'TIMELINE:\n'+tl.join('\n')+'\nNo on-screen text or subtitles. Smooth transitions between shots.'; }
+  var tl=cl.cuts.map(function(o,i){ var c=o.c, a=t, b2=t+o.sec; t=b2; var L=String(c.line||'').split('\n').filter(Boolean).map(function(l){ var p=lnParse(l); return (p.who||'narrator')+' says in Korean: "'+p.say+'"'; });
+    return '['+a.toFixed(1)+'s–'+b2.toFixed(1)+'s] '+(SHOTEN[c.k]||'medium shot')+', '+(ANGEN[c.ang||'']||'eye level')+', '+MOVE(c,i)+'. '+(c.scr||'')+(L.length?'. '+L.join(' '):'')+(c.nar?'. Narrator voice-over in Korean: "'+c.nar+'"':''); });
+  return (n>1?'[Clip '+k+'/'+n+'] ':'')+'15-second video, 2D Korean webtoon anime style, '+(cl.cuts.length>1?cl.cuts.length+' shots with hard cuts':'one continuous shot')+'. '+
+    (cl.cuts.length?'Start from the attached first-frame image. ':'')+
+    (((g&&(g.place||g.en||g.ko))?'Setting: '+[g.place,g.en||g.ko,g.light].filter(Boolean).join(', ')+'. ':x&&x.place?'Setting: '+x.place+'. ':''))+
+    (nm.length?'Characters (keep identical to the attached sheets): '+nm.map(function(n){ return n+' — '+(ctLookSafe(n)||''); }).join('; ')+'. ':'')+'\n'+tl.join('\n')+'\nNo subtitles, no on-screen text. Natural lip-sync for spoken lines, light ambient sound.'; }
+// 그록으로 보내기: 시작 프레임 + 이 클립 모든 컷 장면 그림(키프레임 시트) + 인물 시트 + 요청문
+function clipFrames(cl){ return Promise.all(cl.cuts.map(function(o){ return cutImg(o.c, 640); })); }
+function clipSheet(cl, k, cvs){ var W=1280, col=2, cw=W/col, rows=Math.ceil(cvs.length/col), hs=[], y=0, out=document.createElement('canvas');
+  for(var r=0;r<rows;r++){ var h=0; for(var q=0;q<col;q++){ var cv=cvs[r*col+q]; if(cv) h=Math.max(h, cv.height*cw/cv.width); } hs.push(h); }
+  out.width=W; out.height=60+hs.reduce(function(a,h){ return a+h+44; },0); var g=out.getContext('2d'); g.fillStyle='#fff'; g.fillRect(0,0,W,out.height); g.fillStyle='#111'; g.font='bold 30px sans-serif'; g.fillText('CLIP '+k+' — keyframes in order', 12, 40); y=60; var t=0;
+  for(var r2=0;r2<rows;r2++){ for(var q2=0;q2<col;q2++){ var i=r2*col+q2, cv2=cvs[i]; if(!cv2) continue; var o=cl.cuts[i], h2=cv2.height*cw/cv2.width; g.fillStyle='#111'; g.font='bold 24px sans-serif'; g.fillText('SHOT '+(i+1)+'  '+t.toFixed(1)+'–'+(t+o.sec).toFixed(1)+'s', q2*cw+10, y+30); t+=o.sec; g.drawImage(cv2, q2*cw+4, y+40, cw-8, h2-8); g.strokeStyle='#111'; g.lineWidth=2; g.strokeRect(q2*cw+4, y+40, cw-8, h2-8); } y+=hs[r2]+44; }
+  return out; }
+function grokText(cl,k,n){ return clipPrompt(cl,k,n).replace('Start from the attached first-frame image. ','Attached: the first-frame image (start from it) and a keyframe sheet with every shot in order — follow each shot\'s composition, characters and background. '); }
+function grokFiles(cl, k){ return clipFrames(cl).then(function(cvs){ var L=[{name:'clip'+k+'-1-start-frame', u:cvs[0].toDataURL('image/png')}, {name:'clip'+k+'-2-keyframes', u:clipSheet(cl,k,cvs).toDataURL('image/png')}];
+  return L.concat(refImgs(cl.cuts.map(function(o){ return o.c; })).filter(function(x){ return /시트/.test(x.name); }).slice(0,2)); }); }
+function sendGrok(cl, k, n){ var text=grokText(cl,k,n); ctCopy(text); stat('장면 그림을 모으는 중…');
+  grokFiles(cl,k).then(function(L){ return Promise.all(L.map(function(x){ return dataFile(x.u, x.name); })); }).then(function(files){
+    if(navigator.canShare && navigator.canShare({files:files})) return navigator.share({files:files, text:text}).then(function(){ stat('공유했다 — Grok Imagine에 그림과 요청문을 넣는다'); }, function(){ stat('공유를 취소했다. 요청문은 복사돼 있다'); });
+    files.forEach(dlFile); stat('클립 '+k+' 그림 '+files.length+'장(시작 프레임·키프레임 시트·인물 시트)을 저장했고 요청문을 복사했다'); window.open('https://grok.com/imagine','_blank','noopener'); }).catch(function(){ stat('그림을 만들지 못했다. 요청문은 복사돼 있다'); }); }
+function grokAll(){ var C=animClips(); if(!C.length) return; stat('클립 '+C.length+'개의 장면 그림을 모으는 중…');
+  var all=[], texts=[]; var step=function(i){ if(i>=C.length){ var txt=texts.join('\n\n------\n\n'); ctCopy(txt);
+      all.push(new File([txt], 'grok-prompts.txt', {type:'text/plain'}));
+      if(navigator.canShare && navigator.canShare({files:all})) return navigator.share({files:all, text:texts[0]}).then(function(){ stat('클립 '+C.length+'개 그림·요청문을 보냈다'); }, function(){ all.forEach(dlFile); });
+      all.forEach(function(f,j){ setTimeout(function(){ dlFile(f); }, j*350); }); stat('클립 '+C.length+'개: 시작 프레임·키프레임 시트 '+(all.length-1)+'장과 grok-prompts.txt를 저장했다 (요청문 전체도 복사됨)'); return; }
+    texts.push(grokText(C[i],i+1,C.length)); clipFrames(C[i]).then(function(cvs){ return Promise.all([dataFile(cvs[0].toDataURL('image/png'),'clip'+(i+1)+'-1-start-frame'), dataFile(clipSheet(C[i],i+1,cvs).toDataURL('image/png'),'clip'+(i+1)+'-2-keyframes')]); }).then(function(fs){ all=all.concat(fs); step(i+1); }); };
+  step(0); }
 function renderS8(){ var box=document.getElementById('ct-s8'); if(!box) return; if(!B||!B.cuts||!B.cuts.length){ box.innerHTML='<p class="small">4단계에서 콘티를 먼저 만든다.</p>'; return; }
   var C=animClips(), tot=C.reduce(function(a,c){ return a+c.sec; },0), drawn=B.cuts.filter(function(c){ return c.art; }).length, n=B.cuts.filter(function(c){ return c.scr; }).length;
   box.innerHTML='<div class="sv-all"><b>📜 완성 콘티</b> <span class="small">모든 컷을 장면 순서대로 이어 붙인 세로 한 장</span><p class="small">'+n+'컷 중 GPT 완성 그림 '+drawn+'컷 · 나머지는 시트 합성 → 3D·선 그림 순으로 쓴다.</p><div class="sv-act"><button class="chip ct-go" type="button" id="ct-strip">완성 콘티 만들기 (대사 있는 판 + 대사 없는 판)</button></div></div>'+
-    '<div class="sv-all"><b>🎬 애니메이션 프롬프트</b> <span class="small">한 클립 = 15초 · '+C.length+'개 클립 (컷 시간 합 '+tot.toFixed(1)+'초)</span><div class="sv-act"><button class="chip ct-go" type="button" data-an="all">📤 시트와 같이 전체 보내기</button><button class="chip" type="button" data-an="copy">전체 복사</button></div>'+
+    '<div class="sv-all"><b>🎬 Grok 애니메이션 프롬프트</b> <span class="small">한 클립 = 15초 · '+C.length+'개 클립</span><p class="small">Grok Imagine은 한 번에 클립 하나를 만든다. 「📤 Grok으로」는 그 클립의 <b>시작 프레임</b>, 모든 컷을 순서대로 붙인 <b>키프레임 시트</b>, 인물 시트, 요청문을 같이 준다. 「📦 전체 클립 한번에」는 모든 클립 그림과 요청문 파일(grok-prompts.txt)을 한꺼번에 준다.</p><div class="sv-act"><button class="chip ct-go" type="button" data-an="grokall">📦 전체 클립 한번에 (장면 그림 + 요청문)</button><button class="chip" type="button" data-an="copy">전체 요청문 복사</button></div>'+
     '<ol class="an-l">'+C.map(function(cl,i){ var t=0; return '<li><b>클립 '+(i+1)+'</b> <span class="small">'+cl.cuts.length+'컷 · '+cl.sec.toFixed(1)+'초'+(cl.scene?' · '+cesc(dispNm(cl.scene.name||'')):'')+(cl.cutWhy?' · 다음 클립으로 끊음: '+cl.cutWhy:'')+'</span>'+
       (cl.warn.length?'<p class="an-w">⚠ '+cl.warn.map(cesc).join(' / ')+'</p>':'')+'<table class="an-t"><tr><th>시간</th><th>컷</th><th>화면</th><th>대사</th></tr>'+cl.cuts.map(function(o){ var a=t; t+=o.sec; return '<tr><td>'+a.toFixed(1)+'–'+t.toFixed(1)+'초</td><td>'+o.c.n+'</td><td>'+cesc(shotName(o.c.k))+' · '+cesc(o.c.scr||'')+'</td><td>'+cesc(String(o.c.line||'').replace(/\n/g,' / '))+(o.c.nar?' <i>(나레이션) '+cesc(o.c.nar)+'</i>':'')+'</td></tr>'; }).join('')+'</table>'+
-      '<div class="sv-act"><button class="chip" type="button" data-an="one" data-i="'+i+'">이 클립 복사</button><button class="chip" type="button" data-an="send1" data-i="'+i+'">📤 시트와 같이 보내기</button></div></li>'; }).join('')+'</ol>'+
+      '<div class="sv-act"><button class="chip ct-go" type="button" data-an="grok" data-i="'+i+'">📤 Grok으로 (시작 프레임·시트)</button><button class="chip" type="button" data-an="one" data-i="'+i+'">요청문 복사</button></div></li>'; }).join('')+'</ol>'+
     '<p class="small">시간은 샷 크기와 대사 길이로 짐작했다(한국어 초당 6~7자). 15초가 넘거나 장면이 바뀌거나 컷 6개·대사 5줄을 넘으면 다음 클립으로 끊고, 모자라면 비율대로 늘려 클립마다 딱 15초로 맞춘다. 시간을 바꾸려면 6단계에서 대사를 줄이거나 컷을 나눈다.</p></div>'; }
 document.addEventListener('click', function(e){ var t=e.target; if(!B) return;
   if(t.id==='ct-strip'){ exportStrips(); return; }
   var a=t.closest&&t.closest('[data-an]'); if(!a) return; var C=animClips(), k=a.dataset.an;
-  var all=function(){ return (C.length>1?'I will give you '+C.length+' clips. Make ONLY clip 1 now. When I reply "다음", make the next clip. Keep characters and places identical.\n\n':'')+C.map(function(cl,i){ return clipPrompt(cl,i+1,C.length); }).join('\n\n'); };
+  var all=function(){ return C.map(function(cl,i){ return clipPrompt(cl,i+1,C.length); }).join('\n\n------\n\n'); };
   if(k==='copy'){ ctCopy(all()); return; }
-  if(k==='one'){ ctCopy(clipPrompt(C[+a.dataset.i],1,1)); return; }
+  if(k==='one'){ ctCopy(clipPrompt(C[+a.dataset.i],+a.dataset.i+1,C.length)); return; }
+  if(k==='grok'){ sendGrok(C[+a.dataset.i], +a.dataset.i+1, C.length); return; }
+  if(k==='grokall'){ grokAll(); return; }
   var cuts=k==='all'?B.cuts.filter(function(c){ return c.scr; }):C[+a.dataset.i].cuts.map(function(o){ return o.c; });
   sendGpt(k==='all'?all():clipPrompt(C[+a.dataset.i],1,1), refImgs(cuts)); });
 
