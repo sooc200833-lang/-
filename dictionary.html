@@ -15063,10 +15063,11 @@ function seOpen(i){ var ch=chars()[i], A=window.__ppArt, F=window.__ppFix; if(!c
   document.body.appendChild(m);
   SE={i:i, ch:ch, m:m, slots:seSlots(ch), cur:0, boxes:{}, c:null, cv:m.querySelector('.se-cv'), split:55, nb:4, nf:6, pad:1, tol:34, clean:null};
   var fill=function(bx){ SE.boxes={}; (bx.body||[]).forEach(function(b,j){ SE.boxes['b'+j]=b; }); (bx.face||[]).forEach(function(b,j){ var s=SE.slots[4+j]; if(s) SE.boxes[s[0]]=b; }); };
-  F.sheetBoxes(u).then(function(r){ SE.c=r.c; fill(r.boxes); SE.auto=r.boxes;
-    var bb=(r.boxes.body||[]).map(function(b){ return b.y+b.h; }), ff=(r.boxes.face||[]).map(function(b){ return b.y; });
-    if(bb.length && ff.length) SE.split=Math.round((Math.max.apply(null,bb)+Math.min.apply(null,ff))/2/r.c.height*100);
-    seCtl(); seDraw(); seSlotsPaint(); sePrev(); m.querySelector('.se-msg').textContent='자동으로 '+Object.keys(SE.boxes).length+'/10칸을 땄다.'; });
+  F.sheetBoxes(u).then(function(r){ SE.c=r.c; SE.auto=r.boxes; var sv=ch.slice && ch.slice.art===ch.sheetArt ? ch.slice : null;
+    if(sv){ SE.boxes=JSON.parse(JSON.stringify(sv.boxes||{})); if(sv.slots) SE.slots=sv.slots.map(function(q){ return q.slice(); }); ['split','nb','nf','pad','tol'].forEach(function(k){ if(sv[k]!=null) SE[k]=sv[k]; }); }
+    else { fill(r.boxes); var bb=(r.boxes.body||[]).map(function(b){ return b.y+b.h; }), ff=(r.boxes.face||[]).map(function(b){ return b.y; });
+      if(bb.length && ff.length) SE.split=Math.round((Math.max.apply(null,bb)+Math.min.apply(null,ff))/2/r.c.height*100); }
+    seCtl(); seDraw(); seSlotsPaint(); sePrev(); m.querySelector('.se-msg').textContent=sv?'지난번에 저장한 칸을 불러왔다. 「자동으로 따기」를 누르면 처음부터 다시 딴다.':'자동으로 '+Object.keys(SE.boxes).length+'/10칸을 땄다.'; });
   m.addEventListener('change', function(e){ if(e.target.classList.contains('se-showbg')){ SE.showBg=e.target.checked; seDraw(); return; } var t=e.target; if(!t.dataset || t.dataset.semo==null || !SE) return; var j=+t.dataset.semo, k=t.value, old=SE.slots[j][0], EN=window.__ppFix.EMN||{};
     SE.slots.forEach(function(q,i){ if(i!==j && q[0]===k){ var bq=SE.boxes[k]; q[0]=old; q[1]=EN[old]||old; if(bq!==undefined){ SE.boxes[old+'__t']=bq; } } });
     var bj=SE.boxes[old]; delete SE.boxes[old]; if(SE.boxes[old+'__t']){ SE.boxes[old]=SE.boxes[old+'__t']; delete SE.boxes[old+'__t']; } if(bj) SE.boxes[k]=bj; else delete SE.boxes[k];
@@ -15119,6 +15120,7 @@ function seSave(){ var F=window.__ppFix, A=window.__ppArt, ch=SE.ch, msg=SE.m.qu
   setTimeout(function(){ var faces={}, bodies=[];
     SE.slots.forEach(function(s,j){ var b=SE.boxes[s[0]]; if(!b) return; var u=seCrop(b); if(!u) return; if(j<4) bodies[j]=u; else faces[s[0]]=u; });
     var ps=[]; for(var j=0;j<4;j++){ (function(j){ if(!bodies[j]) return; var id='b'+Date.now().toString(36)+j; ps.push(A.put(id,bodies[j]).then(function(){ return [j,id]; })); })(j); }
+    ch.slice={art:ch.sheetArt, boxes:JSON.parse(JSON.stringify(SE.boxes)), slots:SE.slots.map(function(q){ return q.slice(); }), split:SE.split, nb:SE.nb, nf:SE.nf, pad:SE.pad, tol:SE.tol};
     Promise.all(ps).then(function(r){ var nb=[]; r.forEach(function(q){ nb[q[0]]=q[1]; }); if(nb.filter(Boolean).length) ch.bodies=[0,1,2,3].map(function(j){ return nb[j]||nb.filter(Boolean)[0]; });
       return Object.keys(faces).length?F.setFaces(ch.name, faces):null; }).then(function(){ save(); renderChars(); try{ renderBoard(); }catch(e){} stat(ch.name+' — 전신 '+bodies.filter(Boolean).length+'개 · 표정 '+Object.keys(faces).length+'개를 저장했다'); SE.m.remove(); SE=null; }); }, 30); }
 document.addEventListener('click', function(e){ var t=e.target.closest&&e.target.closest('[data-shedit]'); if(t){ e.stopPropagation(); seOpen(+t.dataset.shedit); } }, true);
