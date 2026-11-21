@@ -1323,6 +1323,7 @@ body.dk-drag, body.dk-drag *{user-select:none!important; -webkit-user-select:non
 .sv-cuts button{font:inherit;font-size:.74rem;border:1px solid var(--line,#ddd);background:none;border-radius:8px;padding:.1rem .4rem;cursor:pointer}
 .sv-act{display:flex;flex-wrap:wrap;gap:.4rem;margin-top:.4rem}
 .sv-all{border:2px solid var(--ink-3,#999);border-radius:12px;padding:.7rem .8rem;margin:.4rem 0}
+.ct-sheet{display:grid;grid-template-columns:3.6em 1fr;gap:.1rem .4rem;margin:.3rem 0;text-align:left}.ct-sheet dt{color:var(--ink-3)}.ct-sheet dd{margin:0}
 .sv-beat{font-size:.82rem;margin:.1rem 0 .3rem;color:var(--ink-2,#444)}
 .sv-img{display:block;width:100%;max-width:520px;margin:.4rem auto;border-radius:8px;border:1px solid var(--line,#ddd)}
 .sv-up{cursor:pointer}
@@ -2745,9 +2746,9 @@ button.pl-card[disabled]{cursor:default}
   </details>
   <div id="ct-plan"></div>
   <h3>2. 등장인물</h3>
-  <p class="small">인물은 이야기에 이름이 나오면 저절로 들어온다.</p>
+  <p class="small"><b>먼저 캐릭터 시트를 짜면</b> AI가 성격·말투·원하는 것·생김새를 정하고, 콘티는 그 시트대로 대사와 행동을 쓴다. 그림 프롬프트에도 그 생김새가 들어간다.</p>
   <details class="ct-help"><summary class="small">자세히</summary><p class="small">인물을 적어 두면 콘티 그림에 <b>이름표</b>와 <b>생김새</b>(머리·안경·모자·흉터·체격)가 붙는다. 이야기에 적힌 특징만 넣고, 적혀 있지 않은 건 미정으로 둔다. 컷마다 누가 나오는지는 AI가 쓴 글의 이름을 보고 정한다. 직접 바꾸려면 컷을 눌러 「인물」 칸에 이름을 적는다.</p></details>
-  <div class="filterbar"><button class="chip" id="ct-fromcast" type="button">등장인물에서 가져오기</button><button class="chip" id="ct-findch" type="button">이야기에서 인물 찾기</button><button class="chip" id="ct-addch" type="button">인물 추가</button></div>
+  <div class="filterbar"><button class="chip ct-go" id="ct-sheet" type="button">🧠 AI로 캐릭터 시트 짜기</button><button class="chip" id="ct-fromcast" type="button">등장인물에서 가져오기</button><button class="chip" id="ct-findch" type="button">이야기에서 인물 찾기</button><button class="chip" id="ct-addch" type="button">인물 추가</button></div>
   <div id="ct-chars"></div>
   <h3>3. 콘티</h3>
   <div class="filterbar ct-main"><button class="chip ct-go" id="ct-write" type="button">AI로 콘티 쓰기</button><button class="chip" id="ct-resume" type="button" hidden>이어서 쓰기</button><button class="chip" id="ct-scenego" type="button" title="쓰기 전에 장면만 먼저 나눠 보고 고칠 때">이야기로 장면 나누기</button><a class="small ct-stlink" id="ct-stlink" href="#contis"></a></div>
@@ -13389,7 +13390,7 @@ function renderChars(){
     if(ro) ro.observe(cv); else setTimeout(function(){ queue(cv); },0);
     f.appendChild(cv);
     f.insertAdjacentHTML('beforeend','<b>'+cesc(ch.name)+'</b>'+(ch.role?'<span class="small">'+cesc(ch.role)+'</span>':'')+
-      '<div class="ct-tags">'+lookTags(ch.look)+'</div>'+(ch.note?'<span class="small">'+cesc(ch.note)+'</span>':'')+
+      '<div class="ct-tags">'+lookTags(ch.look)+'</div>'+(ch.sheet?'<dl class="ct-sheet small">'+[['성격','pers'],['말투','speech'],['원함','want'],['약점','fear'],['관계','rel'],['생김새','look']].map(function(r){ return ch.sheet[r[1]]?'<dt>'+r[0]+'</dt><dd>'+cesc(ch.sheet[r[1]])+'</dd>':''; }).join('')+'</dl>':(ch.note?'<span class="small">'+cesc(ch.note)+'</span>':''))+
       '<div class="filterbar"><button class="chip" type="button" data-ce="'+i+'">고치기</button>'+
       (window.__castUpsert?'<button class="chip" type="button" data-cs="'+i+'">'+(window.__castFind&&window.__castFind(ch.name)?'등장인물에 반영':'등장인물에 넣기')+'</button>':'')+
       '<button class="chip" type="button" data-cd="'+i+'">지우기</button></div>');
@@ -13417,6 +13418,41 @@ function editChar(i){
   });
 }
 function ensureB(){ if(!B){ B={total:+document.getElementById('ct-total').value||70, band:[], cl:[], drawn:'', story:document.getElementById('ct-story').value, cuts:[], chars:[]}; } if(!B.chars) B.chars=[]; return B; }
+
+// 인물 한 줄: 캐릭터 시트가 있으면 성격·말투·욕망·관계·생김새까지 (콘티 쓰기 AI가 읽는다)
+function chLine(x){ var h=x.sheet||{}; return x.name+(x.role?' — '+x.role:'')+
+  (h.pers?' | 성격: '+h.pers:'')+(h.speech?' | 말투: '+h.speech:'')+(h.want?' | 원하는 것: '+h.want:'')+(h.fear?' | 두려움·약점: '+h.fear:'')+(h.rel?' | 관계: '+h.rel:'')+
+  (h.look?' | 생김새: '+h.look:(x.note?' · '+x.note:'')); }
+var SHSYS='당신은 웹툰 캐릭터 디자이너이자 각본가다. 이야기를 읽고 인물마다 캐릭터 시트를 만든다. 이야기에 적힌 것은 반드시 지키고, 적혀 있지 않은 성격·말투·생김새는 이야기의 장르와 역할에 어울리게 새로 정한다. 인물끼리 실루엣·머리 모양·색이 겹치지 않게 한다. JSON만 출력한다.';
+function makeSheets(){
+  if(!aiReady()){ stat('AI 연결에서 키를 넣어야 쓸 수 있다.'); return; }
+  ensureB(); var story=document.getElementById('ct-story').value.trim();
+  if(!story){ stat('대강 이야기 칸이 비어 있다. 이야기를 먼저 넣는다.'); return; }
+  var have=chars().map(function(x){ return x.name+(x.role?'('+x.role+')':''); }).join(', ');
+  setBusy(true); stat('이야기를 읽고 캐릭터 시트를 짜는 중…');
+  aiAsk(SHSYS, '[이야기]\n'+story.slice(0,6000)+(have?'\n\n[이미 있는 인물 — 이 이름은 꼭 포함]\n'+have:'')+
+    '\n\n주요 인물 많아야 6명. 형식:\n[{"name":"이름","role":"이야기 속 역할","pers":"성격 핵심 2~3개","speech":"말투(어미·버릇, 예시 대사 한 줄 포함)","want":"이 이야기에서 원하는 것","fear":"두려움이나 약점","rel":"다른 인물과의 관계 한 줄",'+
+    '"look":"생김새(한국어): 나이대·키·체형·머리 모양과 색·눈·옷·소품·특징","lookEn":"same appearance in English, comma separated, for an illustrator",'+
+    '"hair":"짧은|긴|묶은|삐죽|민머리","dark":true/false,"glasses":true/false,"hat":true/false,"scar":true/false,"build":"작음|보통|큼"}]', 2600, {temperature:0.7}).then(function(t){
+    setBusy(false);
+    if(aiIsErr(t)){ stat(String(t).slice(0,90)); return; }
+    var j=null; try{ var m=String(t).match(/\[[\s\S]*\]/); j=JSON.parse(m?m[0]:t); }catch(e){}
+    if(!Array.isArray(j) || !j.length){ stat('캐릭터 시트를 읽지 못했다. 다시 눌러 본다.'); return; }
+    var prof={}; try{ prof=JSON.parse(localStorage.getItem('ppProf')||'{}'); }catch(e){}
+    var made=0;
+    j.forEach(function(x){ if(!x||!x.name) return; var nm=String(x.name).trim().slice(0,20), ch=null;
+      B.chars.forEach(function(c){ if(c.name===nm) ch=c; }); if(!ch){ ch={name:nm, role:'', look:{}, note:''}; B.chars.push(ch); }
+      if(x.role) ch.role=String(x.role).slice(0,30);
+      ch.sheet={pers:String(x.pers||'').slice(0,80), speech:String(x.speech||'').slice(0,120), want:String(x.want||'').slice(0,80), fear:String(x.fear||'').slice(0,80), rel:String(x.rel||'').slice(0,100), look:String(x.look||'').slice(0,200), lookEn:String(x.lookEn||'').slice(0,240)};
+      var lk=figClean({hair:x.hair, build:x.build, dark:x.dark===true, glasses:x.glasses===true, hat:x.hat===true, scar:x.scar===true}); ch.look=Object.assign({}, ch.look||{}, lk);
+      ch.note=ch.sheet.look.slice(0,80);
+      if(ch.sheet.lookEn){ prof[nm]=Object.assign({}, prof[nm]||{}, {look:ch.sheet.lookEn}); }
+      made++; });
+    try{ localStorage.setItem('ppProf', JSON.stringify(prof)); }catch(e){}
+    save(); renderChars(); renderBoard();
+    stat('캐릭터 시트 '+made+'명을 짰다. 이제 「AI로 콘티 쓰기」를 누르면 이 성격·말투·생김새대로 콘티를 쓴다.');
+  });
+}
 var CHSYS='당신은 원고에서 등장인물을 정리하는 편집자다. 원고에 적힌 내용만 쓴다. 적혀 있지 않은 외모는 지어내지 않는다. JSON만 출력한다.';
 function findChars(){
   if(!aiReady()){ stat('AI 연결에서 키를 넣어야 쓸 수 있다.'); return; }
@@ -14640,7 +14676,7 @@ function camUI(ed, c, cur, setCam){
   });
 }
 // GPT 컷 그림 요청문 (2026-11-21)
-function ctLook(nm){ var pr=null; try{ pr=(JSON.parse(localStorage.getItem('ppProf')||'{}')[nm]||{}).look; }catch(e){} if(pr) return pr;
+function ctLook(nm){ var sh=null; (B&&B.chars||[]).forEach(function(x){ if(x.name===nm && x.sheet && x.sheet.lookEn) sh=x.sheet.lookEn; }); if(sh) return sh; var pr=null; try{ pr=(JSON.parse(localStorage.getItem('ppProf')||'{}')[nm]||{}).look; }catch(e){} if(pr) return pr;
   var m=window.__castFind?window.__castFind(nm):null; if(m) return [m.look&&typeof m.look==='string'?m.look:'', m.desc, m.memo].filter(Boolean).join(', ').slice(0,200);
   var ch=null; (B&&B.chars||[]).forEach(function(x){ if(x.name===nm) ch=x; }); if(ch){ var l=ch.look||{}; return [l.hair&&(l.hair+' hair'), l.dark&&'dark hair', l.glasses&&'glasses', l.hat&&'hat', l.scar&&'scar', l.build&&(l.build+' build'), ch.note].filter(Boolean).join(', '); } return ''; }
 function ctGptPrompt(cuts){
@@ -15491,7 +15527,7 @@ function chunks(){
 }
 var RSYS='당신은 한국 웹툰 콘티 감독이다. 원고들을 함께 검토해 컷 배정표를 만든다. 정해진 형식의 줄만 쓴다. 서론·마크다운 기호를 쓰지 않는다.';
 function reviewPrompt(){
-  var cs=chars(); return srcAll()+(cs.length?'\n\n[등장인물]\n'+cs.map(function(x){ return x.name+(x.role?' — '+x.role:''); }).join('\n'):'')+'\n\n[전체 분량] '+B.total+'컷 (5컷 안팎은 달라도 된다)\n[구간] 도입 → 전개 → 전환 → 절정 → 마지막 훅 순서. 구간마다 몇 컷인지는 정해져 있지 않다 — 이야기에 맞게 장면 단위로 나눈다.\n\n'+
+  var cs=chars(); return srcAll()+(cs.length?'\n\n[등장인물]\n'+cs.map(chLine).join('\n'):'')+'\n\n[전체 분량] '+B.total+'컷 (5컷 안팎은 달라도 된다)\n[구간] 도입 → 전개 → 전환 → 절정 → 마지막 훅 순서. 구간마다 몇 컷인지는 정해져 있지 않다 — 이야기에 맞게 장면 단위로 나눈다.\n\n'+
     '위 글들을 함께 검토해 '+B.total+'컷 콘티의 장면 배정표를 만든다.\n'+
     '- 사건 순서와 결말은 줄거리를, 장면의 행동·대사·분위기는 웹소설을, 컷 나눔과 구도는 컷별 콘티를 주로 참고한다.\n'+
     '- 글끼리 내용이 다르면 대강 이야기를 가장 우선하고, 그다음 컷별 콘티 → 웹소설 → 줄거리 순으로 따른다.\n'+
@@ -15541,7 +15577,7 @@ function cutPrompt(ch){
     rows.push(n+' · 추천 '+compText(c)+(c.silent?' · 무음':'')+(c.hook?' · 넘김 훅':'')+(PG_TURN[n]?' · 쪽 넘김 자리':'')+(c.hint?' · 컷 역할: '+c.hint:''));
   }
   L.push('[컷 배정표]\n'+rows.join('\n'));
-  if(chars().length) L.push('[등장인물]\n'+chars().map(function(x){ return x.name+(x.role?' — '+x.role:'')+(x.note?' · '+x.note:''); }).join('\n'));
+  if(chars().length) L.push('[등장인물]\n'+chars().map(chLine).join('\n')+(chars().some(function(x){ return x.sheet; })?'\n→ 대사는 각 인물의 말투로, 행동과 반응은 성격·원하는 것·약점에 맞게 쓴다. 화면 묘사에는 생김새(옷·소품·특징)를 살린다.':''));
   var pa=ch.prev?Math.max(1,ch.prev.a,ch.a-20):Math.max(1,ch.a-3);   // 앞 묶음 전체(20줄까지)
   var prev=[]; for(var p=pa;p<ch.a;p++){ var q=B.cuts[p-1]; if(q&&q.scr) prev.push(cutRow(q)); }
   if(prev.length) L.push('[바로 앞 컷 — 번호|구도|인물|화면|대사|나레이션]\n'+prev.join('\n'));
@@ -15650,7 +15686,7 @@ function polishAll(done){
     var rows=[]; for(var n=a;n<=b;n++){ var c=B.cuts[n-1]; if(c) rows.push(row(c)); }
     L.push(rows.join('\n'));
     if(B.scenes && B.scenes.length) L.push('[장면 배정표]\n'+B.scenes.map(function(x){ return x.a+'–'+x.b+' '+x.sum+(x.show?' · 꼭 보여 줄 것: '+x.show:''); }).join('\n'));
-    if(chars().length) L.push('[등장인물]\n'+chars().map(function(x){ return x.name+(x.role?' — '+x.role:''); }).join('\n'));
+    if(chars().length) L.push('[등장인물]\n'+chars().map(chLine).join('\n'));
     L.push('고칠 것\n'+
       '- 한 장면 안에서 인물의 좌우 자리가 뒤바뀐 컷(180도 선을 넘음). 인물 칸은 화면 왼쪽부터 적는다.\n'+
       '- 같은 대사나 같은 화면이 되풀이되는 컷\n'+
@@ -15863,7 +15899,7 @@ function flowPrompt(){
   var L=[], story=String(B.story||'').trim();
   if(story) L.push('[대강 이야기]\n'+story.slice(0,2500));
   var scs=flowScenes(); if(scs.length) L.push('[장면 배정표]\n'+scs.map(function(x){ return x.a+'–'+x.b+' '+(x.sum||''); }).join('\n'));
-  try{ var cs=chars(); if(cs.length) L.push('[등장인물]\n'+cs.map(function(x){ return x.name+(x.role?' — '+x.role:''); }).join('\n')); }catch(e){}
+  try{ var cs=chars(); if(cs.length) L.push('[등장인물]\n'+cs.map(chLine).join('\n')); }catch(e){}
   L.push('[콘티 — 번호|구도|인물|화면|대사|나레이션]\n대사의 말풍선은 「 / 」로 잇고 「이름: 」은 말하는 사람, (괄호)는 속마음이다. 나레이션은 위·아래·사이(앞 컷과의 사이) 자막이다 — 시간·장소가 바뀐 것을 나레이션이 알려 주면 그곳은 끊김이 아니다.\n'+B.cuts.filter(function(c){ return c.scr; }).map(function(c){
     return c.n+'|'+compText(c)+'|'+flowNames(c).join(',')+'|'+oneLn(c.scr).slice(0,70)+'|'+balloonsField(c.line).slice(0,60)+'|'+narField(c).slice(0,50); }).join('\n'));
   L.push('독자가 「어? 왜?」「언제?」「여기 어디?」「이 사람은 누구?」「무슨 감정이지?」 하고 멈칫할 컷만 고른다. 구도 취향이나 문장 다듬기는 짚지 않는다.\n'+
@@ -16263,7 +16299,7 @@ function npTargets(){ return npWritten().filter(function(c){ return !String(c.li
 function npNames(c){ return whoOf(c).map(function(x){ return x.name; }).join(','); }
 function sgPrompt(){
   var L=[srcAll()];
-  if(chars().length) L.push('[등장인물]\n'+chars().map(function(x){ return x.name+(x.role?' — '+x.role:''); }).join('\n'));
+  if(chars().length) L.push('[등장인물]\n'+chars().map(chLine).join('\n'));
   L.push('[콘티 — 번호|구도|인물|화면|대사(원고에서 옮긴 것)|나레이션]\n'+npWritten().map(function(c){ return cutRow(c,70,60)+(c.silent?'|무음':''); }).join('\n'));
   var tg=npTargets().length;
   L.push('위 콘티의 컷마다 말풍선 대사와 나레이션 자막을 추천한다. 작가가 고치고 골라서 한 번에 올린다.\n'+
@@ -16429,6 +16465,7 @@ window.__ctPortrait=function(cv){ if(drawMode()==='3d'){ queue(cv); return; } ne
 // 베스트컷이 쓰는 창구: 구도·앵글 목록, 컷 → 그림 칸, 인물 풀이, 베스트컷 → 콘티 컷
 window.__ctSHOTS=SHOTS; window.__ctANGS=ANGS; window.__ctShotName=shotName; window.__ctAngName=angName; window.__ctPoseJ=POSE_J; window.__ctPoseInfo=POSE_INFO;
 window.__d3Sprite=d3Sprite; window.__d3Sets=D3_SETS; window.__d3EmoKo=D3_EMO_KO; window.__d3PropKo=D3_PROP_KO; window.__setDraw=setDraw; window.__drawMode=drawMode; window.__ctCutData=function(cv,c){ return cutData(cv,c); }; window.__ctWhoOf=function(c){ return whoOf(c); }; window.__ctApplyBest=applyBest;
+document.getElementById('ct-sheet').addEventListener('click', makeSheets);
 document.getElementById('ct-addch').addEventListener('click', function(){ ensureB(); B.chars.push({name:'인물 '+(B.chars.length+1), role:'', look:{}, note:''}); save(); renderChars(); editChar(B.chars.length-1); });
 document.getElementById('ct-chars').addEventListener('click', function(e){
   var t=e.target.closest('button'); if(!t||!B) return;
