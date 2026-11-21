@@ -330,3 +330,4 @@ arcForm, deviceId, folderMemo, gdBase, gdLast, gdLinked, ideaText, mangaDataVer,
 - 2026-11-21 콘티 구성기 간소화: 기본 화면을 '장면별 보기'(장면 카드+컷 목록+장면별 GPT 프롬프트 복사/ChatGPT 열기/보기)로, 기존 컷 그림판은 '컷 그림판' 단추로 전환(localStorage ctView). 함께 볼 글·분량은 옵션으로 접음, 장면 배정표 숨김
 - 2026-11-21 콘티→그림 프롬프트: 장면마다 '콘티 읽고 연출 짜기'(aiAsk가 전체 이야기·장면 흐름·컷 대사/나레이션·생김새를 읽고 setting/light/컷별 see·faces·staging·emph를 JSON으로 → B.scenePr[a]), '장면 러프 콘티 그리기'(장면 한 장에 컷을 세로로 나눈 연필 러프 프롬프트), 맨 위 전체 모음(복사/ChatGPT/모아 보기, '다음'으로 장면 순차), 장면 그림 올리기(B.sceneArt[a] → __ppArt)
 - 2026-11-21 캐릭터 시트 우선 흐름: 2단계에 '🧠 AI로 캐릭터 시트 짜기'(makeSheets: 성격·말투·원함·약점·관계·생김새(한/영)·fig 플래그 → B.chars[].sheet, ppProf[이름].look=lookEn). 콘티 쓰기 프롬프트의 [등장인물]은 chLine으로 시트 전체를 넣고 말투·성격대로 쓰라고 지시. ctLook은 시트 영어 생김새 우선
+- 2026-11-21 '🖌 GPT로 등장인물 시트 한번에'(#ct-chgpt): 1장 라인업 + '다음'마다 인물별 레퍼런스 시트(턴어라운드 4 + 표정 6). 인물 카드마다 '🖌 GPT 시트'(data-cg). 생김새는 sheet.lookEn 우선

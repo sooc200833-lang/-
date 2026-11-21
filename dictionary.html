@@ -2748,7 +2748,7 @@ button.pl-card[disabled]{cursor:default}
   <h3>2. 등장인물</h3>
   <p class="small"><b>먼저 캐릭터 시트를 짜면</b> AI가 성격·말투·원하는 것·생김새를 정하고, 콘티는 그 시트대로 대사와 행동을 쓴다. 그림 프롬프트에도 그 생김새가 들어간다.</p>
   <details class="ct-help"><summary class="small">자세히</summary><p class="small">인물을 적어 두면 콘티 그림에 <b>이름표</b>와 <b>생김새</b>(머리·안경·모자·흉터·체격)가 붙는다. 이야기에 적힌 특징만 넣고, 적혀 있지 않은 건 미정으로 둔다. 컷마다 누가 나오는지는 AI가 쓴 글의 이름을 보고 정한다. 직접 바꾸려면 컷을 눌러 「인물」 칸에 이름을 적는다.</p></details>
-  <div class="filterbar"><button class="chip ct-go" id="ct-sheet" type="button">🧠 AI로 캐릭터 시트 짜기</button><button class="chip" id="ct-fromcast" type="button">등장인물에서 가져오기</button><button class="chip" id="ct-findch" type="button">이야기에서 인물 찾기</button><button class="chip" id="ct-addch" type="button">인물 추가</button></div>
+  <div class="filterbar"><button class="chip ct-go" id="ct-sheet" type="button">🧠 AI로 캐릭터 시트 짜기</button><button class="chip" id="ct-chgpt" type="button">🖌 GPT로 등장인물 시트 한번에</button><button class="chip" id="ct-fromcast" type="button">등장인물에서 가져오기</button><button class="chip" id="ct-findch" type="button">이야기에서 인물 찾기</button><button class="chip" id="ct-addch" type="button">인물 추가</button></div>
   <div id="ct-chars"></div>
   <h3>3. 콘티</h3>
   <div class="filterbar ct-main"><button class="chip ct-go" id="ct-write" type="button">AI로 콘티 쓰기</button><button class="chip" id="ct-resume" type="button" hidden>이어서 쓰기</button><button class="chip" id="ct-scenego" type="button" title="쓰기 전에 장면만 먼저 나눠 보고 고칠 때">이야기로 장면 나누기</button><a class="small ct-stlink" id="ct-stlink" href="#contis"></a></div>
@@ -13393,7 +13393,7 @@ function renderChars(){
       '<div class="ct-tags">'+lookTags(ch.look)+'</div>'+(ch.sheet?'<dl class="ct-sheet small">'+[['성격','pers'],['말투','speech'],['원함','want'],['약점','fear'],['관계','rel'],['생김새','look']].map(function(r){ return ch.sheet[r[1]]?'<dt>'+r[0]+'</dt><dd>'+cesc(ch.sheet[r[1]])+'</dd>':''; }).join('')+'</dl>':(ch.note?'<span class="small">'+cesc(ch.note)+'</span>':''))+
       '<div class="filterbar"><button class="chip" type="button" data-ce="'+i+'">고치기</button>'+
       (window.__castUpsert?'<button class="chip" type="button" data-cs="'+i+'">'+(window.__castFind&&window.__castFind(ch.name)?'등장인물에 반영':'등장인물에 넣기')+'</button>':'')+
-      '<button class="chip" type="button" data-cd="'+i+'">지우기</button></div>');
+      '<button class="chip" type="button" data-cg="'+i+'">🖌 GPT 시트</button><button class="chip" type="button" data-cd="'+i+'">지우기</button></div>');
     box.appendChild(f);
   });
 }
@@ -14785,6 +14785,32 @@ document.addEventListener('click', function(e){ var t=e.target; if(!t.closest) r
 
 document.addEventListener('change', function(e){ var t=e.target; if(!t.dataset || !t.dataset.sup || !B || !window.__ppArt || !t.files[0]) return;
   window.__ppArt.fromFile(t.files[0]).then(function(id){ B.sceneArt=B.sceneArt||{}; B.sceneArt[t.dataset.sup]=id; save(); renderScenes(); stat('장면 그림을 붙였다'); }); });
+
+// GPT로 등장인물 시트 한 번에: 1장 라인업 → 「다음」마다 인물별 시트(정면·옆·뒤 + 표정 6)
+function chLookEn(x){ var h=x.sheet||{}; return h.lookEn||h.look||ctLookSafe(x.name)||x.note||''; }
+function ctLookSafe(nm){ try{ return ctLook(nm); }catch(e){ return ''; } }
+function chGptOne(x, k, n){
+  var h=x.sheet||{};
+  return (n>1?'[Character '+k+' of '+n+'] ':'')+'Draw ONE image: a character reference sheet for '+x.name+'.\n'+
+    'Appearance: '+chLookEn(x)+'\n'+(h.pers?'Personality (show it in posture and expressions): '+h.pers+'\n':'')+(x.role?'Role: '+x.role+'\n':'')+
+    'LAYOUT: top row = full body turnaround (front, 3/4, side, back), same height. Bottom row = 6 bust-up expressions: neutral, smile, angry, sad, surprised, '+(h.fear?'scared':'embarrassed')+'.\n'+
+    'Korean webtoon style, clean line art, flat colors, plain white background, NO text, NO names, NO labels. Keep outfit and colors identical in every view.';
+}
+function chGptAll(list){
+  var cs=(list||chars()).filter(function(x){ return x && x.name; }); if(!cs.length) return '';
+  var n=cs.length;
+  var lineup='Draw ONE image: a character lineup of '+n+' characters standing side by side, full body, front view, same scale (show height differences), plain white background, Korean webtoon style, clean line art, flat colors. NO text, NO names.\nFrom left to right:\n'+
+    cs.map(function(x,i){ return (i+1)+'. '+x.name+(x.role?' ('+x.role+')':'')+': '+chLookEn(x); }).join('\n')+'\nEvery character must look clearly different (silhouette, hair, colors).';
+  if(n===1) return chGptOne(cs[0],1,1);
+  return 'I will give you '+(n+1)+' images to draw. Draw ONLY the first one now. Each time I reply "다음", draw the next one. Keep every character design identical to the lineup.\n\n=== IMAGE 1: LINEUP ===\n'+lineup+'\n\n'+
+    cs.map(function(x,i){ return '=== IMAGE '+(i+2)+': '+x.name+' ===\n'+chGptOne(x,i+1,n); }).join('\n\n');
+}
+document.addEventListener('click', function(e){ var t=e.target; if(!t.closest) return;
+  var all=t.closest('#ct-chgpt'), one=t.closest('[data-cg]'); if(!all && !one) return;
+  var q=all?chGptAll():chGptOne(chars()[+one.dataset.cg],1,1); if(!q) return stat('인물이 없다. 「AI로 캐릭터 시트 짜기」를 먼저 누른다.');
+  ctCopy(q); stat('등장인물 시트 요청문을 복사했다 — ChatGPT에 붙여 넣고, 그린 뒤 「다음」이라고 답하면 다음 인물을 그린다.');
+  setTimeout(function(){ window.open('https://chatgpt.com/?q='+encodeURIComponent(q.length>1800?'다음 메시지로 등장인물 시트 요청문을 붙여 넣을게. 받으면 첫 그림부터 그려줘.':q),'_blank','noopener'); },200);
+});
 document.addEventListener('pp-art-ready', function(){ if(B) try{ renderBoard(); }catch(e){} });
 function ctCopy(t){ (navigator.clipboard&&navigator.clipboard.writeText?navigator.clipboard.writeText(t):Promise.reject()).then(function(){ stat('그림 요청문을 복사했다 — ChatGPT에 붙여 넣고, 받은 그림은 컷 편집기 「그림 올리기」'); }, function(){ stat('복사하지 못했다'); }); }
 document.addEventListener('click', function(e){ var t=e.target;
