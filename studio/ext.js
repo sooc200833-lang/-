@@ -305,3 +305,51 @@ sn.addEventListener('click',e=>{const b=e.target.closest('[data-add]');if(b)open
 $('.pad',$('#tab-script')).insertAdjacentHTML('afterbegin','');
 }
 })();
+
+/* ───────── 전체 원고 복사 ───────── */
+(function(){
+const W=window.WT,{S,$,el,copy,toast}=W;
+const EXN={n:'보통',calm:'차분',smile:'미소',grin:'씨익',blank:'멍',shy:'수줍',panic:'당황',shock:'충격',dead:'절망',deadsweat:'식은땀',angry:'화남',sad:'슬픔',cry:'울음',menace:'위압',smirk:'비웃',hurt:'상처',think:'생각',gloom:'우울'};
+const KN={'*':'속마음','%':'속마음','!':'외침','~':'떨림','$':'위압','^':'속삭임'};
+const nm=id=>(window.CHARS[id]||{}).name||id;
+const clean=t=>t.replace(/<br\s*\/?>/g,' ').replace(/\s@-?[\d.]+,-?[\d.]+(>[-\d.,]+)?\s*$/,'').trim();
+function manuscript(withDir){
+  const out=[];let cut=0,title='';
+  S.src.split('\n').forEach(raw=>{const l=raw.trim();if(!l||l.startsWith('//')||/^(VAR|~|-> ?END)/.test(l))return;
+    let m;
+    if((m=l.match(/^@title\s+(.*)/))){title=m[1].split('::')[0].trim();out.push('《'+title+'》'+(m[1].includes('::')?' — '+m[1].split('::')[1].trim():''),'');return;}
+    if((m=l.match(/^={2,}\s*(\w+)/))){out.push('','■ 장면 '+m[1]);return;}
+    if((m=l.match(/^@panel\s+(\S+)(?:\s+([\d.]+))?(.*)/))){cut++;out.push('',`[컷 ${cut}]`+(withDir?` 배경:${m[1]}${m[2]?' 비율1:'+m[2]:''}${m[3].trim()?' 효과:'+m[3].trim():''}`:''));return;}
+    if((m=l.match(/^@char\s+(\S+)\s+(\S+)/))){if(withDir)out.push(`  (${nm(m[1])} — ${m[2].split('+').map(e=>EXN[e]||e).join('+')})`);return;}
+    if((m=l.match(/^@(txt|dark)\s+(.*)/))){out.push(clean(m[2]));return;}
+    if((m=l.match(/^@sfx\s+(\S+)/))){out.push('효과음: '+m[1]);return;}
+    if((m=l.match(/^@msg\s+(.*)/))){out.push('  [톡] '+clean(m[1]));return;}
+    if((m=l.match(/^@chat\s+(.*)/))){out.push('[단톡방: '+m[1]+']');return;}
+    if((m=l.match(/^@stamp\s+\S+\s+(.*)/))){out.push('','★ '+m[1].replace('::','—'));return;}
+    if((m=l.match(/^@ending\s+(\S+)\s+(.*)/))){out.push('— 엔딩 '+m[1]+': '+m[2].replace('::','·'));return;}
+    if((m=l.match(/^@note\s+(.*)/))){if(withDir)out.push('  ✎ '+m[1]);return;}
+    if(l.startsWith('@'))return;
+    if((m=l.match(/^[*+]\s*\[(.*)\]\s*(.*)$/))){let t=m[1];const d=(t.match(/::(.*)$/)||[])[1];t=t.replace(/::.*$/,'').replace(/\s@\S+\s*$/,'');t=clean(t).replace(/^([^:\s]{1,12}?)([*%!~$^]?):/,(x,n,k)=>n+(KN[k]?'('+KN[k]+')':'')+':');out.push('  ▶ 선택: '+t+(d?` (${d.trim()})`:''));return;}
+    if((m=l.match(/^->\s*(\w+)/))){if(withDir)out.push('    → '+m[1]);return;}
+    if(/^\{|^\}|^-\s*else/.test(l))return;
+    if(l.startsWith('!!')){out.push('효과음: '+l.slice(2).trim());return;}
+    if((m=l.match(/^\((.*)\)$/))){out.push('나레이션: '+clean(m[1]));return;}
+    if((m=l.match(/^([^:\s]{1,12}?)([*%!~$^]?):\s*(.*)$/))){out.push(`${m[1]}${KN[m[2]]?'('+KN[m[2]]+')':''}: ${clean(m[3])}`);return;}
+    out.push(clean(l));
+  });
+  return out.join('\n').replace(/\n{3,}/g,'\n\n').trim()+'\n';
+}
+const row=$('#btnCopy').parentNode;
+const b=el('button','btn','📋 원고 복사');b.type='button';row.insertBefore(b,row.firstChild.nextSibling);
+b.onclick=()=>{
+  const old=document.getElementById('msMenu');if(old)return old.remove();
+  const m=el('div','card');m.id='msMenu';m.style.marginTop='8px';
+  m.innerHTML=`<b>전체 원고 복사</b><div class="row" style="margin-top:8px"><button class="btn sm2" data-ms="r" type="button">읽기용 원고</button><button class="btn ghost sm2" data-ms="d" type="button">연출 포함 원고</button><button class="btn ghost sm2" data-ms="s" type="button">대본 그대로</button><button class="btn ghost sm2" data-ms="f" type="button">.txt 저장</button></div><div class="sm" style="margin-top:6px">읽기용: 대사·나레이션·선택지만 · 연출 포함: 배경·표정·메모까지</div>`;
+  row.after(m);
+  m.onclick=e=>{const k=(e.target.closest('[data-ms]')||{}).dataset;if(!k)return;
+    if(k.ms==='s')return copy(S.src);
+    if(k.ms==='f'){const blob=new Blob([manuscript(true)],{type:'text/plain'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=(((S.src.match(/@title\s+([^:\n]+)/)||[])[1]||'원고').trim())+'.txt';a.click();return toast('원고 파일을 저장했어요');}
+    copy(manuscript(k.ms==='d'));};
+};
+window.WTManuscript=manuscript;
+})();
