@@ -322,3 +322,7 @@ arcForm, deviceId, folderMemo, gdBase, gdLast, gdLinked, ideaText, mangaDataVer,
 - 플레이 모듈 추가: `__play.startWith(o)`, PL.mode='cast'·seed·cast, 프롬프트에 [시작 소재]·[미리 만든 등장인물], 미리 만든 인물은 npcs에서 빠지지 않게
 - playplus 추가: 턴마다 「📐 구도 잡기」(숏·앵글·비율·인물 2명·표정·그림 설명·자세, ★ 중요 장면, 미리보기, GPT 그리기) → `ppCut[게임][턴].pan`, `__ppCut`·`panOf`가 반영. `__ppSeedProf`가 조연 생김새를 표정 시트·그림 요청문에. extra 인물은 「엑스트라」 시트로
 - 생김새 자동(2026-11-21): `window.__lookAsk({name,role,hint,genre,seed})`(castplay 모듈 안, aiAsk 사용) → {name,look,persona,speech}. 캐스팅 플레이 주인공 「✦ 생김새 알아서」, 조연 생김새 칸 ✦, 「＋ 직접 추가」는 바로 생김새까지, 주인공 설명이 비어 있으면 시작할 때 자동. 표정 시트 「✦ 생김새 알아서 짜기」
+
+## 콘티 GPT 그림 · 캐릭터 시트 생성기 (2026-11-21)
+- 콘티 구성기: 판 위 「🖌 GPT로 전체 콘티 그리기」(`ct-gptall`, 화면 글 있는 컷 30개까지)·「🎭 표정 시트」, 컷 편집기 줄 `.ct-gpt`(GPT로 이 컷 그리기·요청문만·그림 올리기/빼기). `ctGptPrompt`, 인물 생김새 `ctLook`(ppProf → 등장인물 → B.chars.look). 그림 id는 컷의 `c.art`, 이미지는 `__ppArt`(IndexedDB pp.art), `cutFill`이 canvas 위에 `.ct-artimg`로 얹는다. `pp-art-ready` 이벤트로 다시 그림
+- 캐릭터 시트 생성기(섹션 `charsheet`, 도구, `[[MOD:charsheet]]` 파일 끝 별도 script): 인물(등장인물/새) → ✦ 생김새(`__lookAsk`) → 시트 7종(턴어라운드·표정·얼굴 각도·의상·포즈·컬러·한 장 모델 시트) 요청문/GPT 열기/그림 올리기. 표정 시트는 🎭(playplus)로 잘라 표정으로. 저장 `csDraft`, `csIndex{이름:{종류:art id}}`, 생김새는 `ppProf`와 공유

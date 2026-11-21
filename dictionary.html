@@ -1488,6 +1488,16 @@ body.dk-drag, body.dk-drag *{user-select:none!important; -webkit-user-select:non
 #castplay-root input[type=text]{font:inherit;padding:6px 8px;border-radius:8px;border:1px solid var(--line,#ccc);background:transparent;color:inherit}
 .pp-cprev{width:100%;border:2px solid #1c1716;overflow:hidden;margin:10px 0;background:#fff}
 .pp-cprev canvas{width:100%!important;height:100%!important;object-fit:cover;border:0}
+.ct-cut{position:relative}
+.ct-artimg{position:absolute;left:0;top:0;width:100%;aspect-ratio:auto;object-fit:cover;z-index:1;pointer-events:none}
+.ct-gpt{margin:6px 0}
+#charsheet-root h3{margin:22px 0 8px}
+.cs-l{display:flex;flex-direction:column;gap:4px;margin:8px 0}
+#charsheet-root .cs-in,#charsheet-root select{font:inherit;font-size:13px;padding:6px 8px;border-radius:8px;border:1px solid var(--line,#ccc);background:transparent;color:inherit}
+.cs-types{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:10px}
+.cs-t{border:1.5px solid var(--line,#ccc);border-radius:12px;padding:10px;display:flex;flex-direction:column;gap:4px}
+.cs-t.on{border-color:var(--ink,#222)}
+.cs-img{width:100%;max-height:260px;object-fit:contain;background:#fff;border-radius:8px;margin-top:6px}
 /* [[/CSS:playplus]] */
 
 /* [[CSS:play]] 클리셰 플레이 */
@@ -2725,6 +2735,7 @@ button.pl-card[disabled]{cursor:default}
   <div id="ct-saved" class="ct-saved"></div>
   <p class="small">컷을 누르면 구도·앵글·화면·대사를 고칠 수 있다. 순서는 컷을 끌어 옮긴다(폰은 길게 눌러 끌기, 키보드는 Alt+화살표, 편집기의 ◀ ▶). 빨간 테두리는 넘김 훅, 「무음」은 대사 없는 컷이다. 그림은 Rough.js(MIT)로 그린다.</p>
   </details>
+  <div class="filterbar ct-gptbar"><button class="chip" id="ct-gptall" type="button">🖌 GPT로 전체 콘티 그리기</button><button class="chip" id="ct-faces" type="button">🎭 표정 시트</button><span class="small">컷을 눌러 편집기에서 「GPT로 이 컷 그리기」·「그림 올리기」</span></div>
   <p class="small" id="ct-stat" role="status"></p>
   <div id="ct-board"></div>
 </section>
@@ -2732,6 +2743,11 @@ button.pl-card[disabled]{cursor:default}
 <section class="blk" id="play">
   <h2 class="big">클리셰 플레이</h2>
   <div id="play-root"></div>
+</section>
+
+<section class="blk" id="charsheet">
+  <h2 class="big">캐릭터 시트 생성기</h2>
+  <div id="charsheet-root"></div>
 </section>
 
 <section class="blk" id="castplay">
@@ -5272,6 +5288,7 @@ var PAGES=[
  {g:'기초',id:'pagemap',t:'페이지 배분 설계',d:'도입·초반·중반·정점·마무리 다섯 구간의 지면 계산.'},
  {g:'놀이',id:'play',t:'클리셰 플레이',d:'AI가 진행하는 웹툰 한 편을 직접 플레이. 숨은 클리셰 카드가 터지면 따르거나 뒤집는다.'},
  {g:'놀이',id:'castplay',t:'캐스팅 플레이',d:'시작 소재·클리셰·주인공을 직접 고르고, 장르에 맞는 조연·엑스트라를 AI로 미리 만든 뒤 플레이. 중요 장면은 직접 구도를 잡는다.'},
+ {g:'도구',id:'charsheet',t:'캐릭터 시트 생성기',d:'인물 하나의 턴어라운드·표정·얼굴 각도·의상·포즈·컬러 시트를 GPT로. 생김새는 AI가 짜 주고, 받은 그림은 인물별로 모은다.'},
  {g:'도구',id:'shuffle',t:'랜덤 구성기',d:'소재·클리셰·엔딩을 한 번에. 연재 모드와 고정 지원.'},
  {g:'도구',id:'ideacomp',t:'아이디어 구성기',d:'적어 둔 아이디어로 소재·클리셰·엔딩·주인공을 골라 구성안을 만든다.'},
  {g:'도구',id:'texts',t:'글 보관함',d:'구성기에서 쓴 줄거리·웹소설·컷별 콘티를 모아 둔다.'},
@@ -14505,6 +14522,7 @@ function cardHTML(c){
 function cutFill(f,c){
   if(c.nar && c.narPos==='between' && balloonsOn()){ var nb=document.createElement('p'); nb.className='ct-narb'; nb.innerHTML=cesc(c.nar).replace(/\n/g,'<br>'); nb.title='컷 사이 나레이션 — 앞 컷과 이 컷 사이'; f.appendChild(nb); }
   f.appendChild(cvFor(c)); f.insertAdjacentHTML('beforeend', cardHTML(c));
+  if(c.art && window.__ppArt){ var au=window.__ppArt.get(c.art); if(au){ var ai=document.createElement('img'); ai.className='ct-artimg'; ai.alt=c.n+'번 컷 그림'; var cvq=f.querySelector('canvas'); ai.onload=function(){ if(cvq){ ai.style.top=cvq.offsetTop+'px'; ai.style.left=cvq.offsetLeft+'px'; ai.style.width=cvq.offsetWidth+'px'; ai.style.height=cvq.offsetHeight+'px'; } }; ai.src=au; if(cvq) cvq.insertAdjacentElement('afterend',ai); else f.insertBefore(ai,f.firstChild); } }
   if(drawMode()==='3d'){ var cb=document.createElement('button'); cb.type='button'; cb.className='ct-cam3'; cb.textContent='🎥'; cb.title=c.n+'번 컷 배경·카메라 바꾸기'; cb.setAttribute('aria-label', c.n+'번 컷 배경·카메라 바꾸기');
     var cvx=f.querySelector('canvas'), place=function(){ if(cvx && cvx.isConnected) cb.style.top=(cvx.offsetTop+8)+'px'; }; requestAnimationFrame(place); setTimeout(place, 400);
     cb.addEventListener('pointerdown', function(e){ e.stopPropagation(); });
@@ -14597,6 +14615,25 @@ function camUI(ed, c, cur, setCam){
     draw();
   });
 }
+// GPT 컷 그림 요청문 (2026-11-21)
+function ctLook(nm){ var pr=null; try{ pr=(JSON.parse(localStorage.getItem('ppProf')||'{}')[nm]||{}).look; }catch(e){} if(pr) return pr;
+  var m=window.__castFind?window.__castFind(nm):null; if(m) return [m.look&&typeof m.look==='string'?m.look:'', m.desc, m.memo].filter(Boolean).join(', ').slice(0,200);
+  var ch=null; (B&&B.chars||[]).forEach(function(x){ if(x.name===nm) ch=x; }); if(ch){ var l=ch.look||{}; return [l.hair&&(l.hair+' hair'), l.dark&&'dark hair', l.glasses&&'glasses', l.hat&&'hat', l.scar&&'scar', l.build&&(l.build+' build'), ch.note].filter(Boolean).join(', '); } return ''; }
+function ctGptPrompt(cuts){
+  var one=function(c){ var who=(c.who&&c.who.length?c.who:(typeof whoOf==='function'?[]:[])).filter(Boolean).slice(0,3), sh=SHOTS.filter(function(s){ return s[0]===c.k; })[0], an=ANGS.filter(function(a){ return a[0]===(c.ang||''); })[0];
+    var wp=c.wp||{}, ratio=c.sz==='wide'?'2:1 wide':c.sz==='tall'?'9:16 tall':c.sz==='half'?'3:4':'4:3';
+    return 'Aspect ratio '+ratio+'.\nShot: '+(sh?sh[1]+' ('+sh[2]+')':'medium shot')+(an&&an[0]?', angle '+an[2]:'')+(c.focus?', speed/focus lines':'')+(c.flash?', flashback border look':'')+'.\n'+
+      'What we see: '+(c.scr||'')+'\n'+(c.line?'Mood from dialogue (do NOT draw text): '+String(c.line).replace(/\n/g,' / ')+'\n':'')+
+      (who.length?'Characters (left to right, keep designs consistent):\n'+who.map(function(nm){ var w=wp[nm]||{}; return '- '+nm+': '+(ctLook(nm)||'')+(w.pose?'; pose '+w.pose:'')+(w.face?'; facing '+w.face:''); }).join('\n'):'No characters.'); };
+  var head='Korean webtoon style, clean line art, cel shading, full color. NO speech bubbles, NO text, NO sound-effect letters, NO panel borders. Leave some empty space for speech bubbles.\n\n';
+  if(cuts.length===1) return 'Draw ONE webtoon panel image. '+head+one(cuts[0]);
+  return 'Draw these '+cuts.length+' webtoon panels ONE BY ONE as separate images, in order. Before each image write only the panel number. Keep every character design identical.\n'+head+cuts.map(function(c){ return '=== PANEL '+c.n+' ===\n'+one(c); }).join('\n\n');
+}
+document.addEventListener('pp-art-ready', function(){ if(B) try{ renderBoard(); }catch(e){} });
+function ctCopy(t){ (navigator.clipboard&&navigator.clipboard.writeText?navigator.clipboard.writeText(t):Promise.reject()).then(function(){ stat('그림 요청문을 복사했다 — ChatGPT에 붙여 넣고, 받은 그림은 컷 편집기 「그림 올리기」'); }, function(){ stat('복사하지 못했다'); }); }
+document.addEventListener('click', function(e){ var t=e.target;
+  if(t.id==='ct-gptall'){ if(!B||!B.cuts||!B.cuts.length) return stat('콘티 컷이 없다'); var q=ctGptPrompt(B.cuts.filter(function(c){ return c.scr; }).slice(0,30)); ctCopy(q); setTimeout(function(){ window.open('https://chatgpt.com/?q='+encodeURIComponent(q.slice(0,6000)),'_blank','noopener'); },150); }
+  if(t.id==='ct-faces'){ if(window.__ppFix) window.__ppFix.openFaces((B&&B.chars&&B.chars[0]&&B.chars[0].name)||''); } });
 function openEdit(f){
   var n=+f.dataset.n, c=B.cuts[n-1]; if(!c || f.querySelector('.ct-ed')) return;
   var ed=document.createElement('div'), P=wpPoses(); ed.className='ct-ed';
@@ -14622,6 +14659,14 @@ function openEdit(f){
     (window.__bcPick?'<div class="filterbar ct-bc"><button class="chip ct-bcin" type="button">베스트컷에서 넣기</button><button class="chip ct-bcout" type="button">이 컷을 베스트컷으로 저장</button></div><div class="ct-bcbox"></div>':'');
   ed.querySelector('.ct-s').value=c.scr||''; ed.querySelector('.ct-l').value=c.line||''; ed.querySelector('.ct-ni').value=c.nar||''; ed.querySelector('.ct-np').value=(c.narPos==='bottom'||c.narPos==='between')?c.narPos:'top'; ed.querySelector('.ct-w').value=whoOf(c).map(function(x){ return x.name||'?'; }).join(', ');
   f.appendChild(ed);
+  (function(){ var r=document.createElement('div'); r.className='filterbar ct-gpt';
+    r.innerHTML='<button class="chip ct-go" type="button" data-cg="gpt">🖌 GPT로 이 컷 그리기</button><button class="chip" type="button" data-cg="copy">요청문만 복사</button><button class="chip" type="button" data-cg="up">🖼 '+(c.art?'그림 바꾸기':'그림 올리기')+'</button>'+(c.art?'<button class="chip" type="button" data-cg="x">그림 빼기</button>':'');
+    ed.insertBefore(r, ed.querySelector('.filterbar'));
+    r.addEventListener('click', function(e){ var b=e.target.closest('[data-cg]'); if(!b) return; e.stopPropagation(); var a=b.dataset.cg;
+      if(a==='gpt'||a==='copy'){ var q=ctGptPrompt([c]); ctCopy(q); if(a==='gpt') setTimeout(function(){ window.open('https://chatgpt.com/?q='+encodeURIComponent(q.slice(0,6000)),'_blank','noopener'); },150); return; }
+      if(a==='x'){ delete c.art; save(); refreshCut(n); return; }
+      if(a==='up'){ var fi=document.createElement('input'); fi.type='file'; fi.accept='image/*'; fi.onchange=function(){ if(!fi.files[0]||!window.__ppArt) return; window.__ppArt.fromFile(fi.files[0]).then(function(id){ c.art=id; save(); refreshCut(n); stat(n+'번 컷에 그림을 넣었다'); }); }; fi.click(); }
+    }); })();
   (function(){   // 가로·세로로 긴 한 컷: 쓰임을 고르면 어울리는 구도·앵글을 맞춰 준다(저장 전에 바꿀 수 있다)
     var sz=ed.querySelector('.ct-sz'), us=ed.querySelector('.ct-use'), ul=ed.querySelector('.ct-usel'), ud=ed.querySelector('.ct-used');
     function fill(){ var z=sz.value; ul.hidden=!(z==='wide'||z==='tall');
@@ -18746,10 +18791,10 @@ function sheet(html){ if(!SH){ SH=document.createElement('div'); SH.id='pp-sheet
   SH.firstChild.innerHTML=html; SH.className='on'; }
 function close(){ if(SH) SH.className=''; }
 function people(){ var p=PL(), L=[]; if(p){ L.push(p.hero.name); (p.cast||[]).concat(p.npcs).forEach(function(x){ if(L.indexOf(x.name)<0) L.push(x.name); }); }
-  Object.keys(SPR).forEach(function(n){ if(L.indexOf(n)<0 && n!==MOB) L.push(n); }); L.push(MOB); return L; }
+  Object.keys(SPR).concat(Object.keys(LG('ppProf',{})), (window.__castList?window.__castList():[]).slice(0,12).map(function(m){ return m.name; })).forEach(function(n){ if(n && L.indexOf(n)<0 && n!==MOB) L.push(n); }); if(U.name && U.name!==MOB && L.indexOf(U.name)<0) L.unshift(U.name); L.push(MOB); return L; }
 function openFaces(name){
-  U={name:name||U.name||people()[0], lay:U.lay||'3x3', mode:'auto', tol:34, cells:null, as:[], drop:{}};
-  paintFaces();
+  U={name:name||U.name||'', lay:U.lay||'3x3', mode:'auto', tol:34, cells:null, as:[], drop:{}};
+  if(!U.name) U.name=people()[0]; paintFaces();
 }
 function paintFaces(){
   var n=U.name, pr=LG('ppProf',{})[n]||{}, mob=n===MOB;
@@ -18929,12 +18974,89 @@ root.addEventListener('pointerdown', function(e){ var b=e.target.closest('.pp-bb
 root.addEventListener('pointermove', function(e){ if(!DR) return; var x=Math.max(5,Math.min(95,(e.clientX-DR.fr.left)/DR.fr.width*100)), y=Math.max(2,Math.min(92,(e.clientY-DR.fr.top)/DR.fr.height*100)); DR.b.style.left=x+'%'; DR.b.style.top=y+'%'; DR.x=x; DR.y=y; });
 root.addEventListener('pointerup', function(){ if(!DR) return; if(DR.x!=null){ var n=+DR.b.dataset.n, cs=cutSet(n), pos=Object.assign({},cs.pos||{}); pos[DR.b.dataset.i]={x:Math.round(DR.x),y:Math.round(DR.y)}; cutSave(n,{pos:pos}); } DR=null; });
 
+window.__ppArt={get:function(id){ return ART[id]; }, put:function(id,u){ ART[id]=u; return put('art',{id:id,u:u}); }, fromFile:function(file){ return loadCanvas(file).then(function(c){ var k=Math.min(1,1100/c.width), o=document.createElement('canvas'); o.width=Math.round(c.width*k); o.height=Math.round(c.height*k); o.getContext('2d').drawImage(c,0,0,o.width,o.height); var id='x'+Date.now().toString(36), u=o.toDataURL('image/jpeg',.86); ART[id]=u; return put('art',{id:id,u:u}).then(function(){ return id; }); }); }};
 window.__ppDeco=function(){ try{ deco(); }catch(e){ console.error(e); } };
 window.__ppFix={allPrompt:allPrompt, manuscript:manuscript, cutPrompt:cutPrompt, sheetPrompt:sheetPrompt, slice:slice, removeBg:removeBg, openFaces:openFaces, spr:SPR};
-idb().then(function(){ return all('spr'); }).then(function(L){ L.forEach(function(r){ SPR[r.id]=r.m; }); return all('art'); }).then(function(L){ L.forEach(function(r){ ART[r.id]=r.u; }); rerender(); deco(); });
+idb().then(function(){ return all('spr'); }).then(function(L){ L.forEach(function(r){ SPR[r.id]=r.m; }); return all('art'); }).then(function(L){ L.forEach(function(r){ ART[r.id]=r.u; }); rerender(); deco(); try{ document.dispatchEvent(new Event('pp-art-ready')); }catch(e){} });
 deco();
 })();
 // [[/MOD:playplus]]
+
+</script>
+<script>
+// [[MOD:charsheet]] 캐릭터 시트 생성기 (2026-11-21)
+// 인물(등장인물에서 고르거나 새로) → 생김새(✦ AI가 알아서) → 시트 종류별 GPT 그림 요청문 → ChatGPT로 그리기 → 받은 그림 올려 인물별 보관
+// 표정 시트는 올리면 칸을 잘라 표정으로(🎭, playplus). 저장: localStorage csDraft·csIndex, ppProf(생김새 공유) · 그림 IndexedDB pp.art(__ppArt)
+(function(){
+var root=document.getElementById('charsheet-root'); if(!root) return;
+function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g,function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
+function LG(k,d){ try{ var v=localStorage.getItem(k); return v==null?d:JSON.parse(v); }catch(e){ return d; } }
+function LS(k,v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} }
+var STY=['Korean webtoon style, clean line art, cel shading','shoujo manga style, big sparkling eyes','shounen manga style, bold lines','romance fantasy illustration style','simple flat 2D style','semi-realistic anime style'];
+var STYN=['웹툰','소녀만화','소년만화','로판 일러스트','단순 2D','반실사 애니'];
+var TYPES=[
+ ['turn','턴어라운드','정면·3/4·옆·뒤 전신 4방향', function(c){ return 'A character TURNAROUND model sheet on one image: the same character in full body, standing in a neutral A-pose, shown from 4 views left to right: FRONT, THREE-QUARTER, SIDE (profile), BACK. Same height and scale in every view, aligned on one ground line. Plain white background, no text, no labels.'; }],
+ ['face','표정 시트','감정별 얼굴 9칸 — 올리면 칸을 잘라 표정으로', null],
+ ['head','얼굴 각도','머리 8방향(정면·좌우·위아래)', function(c){ return 'A HEAD ANGLE reference sheet on one image: the same character head and shoulders in a 4x2 grid: front, 3/4 left, profile left, back, 3/4 right, profile right, looking up, looking down. Neutral expression, same size, plain white background, no text.'; }],
+ ['outfit','의상·소품','옷 앞뒤와 소품 확대', function(c){ return 'A COSTUME and PROPS detail sheet on one image: the character outfit shown flat from the front and back, plus close-up drawings of shoes, accessories and signature items around it. Plain white background, no text.'; }],
+ ['pose','전신 포즈','성격이 드러나는 포즈 6개', function(c){ return 'A POSE sheet on one image: the same character in 6 full-body dynamic poses that show their personality ('+(c.persona||'')+'): e.g. idle, walking, running, pointing, sitting, a signature action. 3x2 grid, plain white background, no text.'; }],
+ ['color','컬러 설정','대표 컷 + 색상 팔레트', function(c){ return 'A COLOR model sheet on one image: one clean front full-body illustration of the character, and beside it a color palette of round swatches for skin, hair, eyes, main clothing and accent colors. Plain white background, no text, leave the swatches unlabeled.'; }],
+ ['all','한 장 모델 시트','전부 한 장에 (턴어라운드·표정·소품)', function(c){ return 'A complete CHARACTER MODEL SHEET on one wide image: a large front full-body view, small side and back views, 6 small facial expressions (neutral, smile, angry, sad, surprised, embarrassed), and close-ups of signature accessories. Clean layout, plain white background, no text or labels.'; }]
+];
+var D=Object.assign({src:'new', id:'', name:'', role:'', look:'', persona:'', style:0, on:{turn:1,face:1}}, LG('csDraft',{}));
+var MSG='', BUSY=false;
+function save(){ LS('csDraft',D); }
+function castList(){ return window.__castList?window.__castList():[]; }
+function idx(){ return LG('csIndex',{}); }
+function base(){ return 'CHARACTER: '+(D.name||'unnamed')+(D.role?' ('+D.role+')':'')+'. Appearance: '+(D.look||'(describe)')+'.'+(D.persona?' Personality: '+D.persona+'.':'')+'\nSTYLE: '+STY[D.style]+', full color. Keep the design EXACTLY identical in every drawing on the sheet.\n\n'; }
+function promptOf(k){ var t=TYPES.filter(function(x){ return x[0]===k; })[0]; if(!t) return '';
+  if(k==='face'){ syncProf(); return window.__ppFix?window.__ppFix.sheetPrompt(D.name,'3x3'):''; }
+  return 'Create ONE image.\n'+base()+t[3](D); }
+function syncProf(){ if(!D.name) return; var a=LG('ppProf',{}); a[D.name]=Object.assign(a[D.name]||{},{look:[D.look,D.role].filter(Boolean).join(', ')}); LS('ppProf',a); }
+function html(){
+  var cl=castList(), ix=idx()[D.name]||{}, art=window.__ppArt;
+  var s='<p class="lede">인물 한 명의 <b>캐릭터 시트</b>를 GPT로 그리게 한다. 생김새는 비워 두면 AI가 짜 준다. 받은 그림을 올리면 인물별로 모아 두고, 표정 시트는 잘라서 클리셰 플레이·콘티 장면의 얼굴로 쓴다.</p>';
+  s+='<h3>① 인물</h3><div class="filterbar">'+(cl.length?'<select class="cs-sel"><option value="">새 인물</option>'+cl.map(function(m){ return '<option value="'+esc(m.id)+'"'+(D.src==='cast'&&D.id===m.id?' selected':'')+'>'+esc(m.name)+(m.role?' · '+esc(m.role):'')+'</option>'; }).join('')+'</select>':'')+
+    '<input class="cs-in" data-f="name" placeholder="이름" maxlength="12" value="'+esc(D.name)+'" style="width:7em"><input class="cs-in" data-f="role" placeholder="역할 (예: 라이벌, 조력자)" value="'+esc(D.role)+'"></div>'+
+    '<label class="small cs-l">생김새<textarea class="cs-in" data-f="look" rows="3" placeholder="성별·나이·체형·머리·눈·옷·소품 — 비우거나 몇 단어만 적고 ✦">'+esc(D.look)+'</textarea></label>'+
+    '<label class="small cs-l">성격<input class="cs-in" data-f="persona" value="'+esc(D.persona)+'" placeholder="포즈·표정에 반영된다"></label>'+
+    '<div class="filterbar"><button class="chip ct-go" type="button" data-cs="look"'+(BUSY?' disabled':'')+'>✦ 생김새 알아서 짜기</button><button class="chip" type="button" data-cs="tocast">등장인물에 저장</button>'+
+    '<span class="small">그림체</span><select class="cs-sty">'+STYN.map(function(n,i){ return '<option value="'+i+'"'+(D.style==i?' selected':'')+'>'+n+'</option>'; }).join('')+'</select></div>';
+  s+='<h3>② 시트 고르기</h3><div class="cs-types">'+TYPES.map(function(t){ var on=!!D.on[t[0]], has=ix[t[0]]&&art&&art.get(ix[t[0]]);
+    return '<div class="cs-t'+(on?' on':'')+'"><label><input type="checkbox" data-on="'+t[0]+'"'+(on?' checked':'')+'> <b>'+t[1]+'</b></label><span class="small">'+t[2]+'</span>'+
+      (on?'<div class="filterbar"><button class="chip ct-go" type="button" data-cs="gpt" data-k="'+t[0]+'">🖌 GPT로 그리기</button><button class="chip" type="button" data-cs="copy" data-k="'+t[0]+'">요청문 복사</button><button class="chip" type="button" data-cs="up" data-k="'+t[0]+'">🖼 '+(t[0]==='face'?'시트 올려 자르기':'그림 올리기')+'</button></div>':'')+
+      (has?'<img class="cs-img" alt="" src="'+art.get(ix[t[0]])+'">':'')+'</div>'; }).join('')+'</div>';
+  s+='<div class="filterbar"><button class="chip" type="button" data-cs="copyall">고른 시트 요청문 한꺼번에 복사</button></div>'+(MSG?'<p class="small" role="status">'+esc(MSG)+'</p>':'');
+  var who=Object.keys(idx()); if(who.length) s+='<h3>③ 모아 둔 시트</h3><div class="filterbar">'+who.map(function(n){ return '<button class="chip'+(n===D.name?' on':'')+'" type="button" data-cs="open" data-n="'+esc(n)+'">'+esc(n)+' ('+Object.keys(idx()[n]).length+')</button>'; }).join('')+'</div>';
+  return s;
+}
+function render(){ root.innerHTML=html(); }
+function need(){ if(!D.name.trim()){ MSG='이름을 먼저 적는다 (✦를 누르면 이름도 지어 준다).'; render(); return false; } return true; }
+function copy(t,m){ (navigator.clipboard&&navigator.clipboard.writeText?navigator.clipboard.writeText(t):Promise.reject()).then(function(){ MSG=m||'복사했다'; render(); }, function(){ MSG='복사하지 못했다'; render(); }); }
+root.addEventListener('click', function(e){ var b=e.target.closest('[data-cs]'); if(!b) return; var a=b.dataset.cs, k=b.dataset.k;
+  if(a==='look'){ if(!window.__lookAsk){ MSG='AI를 쓸 수 없다'; return render(); } BUSY=true; MSG='생김새를 짜는 중…'; render();
+    window.__lookAsk({name:D.name, role:D.role, hint:[D.look,D.persona].filter(Boolean).join(' · ')}).then(function(j){ BUSY=false; if(!D.name) D.name=String(j.name||'').slice(0,12); D.look=String(j.look||''); if(!D.persona) D.persona=String(j.persona||''); syncProf(); MSG='생김새를 짰다. 마음에 안 들면 다시 누른다.'; save(); render(); },
+      function(er){ BUSY=false; MSG=String(er&&er.message||er); render(); }); return; }
+  if(a==='tocast'){ if(!need()) return; syncProf(); var r=window.__castUpsert?window.__castUpsert({name:D.name, role:D.role, desc:[D.look,D.persona].filter(Boolean).join(' · '), fig:typeof castFigGuess==='function'?castFigGuess(D.look):null}):''; MSG=r?'등장인물에 저장했다.':'저장하지 못했다'; return render(); }
+  if(a==='copy'||a==='gpt'){ if(!need()) return; var q=promptOf(k); copy(q, a==='gpt'?'요청문 복사 — ChatGPT에서 그린 뒤 그림을 저장해 「그림 올리기」':'요청문을 복사했다'); if(a==='gpt') setTimeout(function(){ window.open('https://chatgpt.com/?q='+encodeURIComponent(q.slice(0,6000)),'_blank','noopener'); },150); return; }
+  if(a==='copyall'){ if(!need()) return; var ks=TYPES.filter(function(t){ return D.on[t[0]]; }); return copy(ks.map(function(t){ return '##### '+t[1]+' #####\n'+promptOf(t[0]); }).join('\n\n'), ks.length+'개 요청문을 복사했다 — 하나씩 보내면 된다'); }
+  if(a==='up'){ if(!need()) return; if(k==='face'){ syncProf(); if(window.__ppFix){ window.__ppFix.openFaces(D.name); setTimeout(function(){ var f=document.querySelector('#pp-file'); if(f) f.click(); },80); } return; }
+    var fi=document.createElement('input'); fi.type='file'; fi.accept='image/*'; fi.onchange=function(){ if(!fi.files[0]||!window.__ppArt) return; window.__ppArt.fromFile(fi.files[0]).then(function(id){ var x=idx(); x[D.name]=x[D.name]||{}; x[D.name][k]=id; LS('csIndex',x); MSG='그림을 모아 두었다.'; render(); }); }; fi.click(); return; }
+  if(a==='open'){ var n=b.dataset.n, m=null; castList().forEach(function(c){ if(c.name===n) m=c; }); D.name=n; if(m){ D.src='cast'; D.id=m.id; D.role=m.role||''; } var pr=LG('ppProf',{})[n]; if(pr&&pr.look) D.look=pr.look; save(); return render(); }
+});
+root.addEventListener('change', function(e){ var t=e.target;
+  if(t.classList.contains('cs-sel')){ var m=null; castList().forEach(function(c){ if(c.id===t.value) m=c; });
+    if(m){ D.src='cast'; D.id=m.id; D.name=m.name; D.role=m.role||''; var pr=LG('ppProf',{})[m.name]; D.look=(pr&&pr.look)||[typeof m.look==='string'?m.look:'', m.desc].filter(Boolean).join(', '); D.persona=m.persona||''; } else { D.src='new'; D.id=''; D.name=''; D.role=''; D.look=''; D.persona=''; }
+    save(); return render(); }
+  if(t.classList.contains('cs-sty')){ D.style=+t.value; save(); return; }
+  if(t.dataset.on){ D.on[t.dataset.on]=t.checked?1:0; save(); return render(); } });
+root.addEventListener('input', function(e){ var t=e.target; if(t.classList.contains('cs-in')){ D[t.dataset.f]=t.value; save(); } });
+document.addEventListener('pp-art-ready', function(){ if(root.offsetParent) render(); });
+window.PAGE_ON=window.PAGE_ON||{};
+var prev=window.PAGE_ON.charsheet; window.PAGE_ON.charsheet=function(){ if(prev) try{ prev(); }catch(e){} render(); };
+render();
+})();
+// [[/MOD:charsheet]]
 
 </script>
 </body>
