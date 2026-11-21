@@ -340,3 +340,4 @@ arcForm, deviceId, folderMemo, gdBase, gdLast, gdLinked, ideaText, mangaDataVer,
   5 장면·배경(B.sceneBg[a]={place,ko,en,light,art}, AI로 짜기, GPT 배경 한번에/장면별, 배경 올리기 → 컷 프롬프트에 배경+첨부 안내)
   6 다듬기(장면별 보기·대사 배정 점검·연출 짜기·컷 그림판; ✎는 어디서든 6단계로)
   7 주요 컷(autoKey: 훅·가로/세로 큰 컷·집중선·장면 끝, c.key로 넣고 빼기 → GPT 한번에 '다음' 순차, 컷마다 그림 올리기 c.art; 장면 러프 콘티는 접어 둠)
+- 2026-11-21 이야기 구체화: 미리보기 상자 없이 결과를 이야기 칸에 바로 넣음(테두리 반짝·스크롤), 진행/키 없음/오류를 단추 아래에 바로 표시, 원래대로·원래 글 아래에 남기기
