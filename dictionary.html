@@ -1551,6 +1551,7 @@ body.dk-drag, body.dk-drag *{user-select:none!important; -webkit-user-select:non
 .ct-cut.ct-gmark canvas,.ct-cut.ct-gmark .ct-col{outline:3px solid #e53935;outline-offset:-3px}
 .ce-box .ce-prev{position:relative;width:100%;border:1px solid var(--line,#ccc);touch-action:none}.ce-prev img{cursor:grab}
 .ce-ctl{display:grid;gap:.4rem;font-size:.82rem}.ce-ctl fieldset{border:1px solid var(--line,#ddd);border-radius:8px;padding:.4rem .6rem;display:grid;gap:.25rem}.ce-ctl label{display:grid;grid-template-columns:5.5em 1fr;align-items:center;gap:.4rem}.ce-ctl .ce-chk{display:inline-flex;gap:.3rem}
+.an-l{padding-left:1.2rem;display:grid;gap:.6rem}.an-l>li{border:1px solid var(--line,#ddd);border-radius:8px;padding:.4rem .5rem}.an-w{color:#b26a00;font-size:.8rem;margin:.2rem 0}.an-t{width:100%;border-collapse:collapse;font-size:.76rem;margin:.3rem 0}.an-t th,.an-t td{border-bottom:1px solid var(--line,#eee);padding:.15rem .25rem;text-align:left;vertical-align:top}.an-t td:first-child{white-space:nowrap}
 .gq-l{list-style:none;padding:0;margin:.4rem 0;display:grid;gap:.4rem}.gq-l li{border:1px solid var(--line,#ddd);border-left:3px solid #e53935;border-radius:8px;padding:.35rem .5rem}.gq-l p{margin:.15rem 0}.gq-d{font-size:.8rem;color:var(--ink-2,#333)}.gq-note{width:100%;font:inherit;font-size:.8rem}.gq-ed{border:none;background:none;cursor:pointer}
 .ce-tabs{display:flex;flex-wrap:wrap;gap:.25rem}.ce-red{background:#e53935!important;color:#fff!important;border-color:#e53935!important}.ce-scr{margin:.2rem 0}
 .ct-colb{position:absolute;max-width:42%;background:#fff;border:1.5px solid #222;border-radius:999px;padding:.15rem .5rem;font-size:.68rem;line-height:1.3;color:#111;z-index:2}.ct-colb.th{border-style:dashed}.ct-coln{position:absolute;left:3%;bottom:3%;max-width:70%;background:#fffbe6;border:1px solid #222;padding:.1rem .4rem;font-size:.64rem;color:#111;z-index:2}
@@ -2852,6 +2853,12 @@ button.pl-card[disabled]{cursor:default}
   <p class="small">AI가 고른 <b>주요 컷</b>(훅·큰 컷·감정 정점·장면 끝)을 확인하고 GPT로 한 번에 그린다. 받은 그림은 컷마다 올린다.</p>
   <div id="ct-s7"></div>
   <div class="filterbar ct-gptbar"><button class="chip" id="ct-gptall" type="button">🖌 GPT로 전체 콘티 그리기</button><button class="chip" id="ct-faces" type="button">🎭 표정 시트</button></div>
+  </div>
+
+  <div class="ct-step" data-st="8">
+  <h3>8. 완성·애니메이션</h3>
+  <p class="small">모든 장면을 이어 <b>완성 콘티</b>(대사 있는 판·없는 판)를 만들고, <b>15초 애니메이션 클립</b> 프롬프트를 짠다.</p>
+  <div id="ct-s8"></div>
   </div>
 </section>
 
@@ -14821,6 +14828,74 @@ function sendGpt(text, list, note){ ctCopy(text);
     return refSheet(list).then(function(u){ if(list.length){ var a=document.createElement('a'); a.download='gpt-참고그림.png'; a.href=u; document.body.appendChild(a); a.click(); a.remove(); }
       stat((list.length?'참고 그림 '+list.length+'장을 한 장으로 저장했다 — ChatGPT에 첨부하고 ':'')+'요청문을 붙여 넣는다 (복사됨)'); window.open('https://chatgpt.com/'+(text.length<1800?'?q='+encodeURIComponent(text):''),'_blank','noopener'); });
   }).catch(function(){ stat('그림을 준비하지 못했다. 요청문은 복사돼 있다'); }); }
+// ===== 8단계: 완성 콘티(대사 있는 판·없는 판) + 애니메이션 15초 클립 프롬프트 =====
+function cutRatio(c){ var z=''; try{ z=cutSize(c); }catch(e){} return z==='wide'?.5:z==='tall'?16/9:z==='half'?4/3:.75; }
+function cutImg(c, W){ var H=Math.round(W*cutRatio(c)), A=window.__ppArt;
+  if(c.art && A && A.get(c.art)) return loadImg(A.get(c.art)).then(function(im){ var cv=document.createElement('canvas'); cv.width=W; cv.height=H; var g=cv.getContext('2d'); g.fillStyle='#fff'; g.fillRect(0,0,W,H); if(im){ var k=Math.max(W/im.width,H/im.height), w=im.width*k, h=im.height*k; g.drawImage(im,(W-w)/2,(H-h)/2,w,h); } return cv; });
+  if(!c.use3d && (bgUrlOf(c) || compOf(c).ppl.some(function(p){ return srcUrl(p.nm,p.src); }))) return compPng(c, W);
+  var bc=root.querySelector('.ct-cut[data-n="'+c.n+'"] canvas'), cv=document.createElement('canvas'); cv.width=W; cv.height=H; var g=cv.getContext('2d'); g.fillStyle='#fff'; g.fillRect(0,0,W,H);
+  if(bc && bc.width>10){ try{ g.drawImage(bc,0,0,W,H); }catch(e){} }
+  g.fillStyle='rgba(255,255,255,.75)'; g.fillRect(0,H-74,W,74); g.fillStyle='#555'; g.font='20px sans-serif'; wrapText(g, '['+c.n+'] '+(c.scr||'').slice(0,90), 16, H-46, W-32, 26); return Promise.resolve(cv); }
+function wrapText(g, t, x, y, maxW, lh){ var line='', lines=[]; String(t).split('').forEach(function(ch){ var tt=line+ch; if(g.measureText(tt).width>maxW && line){ lines.push(line); line=ch; } else line=tt; }); if(line) lines.push(line); lines.forEach(function(l,i){ g.fillText(l, x, y+i*lh); }); return lines.length; }
+function drawBubbles(g, c, W, H){ var cp=compOf(c), L=String(c.line||'').split('\n').map(function(l){ return l.trim(); }).filter(Boolean).slice(0,3);
+  g.font='bold 22px sans-serif'; L.forEach(function(l,i){ var p=lnParse(l), say=p.say.replace(/^\((.*)\)$/,'$1'), ix=-1; cp.ppl.forEach(function(q,j){ if(q.nm===p.who) ix=j; });
+    var cx=(ix>-1?cp.ppl[ix].x:[22,70,40][i])/100*W, mw=Math.min(W*.45, g.measureText(say).width+36), lines=Math.ceil((g.measureText(say).width+36)/mw), bh=lines*28+18, bx=Math.max(8,Math.min(W-mw-8,cx-mw/2)), by=12+i*(bh+10);
+    g.save(); g.fillStyle='#fff'; g.strokeStyle='#111'; g.lineWidth=2.5; if(p.kind==='think'||/^\(/.test(p.say)) g.setLineDash([6,5]); g.beginPath(); if(g.roundRect) g.roundRect(bx,by,mw,bh,bh/2); else g.rect(bx,by,mw,bh); g.fill(); g.stroke(); g.restore();
+    g.fillStyle='#111'; wrapText(g, say, bx+18, by+32, mw-36, 28); });
+  if(c.nar){ g.font='20px sans-serif'; var nw=Math.min(W*.7, g.measureText(c.nar).width+28), nl=Math.ceil((g.measureText(c.nar).width+28)/nw), nh=nl*26+14, ny=c.narPos==='bottom'?H-nh-10:H-nh-10; g.fillStyle='#fffbe6'; g.fillRect(10,ny,nw,nh); g.strokeStyle='#111'; g.lineWidth=1.5; g.strokeRect(10,ny,nw,nh); g.fillStyle='#111'; wrapText(g, c.nar, 24, ny+28, nw-28, 26); } }
+function buildStrip(withText){ var W=800, cuts=B.cuts.filter(function(c){ return c.scr || c.art; });
+  return Promise.all(cuts.map(function(c){ return cutImg(c, W); })).then(function(cs){ var gaps=cuts.map(function(c,i){ if(!i) return 40; var x=null, y=null; try{ x=sceneOfCut(c.n); y=sceneOfCut(cuts[i-1].n); }catch(e){} return (c.gap==3?260:c.gap==2?140:c.gap==0?8:(x&&y&&x!==y)?200:60); });
+    var H=cs.reduce(function(a,cv,i){ return a+cv.height+gaps[i]; },0)+60, out=document.createElement('canvas'); out.width=W; out.height=H; var g=out.getContext('2d'); g.fillStyle='#fff'; g.fillRect(0,0,W,H); var y=0;
+    cs.forEach(function(cv,i){ y+=gaps[i]; if(withText){ var t=document.createElement('canvas'); t.width=cv.width; t.height=cv.height; var tg=t.getContext('2d'); tg.drawImage(cv,0,0); drawBubbles(tg, cuts[i], cv.width, cv.height); cv=t; } g.drawImage(cv,0,y); g.strokeStyle='#111'; g.lineWidth=3; g.strokeRect(1.5,y,W-3,cv.height); y+=cv.height; });
+    return out; }); }
+function dlCanvas(cv, name){ return new Promise(function(res){ cv.toBlob(function(b){ var f=new File([b], name, {type:'image/png'}); res(f); }, 'image/png'); }); }
+function exportStrips(){ if(!B||!B.cuts||!B.cuts.length) return stat('콘티가 없다'); stat('완성 콘티를 만드는 중… (컷이 많으면 오래 걸린다)');
+  Promise.all([buildStrip(true), buildStrip(false)]).then(function(r){ return Promise.all([dlCanvas(r[0],'콘티-대사있음.png'), dlCanvas(r[1],'콘티-대사없음.png')]); }).then(function(files){
+    if(navigator.canShare && navigator.canShare({files:files})) return navigator.share({files:files, title:'완성 콘티'}).then(function(){ stat('완성 콘티 두 장을 보냈다'); }, function(){ files.forEach(dlFile); });
+    B.exported=1; save(); stepNav(); files.forEach(dlFile); stat('완성 콘티 두 장을 저장했다 — 대사 있는 판 · 대사 없는 판'); }).catch(function(e){ stat('완성 콘티를 만들지 못했다: '+(e&&e.message||'')); }); }
+function dlFile(f){ var a=document.createElement('a'); a.download=f.name; a.href=URL.createObjectURL(f); document.body.appendChild(a); a.click(); setTimeout(function(){ URL.revokeObjectURL(a.href); a.remove(); },2000); }
+// 애니메이션: 컷 시간 짐작 → 15초 클립으로 끊기 → 점검
+function cutSec(c){ var base={els:3,ls:2.5,fs:2.2,stand:2.2,two:2.2,ms:2,ots:2,bs:1.8,cu:1.6,ecu:1.3}[c.k]||2, say=String(c.line||'').replace(/^[^:\n]{1,12}:\s*/gm,'').replace(/\s+/g,''), nar=String(c.nar||'').replace(/\s+/g,'');
+  var t=Math.max(base, say.length/6.5+0.6)+(nar?nar.length/9:0)+(c.dyn?-.3:0)+(c.hook?0.8:0)+(c.gap==3?0.8:0); return Math.round(Math.min(6, Math.max(1, t))*2)/2; }
+function isMv(c){ return !!(c.dyn||/싸우|달려|뛰어|베|폭발|날아|부딪|휘두르|쓰러/.test(c.scr||'')); }
+function animClips(){ var cuts=B.cuts.filter(function(c){ return c.scr; }), clips=[], cur=null;
+  var push=function(){ if(cur && cur.cuts.length) clips.push(cur); cur=null; };
+  cuts.forEach(function(c){ var sec=cutSec(c), x=null; try{ x=sceneOfCut(c.n); }catch(e){}
+    var lines=String(c.line||'').split('\n').filter(Boolean).length;
+    if(cur){ var why=''; if(cur.sec+sec>15) why='15초를 넘어서'; else if((x&&x.a)!==(cur.scene&&cur.scene.a)) why='장면이 바뀌어서'; else if(cur.cuts.length>=6) why='컷이 너무 많아서(6컷)'; else if(cur.lines+lines>5) why='대사가 너무 많아서'; else if(cur.chars+String(c.line||'').length>110) why='말이 너무 길어서'; else if(cur.mv+(isMv(c)?1:0)>2) why='큰 움직임이 셋째라서';
+      if(why){ cur.cutWhy=why; push(); } }
+    if(!cur) cur={cuts:[], sec:0, lines:0, chars:0, mv:0, scene:x}; if(isMv(c)) cur.mv++;
+    cur.cuts.push({c:c, sec:sec}); cur.sec+=sec; cur.lines+=lines; cur.chars+=String(c.line||'').length; });
+  push(); clips.forEach(function(cl){ cl.plan=cl.sec; if(cl.sec<15){ var k=15/cl.sec; cl.cuts.forEach(function(o){ o.sec=Math.round(o.sec*k*10)/10; }); var sum=cl.cuts.reduce(function(a,o){ return a+o.sec; },0); cl.cuts[cl.cuts.length-1].sec=Math.round((cl.cuts[cl.cuts.length-1].sec+15-sum)*10)/10; cl.sec=15; cl.stretched=1; } });
+  clips.forEach(function(cl){ var warn=[]; if(cl.stretched && cl.plan<7) warn.push('내용이 '+cl.plan.toFixed(1)+'초뿐이라 15초로 늘렸다 — 느리게 보일 수 있다'); if(cl.cuts.length===1 && cl.cuts[0].sec>=5.5) warn.push('한 컷이 너무 길다 — 대사를 줄이거나 컷을 나눈다');
+    cl.warn=warn; });
+  return clips; }
+var MOVE=function(c,i,n){ return c.focus?'quick push-in':/^(cu|ecu)$/.test(c.k)?'slow push-in':/^(ls|els)$/.test(c.k)?'slow pan':c.ang==='high'?'slow tilt down':c.ang==='low'?'slow tilt up':c.dyn?'handheld shake':'subtle camera drift'; };
+function clipPrompt(cl, k, n){ var t=0, seen={}, nm=[]; cl.cuts.forEach(function(o){ compOf(o.c).ppl.forEach(function(p){ if(!seen[p.nm]){ seen[p.nm]=1; nm.push(p.nm); } }); ctWho(o.c).forEach(function(w){ if(!seen[w]){ seen[w]=1; nm.push(w); } }); });
+  var x=cl.scene, g=x&&B.sceneBg&&B.sceneBg[x.a];
+  var tl=cl.cuts.map(function(o,i){ var c=o.c, a=t, b2=t+o.sec; t=b2; var L=String(c.line||'').split('\n').filter(Boolean).map(function(l){ var p=lnParse(l); return (p.who||'(narration)')+': "'+p.say+'"'; });
+    return a.toFixed(1)+'s–'+b2.toFixed(1)+'s | '+(SHOTEN[c.k]||'medium shot')+', '+(ANGEN[c.ang||'']||'eye level')+', camera: '+MOVE(c,i)+' | '+(c.scr||'')+(L.length?' | dialogue (Korean voice, lip-sync): '+L.join(' / '):' | no dialogue')+(c.nar?' | narration voice-over: "'+c.nar+'"':''); });
+  return (n>1?'[CLIP '+k+' of '+n+']\n':'')+'Create a 15-second animated video clip (exactly 15.0 seconds total). Korean webtoon / anime style, consistent character designs, cinematic cuts in this order:\n'+
+    ((g&&(g.place||g.en||g.ko))?'Location: '+[g.place,g.en||g.ko,g.light].filter(Boolean).join(' / ')+'\n':x&&x.place?'Location: '+x.place+'\n':'')+
+    (nm.length?'Characters (match attached sheets):\n'+nm.map(function(n){ return '- '+n+': '+(ctLookSafe(n)||''); }).join('\n')+'\n':'')+
+    'TIMELINE:\n'+tl.join('\n')+'\nNo on-screen text or subtitles. Smooth transitions between shots.'; }
+function renderS8(){ var box=document.getElementById('ct-s8'); if(!box) return; if(!B||!B.cuts||!B.cuts.length){ box.innerHTML='<p class="small">4단계에서 콘티를 먼저 만든다.</p>'; return; }
+  var C=animClips(), tot=C.reduce(function(a,c){ return a+c.sec; },0), drawn=B.cuts.filter(function(c){ return c.art; }).length, n=B.cuts.filter(function(c){ return c.scr; }).length;
+  box.innerHTML='<div class="sv-all"><b>📜 완성 콘티</b> <span class="small">모든 컷을 장면 순서대로 이어 붙인 세로 한 장</span><p class="small">'+n+'컷 중 GPT 완성 그림 '+drawn+'컷 · 나머지는 시트 합성 → 3D·선 그림 순으로 쓴다.</p><div class="sv-act"><button class="chip ct-go" type="button" id="ct-strip">완성 콘티 만들기 (대사 있는 판 + 대사 없는 판)</button></div></div>'+
+    '<div class="sv-all"><b>🎬 애니메이션 프롬프트</b> <span class="small">한 클립 = 15초 · '+C.length+'개 클립 (컷 시간 합 '+tot.toFixed(1)+'초)</span><div class="sv-act"><button class="chip ct-go" type="button" data-an="all">📤 시트와 같이 전체 보내기</button><button class="chip" type="button" data-an="copy">전체 복사</button></div>'+
+    '<ol class="an-l">'+C.map(function(cl,i){ var t=0; return '<li><b>클립 '+(i+1)+'</b> <span class="small">'+cl.cuts.length+'컷 · '+cl.sec.toFixed(1)+'초'+(cl.scene?' · '+cesc(dispNm(cl.scene.name||'')):'')+(cl.cutWhy?' · 다음 클립으로 끊음: '+cl.cutWhy:'')+'</span>'+
+      (cl.warn.length?'<p class="an-w">⚠ '+cl.warn.map(cesc).join(' / ')+'</p>':'')+'<table class="an-t"><tr><th>시간</th><th>컷</th><th>화면</th><th>대사</th></tr>'+cl.cuts.map(function(o){ var a=t; t+=o.sec; return '<tr><td>'+a.toFixed(1)+'–'+t.toFixed(1)+'초</td><td>'+o.c.n+'</td><td>'+cesc(shotName(o.c.k))+' · '+cesc(o.c.scr||'')+'</td><td>'+cesc(String(o.c.line||'').replace(/\n/g,' / '))+(o.c.nar?' <i>(나레이션) '+cesc(o.c.nar)+'</i>':'')+'</td></tr>'; }).join('')+'</table>'+
+      '<div class="sv-act"><button class="chip" type="button" data-an="one" data-i="'+i+'">이 클립 복사</button><button class="chip" type="button" data-an="send1" data-i="'+i+'">📤 시트와 같이 보내기</button></div></li>'; }).join('')+'</ol>'+
+    '<p class="small">시간은 샷 크기와 대사 길이로 짐작했다(한국어 초당 6~7자). 15초가 넘거나 장면이 바뀌거나 컷 6개·대사 5줄을 넘으면 다음 클립으로 끊고, 모자라면 비율대로 늘려 클립마다 딱 15초로 맞춘다. 시간을 바꾸려면 6단계에서 대사를 줄이거나 컷을 나눈다.</p></div>'; }
+document.addEventListener('click', function(e){ var t=e.target; if(!B) return;
+  if(t.id==='ct-strip'){ exportStrips(); return; }
+  var a=t.closest&&t.closest('[data-an]'); if(!a) return; var C=animClips(), k=a.dataset.an;
+  var all=function(){ return (C.length>1?'I will give you '+C.length+' clips. Make ONLY clip 1 now. When I reply "다음", make the next clip. Keep characters and places identical.\n\n':'')+C.map(function(cl,i){ return clipPrompt(cl,i+1,C.length); }).join('\n\n'); };
+  if(k==='copy'){ ctCopy(all()); return; }
+  if(k==='one'){ ctCopy(clipPrompt(C[+a.dataset.i],1,1)); return; }
+  var cuts=k==='all'?B.cuts.filter(function(c){ return c.scr; }):C[+a.dataset.i].cuts.map(function(o){ return o.c; });
+  sendGpt(k==='all'?all():clipPrompt(C[+a.dataset.i],1,1), refImgs(cuts)); });
+
 function renderGptQ(){ var box=document.getElementById('ct-gptq'); if(!box) return; var Q=gptQ();
   box.innerHTML='<div class="sv-all ce-q"><b>🔴 GPT로 하기 '+Q.length+'컷</b> <span class="small">컷 그림의 「GPT로 하기」로 표시한다</span>'+(Q.length?'<ul class="gq-l">'+Q.map(function(c){ return '<li><b>'+c.n+'번</b> <button type="button" class="gq-ed" data-gqe="'+c.n+'">🎛</button><p class="small">'+cesc(c.scr||'')+'</p><p class="gq-d">'+cesc(compDesc(c).ko)+'</p><input type="text" class="gq-note" data-gqn="'+c.n+'" placeholder="연출 메모 (예: 눈을 내리깐다, 손에 쥔 편지를 강조)" value="'+cesc(c.cnote||'')+'"></li>'; }).join('')+'</ul><div class="sv-act"><button class="chip ct-go" type="button" data-gq="send">📤 시트·배경 그림과 같이 GPT로 보내기</button><button class="chip" type="button" data-gq="go">요청문만 GPT로</button><button class="chip" type="button" data-gq="copy">요청문 복사</button><button class="chip" type="button" data-gq="png">구성 그림 저장 (첨부용)</button><button class="chip" type="button" data-gq="show">모아 보기</button><button class="chip" type="button" data-gq="clear">표시 모두 지우기</button></div><pre class="sv-pr" hidden></pre><p class="small">폰에서는 공유 창에서 <b>ChatGPT</b>를 고르면 시트·배경·구성 그림과 요청문이 같이 붙는다. 컴퓨터에서는 참고 그림 한 장이 저장되니 ChatGPT에 첨부한다. 한 컷을 그리면 「다음」. 받은 그림은 7단계에서 컷마다 올린다.</p>':'')+'</div>'; }
 document.addEventListener('input', function(e){ var t=e.target; if(t.dataset && t.dataset.gqn && B){ var c=B.cuts[+t.dataset.gqn-1]; if(c){ c.cnote=t.value.slice(0,200); save(); } } });
@@ -15063,7 +15138,7 @@ document.addEventListener('click', function(e){ var t=e.target; if(!t.closest ||
     var rest=ai.filter(function(x){ return !x.done; }); renderScenes(); dlgRender(dlgCheck(), rest); stat(q[0]+'번 컷 대사를 바꿨다'); }
 });
 // ===== 단계 진행 (2026-11-21): 구체화 → 캐릭터 시트 → 대사 배정 → 콘티 → 장면·배경 → 다듬기 → 주요 컷 =====
-var STEPS=[[1,'이야기'],[2,'캐릭터'],[3,'대사 배정'],[4,'콘티'],[5,'장면·배경'],[6,'다듬기'],[7,'주요 컷']];
+var STEPS=[[1,'이야기'],[2,'캐릭터'],[3,'대사 배정'],[4,'콘티'],[5,'장면·배경'],[6,'다듬기'],[7,'주요 컷'],[8,'완성·영상']];
 var CSTEP=(function(){ try{ return +localStorage.getItem('ctStep')||1; }catch(e){ return 1; } })();
 function stepDone(n){ var st=(document.getElementById('ct-story')||{}).value||'';
   if(n===1) return !!(B&&B.expanded) || st.length>400;
@@ -15073,13 +15148,14 @@ function stepDone(n){ var st=(document.getElementById('ct-story')||{}).value||''
   if(n===5) return !!(B&&B.sceneBg&&Object.keys(B.sceneBg).length);
   if(n===6) return !!(B&&B.scenePr&&Object.keys(B.scenePr).length);
   if(n===7) return !!(B&&B.cuts&&B.cuts.some(function(c){ return c.key && c.art; }));
+  if(n===8) return !!(B&&B.exported);
   return false; }
 function stepNav(){ var nv=document.getElementById('ct-steps'); if(!nv) return;
   nv.innerHTML=STEPS.map(function(s){ return '<button type="button" class="ct-stb'+(s[0]===CSTEP?' on':'')+(stepDone(s[0])?' done':'')+'" data-step="'+s[0]+'"'+(s[0]===CSTEP?' aria-current="step"':'')+'><i>'+(stepDone(s[0])&&s[0]!==CSTEP?'✓':s[0])+'</i>'+s[1]+'</button>'; }).join(''); }
-function goStep(n, noScroll){ CSTEP=Math.max(1,Math.min(7,+n||1)); try{ localStorage.setItem('ctStep',CSTEP); }catch(e){}
+function goStep(n, noScroll){ CSTEP=Math.max(1,Math.min(8,+n||1)); try{ localStorage.setItem('ctStep',CSTEP); }catch(e){}
   document.querySelectorAll('#conti .ct-step').forEach(function(d){ d.hidden=+d.dataset.st!==CSTEP; });
   document.querySelectorAll('#conti .ct-step').forEach(function(d){ if(d.querySelector('.ct-nx')) return; var k=+d.dataset.st, f=document.createElement('div'); f.className='filterbar ct-nx';
-    f.innerHTML=(k>1?'<button class="chip" type="button" data-step="'+(k-1)+'">← '+STEPS[k-2][1]+'</button>':'')+(k<7?'<button class="chip ct-go" type="button" data-step="'+(k+1)+'">다음: '+STEPS[k][1]+' →</button>':''); d.appendChild(f); });
+    f.innerHTML=(k>1?'<button class="chip" type="button" data-step="'+(k-1)+'">← '+STEPS[k-2][1]+'</button>':'')+(k<8?'<button class="chip ct-go" type="button" data-step="'+(k+1)+'">다음: '+STEPS[k][1]+' →</button>':''); d.appendChild(f); });
   stepNav();
   if(CSTEP===6){ try{ ctView(); if(CTV==='b') renderBoard(); }catch(e){} }
   try{ renderSteps(); }catch(e){}
@@ -15125,7 +15201,7 @@ document.addEventListener('click', function(e){ var t=e.target; if(!B) return;
         B.props.push({kind:/동물/.test(x.kind)?'동물':/사물|소품/.test(x.kind)?'사물':'엑스트라', name:String(x.name).slice(0,20), look:String(x.look||'').slice(0,160), lookEn:String(x.lookEn||'').slice(0,200)}); add++; });
       save(); renderShChk(); try{ renderProps(); }catch(er){} stat(add?add+'개를 목록에 넣었다':'빠진 것이 없다'); }); }
 });
-function renderSteps(){ stepNav(); try{ if(window.__ppArt) setTimeout(chAutoSlice, 600); }catch(e){} try{ renderDlg(); }catch(e){} try{ renderProps(); }catch(e){} try{ renderBg(); }catch(e){} try{ renderKey(); }catch(e){} try{ renderS4(); }catch(e){} try{ renderShChk(); }catch(e){} try{ renderGptQ(); }catch(e){} }
+function renderSteps(){ stepNav(); try{ if(window.__ppArt) setTimeout(chAutoSlice, 600); }catch(e){} try{ renderDlg(); }catch(e){} try{ renderProps(); }catch(e){} try{ renderBg(); }catch(e){} try{ renderKey(); }catch(e){} try{ renderS4(); }catch(e){} try{ renderShChk(); }catch(e){} try{ renderGptQ(); }catch(e){} try{ renderS8(); }catch(e){ try{ console.warn('renderS8', e); }catch(er){} } }
 
 // ---- 1. 이야기 구체화
 var EXSYS='너는 웹툰 각본가다. 작가가 대강 적은 이야기를 콘티로 옮기기 좋게 구체화한다. 적힌 설정·사건·인물·결말은 바꾸지 않고, 빈 곳만 이야기 톤에 맞게 채운다. 결과는 한국어 산문.';
