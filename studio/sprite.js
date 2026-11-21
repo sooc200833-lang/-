@@ -178,7 +178,49 @@ function usedChars(){
 }
 function startFor(id){
   const pr=PRESET[id]; if(pr) Object.assign(P,pr); else {P.name=(window.CHARS[id]||{}).name||'';}
-  saveP(); U.target=id; U.src=null; U.sliced=null; U.tab='s'; sheet.classList.add('on'); paint();
+  saveP(); U.lay=null; U.target=id; U.src=null; U.sliced=null; U.tab='s'; sheet.classList.add('on'); paint();
+}
+
+
+/* ───────── 엑스트라 한 장 시트 (눈 안 보이게) ───────── */
+const MOB_ORDER=['n','smile','grin','shy','panic','shock','angry','sad','cry','think','smirk','gloom'];
+const MOBEN={n:'neutral, mouth closed',calm:'calm',smile:'smiling',grin:'laughing with open mouth',blank:'mouth slightly open, dazed',shy:'blushing cheeks, small smile',panic:'wavy flustered mouth, sweat drops',shock:'mouth wide open in shock, sweat',dead:'gloomy, mouth line, dark lines over face',deadsweat:'nervous, big sweat drop',angry:'angry vein mark, gritted teeth',sad:'mouth turned down',cry:'tears running down cheeks from under the bangs',menace:'dark shadow over upper face, evil grin',smirk:'smug smirk',hurt:'trembling mouth',think:'hand on chin, mouth pursed',gloom:'vertical gloom lines over head'};
+function mobExprs(){
+  const used=new Set(); const ids=Object.keys(window.CHARS).filter(i=>window.CHARS[i].mob);
+  S.src.split('\n').forEach(l=>{const m=l.match(/^\s*@char\s+(\S+)\s+(\S+)/);if(m&&ids.includes(m[1]))used.add(m[2].split('+')[0]);});
+  const list=MOB_ORDER.filter(k=>used.has(k)).concat([...used].filter(k=>!MOB_ORDER.includes(k)));
+  for(const k of MOB_ORDER){if(list.length>=9)break;if(!list.includes(k))list.push(k);}
+  return list.slice(0,12);
+}
+function promptMob(list,kinds){
+  const cols=list.length<=4?2:list.length<=9?3:4, rows=Math.ceil(list.length/cols);
+  const who={m:'a generic male student extra (short plain hair, navy school blazer, tie)',g:'a generic female student extra (plain bob hair, navy school blazer, ribbon)'};
+  return kinds.map(k=>`Create ONE image: an expression sprite sheet of ${who[k]} for a Korean webtoon. This is a background EXTRA (mob character), not a main character.
+
+STYLE: ${P.style||'Korean webtoon style'}, clean line art, soft cel shading, slightly muted colors so they stay in the background.
+
+EYES MUST NOT BE VISIBLE in any cell: the eyes are completely hidden under thick bangs / a soft shadow over the upper face. Show emotion ONLY with the mouth, blush, sweat drops, tears, vein marks and manga symbols.
+
+LAYOUT: strict grid of ${cols} columns x ${rows} rows, evenly spaced, same size cells. Same character in every cell, bust-up, facing front, same size and position. Plain pure white background, no borders, no text, no numbers, clear white gaps between cells.
+
+EXPRESSIONS in reading order (left to right, top to bottom):
+${list.map((k,i)=>`${i+1}. ${MOBEN[k]||k}`).join('\n')}`).join('\n\n---\n\n');
+}
+function openMob(){
+  const list=mobExprs(); const kinds=['m','g'];
+  box.innerHTML=`<h2>엑스트라 표정 시트</h2><div class="sm" style="line-height:1.6">대본에서 엑스트라(반애들)가 쓰는 표정 ${list.length}개를 모아 한 장 시트 요청문을 만들어요. <b>눈은 앞머리·그림자로 가려서</b> 입·홍조·땀으로만 감정을 보여줘요.</div>
+  <div class="sm" style="margin-top:8px">${list.map((k,i)=>`${i+1}.${EXN[k]||k}`).join(' · ')}</div>
+  <div class="row" style="margin-top:8px"><label class="sm"><input type="checkbox" id="mk_m" checked> 남학생</label><label class="sm"><input type="checkbox" id="mk_g" checked> 여학생</label></div>
+  <pre class="code" id="mobp" style="max-height:30vh;overflow:auto;white-space:pre-wrap;font-size:11px"></pre>
+  <div class="row"><button class="btn" id="mobCp" type="button">요청문 복사</button><button class="btn ghost" id="mobUpM" type="button">남학생 시트 올리기</button><button class="btn ghost" id="mobUpG" type="button">여학생 시트 올리기</button></div>
+  <div class="sm" style="margin-top:8px">남녀를 따로 한 장씩 그리게 해요. 올리면 칸이 자동으로 나뉘고 표정 이름이 위 순서대로 붙어요.</div>`;
+  const ks=()=>['m','g'].filter(k=>$('#mk_'+k,box).checked);
+  const upd=()=>$('#mobp',box).textContent=promptMob(list,ks());
+  upd(); $('#mk_m',box).onchange=upd; $('#mk_g',box).onchange=upd;
+  $('#mobCp',box).onclick=()=>copy(promptMob(list,ks()));
+  const go=id=>{U.lay=list;U.target=id;U.src=null;U.sliced=null;U.tab='u';paint();setTimeout(()=>$('#sf',box)&&$('#sf',box).click(),50);};
+  $('#mobUpM',box).onclick=()=>go('mob'); $('#mobUpG',box).onclick=()=>go('mobg');
+  sheet.classList.add('on');
 }
 
 /* ───────── UI ───────── */
@@ -219,7 +261,7 @@ function paint(){
 }
 function paintUp(){
   const up=$('#up',box); if(!up) return;
-  const chars=Object.keys(window.CHARS).filter(i=>!window.CHARS[i].mob);
+  const chars=Object.keys(window.CHARS);
   const lay=LAYOUTS[P.layout]; const ex=Object.keys(EXN);
   let h=`<div class="card" style="margin-top:10px"><div class="sm">배경 제거 강도 <b id="tv">${U.tol}</b> <span class="sm">(윤곽이 지워지면 낮게, 배경이 남으면 높게)</span></div><input type="range" id="tol" min="6" max="90" value="${U.tol}" style="width:100%">
    <div class="sm" style="margin-top:8px">칸 나누기</div><div class="seg">${['auto','2x2','3x2','3x3','4x3','3x4','4x4','5x2'].map(m=>`<button type="button" class="chip${U.mode===m?' on':''}" data-gm="${m}">${m==='auto'?'자동':m}</button>`).join('')}</div>
@@ -241,7 +283,7 @@ async function process(){
   if(!U.src) return; U.busy=true; paintUp();
   await new Promise(r=>setTimeout(r,30));
   try{ U.clean=removeBg(U.src,U.tol); U.sliced=slice(U.clean,U.mode,U.crop);
-    const lay=LAYOUTS[P.layout]; const all=Object.keys(EXN);
+    const lay=U.lay||LAYOUTS[P.layout]; const all=Object.keys(EXN);
     U.assign=U.sliced.cells.map((c,n)=>{ // 격자 위치 순서 = 표정 순서
       const k=lay[c.idx]; return k||all[n%all.length]; }); U.drop=new Set();
   }catch(e){ U.sliced={cells:[],cols:0,rows:0}; toast('처리 오류: '+e.message); }
@@ -284,16 +326,16 @@ box.addEventListener('change',async e=>{const t=e.target;
   if(t.dataset.as!=null){U.assign[+t.dataset.as]=t.value;return;}
   if(t.id==='tg'){U.target=t.value;return;}
 });
-function open(tab){ if(tab)U.tab=tab; paint(); sheet.classList.add('on'); }
+function open(tab){ U.lay=null; if(tab)U.tab=tab; paint(); sheet.classList.add('on'); }
 
 /* 캐릭터 탭에 진입 버튼 삽입 */
 const host=$('#chars');
 function inject(){ if($('#mkChar',host)||!host.firstElementChild) return;
-  const b=el('div','card'); b.id='mkChar'; b.innerHTML=`<b style="font-family:'Gowun Batang'">🎨 내 캐릭터 만들기</b><div class="sm" style="margin-top:4px;line-height:1.5">GPT로 프로필·표정 시트를 만들고, 사진을 올리면 자동으로 편집해 캐릭터로 써요.</div><div class="sm" style="margin-top:10px"><b>지금 만화의 등장인물</b> — 눌러서 그림을 바꿔요</div><div class="row" id="usedRow" style="margin-top:6px;gap:8px;flex-wrap:wrap"></div><div class="row" style="margin-top:10px"><button class="btn sm2" data-o="p" type="button">새 캐릭터 만들기</button><button class="btn ghost sm2" data-o="u" type="button">시트 바로 올리기</button><button class="chip" data-o="m" type="button">내 캐릭터</button></div>`;
+  const b=el('div','card'); b.id='mkChar'; b.innerHTML=`<b style="font-family:'Gowun Batang'">🎨 내 캐릭터 만들기</b><div class="sm" style="margin-top:4px;line-height:1.5">GPT로 프로필·표정 시트를 만들고, 사진을 올리면 자동으로 편집해 캐릭터로 써요.</div><div class="sm" style="margin-top:10px"><b>지금 만화의 등장인물</b> — 눌러서 그림을 바꿔요</div><div class="row" id="usedRow" style="margin-top:6px;gap:8px;flex-wrap:wrap"></div><div class="row" style="margin-top:10px"><button class="btn sm2" data-o="p" type="button">새 캐릭터 만들기</button><button class="btn ghost sm2" data-o="u" type="button">시트 바로 올리기</button><button class="chip" data-o="m" type="button">내 캐릭터</button><button class="chip" data-o="mob" type="button">👥 엑스트라 시트</button></div>`;
   host.insertBefore(b,host.firstElementChild);
   $('#usedRow',b).innerHTML=usedChars().map(id=>`<button type="button" data-st="${id}" style="width:64px;background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:3px;font:inherit;font-size:11px;color:inherit">${window.charSVG(id,'smile')}${esc(window.CHARS[id].name)}${window.CHARS[id].sprUser?' ✓':''}</button>`).join('')||'<span class="sm">등장인물 없음</span>'; }
 new MutationObserver(()=>inject()).observe(host,{childList:true});
-host.addEventListener('click',e=>{const st=e.target.closest('[data-st]');if(st)return startFor(st.dataset.st);const b=e.target.closest('[data-o]');if(b)open(b.dataset.o);});
+host.addEventListener('click',e=>{const st=e.target.closest('[data-st]');if(st)return startFor(st.dataset.st);const b=e.target.closest('[data-o]');if(b)return b.dataset.o==='mob'?openMob():open(b.dataset.o);});
 
 /* ───────── 컷 그림 저장 ───────── */
 window.ARTS=window.ARTS||{};

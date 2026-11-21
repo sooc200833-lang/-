@@ -161,8 +161,9 @@ window.charSVG = function(id, exprStr){
   if (e.blush) s += `<ellipse cx="78" cy="133" rx="12" ry="6" fill="#ff8fa8" opacity=".5"/><ellipse cx="122" cy="133" rx="12" ry="6" fill="#ff8fa8" opacity=".5"/>
      <path d="M70,136 l5,-7 M75,136 l5,-7 M80,136 l5,-7 M114,136 l5,-7 M119,136 l5,-7 M124,136 l5,-7" stroke="#e8577a" stroke-width="1.3" stroke-linecap="round"/>`;
   s += `</g>`;
-  s += brows(e.brow, c);
-  s += eye(84, 114, e.eye, c, 'l', skin) + eye(116, 114, e.eye, c, 'r', skin);
+  if (c.mob) s += `<g clip-path="url(#${fid})"><rect x="58" y="40" width="84" height="84" fill="${c.hair}" opacity=".55"/><path d="M60,124 Q100,112 140,124" stroke="#6d665f" stroke-width="1.6" fill="none" opacity=".6"/></g>`;
+  else { s += brows(e.brow, c);
+  s += eye(84, 114, e.eye, c, 'l', skin) + eye(116, 114, e.eye, c, 'r', skin); }
   if (e.tear) s += `<path d="M110,128 q-2,14 3,24 q5,-10 -3,-24z" fill="#a9dcf7" stroke="#5b9bc4" stroke-width="1"/>`;
   s += `<path d="M99,130 L101,134" stroke="#d9a493" stroke-width="1.6" stroke-linecap="round"/>`; // 코
   s += mouth(e.mouth, c);
