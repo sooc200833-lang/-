@@ -1334,6 +1334,10 @@ body.dk-drag, body.dk-drag *{user-select:none!important; -webkit-user-select:non
 .ct-stb i{font-style:normal;display:inline-grid;place-items:center;width:1.4em;height:1.4em;border-radius:50%;background:var(--soft,#eee);font-size:.75rem}
 .ct-stb.done i{background:#2e7d32;color:#fff}.ct-stb.on{border-color:var(--ink,#111);color:var(--ink,#111);font-weight:700}.ct-stb.on i{background:var(--ink,#111);color:#fff}
 .ct-step h3{margin-top:.4rem}.ct-nx{margin-top:1rem;justify-content:space-between}
+.ct-shimg{display:block;width:100%;max-width:360px;margin:.3rem 0;border-radius:8px;border:1px solid var(--line,#ddd);cursor:zoom-in}
+.ct-grp{border:1px solid var(--line,#ddd);border-radius:10px;padding:.5rem .6rem;margin:.4rem 0}
+.ct-zoom{position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:9999;display:grid;place-items:center;padding:1rem;cursor:zoom-out}.ct-zoom img{max-width:100%;max-height:100%}
+.ct-attach{background:var(--soft,#f3f3f3);padding:.3rem .5rem;border-radius:6px}
 .ct-exmsg{font-size:.86rem;margin:.4rem 0;padding:.5rem .6rem;border-radius:8px;background:var(--soft,#f3f3f3)}
 @keyframes ctfl{from{box-shadow:0 0 0 3px #2e7d32}to{box-shadow:0 0 0 0 transparent}}.ct-flash{animation:ctfl 1.6s ease-out}
 .ct-exta{width:100%;font:inherit;font-size:.86rem;margin:.4rem 0}
@@ -13451,11 +13455,12 @@ function renderChars(){
     cv.dataset.who=JSON.stringify([{name:ch.name, look:ch.look||{}}]); cv.setAttribute('role','img'); cv.setAttribute('aria-label', ch.name+' 생김새');
     if(ro) ro.observe(cv); else setTimeout(function(){ queue(cv); },0);
     f.appendChild(cv);
+    if(ch.sheetArt && window.__ppArt){ var su=window.__ppArt.get(ch.sheetArt); if(su) f.insertAdjacentHTML('beforeend','<img class="ct-shimg" data-zoom="1" alt="'+cesc(ch.name)+' 시트 그림" src="'+su+'">'); }
     f.insertAdjacentHTML('beforeend','<b>'+cesc(ch.name)+'</b>'+(ch.sheet&&ch.sheet.kind?' <span class="ct-kind">'+ch.sheet.kind+'</span>':'')+(ch.role?'<span class="small">'+cesc(ch.role)+'</span>':'')+
       '<div class="ct-tags">'+lookTags(ch.look)+'</div>'+(ch.sheet?'<dl class="ct-sheet small">'+[['성격','pers'],['말투','speech'],['원함','want'],['약점','fear'],['관계','rel'],['생김새','look']].map(function(r){ return ch.sheet[r[1]]?'<dt>'+r[0]+'</dt><dd>'+cesc(ch.sheet[r[1]])+'</dd>':''; }).join('')+'</dl>':(ch.note?'<span class="small">'+cesc(ch.note)+'</span>':''))+
       '<div class="filterbar"><button class="chip" type="button" data-ce="'+i+'">고치기</button>'+
       (window.__castUpsert?'<button class="chip" type="button" data-cs="'+i+'">'+(window.__castFind&&window.__castFind(ch.name)?'등장인물에 반영':'등장인물에 넣기')+'</button>':'')+
-      '<button class="chip" type="button" data-cg="'+i+'">🖌 GPT 시트</button><button class="chip" type="button" data-cd="'+i+'">지우기</button></div>');
+      '<button class="chip" type="button" data-cg="'+i+'">🖌 GPT 시트</button><label class="chip sv-up">'+(ch.sheetArt?'시트 바꾸기':'📥 시트 그림 넣기')+'<input type="file" accept="image/*" hidden data-shup="'+i+'"></label><button class="chip" type="button" data-cd="'+i+'">지우기</button></div>');
     box.appendChild(f);
   });
 }
@@ -14922,7 +14927,20 @@ document.addEventListener('click', function(e){ var t=e.target; if(!t.id) return
 // ---- 2. 엑스트라·동물·사물 + 시트 점검
 var PK={'엑스트라':'👥','동물':'🐾','사물':'📦'};
 function renderProps(){ var box=document.getElementById('ct-props'); if(!box) return; var L=(B&&B.props)||[];
-  box.innerHTML=L.length?'<h4 class="ct-reft">엑스트라·동물·사물</h4><ul class="ct-pl">'+L.map(function(x,i){ return '<li><b>'+(PK[x.kind]||'•')+' '+cesc(x.name)+'</b> <span class="small">'+cesc(x.kind)+'</span><br><span class="small">'+cesc(x.look||'')+'</span> <button type="button" class="ct-pdel" data-pdel="'+i+'" aria-label="'+cesc(x.name)+' 지우기">✕</button></li>'; }).join('')+'</ul>':''; }
+  var A=window.__ppArt, img=function(id,alt){ var u=id&&A&&A.get(id); return u?'<img class="ct-shimg" data-zoom="1" alt="'+cesc(alt)+'" src="'+u+'">':''; }, up=function(key,has){ return '<label class="chip sv-up">'+(has?'바꾸기':'📥 그림 넣기')+'<input type="file" accept="image/*" hidden data-shk="'+key+'"></label>'; };
+  var G=(B&&B.sheetArts)||{}, h='';
+  if(chars().length>1) h+='<div class="ct-grp"><b>라인업</b> <span class="small">인물 전원 한 장</span>'+img(G.lineup,'라인업')+up('lineup',G.lineup)+'</div>';
+  ['엑스트라','동물','사물'].forEach(function(k){ var it=L.filter(function(x){ return x.kind===k; }); if(!it.length) return;
+    h+='<div class="ct-grp"><b>'+PK[k]+' '+k+' 시트</b><ul class="ct-pl">'+it.map(function(x){ var i=L.indexOf(x); return '<li><b>'+cesc(x.name)+'</b><br><span class="small">'+cesc(x.look||'')+'</span> <button type="button" class="ct-pdel" data-pdel="'+i+'" aria-label="'+cesc(x.name)+' 지우기">✕</button></li>'; }).join('')+'</ul>'+img(G[k], k+' 시트')+up(k,G[k])+'</div>'; });
+  box.innerHTML=h?'<h4 class="ct-reft">GPT로 받은 시트 그림</h4><p class="small">인물 카드의 「시트 그림 넣기」와 여기에 넣는다. 넣은 시트는 주요 컷을 그릴 때 첨부할 그림으로 안내된다.</p>'+h:''; }
+document.addEventListener('change', function(e){ var t=e.target; if(!t.dataset || !(t.dataset.shup!=null || t.dataset.shk) || !t.files[0] || !window.__ppArt || !B) return;
+  window.__ppArt.fromFile(t.files[0]).then(function(id){
+    if(t.dataset.shup!=null){ var ch=chars()[+t.dataset.shup]; if(ch){ ch.sheetArt=id; stat(ch.name+' 시트 그림을 넣었다'); } }
+    else { B.sheetArts=B.sheetArts||{}; B.sheetArts[t.dataset.shk]=id; stat((t.dataset.shk==='lineup'?'라인업':t.dataset.shk+' 시트')+' 그림을 넣었다'); }
+    save(); renderChars(); renderProps(); try{ renderKey(); }catch(er){} }); });
+document.addEventListener('click', function(e){ var t=e.target; if(!(t.dataset && t.dataset.zoom)) return; var d=document.createElement('div'); d.className='ct-zoom'; d.innerHTML='<img alt="" src="'+t.src+'">'; d.addEventListener('click', function(){ d.remove(); }); document.body.appendChild(d); });
+function sheetRefs(names){ var A=window.__ppArt, out=[]; if(!A||!B) return out; chars().forEach(function(x){ if(x.sheetArt && (!names || names.indexOf(x.name)>-1)) out.push(x.name+' 시트'); });
+  var G=B.sheetArts||{}; if(G.lineup) out.push('라인업'); ['엑스트라','동물','사물'].forEach(function(k){ if(G[k]) out.push(k+' 시트'); }); return out; }
 document.addEventListener('click', function(e){ var t=e.target.closest&&e.target.closest('[data-pdel]'); if(t&&B&&B.props){ B.props.splice(+t.dataset.pdel,1); save(); renderProps(); } });
 var CKSYS='너는 웹툰 캐릭터 시트 검수자다. 이야기와 시트를 비교해 문제만 짚는다. JSON만 답한다.';
 function sheetRule(){ var out=[], cs=chars(), hs={};
@@ -15025,7 +15043,7 @@ function ctKeyPrompt(c, k, n){ var x=sceneOfCut(c.n)||{a:1,b:B.cuts.length,name:
   var w=ctWho(c), fc=(pp&&pp.faces)||{};
   return (n>1?'=== PANEL '+k+' of '+n+' (cut '+c.n+') ===\n':'')+'Draw ONE finished webtoon panel. Korean webtoon style, clean line art, cel shading, full color. NO speech bubbles, NO text, NO panel border. Leave empty space for speech bubbles.\n'+
     'Aspect ratio '+(z==='wide'?'2:1':z==='tall'?'9:16':z==='half'?'3:4':'4:3')+'. Shot: '+(sh?sh[1]:'medium shot')+(an&&an[0]?', '+an[2]:'')+(c.focus?', focus lines':'')+(c.flash?', flashback tint':'')+'.\n'+
-    'Scene: '+dispNm(x.name||'')+'\n'+bgLine(x)+'What we see: '+((pp&&pp.see)||c.scr||'')+'\n'+(pp&&pp.staging?'Staging: '+pp.staging+'\n':'')+
+    (n===1&&sheetRefs(w).length?'Character sheet images are attached — copy the characters exactly.\n':'')+'Scene: '+dispNm(x.name||'')+'\n'+bgLine(x)+'What we see: '+((pp&&pp.see)||c.scr||'')+'\n'+(pp&&pp.staging?'Staging: '+pp.staging+'\n':'')+
     (w.length?'Characters:\n'+w.map(function(nm){ return '- '+nm+': '+(ctLookSafe(nm)||'')+(fc[nm]?'; expression: '+fc[nm]:''); }).join('\n')+'\n':'')+
     (c.line?'Mood from dialogue (do NOT draw text): '+String(c.line).replace(/\n/g,' / ')+'\n':'')+(pp&&pp.emph?'Emphasis: '+pp.emph+'\n':''); }
 function keyCuts(){ return (B&&B.cuts||[]).filter(function(c){ return c.scr && autoKey(c); }); }
@@ -15034,13 +15052,13 @@ function renderKey(){ var box=document.getElementById('ct-s7'); if(!box) return;
   var K=keyCuts(), L=sceneList(); if(!L.length) L=[{a:1,b:B.cuts.length,name:'전체'}];
   box.innerHTML='<div class="sv-all"><b>주요 컷 '+K.length+'개</b> <span class="small">눌러서 넣고 뺀다</span><div class="kc-pick">'+L.map(function(x){ var h='<div class="kc-sc"><span class="small">'+cesc(dispNm(x.name||''))+'</span>'; for(var n=x.a;n<=x.b;n++){ var c=B.cuts[n-1]; if(!c||!c.scr) continue; h+='<button type="button" class="kc'+(autoKey(c)?' on':'')+'" data-kc="'+n+'" title="'+cesc(c.scr)+'" aria-pressed="'+autoKey(c)+'">'+n+'</button>'; } return h+'</div>'; }).join('')+'</div>'+
     '<div class="sv-act"><button class="chip ct-go" type="button" data-ka="go">🖌 주요 컷 GPT로 한번에</button><button class="chip" type="button" data-ka="copy">복사</button><button class="chip" type="button" data-ka="show">모아 보기</button></div><pre class="sv-pr" hidden></pre>'+
-    '<p class="small">ChatGPT가 한 컷을 그리면 「다음」이라고 답해 다음 컷을 받는다. 5단계에서 배경 그림을 받아 뒀다면 같이 첨부한다.</p></div>'+
+    '<p class="small">ChatGPT가 한 컷을 그리면 「다음」이라고 답해 다음 컷을 받는다.</p>'+(function(){ var r=sheetRefs(); var bg=Object.keys(B.sceneBg||{}).filter(function(k){ return B.sceneBg[k].art; }).length; return (r.length||bg)?'<p class="small ct-attach">📎 ChatGPT에 같이 첨부할 그림: '+r.map(cesc).join(', ')+(bg?(r.length?', ':'')+'배경 '+bg+'장':'')+'</p>':'<p class="small">2단계 시트 그림·5단계 배경 그림을 넣어 두면 같이 첨부하라고 알려 준다.</p>'; })()+'</div>'+
     '<ul class="kc-l">'+K.map(function(c){ var au=c.art&&window.__ppArt&&window.__ppArt.get(c.art);
       return '<li>'+(au?'<img alt="'+c.n+'번 컷 그림" src="'+au+'">':'<span class="kc-ph">그림 없음</span>')+'<div><b>'+c.n+'번</b> <span class="small">'+cesc(shotName(c.k))+'</span><p class="small">'+cesc(c.scr)+'</p><div class="sv-act"><button class="chip" type="button" data-k1="'+c.n+'">🖌 이 컷만</button><label class="chip sv-up">그림 올리기<input type="file" accept="image/*" hidden data-kup="'+c.n+'"></label><button class="chip" type="button" data-ed="'+c.n+'">✎</button></div></div></li>'; }).join('')+'</ul>'+
     '<details class="ct-more"><summary class="small">장면 러프 콘티(장면마다 한 장)</summary><div class="sv-act"><button class="chip" type="button" data-sa="ai">🧠 전체 콘티 읽고 연출 짜기</button><button class="chip" type="button" data-sa="go">✏ 전체 러프 콘티 그리기</button><button class="chip" type="button" data-sa="copy">복사</button><button class="chip" type="button" data-sa="show">모아 보기</button></div><pre class="sv-pr" hidden></pre></details>'; }
 function keyAll(){ var K=keyCuts(); if(!K.length) return ''; var seen={}, nm=[]; K.forEach(function(c){ ctWho(c).forEach(function(n){ if(!seen[n]){ seen[n]=1; nm.push(n); } }); });
   return (K.length>1?'I will give you '+K.length+' key panels of one webtoon episode. Draw ONLY panel 1 now. Each time I reply "다음", draw the next panel. Keep every character and background design identical across panels.\n':'')+
-    (nm.length?'Character reference:\n'+nm.map(function(n){ return '- '+n+': '+(ctLookSafe(n)||''); }).join('\n')+'\n':'')+'\n'+K.map(function(c,i){ return ctKeyPrompt(c,i+1,K.length); }).join('\n\n'); }
+    (nm.length?'Character reference:\n'+nm.map(function(n){ return '- '+n+': '+(ctLookSafe(n)||''); }).join('\n')+'\n':'')+(sheetRefs(nm).length?'Character sheet images are attached ('+sheetRefs(nm).length+'). Copy each character EXACTLY from the attached sheets.\n':'')+'\n'+K.map(function(c,i){ return ctKeyPrompt(c,i+1,K.length); }).join('\n\n'); }
 document.addEventListener('click', function(e){ var t=e.target; if(!t.closest || !B) return;
   var kc=t.closest('[data-kc]'); if(kc){ var c=B.cuts[+kc.dataset.kc-1]; c.key=autoKey(c)?0:1; save(); renderKey(); return; }
   var k1=t.closest('[data-k1]'); if(k1){ var q=ctKeyPrompt(B.cuts[+k1.dataset.k1-1],1,1); ctCopy(q); setTimeout(function(){ window.open('https://chatgpt.com/?q='+encodeURIComponent(q.slice(0,1800)),'_blank','noopener'); },200); return; }
