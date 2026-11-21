@@ -1324,6 +1324,7 @@ body.dk-drag, body.dk-drag *{user-select:none!important; -webkit-user-select:non
 .sv-act{display:flex;flex-wrap:wrap;gap:.4rem;margin-top:.4rem}
 .sv-all{border:2px solid var(--ink-3,#999);border-radius:12px;padding:.7rem .8rem;margin:.4rem 0}
 .ct-sheet{display:grid;grid-template-columns:3.6em 1fr;gap:.1rem .4rem;margin:.3rem 0;text-align:left}.ct-sheet dt{color:var(--ink-3)}.ct-sheet dd{margin:0}
+.dck{list-style:none;padding:0;margin:.4rem 0;font-size:.82rem}.dck>li{margin:.35rem 0}.dck ul{margin:.15rem 0 0 1rem;padding:0}.dck li li{margin:.15rem 0}.dck .err{color:#b3261e}.dck .ai{color:var(--ink-2,#333)}.dck q{background:var(--soft,#f3f3f3);padding:0 .2rem;border-radius:4px}.dck button{font:inherit;font-size:.74rem;border:1px solid var(--line,#ccc);background:none;border-radius:8px;padding:0 .4rem;cursor:pointer}.dq{color:#b3261e;font-style:normal;font-weight:700}
 .sv-beat{font-size:.82rem;margin:.1rem 0 .3rem;color:var(--ink-2,#444)}
 .sv-img{display:block;width:100%;max-width:520px;margin:.4rem auto;border-radius:8px;border:1px solid var(--line,#ddd)}
 .sv-up{cursor:pointer}
@@ -14753,14 +14754,67 @@ function ctAiScene(i){ var L=sceneList(); if(!L.length) L=[{a:1,b:B.cuts.length,
     if(!j || !j.panels){ stat((i+1)+'번 장면: AI 답을 읽지 못했다'); return false; }
     B.scenePr=B.scenePr||{}; B.scenePr[x.a]=j; save(); return true; });
 }
+
+// 대사 배정 점검 (규칙 + AI 말투 점검)
+function lnParse(l){ l=String(l||'').trim(); var m=l.match(/^([^:：()\s][^:：()]{0,11})\s*[:：]\s*(.+)$/); if(m) return {who:m[1].trim(), say:m[2], kind:'say'};
+  if(/^\(.*\)$/.test(l)) return {who:'', say:l, kind:'think'}; return {who:'', say:l, kind:'bare'}; }
+var DCK=null;
+function dlgCheck(){
+  var out=[], names={}; chars().forEach(function(x){ names[x.name]=1; });
+  var run={who:'',k:0};
+  B.cuts.forEach(function(c){ var L=String(c.line||'').split('\n').map(function(x){ return x.trim(); }).filter(Boolean); if(!L.length){ run={who:'',k:0}; return; }
+    var w=ctWho(c), add=function(i,msg,lv){ out.push({n:c.n, i:i, msg:msg, lv:lv||'warn', line:i>=0?L[i]:''}); };
+    if(c.silent) add(-1,'무음 컷인데 대사가 있다','err');
+    if(L.length>3) add(-1,'말풍선 '+L.length+'개 — 셋까지가 읽기 편하다. 컷을 나누거나 줄인다');
+    L.forEach(function(l,i){ var p=lnParse(l);
+      if(p.say.length>40) add(i,'한 풍선에 '+p.say.length+'자 — 둘로 나누거나 줄인다');
+      if(p.kind==='bare' && w.length!==1) add(i, w.length?'누가 말하는지 없다 (컷에 '+w.join('·')+')':'누가 말하는지 없고 컷에 인물도 없다','err');
+      if(p.kind==='think' && w.length>1) add(i,'속마음인데 컷에 '+w.length+'명 — 누구 속마음인지 「이름: (속마음)」으로');
+      if(p.who){ if(!names[p.who] && Object.keys(names).length) add(i,'「'+p.who+'」는 등장인물에 없다 (오타·별칭?)','err');
+        else if(w.length && w.indexOf(p.who)<0) add(i,p.who+'가 말하는데 컷 화면에 없다 — 화면 밖 목소리면 괜찮고, 아니면 인물에 넣는다'); }
+      var sp=p.who||(w.length===1?w[0]:''); if(sp && sp===run.who) run.k++; else run={who:sp,k:1};
+      if(run.k===5) add(i, sp+' 혼자 5번 연달아 말한다 — 상대 반응 컷을 끼운다'); });
+  });
+  return out;
+}
+var DSYS='너는 웹툰 대사 편집자다. 컷마다 대사가 누구 것인지, 그 인물의 말투·성격과 맞는지 점검한다. 문제 있는 줄만 고친다. 고친 줄은 반드시 「이름: 대사」 형식(속마음은 「이름: (속마음)」). JSON만 답한다.';
+function dlgAi(){
+  if(!aiReady()){ stat('AI 키가 없어 말투 점검은 못 한다 — 규칙 점검만 했다'); return Promise.resolve([]); }
+  var cs=B.cuts.filter(function(c){ return c.line; }).slice(0,80); if(!cs.length) return Promise.resolve([]);
+  var u='[등장인물]\n'+chars().map(chLine).join('\n')+'\n\n[컷]\n'+cs.map(function(c){ return c.n+'번 | 화면: '+(c.scr||'')+' | 인물: '+(ctWho(c).join(', ')||'없음')+'\n'+String(c.line).split('\n').map(function(l,i){ return '  ['+i+'] '+l; }).join('\n'); }).join('\n')+
+    '\n\n점검: ① 누가 말하는지 모호한 줄 ② 화자가 흐름상 틀린 줄 ③ 인물 말투·성격과 안 맞는 줄. 형식: [{"n":컷,"i":줄번호,"why":"짧은 이유","fix":"이름: 고친 대사"}] (문제 없으면 [])';
+  return aiAsk(DSYS, u, 2400, {json:true, temperature:0.3}).then(function(t){ if(aiIsErr(t)){ stat(t); return []; }
+    var j=[]; try{ var m=String(t).match(/\[[\s\S]*\]/); j=JSON.parse(m?m[0]:t); }catch(e){} return Array.isArray(j)?j.filter(function(x){ return x && x.n && x.fix; }):[]; });
+}
+function dlgRender(rule, ai){
+  var box=document.getElementById('sv-dck'); if(!box) return; var byN={};
+  rule.forEach(function(r){ (byN[r.n]=byN[r.n]||[]).push(r); }); (ai||[]).forEach(function(r){ r.ai=1; (byN[r.n]=byN[r.n]||[]).push(r); });
+  var ns=Object.keys(byN).map(Number).sort(function(a,b){ return a-b; });
+  var lined=B.cuts.filter(function(c){ return c.line; }).length;
+  if(!ns.length){ box.innerHTML='<p class="small">✅ 대사 '+lined+'컷 점검 — 문제 없음'+(ai?'':' (규칙 점검)')+'</p>'; return; }
+  box.innerHTML='<p class="small">대사 있는 '+lined+'컷 중 <b>'+ns.length+'컷</b>에 확인할 곳</p><ul class="dck">'+ns.map(function(n){ var c=B.cuts[n-1];
+    return '<li><b>'+n+'번</b> <button type="button" data-ed="'+n+'">✎</button><ul>'+byN[n].map(function(r,k){
+      var ln=r.ai?(String(c.line||'').split('\n')[+r.i]||''):r.line;
+      return '<li class="'+(r.ai?'ai':r.lv)+'">'+(ln?'<q>'+cesc(ln)+'</q> ':'')+cesc(r.ai?('말투·화자: '+(r.why||'')):r.msg)+
+        (r.ai?'<br>→ <q>'+cesc(r.fix)+'</q> <button type="button" data-dfix="'+n+'|'+(+r.i)+'">바꾸기</button>':'')+'</li>'; }).join('')+'</ul></li>'; }).join('')+'</ul>';
+  box.__ai=ai;
+}
+document.addEventListener('click', function(e){ var t=e.target; if(!t.closest || !B) return;
+  if(t.id==='sv-dckb'){ var r=dlgCheck(); dlgRender(r,null); t.disabled=true; stat('규칙 점검 끝 — AI가 말투·화자를 읽는 중…');
+    dlgAi().then(function(a){ t.disabled=false; dlgRender(dlgCheck(), a); stat('대사 배정 점검 끝'); }); return; }
+  var fx=t.closest('[data-dfix]'); if(fx){ var q=fx.dataset.dfix.split('|'), c=B.cuts[+q[0]-1], ai=(document.getElementById('sv-dck')||{}).__ai||[], hit=ai.filter(function(x){ return +x.n===+q[0] && +x.i===+q[1]; })[0];
+    if(!c||!hit) return; var L=String(c.line||'').split('\n'); L[+q[1]]=String(hit.fix); c.line=L.join('\n'); save(); hit.done=1;
+    var rest=ai.filter(function(x){ return !x.done; }); renderScenes(); dlgRender(dlgCheck(), rest); stat(q[0]+'번 컷 대사를 바꿨다'); }
+});
 function renderScenes(){
   var box=document.getElementById('ct-sv'); if(!box) return; ctView();
   if(!B || !B.cuts || !B.cuts.length){ box.innerHTML='<p class="small">이야기를 적고 「AI로 콘티 쓰기」를 누르면 장면별로 여기에 나온다.</p>'; return; }
   var L=sceneList(); if(!L.length) L=[{a:1,b:B.cuts.length,name:'전체'}];
-  var top='<div class="sv-all"><b>콘티 → 그림 프롬프트</b> <span class="small">장면 '+L.length+'개 · 장면마다 한 장의 러프 콘티로</span><div class="sv-act"><button class="chip" type="button" data-sa="ai">🧠 전체 콘티 읽고 연출 짜기</button><button class="chip ct-go" type="button" data-sa="go">✏ 전체 러프 콘티 그리기 (ChatGPT)</button><button class="chip" type="button" data-sa="copy">전체 프롬프트 복사</button><button class="chip" type="button" data-sa="show">모아 보기</button></div><pre class="sv-pr" hidden></pre><p class="small">ChatGPT가 1장면을 그리면 「다음」이라고 답해 다음 장면을 받는다. 받은 그림은 장면 카드의 「그림 올리기」로.</p></div>';
+  var top='<div class="sv-all"><b>콘티 → 그림 프롬프트</b> <span class="small">장면 '+L.length+'개 · 장면마다 한 장의 러프 콘티로</span><div class="sv-act"><button class="chip" type="button" data-sa="ai">🧠 전체 콘티 읽고 연출 짜기</button><button class="chip ct-go" type="button" data-sa="go">✏ 전체 러프 콘티 그리기 (ChatGPT)</button><button class="chip" type="button" data-sa="copy">전체 프롬프트 복사</button><button class="chip" type="button" data-sa="show">모아 보기</button></div><pre class="sv-pr" hidden></pre><p class="small">ChatGPT가 1장면을 그리면 「다음」이라고 답해 다음 장면을 받는다. 받은 그림은 장면 카드의 「그림 올리기」로.</p></div>'+
+    '<div class="sv-all"><b>💬 대사 배정 점검</b> <span class="small">누가 말하는지·화면에 있는지·말투가 맞는지</span><div class="sv-act"><button class="chip ct-go" type="button" id="sv-dckb">점검하기</button></div><div id="sv-dck"></div></div>';
   box.innerHTML=top+L.map(function(x,i){ var who=''; try{ who=sceneWho(x); }catch(e){}
     var rows=''; for(var n=x.a;n<=x.b;n++){ var c=B.cuts[n-1]; if(!c) continue;
-      rows+='<li><b>'+n+'</b><span>'+cesc(shotName(c.k))+' · '+(c.scr?cesc(c.scr):'<i>화면 미정</i>')+(c.line?'<span class="sv-l">'+cesc(c.line).replace(/\n/g,' / ')+'</span>':'')+'</span><button type="button" data-ed="'+n+'" aria-label="'+n+'번 컷 고치기">✎</button></li>'; }
+      rows+='<li><b>'+n+'</b><span>'+cesc(shotName(c.k))+' · '+(c.scr?cesc(c.scr):'<i>화면 미정</i>')+(c.line?'<span class="sv-l">'+String(c.line).split('\n').filter(Boolean).map(function(l){ var p=lnParse(l), w=ctWho(c); return p.who?'<b>'+cesc(p.who)+'</b>: '+cesc(p.say):(p.kind==='bare'&&w.length!==1?'<em class="dq">?</em> ':(w.length===1?'<b>'+cesc(w[0])+'</b>: ':''))+cesc(p.say); }).join(' / ')+'</span>':'')+'</span><button type="button" data-ed="'+n+'" aria-label="'+n+'번 컷 고치기">✎</button></li>'; }
     return '<div class="sv-sc" data-i="'+i+'"><h4>'+(i+1)+'. '+cesc(dispNm(x.name||'장면'))+' <span class="small">'+x.a+'–'+x.b+'컷</span></h4>'+
       '<p class="sv-m">'+[who,x.place].filter(Boolean).map(cesc).join(' · ')+(x.desc||x.sum?(who||x.place?' — ':'')+cesc(x.desc||x.sum):'')+'</p>'+(function(){ var ap=B.scenePr&&B.scenePr[x.a]; return ap?'<p class="sv-beat">🧠 '+cesc(ap.beat||'연출 읽음')+'</p>':''; })()+'<ul class="sv-cuts">'+rows+'</ul>'+
       (function(){ var aid=B.sceneArt&&B.sceneArt[x.a], au=aid&&window.__ppArt&&window.__ppArt.get(aid); return au?'<img class="sv-img" alt="'+(i+1)+'번 장면 러프 콘티" src="'+au+'">':''; })()+'<div class="sv-act"><button class="chip" type="button" data-sp="ai">🧠 콘티 읽고 연출 짜기</button><button class="chip" type="button" data-sp="page">✏ 장면 러프 콘티 그리기</button><button class="chip" type="button" data-sp="copy">🖌 컷별 완성 그림</button><button class="chip" type="button" data-sp="show">프롬프트 보기</button><label class="chip sv-up">그림 올리기<input type="file" accept="image/*" hidden data-sup="'+x.a+'"></label></div><pre class="sv-pr" hidden></pre></div>'; }).join('');
@@ -15603,7 +15657,7 @@ function cutPrompt(ch){
     rows.push(n+' · 추천 '+compText(c)+(c.silent?' · 무음':'')+(c.hook?' · 넘김 훅':'')+(PG_TURN[n]?' · 쪽 넘김 자리':'')+(c.hint?' · 컷 역할: '+c.hint:''));
   }
   L.push('[컷 배정표]\n'+rows.join('\n'));
-  if(chars().length) L.push('[등장인물]\n'+chars().map(chLine).join('\n')+(chars().some(function(x){ return x.sheet; })?'\n→ 대사는 각 인물의 말투로, 행동과 반응은 성격·원하는 것·약점에 맞게 쓴다. 화면 묘사에는 생김새(옷·소품·특징)를 살린다.':''));
+  if(chars().length) L.push('[등장인물]\n'+chars().map(chLine).join('\n')+(chars().some(function(x){ return x.sheet; })?'\n→ 대사는 각 인물의 말투로, 행동과 반응은 성격·원하는 것·약점에 맞게 쓴다. 화면 묘사에는 생김새(옷·소품·특징)를 살린다.':'')+'\n→ 대사 줄마다 반드시 「이름: 대사」로 말한 사람을 붙인다(속마음은 「이름: (속마음)」). 말하는 사람은 그 컷 화면에 나오게 쓰고, 화면 밖 목소리면 화면 칸에 그렇게 적는다.');
   var pa=ch.prev?Math.max(1,ch.prev.a,ch.a-20):Math.max(1,ch.a-3);   // 앞 묶음 전체(20줄까지)
   var prev=[]; for(var p=pa;p<ch.a;p++){ var q=B.cuts[p-1]; if(q&&q.scr) prev.push(cutRow(q)); }
   if(prev.length) L.push('[바로 앞 컷 — 번호|구도|인물|화면|대사|나레이션]\n'+prev.join('\n'));
