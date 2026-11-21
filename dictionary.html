@@ -14876,7 +14876,9 @@ function refImgs(Q){ var A=window.__ppArt, seen={}, out=[]; if(!A) return out;
 function dataFile(u, name){ return fetch(u).then(function(r){ return r.blob(); }).then(function(b){ return new File([b], name.replace(/[^\w가-힣.-]+/g,'_')+(b.type==='image/png'?'.png':'.jpg'), {type:b.type||'image/png'}); }); }
 function refSheet(list){ var W=1200; return Promise.all(list.map(function(x){ return loadImg(x.u); })).then(function(ims){ var hs=ims.map(function(im){ return im?Math.round(im.height*W/im.width):0; }), H=hs.reduce(function(a,h){ return a+h+50; },0), cv=document.createElement('canvas'); cv.width=W; cv.height=H; var g=cv.getContext('2d'); g.fillStyle='#fff'; g.fillRect(0,0,W,H); var y=0;
   ims.forEach(function(im,i){ if(!im) return; g.fillStyle='#111'; g.font='bold 30px sans-serif'; g.fillText(list[i].name, 10, y+36); g.drawImage(im,0,y+50,W,hs[i]); y+=hs[i]+50; }); return cv.toDataURL('image/png'); }); }
-function sendGpt(text, list, note){ ctCopy(text);
+function cap5(list){ if(list.length<=5) return Promise.resolve(list); var head=list.slice(0,4), rest=list.slice(4); return refSheet(rest).then(function(u){ return head.concat([{name:'참고 그림 묶음 ('+rest.map(function(x){ return x.name; }).join(', ').slice(0,60)+')', u:u}]); }); }
+function sendGpt(text, list, note){ ctCopy(text); return cap5(list).then(function(list){ sendGpt0(text, list, note); }); }
+function sendGpt0(text, list, note){
   Promise.all(list.map(function(x){ return dataFile(x.u, x.name); })).then(function(files){
     if(navigator.canShare && files.length && navigator.canShare({files:files})){ return navigator.share({files:files, text:text}).then(function(){ stat('공유했다 — ChatGPT에서 그림과 요청문을 확인하고 보낸다'); }, function(){ stat('공유를 취소했다. 요청문은 복사돼 있다'); }); }
     return refSheet(list).then(function(u){ if(list.length){ var a=document.createElement('a'); a.download='gpt-참고그림.png'; a.href=u; document.body.appendChild(a); a.click(); a.remove(); }
@@ -14960,7 +14962,7 @@ function animClips(){ var cuts=B.cuts.filter(function(c){ return c.scr; }), clip
   var push=function(){ if(cur && cur.cuts.length) clips.push(cur); cur=null; };
   cuts.forEach(function(c){ var sec=cutSec(c), x=null; try{ x=sceneOfCut(c.n); }catch(e){}
     var lines=String(c.line||'').split('\n').filter(Boolean).length;
-    if(cur){ var why=''; if(cur.sec+sec>15) why='15초를 넘어서'; else if((x&&x.a)!==(cur.scene&&cur.scene.a)) why='장면이 바뀌어서'; else if(cur.cuts.length>=6) why='컷이 너무 많아서(6컷)'; else if(cur.lines+lines>5) why='대사가 너무 많아서'; else if(cur.chars+String(c.line||'').length>110) why='말이 너무 길어서'; else if(cur.mv+(isMv(c)?1:0)>2) why='큰 움직임이 셋째라서';
+    if(cur){ var why=''; if(cur.sec+sec>15) why='15초를 넘어서'; else if((x&&x.a)!==(cur.scene&&cur.scene.a)) why='장면이 바뀌어서'; else if(cur.cuts.length>=5) why='한 번에 올릴 수 있는 그림이 5장이라 (5컷)'; else if(cur.lines+lines>5) why='대사가 너무 많아서'; else if(cur.chars+String(c.line||'').length>110) why='말이 너무 길어서'; else if(cur.mv+(isMv(c)?1:0)>2) why='큰 움직임이 셋째라서';
       if(why){ cur.cutWhy=why; push(); } }
     if(!cur) cur={cuts:[], sec:0, lines:0, chars:0, mv:0, scene:x}; if(isMv(c)) cur.mv++;
     cur.cuts.push({c:c, sec:sec}); cur.sec+=sec; cur.lines+=lines; cur.chars+=String(c.line||'').length; });
@@ -15028,7 +15030,7 @@ function renderS8(){ var box=document.getElementById('ct-s8'); if(!box) return; 
     '<ol class="an-l">'+C.map(function(cl,i){ var t=0; return '<li><b>클립 '+(i+1)+'</b> <span class="small">'+cl.cuts.length+'컷 · '+cl.sec.toFixed(1)+'초'+(cl.scene?' · '+cesc(dispNm(cl.scene.name||'')):'')+(cl.cutWhy?' · 다음 클립으로 끊음: '+cl.cutWhy:'')+'</span>'+
       (cl.warn.length?'<p class="an-w">⚠ '+cl.warn.map(cesc).join(' / ')+'</p>':'')+'<table class="an-t"><tr><th>시간</th><th>컷</th><th>화면</th><th>대사</th></tr>'+cl.cuts.map(function(o){ var a=t; t+=o.sec; return '<tr><td>'+a.toFixed(1)+'–'+t.toFixed(1)+'초</td><td>'+o.c.n+'</td><td>'+cesc(shotName(o.c.k))+' · '+cesc(o.c.scr||'')+'</td><td>'+cesc(String(o.c.line||'').replace(/\n/g,' / '))+(o.c.nar?' <i>(나레이션) '+cesc(o.c.nar)+'</i>':'')+((o.c.ja||[]).filter(Boolean).length||o.c.narJa?'<br><span class="ja">'+cesc((o.c.ja||[]).filter(Boolean).join(' / ')+(o.c.narJa?' ('+o.c.narJa+')':''))+'</span>':'')+'</td></tr>'; }).join('')+'</table>'+
       '<div class="sv-act"><button class="chip ct-go" type="button" data-an="grok" data-i="'+i+'">📤 Grok으로 (컷 그림 '+cl.cuts.length+'장 + 요청문)</button><button class="chip" type="button" data-an="one" data-i="'+i+'">요청문 복사</button></div></li>'; }).join('')+'</ol>'+
-    '<p class="small">시간은 샷 크기와 대사 길이로 짐작했다(한국어 초당 6~7자). 15초가 넘거나 장면이 바뀌거나 컷 6개·대사 5줄을 넘으면 다음 클립으로 끊고, 모자라면 비율대로 늘려 클립마다 딱 15초로 맞춘다. 시간을 바꾸려면 6단계에서 대사를 줄이거나 컷을 나눈다.</p></div>';  if(FX.on) fxRender(); }
+    '<p class="small">시간은 샷 크기와 대사 길이로 짐작했다(한국어 초당 6~7자). 15초가 넘거나 장면이 바뀌거나 컷 5개(그림 5장 한도)·대사 5줄을 넘으면 다음 클립으로 끊고, 모자라면 비율대로 늘려 클립마다 딱 15초로 맞춘다. 시간을 바꾸려면 6단계에서 대사를 줄이거나 컷을 나눈다.</p></div>';  if(FX.on) fxRender(); }
 document.addEventListener('click', function(e){ var t=e.target; if(!B) return;
   if(t.id==='ct-strip'){ exportStrips(); return; }
   var a=t.closest&&t.closest('[data-an]'); if(!a) return; var C=animClips(), k=a.dataset.an;
