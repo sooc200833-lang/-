@@ -1335,6 +1335,7 @@ body.dk-drag, body.dk-drag *{user-select:none!important; -webkit-user-select:non
 .ct-stb.done i{background:#2e7d32;color:#fff}.ct-stb.on{border-color:var(--ink,#111);color:var(--ink,#111);font-weight:700}.ct-stb.on i{background:var(--ink,#111);color:#fff}
 .ct-step h3{margin-top:.4rem}.ct-nx{margin-top:1rem;justify-content:space-between}
 .ct-shimg{display:block;width:100%;max-width:360px;margin:.3rem 0;border-radius:8px;border:1px solid var(--line,#ddd);cursor:zoom-in}
+.ct-shin{border-style:dashed}.ct-shrow{display:grid;gap:.3rem;border-top:1px solid var(--line,#eee);padding:.4rem 0}.ct-shrow select,.ct-shnew{font:inherit;font-size:.84rem}
 .ct-grp{border:1px solid var(--line,#ddd);border-radius:10px;padding:.5rem .6rem;margin:.4rem 0}
 .ct-zoom{position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:9999;display:grid;place-items:center;padding:1rem;cursor:zoom-out}.ct-zoom img{max-width:100%;max-height:100%}
 .ct-attach{background:var(--soft,#f3f3f3);padding:.3rem .5rem;border-radius:6px}
@@ -2779,6 +2780,7 @@ button.pl-card[disabled]{cursor:default}
   <h3>2. 캐릭터 시트</h3>
   <p class="small">AI가 이야기를 읽고 <b>주연·조연</b> 시트(성격·말투·원하는 것·생김새)와 <b>엑스트라·동물·사물</b>을 만든다. 「시트 점검」으로 이야기와 어긋난 곳·겹치는 외모를 찾는다.</p>
   <div class="filterbar"><button class="chip ct-go" id="ct-sheet" type="button">🧠 AI로 캐릭터 시트 짜기</button><button class="chip" id="ct-chk" type="button">🔍 시트 점검</button><button class="chip" id="ct-chgpt" type="button">🖌 GPT로 시트 한번에 (주연·조연·엑스트라·동물·사물)</button></div>
+  <div class="ct-grp ct-shin"><b>📥 GPT로 받은 시트 그림 넣기</b> <span class="small">인물이 아직 없어도 된다. 그림을 고르고 누구 시트인지 정한다.</span><div class="filterbar"><label class="chip sv-up ct-go">그림 고르기<input type="file" accept="image/*" multiple hidden id="ct-shfile"></label></div><div id="ct-shq"></div></div>
   <div id="ct-chkout"></div>
   <div id="ct-chars"></div>
   <div id="ct-props"></div>
@@ -14929,7 +14931,7 @@ var PK={'엑스트라':'👥','동물':'🐾','사물':'📦'};
 function renderProps(){ var box=document.getElementById('ct-props'); if(!box) return; var L=(B&&B.props)||[];
   var A=window.__ppArt, img=function(id,alt){ var u=id&&A&&A.get(id); return u?'<img class="ct-shimg" data-zoom="1" alt="'+cesc(alt)+'" src="'+u+'">':''; }, up=function(key,has){ return '<label class="chip sv-up">'+(has?'바꾸기':'📥 그림 넣기')+'<input type="file" accept="image/*" hidden data-shk="'+key+'"></label>'; };
   var G=(B&&B.sheetArts)||{}, h='';
-  if(chars().length>1) h+='<div class="ct-grp"><b>라인업</b> <span class="small">인물 전원 한 장</span>'+img(G.lineup,'라인업')+up('lineup',G.lineup)+'</div>';
+  if(chars().length>1 || G.lineup) h+='<div class="ct-grp"><b>라인업</b> <span class="small">인물 전원 한 장</span>'+img(G.lineup,'라인업')+up('lineup',G.lineup)+'</div>';
   ['엑스트라','동물','사물'].forEach(function(k){ var it=L.filter(function(x){ return x.kind===k; }); if(!it.length) return;
     h+='<div class="ct-grp"><b>'+PK[k]+' '+k+' 시트</b><ul class="ct-pl">'+it.map(function(x){ var i=L.indexOf(x); return '<li><b>'+cesc(x.name)+'</b><br><span class="small">'+cesc(x.look||'')+'</span> <button type="button" class="ct-pdel" data-pdel="'+i+'" aria-label="'+cesc(x.name)+' 지우기">✕</button></li>'; }).join('')+'</ul>'+img(G[k], k+' 시트')+up(k,G[k])+'</div>'; });
   box.innerHTML=h?'<h4 class="ct-reft">GPT로 받은 시트 그림</h4><p class="small">인물 카드의 「시트 그림 넣기」와 여기에 넣는다. 넣은 시트는 주요 컷을 그릴 때 첨부할 그림으로 안내된다.</p>'+h:''; }
@@ -14939,6 +14941,23 @@ document.addEventListener('change', function(e){ var t=e.target; if(!t.dataset |
     else { B.sheetArts=B.sheetArts||{}; B.sheetArts[t.dataset.shk]=id; stat((t.dataset.shk==='lineup'?'라인업':t.dataset.shk+' 시트')+' 그림을 넣었다'); }
     save(); renderChars(); renderProps(); try{ renderKey(); }catch(er){} }); });
 document.addEventListener('click', function(e){ var t=e.target; if(!(t.dataset && t.dataset.zoom)) return; var d=document.createElement('div'); d.className='ct-zoom'; d.innerHTML='<img alt="" src="'+t.src+'">'; d.addEventListener('click', function(){ d.remove(); }); document.body.appendChild(d); });
+
+// 시트 그림 넣기 (인물이 없어도): 그림마다 누구 시트인지 고른다
+var SHQ=[];
+function shqRender(){ var box=document.getElementById('ct-shq'); if(!box) return; var A=window.__ppArt;
+  if(!SHQ.length){ box.innerHTML=''; return; }
+  var opt=chars().map(function(x){ return '<option value="c:'+cesc(x.name)+'">'+cesc(x.name)+' 시트</option>'; }).join('')+'<option value="g:lineup">라인업(전원)</option><option value="g:엑스트라">엑스트라 시트</option><option value="g:동물">동물 시트</option><option value="g:사물">사물·소품 시트</option><option value="new">새 인물…</option>';
+  box.innerHTML=SHQ.map(function(id,i){ var u=A&&A.get(id); return '<div class="ct-shrow">'+(u?'<img class="ct-shimg" data-zoom="1" alt="" src="'+u+'">':'')+'<label class="small">누구 시트? <select data-shq="'+i+'"><option value="">고른다</option>'+opt+'</select></label><input type="text" class="ct-shnew" data-shqn="'+i+'" placeholder="새 인물 이름" hidden><button class="chip" type="button" data-shqok="'+i+'">넣기</button></div>'; }).join(''); }
+document.addEventListener('change', function(e){ var t=e.target;
+  if(t.id==='ct-shfile' && t.files.length && window.__ppArt){ var fs=[].slice.call(t.files); stat('그림을 읽는 중…');
+    Promise.all(fs.map(function(f){ return window.__ppArt.fromFile(f); })).then(function(ids){ SHQ=SHQ.concat(ids); shqRender(); stat('누구 시트인지 고르고 「넣기」를 누른다'); t.value=''; }); return; }
+  if(t.dataset && t.dataset.shq!=null){ var nn=document.querySelector('[data-shqn="'+t.dataset.shq+'"]'); if(nn){ nn.hidden=t.value!=='new'; if(t.value==='new') nn.focus(); } } });
+document.addEventListener('click', function(e){ var b=e.target.closest&&e.target.closest('[data-shqok]'); if(!b) return; var i=+b.dataset.shqok, sel=document.querySelector('[data-shq="'+i+'"]'), v=sel&&sel.value, id=SHQ[i];
+  if(!v) return stat('누구 시트인지 먼저 고른다'); ensureB();
+  if(v==='new'){ var nm=(document.querySelector('[data-shqn="'+i+'"]').value||'').trim().slice(0,20); if(!nm) return stat('새 인물 이름을 적는다'); var ex=null; B.chars.forEach(function(x){ if(x.name===nm) ex=x; }); if(!ex){ ex={name:nm, role:'', look:{}, note:''}; B.chars.push(ex); } ex.sheetArt=id; stat(nm+' 시트를 넣었다'); }
+  else if(v.indexOf('c:')===0){ var n2=v.slice(2); chars().forEach(function(x){ if(x.name===n2) x.sheetArt=id; }); stat(n2+' 시트를 넣었다'); }
+  else { B.sheetArts=B.sheetArts||{}; B.sheetArts[v.slice(2)]=id; stat('시트를 넣었다'); }
+  SHQ.splice(i,1); save(); renderChars(); renderProps(); shqRender(); try{ renderKey(); stepNav(); }catch(er){} });
 function sheetRefs(names){ var A=window.__ppArt, out=[]; if(!A||!B) return out; chars().forEach(function(x){ if(x.sheetArt && (!names || names.indexOf(x.name)>-1)) out.push(x.name+' 시트'); });
   var G=B.sheetArts||{}; if(G.lineup) out.push('라인업'); ['엑스트라','동물','사물'].forEach(function(k){ if(G[k]) out.push(k+' 시트'); }); return out; }
 document.addEventListener('click', function(e){ var t=e.target.closest&&e.target.closest('[data-pdel]'); if(t&&B&&B.props){ B.props.splice(+t.dataset.pdel,1); save(); renderProps(); } });
