@@ -308,8 +308,11 @@ arcForm, deviceId, folderMemo, gdBase, gdLast, gdLinked, ideaText, mangaDataVer,
 - 모델 높이를 기준으로 크기를 정규화하고 화면 종횡비에 따른 카메라 거리 계산으로 전신이 보이도록 배치한다.
 - 주의: GitHub 트리에서 모델 파일 경로를 확인했지만 iPhone Safari에서 실제 렌더링/애니메이션 실행은 아직 확인하지 않았다.
 
-## 웹툰 선택지 스튜디오 (2026-11-21) — `studio/`
-- 주소 https://sooc200833-lang.github.io/-/studio/ · 로비 카드와 사전 「클리셰 플레이」 위 링크로 연결
-- 여러 파일: `index.html`(화면), `app.js`(ink 대본→웹툰 컷 렌더·플레이·맵·자동 테스트), `ext.js`(클리셰 탭·클리셰 플레이·쉬운 추가 시트), `sprite.js`(GPT 프로필·표정 시트 요청문, 시트 업로드→배경 제거·칸 자르기·표정 배정, 컷 그림 요청문·컷 그림 저장), `story-seoyun.js`(서윤양 7엔딩), `cliches.js`(trope-engine-korea MIT 1000개), `directing.js`(연출 템플릿), `lib/`(inkjs, scrollama, embla, comical, manpu_doodle 기호)
-- 대본 확장 문법: `@panel 배경 높이비 효과…`, `@art 그림키`(컷 그림), `@bub 배율`(말풍선 크기), `@mark 기호 x y 크기`, 대사 끝 ` @x,y`(말풍선 위치)
-- 올린 표정 시트·컷 그림은 브라우저 IndexedDB `wt_sprites`(c, a)에만 저장. 기기 간 동기화 없음
+
+## 클리셰 플레이 강화 (2026-11-21) — `[[MOD:playplus]]`, `[[CSS:playplus]]` (파일 끝 별도 `<script>`)
+- 웹툰 보기(`ppSet.wt`): 턴 그림을 `.pp-frame`에 넣고 비율(0.5~1.78) 선택, 대사를 칸 안 말풍선 `.pp-bb`로(끌어서 위치, 풍선−/+ 크기). 판별 컷 설정 `ppCut[게임키][턴]={h,bs,pos}`
+- 선택지 스와이프(`ppSet.swipe`): 선택지를 가로 스냅 레일로, 아래 `.pp-commit`이 보이면 확정(사용자 스크롤 입력 뒤에만)
+- 표정 시트(🎭): 인물마다 GPT 프로필 요청문·붙여 넣기 채우기(`ppProf`), 표정 시트 요청문(4/9/12종), 시트 사진 → 배경 제거·칸 자르기·표정 배정 → IndexedDB `pp.spr`. 「엑스트라」는 눈 안 보이게. 장면에서 시트 있는 인물은 `__ppCut`이 콘티 그림에서 빼고 표정 이미지(`panel.emo`, AI 형식에 추가)를 얹는다
+- 컷 그림: 「🖌 GPT로 이 컷 그리기」/「GPT로 전체 컷 그리기」는 요청문 복사 + chatgpt.com/?q= 열기. 「그림 올리기」는 IndexedDB `pp.art`, 비율 자동
+- 원고 복사: 읽기용/연출 포함(`__ppFix.manuscript`)
+- 플레이 모듈 수정 3곳: 형식에 `emo`, 규칙 한 줄, `paint`에서 `__ppCut`, `render` 끝에서 `__ppDeco`. 주의: `__ctCutData`가 canvas dataset을 지우므로 턴 번호는 `.pl-turn` 순서로 센다

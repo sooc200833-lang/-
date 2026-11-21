@@ -1442,6 +1442,42 @@ body.dk-drag, body.dk-drag *{user-select:none!important; -webkit-user-select:non
 .ct-ed .ct-redo-row{display:grid; gap:.3rem; justify-items:start}
 .ct-ed .ct-redo-row label{justify-self:stretch}
 .ct-ed .chip:disabled{opacity:.5; cursor:default}
+/* [[CSS:playplus]] 클리셰 플레이 강화 */
+#play-root.pp-wt .pl-scene{display:block}
+#play-root.pp-wt .pl-lines{display:none}
+.pp-frame{position:relative;width:100%;overflow:hidden;border:2.5px solid #1c1716;background:#fff;touch-action:pan-y}
+.pp-frame canvas.pl-cv{display:block;width:100%!important;height:100%!important;object-fit:cover}
+.pp-art{position:absolute;inset:0;background:#f3efe9 center/cover no-repeat;z-index:2}
+.pp-spr{position:absolute;bottom:0;transform:translateX(-50%);max-width:70%;object-fit:contain;object-position:bottom;z-index:3;pointer-events:none}
+.pp-bb{position:absolute;transform:translate(-50%,0);z-index:5;max-width:58%;background:#fff;color:#1c1716;border:2px solid #1c1716;border-radius:50%/42%;padding:.7em 1.1em;font-weight:800;line-height:1.35;text-align:center;cursor:grab;touch-action:none;user-select:none;box-shadow:2px 2px 0 rgba(0,0,0,.12)}
+.pp-bb.me{background:#fff7fa;border-color:#c2577a}
+.pp-bb i{display:block;font-style:normal;font-weight:600;font-size:.72em;opacity:.6}
+.pp-tools{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:8px 0 4px}
+.pp-tools select{font:inherit;font-size:12px;padding:4px 6px;border-radius:8px}
+.pp-rail{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;gap:0;margin:6px 0}
+.pp-rail::-webkit-scrollbar{display:none}
+.pp-slide{flex:0 0 100%;scroll-snap-align:center;display:flex;justify-content:center;padding:4px 10%}
+.pp-slide .pl-ch{width:100%;min-height:64px;font-size:15px;border-radius:40px/30px;border:2px solid currentColor;white-space:normal}
+.pp-dots{display:flex;justify-content:center;gap:6px}.pp-dots i{width:7px;height:7px;border-radius:50%;background:currentColor;opacity:.25}.pp-dots i.on{opacity:.9}
+.pp-hint{text-align:center;margin:6px 0 0}
+.pp-commit{height:46vh;display:flex;align-items:flex-start;justify-content:center;padding-top:30px;opacity:.6;font-size:13px}
+.pp-commit.go{opacity:1}
+#pp-sheet{position:fixed;inset:0;z-index:9999;background:rgba(15,12,10,.55);display:none;align-items:flex-end;justify-content:center}
+#pp-sheet.on{display:flex}
+#pp-sheet .pp-box{background:var(--bg,#fff);color:inherit;width:100%;max-width:560px;max-height:90vh;overflow:auto;border-radius:18px 18px 0 0;padding:16px 16px 26px}
+#pp-sheet h4{margin:14px 0 6px}
+.pp-seg,.pp-row{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:6px 0}
+.pp-in{width:100%;box-sizing:border-box;font:inherit;font-size:13px;padding:8px;border-radius:8px;border:1px solid rgba(0,0,0,.2);background:transparent;color:inherit}
+.pp-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:8px 0}
+.pp-grid.sm{grid-template-columns:repeat(5,1fr)}
+.pp-grid>div{background:repeating-conic-gradient(#e9e9e9 0 25%,#fff 0 50%) 0 0/14px 14px;border-radius:10px;padding:4px;text-align:center}
+.pp-grid>div.off{opacity:.3}
+.pp-grid img{width:100%;height:90px;object-fit:contain;display:block}
+.pp-grid select{width:100%;font-size:12px}
+#pp-toast{position:fixed;left:50%;bottom:80px;transform:translateX(-50%);background:#1c1716;color:#fff;padding:9px 16px;border-radius:99px;font-size:13px;z-index:10000;opacity:0;transition:opacity .2s;pointer-events:none}
+#pp-toast.on{opacity:1}
+/* [[/CSS:playplus]] */
+
 /* [[CSS:play]] 클리셰 플레이 */
 #play-root{--pl-acc:var(--mark)}
 .pl-setup .pl-row{display:flex; flex-wrap:wrap; align-items:center; gap:.4rem .6rem; padding:.55rem 0; border-bottom:1px dashed var(--rule)}
@@ -2683,7 +2719,6 @@ button.pl-card[disabled]{cursor:default}
 
 <section class="blk" id="play">
   <h2 class="big">클리셰 플레이</h2>
-  <a href="./studio/" style="display:block;margin:0 0 14px;padding:12px 14px;border:1.5px solid currentColor;border-radius:12px;text-decoration:none;color:inherit"><b>🎬 웹툰 선택지 스튜디오로 플레이</b><br><span style="font-size:12px;opacity:.75">연출 클리셰를 컷으로 바로 플레이 · 표정 시트로 캐릭터 만들기 · 컷 그림 요청문 · 칸 비율·말풍선 조절</span></a>
   <div id="play-root"></div>
 </section>
 
@@ -16928,11 +16963,12 @@ function turnPrompt(act){
     '- choices: 다음에 할 만한 행동 3개, 서로 성격이 다르게(정면 돌파·꾀·감정 등), 각 18자 안쪽.\n'+
     '- comments: 이 장면을 본 웹툰 독자 댓글 2개(짧고 생생하게, 반말·유행어 가능, 욕설 없이).\n'+
     '- panel: 이 턴을 대표하는 한 컷. k는 els ls fs ms bs cu ecu two ots stand bird insert pov back empty crowd 중 하나, ang은 ""·high·low·dutch, who는 컷에 보이는 인물 이름(많아야 2), scr은 30자 그림 설명.\n'+
+    '- panel.emo: 컷에 보이는 인물마다 표정 하나 {이름: n|smile|grin|shy|panic|shock|angry|sad|cry|smirk|think|menace|blank|hurt}.\n'+
     '- lines: 이 컷의 대사 0~2개(각 25자 안쪽).\n'+
     '- summary: 지금까지 줄거리를 300자 안쪽으로 새로 정리. npcs: 지금까지 나온 다른 인물 전부 {name, role(8자), look(외모 한 줄)}.\n'+
     '- tension: 이번 턴 뒤 긴장 0~100. fresh: 이번 턴이 얼마나 신선했나 0~3.\n'+
     (end?'- 이번이 마지막 턴이다. 이야기를 매듭짓고 end=true, ending에 {title(작품 제목 12자), logline(한 줄 40자), type(아래 결말 중 하나)}를 넣는다. choices는 빈 배열.\n  결말: '+shuffle(ENDINGS).slice(0,8).map(function(e){ return e[1]; }).join(' · ')+'\n':'- end=false.\n')+
-    '형식: {"narr":"","lines":[{"who":"","text":""}],"panel":{"k":"","ang":"","who":[],"scr":""},"event":{"card":"","setup":"","follow":"","flip":""},"tropes":[{"name":"","how":""}],"choices":["","",""],"comments":["",""],"summary":"","npcs":[{"name":"","role":"","look":""}],"tension":0,"fresh":0,"end":false,"ending":null}');
+    '형식: {"narr":"","lines":[{"who":"","text":""}],"panel":{"k":"","ang":"","who":[],"scr":"","emo":{}},"event":{"card":"","setup":"","follow":"","flip":""},"tropes":[{"name":"","how":""}],"choices":["","",""],"comments":["",""],"summary":"","npcs":[{"name":"","role":"","look":""}],"tension":0,"fresh":0,"end":false,"ending":null}');
   return L.join('\n\n');
 }
 function parseJ(t){ t=String(aiClean?aiClean(t):t).trim(); try{ return JSON.parse(t); }catch(e){} var a=t.indexOf('{'), b=t.lastIndexOf('}'); if(a>-1 && b>a){ try{ return JSON.parse(t.slice(a,b+1)); }catch(e){} } return null; }
@@ -17024,14 +17060,14 @@ function playHTML(){
   return h;
 }
 function render(){
-  if(!PL){ root.innerHTML=setupHTML(); return; }
-  root.innerHTML=playHTML(); paint();
+  if(!PL){ root.innerHTML=setupHTML(); if(window.__ppDeco) window.__ppDeco(); return; }
+  root.innerHTML=playHTML(); paint(); if(window.__ppDeco) window.__ppDeco();
 }
 function paint(){
   if(!window.__ctCutData || !window.__ctPortrait){ if((paint.n=(paint.n||0)+1)<40) setTimeout(paint,250); return; }
   [].slice.call(root.querySelectorAll('canvas.pl-cv')).forEach(function(cv){
     var t=PL.log[+cv.dataset.t-1]; if(!t) return; var c=panelOf(t);
-    try{ window.__ctCutData(cv, c); cv.dataset.who=JSON.stringify(c.who.map(function(nm){ return {name:nm, look:lookOf(nm)}; })); delete cv.dataset.bempty; delete cv.dataset.nob; window.__ctPortrait(cv); }catch(e){}
+    try{ if(window.__ppCut) c=window.__ppCut(c,t,cv); window.__ctCutData(cv, c); cv.dataset.who=JSON.stringify(c.who.map(function(nm){ return {name:nm, look:lookOf(nm)}; })); delete cv.dataset.bempty; delete cv.dataset.nob; window.__ctPortrait(cv); }catch(e){}
   });
 }
 function scrollEnd(){ var l=root.querySelector('.pl-turn:last-of-type'); if(l) try{ l.scrollIntoView({block:'start', behavior:'smooth'}); }catch(e){} }
@@ -18425,6 +18461,285 @@ if(typeof mineCount==='function') mineCount();
 if(typeof runChar==='function') try{ runChar(); }catch(e){}   // 모듈이 붙인 뱃지·▸까지 다시 그린다
 show((location.hash||'#home').slice(1));
 })();
+</script>
+<script>
+// [[MOD:playplus]] 클리셰 플레이 강화 (2026-11-21)
+// ① 웹툰 보기: 컷 비율·말풍선(끌어서 위치, 크기)·컷 그림 올리기·컷 그림 요청문
+// ② 선택지: 옆으로 밀어 고르고 아래로 내려 확정
+// ③ 표정 시트: 인물마다 GPT 프로필·표정 시트 요청문 → 시트 사진 올리면 배경 제거·칸 자르기·표정 배정 → 장면에 그 표정으로
+//    엑스트라는 눈이 안 보이게 한 장 시트
+// ④ 원고 복사: 지금까지의 판을 읽기용/연출 포함 원고로
+// 저장: localStorage ppSet(설정), ppCut(판별 컷 설정), ppProf(인물 프로필) · IndexedDB pp(spr: 인물 표정, art: 컷 그림)
+(function(){
+var root=document.getElementById('play-root'); if(!root || !window.__play) return;
+function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g,function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
+function LG(k,d){ try{ var v=localStorage.getItem(k); return v==null?d:JSON.parse(v); }catch(e){ return d; } }
+function LS(k,v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} }
+function PL(){ return window.__play.state(); }
+var SET=Object.assign({wt:true, swipe:true}, LG('ppSet',{}));
+var EMO=['n','smile','grin','shy','panic','shock','angry','sad','cry','smirk','think','menace','blank','hurt'];
+var EMN={n:'보통',smile:'미소',grin:'활짝',shy:'수줍',panic:'당황',shock:'충격',angry:'화남',sad:'슬픔',cry:'울음',smirk:'비웃음',think:'생각',menace:'위압',blank:'멍',hurt:'상처'};
+var EMEN={n:'neutral calm face',smile:'warm gentle smile',grin:'big open-mouth grin',shy:'shy, blushing, looking away',panic:'flustered, panicking, sweat drop',shock:'shocked, eyes wide, mouth open',angry:'angry, furrowed brows',sad:'sad, downcast',cry:'crying, tears streaming',smirk:'smug smirk',think:'thinking, hand on chin',menace:'menacing cold glare, shadowed upper face',blank:'blank dazed stare',hurt:'hurt, trembling lip'};
+var MOBEN={n:'neutral, mouth closed',smile:'smiling',grin:'laughing, open mouth',shy:'blushing cheeks, small smile',panic:'wavy flustered mouth, sweat drops',shock:'mouth wide open, sweat',angry:'vein mark, gritted teeth',sad:'mouth turned down',cry:'tears running from under the bangs',smirk:'smug smirk',think:'hand on chin',menace:'dark shadow, evil grin',blank:'mouth slightly open',hurt:'trembling mouth'};
+var LAY={'2x2':['n','smile','angry','sad'],'3x3':['n','smile','shy','panic','shock','angry','sad','cry','smirk'],'4x3':['n','smile','grin','shy','panic','shock','angry','sad','cry','smirk','think','menace']};
+var FALL={grin:'smile',shy:'smile',panic:'shock',shock:'panic',cry:'sad',hurt:'sad',menace:'angry',smirk:'smile',think:'n',blank:'n',angry:'n',sad:'n',smile:'n'};
+var MOB='엑스트라';
+
+/* ---------- 저장소 ---------- */
+var DB=null, SPR={}, ART={};
+function idb(){ return new Promise(function(res){ try{ var r=indexedDB.open('pp',1); r.onupgradeneeded=function(){ r.result.createObjectStore('spr',{keyPath:'id'}); r.result.createObjectStore('art',{keyPath:'id'}); }; r.onsuccess=function(){ DB=r.result; res(); }; r.onerror=function(){ res(); }; }catch(e){ res(); } }); }
+function all(st){ return new Promise(function(res){ if(!DB) return res([]); try{ var q=DB.transaction(st).objectStore(st).getAll(); q.onsuccess=function(){ res(q.result||[]); }; q.onerror=function(){ res([]); }; }catch(e){ res([]); } }); }
+function put(st,o){ return new Promise(function(res){ if(!DB) return res(); try{ var t=DB.transaction(st,'readwrite'); t.objectStore(st).put(o); t.oncomplete=res; t.onerror=res; }catch(e){ res(); } }); }
+function del(st,id){ return new Promise(function(res){ if(!DB) return res(); try{ var t=DB.transaction(st,'readwrite'); t.objectStore(st).delete(id); t.oncomplete=res; t.onerror=res; }catch(e){ res(); } }); }
+function gameKey(){ var p=PL(); return p?String(p.at||p.hero.name+'|'+p.genre):''; }
+function cutSet(n){ var a=LG('ppCut',{}), k=gameKey(); return ((a[k]||{})[n])||{}; }
+function cutSave(n,o){ var a=LG('ppCut',{}), k=gameKey(); a[k]=a[k]||{}; a[k][n]=Object.assign({}, a[k][n]||{}, o); var ks=Object.keys(a); if(ks.length>12) delete a[ks[0]]; LS('ppCut',a); }
+function sprOf(name, emo){ var s=SPR[name]; if(!s) return ''; var k=emo||'n', g=0; while(!s[k] && g++<4) k=FALL[k]||'n'; return s[k]||s.n||s[Object.keys(s)[0]]; }
+
+/* ---------- 알림·복사 ---------- */
+function toast(t){ var s=document.getElementById('pp-toast'); if(!s){ s=document.createElement('div'); s.id='pp-toast'; s.setAttribute('role','status'); document.body.appendChild(s); } s.textContent=t; s.className='on'; clearTimeout(toast.t); toast.t=setTimeout(function(){ s.className=''; },2200); }
+function copy(t,msg){ (navigator.clipboard&&navigator.clipboard.writeText?navigator.clipboard.writeText(t):Promise.reject()).then(function(){ toast(msg||'복사했다'); }, function(){ var a=document.createElement('textarea'); a.value=t; document.body.appendChild(a); a.select(); try{ document.execCommand('copy'); toast(msg||'복사했다'); }catch(e){ toast('복사하지 못했다'); } a.remove(); }); }
+
+/* ---------- 원고 ---------- */
+function manuscript(dir){
+  var p=PL(); if(!p) return ''; var L=[];
+  L.push(p.ending?'『'+p.ending.title+'』 — '+p.ending.logline:'『클리셰 플레이』 진행 중', p.genre+' · '+p.world[0]+' · 주인공 '+p.hero.name, '');
+  p.log.forEach(function(t){
+    L.push('[컷 '+t.n+']'+(dir&&t.panel?' '+[t.panel.k,t.panel.ang,(t.panel.scr||'')].filter(Boolean).join(' · '):''));
+    if(t.act && t.n>1) L.push('▶ 선택: '+t.act);
+    if(dir && t.panel && t.panel.emo) Object.keys(t.panel.emo).forEach(function(k){ L.push('  ('+k+' — '+(EMN[t.panel.emo[k]]||t.panel.emo[k])+')'); });
+    L.push('나레이션: '+t.narr);
+    t.lines.forEach(function(l){ L.push((l.who||'?')+': '+l.text); });
+    if(dir && t.card) L.push('  ★ 클리셰 발동: '+t.card+(t.setup?' — '+t.setup:''));
+    if(dir && t.tropes && t.tropes.length) L.push('  🏷 '+t.tropes.map(function(x){ return x.name; }).join(', '));
+    L.push('');
+  });
+  if(p.ending) L.push('— 완결 · 결말: '+(p.ending.type||'')+' · 등급 신선도 '+p.fresh);
+  return L.join('\n');
+}
+
+/* ---------- 컷 그림 요청문 ---------- */
+var STYLES=['Korean webtoon style, clean line art, cel shading','shoujo manga style, big sparkling eyes','shounen manga style, bold lines','romance fantasy illustration style','simple flat 2D style'];
+var SHOT={els:'extreme long shot',ls:'long shot',fs:'full shot',ms:'medium shot',bs:'bust shot',cu:'close-up',ecu:'extreme close-up',two:'two shot',ots:'over-the-shoulder shot',stand:'face-off shot',bird:"bird's-eye view",insert:'insert close-up of an object',pov:'point-of-view shot',back:'shot from behind',empty:'empty background, no people',crowd:'crowd shot'};
+var ANG={high:'high angle',low:'low angle',dutch:'dutch angle'};
+var RATIO={'0.5':'2:1 wide','0.75':'4:3','1':'1:1 square','1.33':'3:4 tall','1.78':'9:16 tall'};
+function lookText(name){ var pr=LG('ppProf',{})[name], p=PL(); if(pr&&pr.look) return name+': '+pr.look;
+  if(p && name===p.hero.name) return name+': '+(p.hero.desc||'');
+  var n=null; (p?p.npcs:[]).forEach(function(x){ if(x.name===name) n=x; }); return name+': '+(n?(n.role+', '+n.look):'');
+}
+function allPrompt(){ var p=PL(); return 'Draw these '+p.log.length+' webtoon panels ONE BY ONE as separate images, in order. Before each image, write only the panel number. Keep every character design identical across all panels.\n\n'+p.log.map(function(t){ return '=== PANEL '+t.n+' ===\n'+cutPrompt(t); }).join('\n\n'); }
+function cutPrompt(t){
+  var p=PL(), pn=t.panel||{}, cs=cutSet(t.n), who=(pn.who||[]).slice(0,2), emo=pn.emo||{};
+  return 'Draw ONE webtoon panel image. '+(STYLES[SET.style||0])+', full color.\n'+
+   'NO speech bubbles, NO text, NO sound-effect letters, NO panel border. Leave some empty space near the top for speech bubbles.\n'+
+   'Aspect ratio '+(RATIO[String(cs.h||1)]||'1:1 square')+'.\n\n'+
+   'Setting: '+p.world[0]+' ('+p.genre+').\n'+
+   'Shot: '+(SHOT[pn.k]||'medium shot')+(ANG[pn.ang]?', '+ANG[pn.ang]:'')+'.\n'+
+   'What we see: '+(pn.scr||'')+'\n'+
+   'Scene (for mood, do not draw text): '+t.narr+(t.lines.length?' / '+t.lines.map(function(l){ return l.who+': '+l.text; }).join(' / '):'')+'\n'+
+   (who.length?'Characters (keep designs exactly consistent):\n'+who.map(function(n,i){ return '- '+(who.length>1?(i?'right':'left')+': ':'')+lookText(n)+'. Expression: '+(EMEN[emo[n]]||'fitting the scene'); }).join('\n'):'No characters.');
+}
+
+/* ---------- 표정 시트 요청문 ---------- */
+function profPrompt(name, hint){
+  return '웹툰 인터랙티브 게임에 나올 인물 「'+name+'」의 그림용 프로필을 만들어 줘.\n참고: '+(hint||'(없음)')+'\n\n아래 형식으로만, 한 줄에 하나씩:\n이름:\n성별:\n나이:\n머리: (색·길이·모양을 그림으로 그릴 수 있게)\n눈:\n옷: (항상 같은 옷)\n특징: (머리핀·안경 등 항상 같은 소품)\n성격:';
+}
+function parseProf(txt){ var map={'이름':'name','성별':'gender','나이':'age','머리':'hair','눈':'eyes','옷':'outfit','복장':'outfit','특징':'extra','소품':'extra','성격':'trait'}, o={}, n=0;
+  String(txt).split('\n').forEach(function(l){ var m=l.match(/^\s*[-*•]?\s*\**\s*([가-힣]+)\s*\**\s*[:：]\s*(.+)$/); if(m && map[m[1]]){ o[map[m[1]]]=m[2].replace(/\*+/g,'').trim(); n++; } }); return n?o:null; }
+function lookFromProf(o){ return [o.gender&&(/남/.test(o.gender)?'male':'female'), o.age, o.hair&&'hair '+o.hair, o.eyes&&'eyes '+o.eyes, o.outfit&&'outfit '+o.outfit, o.extra].filter(Boolean).join('; '); }
+function sheetPrompt(name, lay){
+  var ex=LAY[lay], cr=lay.split('x').map(Number), mob=name===MOB;
+  var who=mob?'a generic background EXTRA student (plain hair, school uniform)':lookText(name);
+  return 'Create ONE image: a character expression sprite sheet for a webtoon game.\n\nCHARACTER: '+who+'\nSTYLE: '+STYLES[SET.style||0]+(mob?', slightly muted colors':'')+'\n\n'+
+   (mob?'EYES MUST NOT BE VISIBLE in any cell: eyes completely hidden under thick bangs or a soft shadow over the upper face. Show emotion ONLY with mouth, blush, sweat, tears, vein marks.\n\n':'')+
+   'LAYOUT: a strict grid of '+cr[0]+' columns x '+cr[1]+' rows = '+ex.length+' cells, evenly spaced, same size. The SAME character in every cell (identical face, hair, outfit, accessories), bust-up, facing front, same size and position. Plain pure white background, no borders, no text, no numbers, clear white gaps between cells.\n\n'+
+   'EXPRESSIONS in reading order (left to right, top to bottom):\n'+ex.map(function(k,i){ return (i+1)+'. '+(mob?MOBEN[k]:EMEN[k]); }).join('\n')+'\n\nOnly the expression changes between cells.';
+}
+
+/* ---------- 시트 자르기 ---------- */
+function loadCanvas(file){ return new Promise(function(res,rej){ var u=URL.createObjectURL(file), im=new Image(); im.onload=function(){ var k=Math.min(1,1800/Math.max(im.width,im.height)), c=document.createElement('canvas'); c.width=Math.round(im.width*k); c.height=Math.round(im.height*k); c.getContext('2d').drawImage(im,0,0,c.width,c.height); URL.revokeObjectURL(u); res(c); }; im.onerror=function(){ rej(new Error('이미지를 읽지 못했다')); }; im.src=u; }); }
+function dist(d,i,b){ return Math.abs(d[i]-b[0])+Math.abs(d[i+1]-b[1])+Math.abs(d[i+2]-b[2]); }
+function removeBg(src,tol){ var c=document.createElement('canvas'); c.width=src.width; c.height=src.height; var x=c.getContext('2d',{willReadFrequently:true}); x.drawImage(src,0,0);
+  var w=c.width,h=c.height,img=x.getImageData(0,0,w,h),d=img.data, cn=[0,(w-1)*4,(h-1)*w*4,((h-1)*w+w-1)*4];
+  if(cn.filter(function(i){ return d[i+3]<20; }).length>=3) return c;
+  var bg=[0,1,2].map(function(k){ return cn.map(function(i){ return d[i+k]; }).sort(function(a,b){ return a-b; })[1]; });
+  var T=tol*3, seen=new Uint8Array(w*h), q=new Int32Array(w*h), qh=0, qt=0;
+  function push(p){ if(!seen[p] && dist(d,p*4,bg)<=T){ seen[p]=1; q[qt++]=p; } }
+  for(var i=0;i<w;i++){ push(i); push((h-1)*w+i); } for(var j=0;j<h;j++){ push(j*w); push(j*w+w-1); }
+  while(qh<qt){ var p=q[qh++], x0=p%w, y0=(p/w)|0; if(x0>0) push(p-1); if(x0<w-1) push(p+1); if(y0>0) push(p-w); if(y0<h-1) push(p+w); }
+  for(var k=0;k<w*h;k++) if(seen[k]) d[k*4+3]=0;
+  x.putImageData(img,0,0); return c; }
+function runs(a,minGap){ var r=[],s=-1,gap=0; for(var i=0;i<a.length;i++){ if(a[i]>0){ if(s<0) s=i; gap=0; } else if(s>=0){ gap++; if(gap>=minGap){ r.push([s,i-gap]); s=-1; gap=0; } } } if(s>=0) r.push([s,a.length-1]); return r.filter(function(v){ return v[1]-v[0]>a.length*0.04; }); }
+function slice(c,mode){
+  var w=c.width,h=c.height,x=c.getContext('2d',{willReadFrequently:true}),d=x.getImageData(0,0,w,h).data,xs,ys;
+  if(mode==='auto'){ var col=new Array(w).fill(0),row=new Array(h).fill(0); for(var j=0;j<h;j++) for(var i=0;i<w;i++) if(d[(j*w+i)*4+3]>30){ col[i]++; row[j]++; }
+    xs=runs(col,Math.max(4,w*0.006)); ys=runs(row,Math.max(4,h*0.006)); if(!xs.length||!ys.length||xs.length*ys.length<2||xs.length*ys.length>25) xs=null; }
+  if(!xs){ var g=(mode==='auto'?'3x3':mode).split('x').map(Number); xs=[]; ys=[]; for(i=0;i<g[0];i++) xs.push([Math.round(w*i/g[0]),Math.round(w*(i+1)/g[0])-1]); for(j=0;j<g[1];j++) ys.push([Math.round(h*j/g[1]),Math.round(h*(j+1)/g[1])-1]); }
+  var out=[]; ys.forEach(function(yy){ xs.forEach(function(xx){
+    var x0=xx[1],y0=yy[1],x1=xx[0],y1=yy[0],any=false; for(var j=yy[0];j<=yy[1];j++) for(var i=xx[0];i<=xx[1];i++) if(d[(j*w+i)*4+3]>40){ any=true; if(i<x0)x0=i; if(i>x1)x1=i; if(j<y0)y0=j; if(j>y1)y1=j; }
+    if(!any || x1-x0<w*0.03 || y1-y0<h*0.03){ out.push(null); return; }
+    var bw=x1-x0+1, bh=y1-y0+1, k=Math.min(1,520/Math.max(bw,bh)), o=document.createElement('canvas'); o.width=Math.round(bw*k); o.height=Math.round(bh*k);
+    o.getContext('2d').drawImage(c,x0,y0,bw,bh,0,0,o.width,o.height); out.push(o.toDataURL('image/png')); }); });
+  return {cells:out, cols:xs.length, rows:ys.length};
+}
+
+/* ---------- 시트 창 ---------- */
+var SH=null, U={};
+function sheet(html){ if(!SH){ SH=document.createElement('div'); SH.id='pp-sheet'; SH.innerHTML='<div class="pp-box" role="dialog" aria-modal="true"></div>'; document.body.appendChild(SH);
+  SH.addEventListener('click',function(e){ if(e.target===SH) close(); }); SH.addEventListener('click',onSheet); SH.addEventListener('change',onSheetChange); SH.addEventListener('input',onSheetInput); }
+  SH.firstChild.innerHTML=html; SH.className='on'; }
+function close(){ if(SH) SH.className=''; }
+function people(){ var p=PL(), L=[]; if(p){ L.push(p.hero.name); p.npcs.forEach(function(x){ if(L.indexOf(x.name)<0) L.push(x.name); }); }
+  Object.keys(SPR).forEach(function(n){ if(L.indexOf(n)<0 && n!==MOB) L.push(n); }); L.push(MOB); return L; }
+function openFaces(name){
+  U={name:name||U.name||people()[0], lay:U.lay||'3x3', mode:'auto', tol:34, cells:null, as:[], drop:{}};
+  paintFaces();
+}
+function paintFaces(){
+  var n=U.name, pr=LG('ppProf',{})[n]||{}, mob=n===MOB;
+  var h='<h3>🎭 표정 시트 — 인물마다 감정별 얼굴</h3><p class="small">GPT로 표정 시트를 그리게 하고, 사진을 올리면 알아서 잘라 장면에 그 표정으로 나온다. 이 기기에 저장된다.</p>'+
+   '<div class="pp-seg">'+people().map(function(x){ return '<button type="button" class="chip'+(x===n?' on':'')+'" data-pp="who" data-n="'+esc(x)+'">'+esc(x)+(SPR[x]?' ✓':'')+'</button>'; }).join('')+'</div>';
+  if(!mob){
+    h+='<h4>① 프로필</h4><textarea class="pp-in" data-f="look" rows="2" placeholder="그림 그릴 생김새 (예: female, 17, long black hair, navy blazer, pink hairpin)">'+esc(pr.look||'')+'</textarea>'+
+     '<div class="pp-row"><button type="button" class="chip" data-pp="cpProf">GPT 프로필 요청문 복사</button></div>'+
+     '<textarea class="pp-in" id="pp-paste" rows="2" placeholder="GPT 답을 붙여 넣고 → 채우기"></textarea><div class="pp-row"><button type="button" class="chip" data-pp="fill">채우기</button></div>';
+  } else h+='<p class="small">엑스트라는 <b>눈이 안 보이게</b> 그린다. 장면에 나오는 이름 없는 인물·군중에 쓰인다.</p>';
+  h+='<h4>'+(mob?'①':'②')+' 표정 시트 요청문</h4><div class="pp-seg">'+Object.keys(LAY).map(function(k){ return '<button type="button" class="chip'+(U.lay===k?' on':'')+'" data-pp="lay" data-k="'+k+'">'+LAY[k].length+'종</button>'; }).join('')+
+   '<select class="pp-style">'+STYLES.map(function(s,i){ return '<option value="'+i+'"'+((SET.style||0)==i?' selected':'')+'>'+esc(s.split(',')[0])+'</option>'; }).join('')+'</select></div>'+
+   '<p class="small">'+LAY[U.lay].map(function(k,i){ return (i+1)+'.'+EMN[k]; }).join(' · ')+'</p>'+
+   '<div class="pp-row"><button type="button" class="chip pl-go" data-pp="cpSheet">표정 시트 요청문 복사</button></div>'+
+   '<h4>'+(mob?'②':'③')+' 시트 올리기</h4><div class="pp-row"><button type="button" class="chip pl-go" data-pp="pick">📷 시트 사진 고르기</button><input type="file" accept="image/*" id="pp-file" hidden>'+(SPR[n]?'<button type="button" class="chip" data-pp="rm">이 인물 그림 지우기</button>':'')+'</div>';
+  if(U.src){
+    h+='<div class="pp-row small">배경 제거 <input type="range" min="6" max="90" value="'+U.tol+'" data-pp-r="tol"> 칸 '+['auto','2x2','3x3','4x3','3x4','4x4'].map(function(m){ return '<button type="button" class="chip'+(U.mode===m?' on':'')+'" data-pp="mode" data-k="'+m+'">'+(m==='auto'?'자동':m)+'</button>'; }).join('')+'</div>';
+    if(U.cells){ h+='<div class="pp-grid">'+U.cells.map(function(u,i){ if(!u) return ''; return '<div class="'+(U.drop[i]?'off':'')+'"><img src="'+u+'" alt=""><select data-as="'+i+'">'+EMO.map(function(k){ return '<option value="'+k+'"'+(U.as[i]===k?' selected':'')+'>'+EMN[k]+'</option>'; }).join('')+'</select><button type="button" class="chip" data-pp="drop" data-i="'+i+'">'+(U.drop[i]?'넣기':'빼기')+'</button></div>'; }).join('')+'</div>'+
+      '<div class="pp-row"><button type="button" class="chip pl-go" data-pp="saveSpr">「'+esc(n)+'」 표정으로 저장</button></div>'; }
+  }
+  if(SPR[n]) h+='<h4>저장된 표정</h4><div class="pp-grid sm">'+Object.keys(SPR[n]).map(function(k){ return '<div><img src="'+SPR[n][k]+'" alt=""><span class="small">'+EMN[k]+'</span></div>'; }).join('')+'</div>';
+  h+='<div class="pp-row"><button type="button" class="chip" data-pp="close">닫기</button></div>';
+  sheet(h);
+}
+function reslice(){ if(!U.src) return; var r=slice(removeBg(U.src,U.tol),U.mode), lay=LAY[U.lay], n=0; U.cells=r.cells; U.as=r.cells.map(function(u){ if(!u) return ''; return lay[n++]||EMO[n%EMO.length]; }); U.drop={}; paintFaces(); }
+function onSheetInput(e){ var t=e.target; if(t.dataset.f==='look'){ var a=LG('ppProf',{}); a[U.name]=Object.assign(a[U.name]||{},{look:t.value}); LS('ppProf',a); }
+  if(t.dataset.ppR==='tol'){ U.tol=+t.value; clearTimeout(U.tt); U.tt=setTimeout(reslice,250); } }
+function onSheetChange(e){ var t=e.target;
+  if(t.id==='pp-file' && t.files[0]){ loadCanvas(t.files[0]).then(function(c){ U.src=c; reslice(); }, function(er){ toast(er.message); }); return; }
+  if(t.dataset.as!=null){ U.as[+t.dataset.as]=t.value; return; }
+  if(t.classList.contains('pp-style')){ SET.style=+t.value; LS('ppSet',SET); }
+  if(t.classList.contains('pp-ratio')){ cutSave(+t.dataset.n,{h:+t.value}); deco(); } }
+function onSheet(e){ var b=e.target.closest('[data-pp]'); if(!b) return; var a=b.dataset.pp, p=PL();
+  if(a==='close') return close();
+  if(a==='who'){ U.name=b.dataset.n; U.src=null; U.cells=null; return paintFaces(); }
+  if(a==='lay'){ U.lay=b.dataset.k; if(U.src) return reslice(); return paintFaces(); }
+  if(a==='mode'){ U.mode=b.dataset.k; return reslice(); }
+  if(a==='drop'){ var i=+b.dataset.i; U.drop[i]=!U.drop[i]; return paintFaces(); }
+  if(a==='pick') return SH.querySelector('#pp-file').click();
+  if(a==='cpProf'){ var hint=''; if(p){ if(U.name===p.hero.name) hint=p.hero.desc; p.npcs.forEach(function(x){ if(x.name===U.name) hint=x.role+', '+x.look; }); hint+=' · 장르 '+p.genre+' · 세계 '+p.world[0]; } return copy(profPrompt(U.name,hint),'프로필 요청문을 복사했다 — GPT에 붙여 넣기'); }
+  if(a==='fill'){ var o=parseProf(SH.querySelector('#pp-paste').value); if(!o) return toast('「이름: …」 형식을 못 찾았다'); var all=LG('ppProf',{}); all[U.name]=Object.assign(all[U.name]||{},o,{look:lookFromProf(o)}); LS('ppProf',all); toast('프로필을 채웠다'); return paintFaces(); }
+  if(a==='cpSheet') return copy(sheetPrompt(U.name,U.lay),'표정 시트 요청문을 복사했다 — GPT 이미지로');
+  if(a==='saveSpr'){ var m={}; U.cells.forEach(function(u,i){ if(u && !U.drop[i] && U.as[i]) m[U.as[i]]=u; }); if(!Object.keys(m).length) return toast('넣을 칸이 없다');
+    SPR[U.name]=m; put('spr',{id:U.name,m:m}).then(function(){ toast('「'+U.name+'」 표정 '+Object.keys(m).length+'개 저장 — 장면에 바로 나온다'); U.src=null; U.cells=null; paintFaces(); rerender(); }); return; }
+  if(a==='rm'){ delete SPR[U.name]; del('spr',U.name).then(function(){ paintFaces(); rerender(); }); return; }
+}
+function rerender(){ var p=PL(); if(p && window.PAGE_ON && window.PAGE_ON.play) try{ window.PAGE_ON.play(); }catch(e){} }
+
+/* ---------- 장면 그리기 전: 시트가 있는 인물은 빼고 배경만 ---------- */
+window.__ppCut=function(c,t,cv){
+  var cs=cutSet(t.n); if(!SET.wt) return c;
+  var who=c.who.filter(function(n){ return !SPR[n] && !(/엑스트라|군중|반 ?애들|학생들/.test(n) && SPR[MOB]); });
+  var o=Object.assign({},c,{who:who, line:''});
+  if(cv && cv.dataset) cv.dataset.ppn=t.n;
+  return o;
+};
+
+/* ---------- 꾸미기: 턴마다 웹툰 컷으로 ---------- */
+function deco(){
+  var p=PL(); if(!p) return decoSetup();
+  ensureBar();
+  root.classList.toggle('pp-wt', !!SET.wt);
+  if(!SET.wt) return;
+  [].slice.call(root.querySelectorAll('.pl-turn')).forEach(function(ar,ix){
+    var cv=ar.querySelector('canvas.pl-cv'); if(!cv) return; var n=ix+1, t=p.log[n-1]; if(!t) return;
+    var cs=cutSet(n), sc=cv.closest('.pl-scene');
+    var fr=ar.querySelector('.pp-frame'); if(!fr){ fr=document.createElement('div'); fr.className='pp-frame'; cv.parentNode.insertBefore(fr,cv); fr.appendChild(cv); }
+    fr.style.aspectRatio='1 / '+(cs.h||1);
+    [].slice.call(fr.querySelectorAll('.pp-ov,.pp-spr,.pp-art,.pp-bb')).forEach(function(x){ x.remove(); });
+    var aid=gameKey()+'_'+n;
+    if(ART[aid]){ var im=document.createElement('div'); im.className='pp-art'; im.style.backgroundImage='url('+ART[aid]+')'; fr.appendChild(im); }
+    else { var who=((t.panel&&t.panel.who)||[]).slice(0,2), emo=(t.panel&&t.panel.emo)||{};
+      who.forEach(function(nm,i){ var key=SPR[nm]?nm:((/엑스트라|군중|반 ?애들|학생들/.test(nm)&&SPR[MOB])?MOB:''); if(!key) return; var u=sprOf(key,emo[nm]); if(!u) return;
+        var s=document.createElement('img'); s.className='pp-spr'; s.alt=nm; s.src=u; s.style.left=(who.length>1?(i?66:34):50)+'%'; s.style.height=(/cu|ecu/.test(t.panel.k)?96:/ls|els|fs|crowd|bird/.test(t.panel.k)?55:80)+'%'; fr.appendChild(s); }); }
+    // 말풍선
+    var bs=cs.bs||1, pos=cs.pos||{};
+    t.lines.forEach(function(l,i){ var b=document.createElement('div'); b.className='pp-bb'+(l.who===p.hero.name?' me':''); b.dataset.i=i; b.dataset.n=n;
+      var d=pos[i]||{x:(t.lines.length>1?(i?70:30):50), y:(i?30:12)}; b.style.left=d.x+'%'; b.style.top=d.y+'%'; b.style.fontSize=(13*bs)+'px';
+      b.innerHTML=(l.who&&l.who!==p.hero.name?'<i>'+esc(l.who)+'</i>':'')+esc(l.text); fr.appendChild(b); });
+    // 도구 줄
+    var tb=ar.querySelector('.pp-tools'); if(tb) tb.remove(); tb=document.createElement('div'); tb.className='pp-tools';
+    tb.innerHTML='<select class="pp-ratio" data-n="'+n+'" aria-label="칸 비율">'+[['0.5','와이드'],['0.75','4:3'],['1','정사각'],['1.33','세로'],['1.78','세로 길게']].map(function(r){ return '<option value="'+r[0]+'"'+(String(cs.h||1)===r[0]?' selected':'')+'>'+r[1]+'</option>'; }).join('')+'</select>'+
+      '<button type="button" class="chip" data-ppt="bs-" data-n="'+n+'">풍선−</button><button type="button" class="chip" data-ppt="bs+" data-n="'+n+'">풍선+</button>'+
+      '<button type="button" class="chip pl-go" data-ppt="gpt" data-n="'+n+'">🖌 GPT로 이 컷 그리기</button><button type="button" class="chip" data-ppt="prompt" data-n="'+n+'">요청문만 복사</button><button type="button" class="chip" data-ppt="art" data-n="'+n+'">🖼 '+(ART[aid]?'그림 바꾸기':'그림 올리기')+'</button>'+(ART[aid]?'<button type="button" class="chip" data-ppt="artx" data-n="'+n+'">그림 빼기</button>':'')+
+      '<span class="small">말풍선은 끌어서 옮긴다</span>';
+    sc.parentNode.insertBefore(tb, sc.nextSibling);
+  });
+  swipeChoices();
+}
+function decoSetup(){ var s=root.querySelector('.pl-setup'); if(!s || s.querySelector('.pp-setbox')) return;
+  var b=document.createElement('div'); b.className='pl-row pp-setbox';
+  b.innerHTML='<span class="pl-k">웹툰</span><label class="small"><input type="checkbox" class="pp-wt"'+(SET.wt?' checked':'')+'> 컷·말풍선으로 보기</label><label class="small"><input type="checkbox" class="pp-sw"'+(SET.swipe?' checked':'')+'> 선택지를 밀어서 고르고 내려서 확정</label><button type="button" class="chip" data-ppt="faces">🎭 표정 시트</button>';
+  var go=s.querySelector('.filterbar'); s.insertBefore(b, go); }
+function ensureBar(){ var sys=root.querySelector('.pl-sys'); if(!sys || sys.querySelector('.pp-x')) return;
+  sys.insertAdjacentHTML('afterbegin','<button type="button" class="chip pp-x" data-ppt="faces">🎭 표정 시트</button><button type="button" class="chip" data-ppt="gptall">🖌 GPT로 전체 컷 그리기</button><button type="button" class="chip" data-ppt="ms">📋 원고 복사</button><button type="button" class="chip" data-ppt="msd">연출 포함 원고</button><label class="small"><input type="checkbox" class="pp-wt"'+(SET.wt?' checked':'')+'> 웹툰 보기</label><label class="small"><input type="checkbox" class="pp-sw"'+(SET.swipe?' checked':'')+'> 밀어서 선택</label>');
+  var end=root.querySelector('.pl-end .filterbar'); if(end && !end.querySelector('[data-ppt=ms]')) end.insertAdjacentHTML('afterbegin','<button type="button" class="chip" data-ppt="msd">📋 전체 원고 복사</button>');
+}
+
+/* ---------- 선택지: 밀어서 고르고 내려서 확정 ---------- */
+var IO=null;
+function swipeChoices(){
+  var box=root.querySelector('.pl-act-box'); if(IO){ IO.disconnect(); IO=null; }
+  if(!box || !SET.swipe) return; var chs=[].slice.call(box.querySelectorAll('.pl-ch')); if(chs.length<2) return;
+  var rail=document.createElement('div'); rail.className='pp-rail'; chs.forEach(function(c){ var w=document.createElement('div'); w.className='pp-slide'; w.appendChild(c); rail.appendChild(w); });
+  var dots=document.createElement('div'); dots.className='pp-dots'; dots.innerHTML=chs.map(function(c,i){ return '<i'+(i?'':' class="on"')+'></i>'; }).join('');
+  var hint=document.createElement('p'); hint.className='small pp-hint'; hint.textContent='← 옆으로 밀어 고르고, 그대로 아래로 내리면 확정 ↓';
+  var commit=document.createElement('div'); commit.className='pp-commit'; commit.innerHTML='<span>↓ 내려서 「<b></b>」</span>';
+  box.insertBefore(hint, box.firstChild); box.insertBefore(rail, hint.nextSibling); box.insertBefore(dots, rail.nextSibling); box.appendChild(commit);
+  function cur(){ var w=rail.clientWidth||1; return Math.max(0,Math.min(chs.length-1,Math.round(rail.scrollLeft/w))); }
+  function upd(){ var i=cur(); [].slice.call(dots.children).forEach(function(d,k){ d.className=k===i?'on':''; }); commit.querySelector('b').textContent=chs[i].textContent; }
+  rail.addEventListener('scroll', function(){ clearTimeout(rail.t); rail.t=setTimeout(upd,60); }); upd();
+  var armed=false, y0=0; function arm(){ if(armed) return; armed=true; y0=window.scrollY; } ['wheel','touchstart','keydown'].forEach(function(ev){ window.addEventListener(ev, arm, {once:true, passive:true}); });
+  IO=new IntersectionObserver(function(es){ es.forEach(function(e){ if(e.isIntersecting && armed && window.scrollY>y0+40 && e.intersectionRatio>0.6 && !chs[cur()].disabled){ IO.disconnect(); IO=null; commit.classList.add('go'); chs[cur()].click(); } }); }, {threshold:[0.6]});
+  IO.observe(commit);
+}
+
+/* ---------- 이벤트 ---------- */
+root.addEventListener('click', function(e){ var b=e.target.closest('[data-ppt]'); if(!b) return; var a=b.dataset.ppt, n=+b.dataset.n, p=PL();
+  if(a==='faces') return openFaces();
+  if(a==='ms') return copy(manuscript(false),'원고를 복사했다');
+  if(a==='msd') return copy(manuscript(true),'연출 포함 원고를 복사했다');
+  if(a==='bs+'||a==='bs-'){ var cs=cutSet(n); cutSave(n,{bs:Math.max(.6,Math.min(1.8,(cs.bs||1)+(a==='bs+'?.15:-.15)))}); return deco(); }
+  if(a==='prompt') return copy(cutPrompt(p.log[n-1]),'컷 그림 요청문을 복사했다 — GPT 이미지로');
+  if(a==='gpt'||a==='gptall'){ var q=a==='gpt'?cutPrompt(p.log[n-1]):allPrompt(); copy(q,'요청문 복사 — ChatGPT가 열리면 보내고, 그림을 저장해 「그림 올리기」'); setTimeout(function(){ window.open('https://chatgpt.com/?q='+encodeURIComponent(q.slice(0,6000)),'_blank','noopener'); },150); return; }
+  if(a==='art'){ var f=document.createElement('input'); f.type='file'; f.accept='image/*'; f.onchange=function(){ if(!f.files[0]) return; loadCanvas(f.files[0]).then(function(c){ var k=Math.min(1,1100/c.width), o=document.createElement('canvas'); o.width=Math.round(c.width*k); o.height=Math.round(c.height*k); o.getContext('2d').drawImage(c,0,0,o.width,o.height);
+      var id=gameKey()+'_'+n, u=o.toDataURL('image/jpeg',.86), r=o.height/o.width, opts=[0.5,0.75,1,1.33,1.78], best=opts.reduce(function(x,y){ return Math.abs(y-r)<Math.abs(x-r)?y:x; });
+      ART[id]=u; put('art',{id:id,u:u}).then(function(){ cutSave(n,{h:best}); deco(); toast('컷 그림을 넣었다 · 비율도 맞췄다'); }); }); }; f.click(); return; }
+  if(a==='artx'){ var id=gameKey()+'_'+n; delete ART[id]; del('art',id).then(deco); return; }
+});
+root.addEventListener('change', function(e){ var t=e.target;
+  if(t.classList.contains('pp-wt')){ SET.wt=t.checked; LS('ppSet',SET); rerender(); }
+  if(t.classList.contains('pp-sw')){ SET.swipe=t.checked; LS('ppSet',SET); rerender(); }
+  if(t.classList.contains('pp-ratio')){ cutSave(+t.dataset.n,{h:+t.value}); deco(); } });
+// 말풍선 끌기
+var DR=null;
+root.addEventListener('pointerdown', function(e){ var b=e.target.closest('.pp-bb'); if(!b) return; var fr=b.parentNode.getBoundingClientRect(); DR={b:b,fr:fr}; b.setPointerCapture(e.pointerId); e.preventDefault(); });
+root.addEventListener('pointermove', function(e){ if(!DR) return; var x=Math.max(5,Math.min(95,(e.clientX-DR.fr.left)/DR.fr.width*100)), y=Math.max(2,Math.min(92,(e.clientY-DR.fr.top)/DR.fr.height*100)); DR.b.style.left=x+'%'; DR.b.style.top=y+'%'; DR.x=x; DR.y=y; });
+root.addEventListener('pointerup', function(){ if(!DR) return; if(DR.x!=null){ var n=+DR.b.dataset.n, cs=cutSet(n), pos=Object.assign({},cs.pos||{}); pos[DR.b.dataset.i]={x:Math.round(DR.x),y:Math.round(DR.y)}; cutSave(n,{pos:pos}); } DR=null; });
+
+window.__ppDeco=function(){ try{ deco(); }catch(e){ console.error(e); } };
+window.__ppFix={allPrompt:allPrompt, manuscript:manuscript, cutPrompt:cutPrompt, sheetPrompt:sheetPrompt, slice:slice, removeBg:removeBg, openFaces:openFaces, spr:SPR};
+idb().then(function(){ return all('spr'); }).then(function(L){ L.forEach(function(r){ SPR[r.id]=r.m; }); return all('art'); }).then(function(L){ L.forEach(function(r){ ART[r.id]=r.u; }); rerender(); deco(); });
+deco();
+})();
+// [[/MOD:playplus]]
+
 </script>
 </body>
 </html>
