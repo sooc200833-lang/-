@@ -321,3 +321,4 @@ arcForm, deviceId, folderMemo, gdBase, gdLast, gdLinked, ideaText, mangaDataVer,
 - 장르 → 시작 소재(MOTIFDATA 후보·검색·직접 적기) → 클리셰 최대 5장(ROWS) → 주인공(등장인물 또는 직접) → 조연·엑스트라 AI 미리 생성(4/6/8명, extra 표시, 고치기·등장인물에 저장 `__castUpsert`) → 길이 → `__play.startWith`로 #play에서 진행. 초안 `cpDraft`
 - 플레이 모듈 추가: `__play.startWith(o)`, PL.mode='cast'·seed·cast, 프롬프트에 [시작 소재]·[미리 만든 등장인물], 미리 만든 인물은 npcs에서 빠지지 않게
 - playplus 추가: 턴마다 「📐 구도 잡기」(숏·앵글·비율·인물 2명·표정·그림 설명·자세, ★ 중요 장면, 미리보기, GPT 그리기) → `ppCut[게임][턴].pan`, `__ppCut`·`panOf`가 반영. `__ppSeedProf`가 조연 생김새를 표정 시트·그림 요청문에. extra 인물은 「엑스트라」 시트로
+- 생김새 자동(2026-11-21): `window.__lookAsk({name,role,hint,genre,seed})`(castplay 모듈 안, aiAsk 사용) → {name,look,persona,speech}. 캐스팅 플레이 주인공 「✦ 생김새 알아서」, 조연 생김새 칸 ✦, 「＋ 직접 추가」는 바로 생김새까지, 주인공 설명이 비어 있으면 시작할 때 자동. 표정 시트 「✦ 생김새 알아서 짜기」
