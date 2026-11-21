@@ -374,3 +374,4 @@ arcForm, deviceId, folderMemo, gdBase, gdLast, gdLinked, ideaText, mangaDataVer,
 - 2026-11-22 배경 사라짐 대응: 그림은 IndexedDB(브라우저·기기별, 드라이브 동기화 안 됨). 단계 줄 아래 경고(#ct-stwarn) — 저장소 못 씀/올린 그림이 이 브라우저에 없음(배경·시트·컷 수). navigator.storage.persist() 요청. 장면 배경을 장면 시작 컷 번호(a)로만 찾던 것 → 이름(nm)·장소로도 찾음(sbgFind), 저장할 때 nm 기록
 - 2026-11-22 그록 요청문에는 일본어 대사만(한국어 대사·번역 지시 안 넣음). 클립 복사·Grok으로·나열 복사 누르면 안 옮긴 대사가 있으면 먼저 AI로 일본어 번역(withJa) 후 만듦
 - 2026-11-22 그록 음성 언어 선택(B.vLang ja 기본/ko): 한국어면 한국어 대사·나레이션 그대로, 일본어면 일본어만(자동 번역)
+- 2026-11-22 그록 Audio 줄 정리: 대사 | 나레이션(화면 밖, 차분하게) | 효과음(sfxOf: 화면 글의 따옴표 의성어 + 바람·발소리·검 뽑기 등 낱말) — 없으면 'ambient sound only'
