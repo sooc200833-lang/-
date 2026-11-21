@@ -14808,11 +14808,11 @@ function compDesc(c){ var cp=compOf(c), z=''; try{ z=cutSize(c); }catch(e){} var
   return {en:en.join('\n'), ko:ko}; }
 function ctCompPrompt(c, k, n){ return ctKeyPrompt(c,k,n)+compDesc(c).en+'\n(A layout reference image for this panel may be attached — follow its placement.)\n'; }
 function gptMode(){ try{ return localStorage.getItem('gptMode')||'all'; }catch(e){ return 'all'; } }
-function gptHead(){ return gptMode()==='all'?'Draw ALL of them now in this one reply — one separate image for each, in order, without waiting for me. ':'Draw ONLY the first now. Each time I reply "다음", draw the next one. '; }
+function gptHead(kind){ return (kind!=='cut' && gptMode()==='all')?'Draw ALL of them now in this one reply — one separate image for each, in order, without waiting for me. ':'Draw ONLY the first now. Each time I reply "다음", draw the next one. '; }
 function gptQ(){ return (B&&B.cuts||[]).filter(function(c){ return c.gpt; }); }
 function gptQText(){ var Q=gptQ(); if(!Q.length) return ''; var seen={}, nm=[]; Q.forEach(function(c){ compOf(c).ppl.forEach(function(p){ if(!seen[p.nm]){ seen[p.nm]=1; nm.push(p.nm); } }); });
   var att=sheetRefs(nm).concat(Object.keys(B.sceneBg||{}).filter(function(k){ return B.sceneBg[k].art; }).length?['scene background panoramas']:[]);
-  return (Q.length>1?'I will give you '+Q.length+' webtoon panels. '+gptHead()+' Keep every character and background identical across panels.\n':'')+
+  return (Q.length>1?'I will give you '+Q.length+' webtoon panels. '+gptHead('cut')+' Keep every character and background identical across panels.\n':'')+
     (att.length?'Attached reference images: '+att.join(', ')+'. Copy characters and backgrounds exactly from them.\n':'')+'\n'+Q.map(function(c,i){ return ctCompPrompt(c,i+1,Q.length); }).join('\n\n'); }
 // 구성 그림(PNG) — GPT에 첨부할 배치 참고 그림
 function loadImg(u){ return new Promise(function(res){ var im=new Image(); im.onload=function(){ res(im); }; im.onerror=function(){ res(null); }; im.src=u; }); }
@@ -15158,7 +15158,7 @@ function ctPagePrompt(x, idx, tot){
 function ctAllPages(){ var L=sceneList(); if(!L.length && B && B.cuts.length) L=[{a:1,b:B.cuts.length,name:'전체'}];
   var P=L.map(function(x,i){ return ctPagePrompt(x,i,L.length); }).filter(Boolean);
   if(!P.length) return '';
-  return (P.length>1?'I will give you '+P.length+' scenes. '+gptHead()+' Keep every character design identical across all scenes.\n\n':'')+P.join('\n\n------\n\n'); }
+  return (P.length>1?'I will give you '+P.length+' scenes. '+gptHead('cut')+' Keep every character design identical across all scenes.\n\n':'')+P.join('\n\n------\n\n'); }
 
 // AI가 콘티(이야기·앞뒤 장면·대사·나레이션)를 읽고 장면 그림 연출을 짠다 → B.scenePr[a]
 var SPSYS='너는 웹툰 콘티를 읽고 그림 작가에게 넘길 연출 지시를 쓰는 연출가다. 콘티에 적힌 사건·대사·나레이션의 감정을 읽어 각 컷에서 무엇이 보여야 하는지 구체적인 시각 묘사로 바꾼다. 콘티에 없는 사건은 지어내지 않는다. 대사의 글자는 그리지 않는다. JSON만 답한다.';
@@ -15248,7 +15248,7 @@ function stepDone(n){ var st=(document.getElementById('ct-story')||{}).value||''
   if(n===8) return !!(B&&B.exported);
   return false; }
 function stepNav(){ var nv=document.getElementById('ct-steps'); if(!nv) return; var gm=gptMode();
-  nv.innerHTML='<span class="ct-gm small">GPT에 여러 장 보낼 때 <button type="button" class="chip'+(gm==='all'?' on':'')+'" data-gm="all">한 번에 모두</button><button type="button" class="chip'+(gm==='step'?' on':'')+'" data-gm="step">한 장씩 (「다음」)</button></span>'+STEPS.map(function(s){ return '<button type="button" class="ct-stb'+(s[0]===CSTEP?' on':'')+(stepDone(s[0])?' done':'')+'" data-step="'+s[0]+'"'+(s[0]===CSTEP?' aria-current="step"':'')+'><i>'+(stepDone(s[0])&&s[0]!==CSTEP?'✓':s[0])+'</i>'+s[1]+'</button>'; }).join(''); }
+  nv.innerHTML='<span class="ct-gm small">GPT에 시트 여러 장 보낼 때 (컷은 늘 한 장씩) <button type="button" class="chip'+(gm==='all'?' on':'')+'" data-gm="all">한 번에 모두</button><button type="button" class="chip'+(gm==='step'?' on':'')+'" data-gm="step">한 장씩 (「다음」)</button></span>'+STEPS.map(function(s){ return '<button type="button" class="ct-stb'+(s[0]===CSTEP?' on':'')+(stepDone(s[0])?' done':'')+'" data-step="'+s[0]+'"'+(s[0]===CSTEP?' aria-current="step"':'')+'><i>'+(stepDone(s[0])&&s[0]!==CSTEP?'✓':s[0])+'</i>'+s[1]+'</button>'; }).join(''); }
 function goStep(n, noScroll){ CSTEP=Math.max(1,Math.min(8,+n||1)); try{ localStorage.setItem('ctStep',CSTEP); }catch(e){}
   document.querySelectorAll('#conti .ct-step').forEach(function(d){ d.hidden=+d.dataset.st!==CSTEP; });
   document.querySelectorAll('#conti .ct-step').forEach(function(d){ if(d.querySelector('.ct-nx')) return; var k=+d.dataset.st, f=document.createElement('div'); f.className='filterbar ct-nx';
@@ -15612,7 +15612,7 @@ function renderKey(){ var box=document.getElementById('ct-s7'); if(!box) return;
       return '<li>'+(au?'<img alt="'+c.n+'번 컷 그림" src="'+au+'">':'<span class="kc-ph">그림 없음</span>')+'<div><b>'+c.n+'번</b> <span class="small">'+cesc(shotName(c.k))+'</span><p class="small">'+cesc(c.scr)+'</p><div class="sv-act"><button class="chip" type="button" data-k1="'+c.n+'">🖌 이 컷만</button><label class="chip sv-up">그림 올리기<input type="file" accept="image/*" hidden data-kup="'+c.n+'"></label><button class="chip" type="button" data-ed="'+c.n+'">✎</button></div></div></li>'; }).join('')+'</ul>'+
     '<details class="ct-more"><summary class="small">장면 러프 콘티(장면마다 한 장)</summary><div class="sv-act"><button class="chip" type="button" data-sa="ai">🧠 전체 콘티 읽고 연출 짜기</button><button class="chip" type="button" data-sa="go">✏ 전체 러프 콘티 그리기</button><button class="chip" type="button" data-sa="copy">복사</button><button class="chip" type="button" data-sa="show">모아 보기</button></div><pre class="sv-pr" hidden></pre></details>'; }
 function keyAll(){ var K=keyCuts(); if(!K.length) return ''; var seen={}, nm=[]; K.forEach(function(c){ ctWho(c).forEach(function(n){ if(!seen[n]){ seen[n]=1; nm.push(n); } }); });
-  return (K.length>1?'I will give you '+K.length+' key panels of one webtoon episode. '+gptHead()+' Keep every character and background design identical across panels.\n':'')+
+  return (K.length>1?'I will give you '+K.length+' key panels of one webtoon episode. '+gptHead('cut')+' Keep every character and background design identical across panels.\n':'')+
     (nm.length?'Character reference:\n'+nm.map(function(n){ return '- '+n+': '+(ctLookSafe(n)||''); }).join('\n')+'\n':'')+(sheetRefs(nm).length?'Character sheet images are attached ('+sheetRefs(nm).length+'). Copy each character EXACTLY from the attached sheets.\n':'')+'\n'+K.map(function(c,i){ return ctKeyPrompt(c,i+1,K.length); }).join('\n\n'); }
 document.addEventListener('click', function(e){ var t=e.target; if(!t.closest || !B) return;
   var kc=t.closest('[data-kc]'); if(kc){ var c=B.cuts[+kc.dataset.kc-1]; c.key=autoKey(c)?0:1; save(); renderKey(); return; }
