@@ -1551,6 +1551,12 @@ body.dk-drag, body.dk-drag *{user-select:none!important; -webkit-user-select:non
 .ct-cut.ct-gmark canvas,.ct-cut.ct-gmark .ct-col{outline:3px solid #e53935;outline-offset:-3px}
 .ce-box .ce-prev{position:relative;width:100%;border:1px solid var(--line,#ccc);touch-action:none}.ce-prev img{cursor:grab}
 .ce-ctl{display:grid;gap:.4rem;font-size:.82rem}.ce-ctl fieldset{border:1px solid var(--line,#ddd);border-radius:8px;padding:.4rem .6rem;display:grid;gap:.25rem}.ce-ctl label{display:grid;grid-template-columns:5.5em 1fr;align-items:center;gap:.4rem}.ce-ctl .ce-chk{display:inline-flex;gap:.3rem}
+.fx-bar{display:flex;flex-wrap:wrap;gap:.4rem;align-items:center;margin:.4rem 0;font-size:.8rem}
+.fx-strip{position:relative;max-width:520px;margin:0 auto;padding-bottom:60px;font-size:var(--fx-f,10px)}
+.fx-cut{position:relative;border:2px solid #111;background:#f4f4f4;overflow:visible}.fx-cut>img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.fx-num{position:absolute;left:-1.6rem;top:0;font-size:.7rem;color:var(--ink-3)}.fx-gap{position:absolute;right:0;top:-1.6rem;font-size:.7rem}.fx-gap select{font-size:.7rem}
+.fx-h{position:absolute;left:50%;bottom:-11px;transform:translateX(-50%);background:#111;color:#fff;border-radius:999px;font-size:.7rem;padding:0 .6rem;cursor:ns-resize;touch-action:none;z-index:3}
+.fx-b{position:absolute;max-width:45%;background:#fff;border:2px solid #111;border-radius:999px;padding:.4em .8em;line-height:1.3;color:#111;font-weight:700;cursor:grab;touch-action:none;z-index:2;font-size:1em}.fx-b.th{border-style:dashed}.fx-b.fx-n{border-radius:0;background:#fffbe6;font-weight:400;max-width:70%;border-width:1px}
 .an-l{padding-left:1.2rem;display:grid;gap:.6rem}.an-l>li{border:1px solid var(--line,#ddd);border-radius:8px;padding:.4rem .5rem}.an-w{color:#b26a00;font-size:.8rem;margin:.2rem 0}.an-t{width:100%;border-collapse:collapse;font-size:.76rem;margin:.3rem 0}.an-t th,.an-t td{border-bottom:1px solid var(--line,#eee);padding:.15rem .25rem;text-align:left;vertical-align:top}.an-t td:first-child{white-space:nowrap}
 .gq-l{list-style:none;padding:0;margin:.4rem 0;display:grid;gap:.4rem}.gq-l li{border:1px solid var(--line,#ddd);border-left:3px solid #e53935;border-radius:8px;padding:.35rem .5rem}.gq-l p{margin:.15rem 0}.gq-d{font-size:.8rem;color:var(--ink-2,#333)}.gq-note{width:100%;font:inherit;font-size:.8rem}.gq-ed{border:none;background:none;cursor:pointer}
 .ce-tabs{display:flex;flex-wrap:wrap;gap:.25rem}.ce-red{background:#e53935!important;color:#fff!important;border-color:#e53935!important}.ce-scr{margin:.2rem 0}
@@ -14843,10 +14849,54 @@ function drawBubbles(g, c, W, H){ var cp=compOf(c), L=String(c.line||'').split('
     g.save(); g.fillStyle='#fff'; g.strokeStyle='#111'; g.lineWidth=2.5; if(p.kind==='think'||/^\(/.test(p.say)) g.setLineDash([6,5]); g.beginPath(); if(g.roundRect) g.roundRect(bx,by,mw,bh,bh/2); else g.rect(bx,by,mw,bh); g.fill(); g.stroke(); g.restore();
     g.fillStyle='#111'; wrapText(g, say, bx+18, by+32, mw-36, 28); });
   if(c.nar){ g.font='20px sans-serif'; var nw=Math.min(W*.7, g.measureText(c.nar).width+28), nl=Math.ceil((g.measureText(c.nar).width+28)/nw), nh=nl*26+14, ny=c.narPos==='bottom'?H-nh-10:H-nh-10; g.fillStyle='#fffbe6'; g.fillRect(10,ny,nw,nh); g.strokeStyle='#111'; g.lineWidth=1.5; g.strokeRect(10,ny,nw,nh); g.fillStyle='#111'; wrapText(g, c.nar, 24, ny+28, nw-28, 26); } }
-function buildStrip(withText){ var W=800, cuts=B.cuts.filter(function(c){ return c.scr || c.art; });
-  return Promise.all(cuts.map(function(c){ return cutImg(c, W); })).then(function(cs){ var gaps=cuts.map(function(c,i){ if(!i) return 40; var x=null, y=null; try{ x=sceneOfCut(c.n); y=sceneOfCut(cuts[i-1].n); }catch(e){} return (c.gap==3?260:c.gap==2?140:c.gap==0?8:(x&&y&&x!==y)?200:60); });
-    var H=cs.reduce(function(a,cv,i){ return a+cv.height+gaps[i]; },0)+60, out=document.createElement('canvas'); out.width=W; out.height=H; var g=out.getContext('2d'); g.fillStyle='#fff'; g.fillRect(0,0,W,H); var y=0;
-    cs.forEach(function(cv,i){ y+=gaps[i]; if(withText){ var t=document.createElement('canvas'); t.width=cv.width; t.height=cv.height; var tg=t.getContext('2d'); tg.drawImage(cv,0,0); drawBubbles(tg, cuts[i], cv.width, cv.height); cv=t; } g.drawImage(cv,0,y); g.strokeStyle='#111'; g.lineWidth=3; g.strokeRect(1.5,y,W-3,cv.height); y+=cv.height; });
+// ===== 8단계 최종 편집: 컷을 일렬로 놓은 뒤 말풍선·나레이션 위치와 컷 크기·간격을 한 번에 =====
+var GAPPX={0:8,1:60,2:140,3:260};
+function fxRatio(c){ return c.fr || cutRatio(c); }
+function fxGap(c, prev){ if(c.gpx!=null) return +c.gpx; if(!prev) return 40; var x=null, y=null; try{ x=sceneOfCut(c.n); y=sceneOfCut(prev.n); }catch(e){} return c.gap!=null&&c.gap!==''&&GAPPX[c.gap]!=null?GAPPX[c.gap]:((x&&y&&x.a!==y.a)?200:60); }
+function fxBubbles(c){ var cp=compOf(c), L=String(c.line||'').split('\n').map(function(l){ return l.trim(); }).filter(Boolean).slice(0,4), out=[];
+  L.forEach(function(l,i){ var p=lnParse(l), ix=-1; cp.ppl.forEach(function(q,j){ if(q.nm===p.who) ix=j; }); var cx=ix>-1?cp.ppl[ix].x:[22,70,40,60][i];
+    var bp=(c.bp||[])[i]; out.push({k:'b', i:i, text:p.say.replace(/^\((.*)\)$/,'$1'), think:p.kind==='think'||/^\(/.test(p.say), x:bp?bp.x:Math.max(2,Math.min(55,cx-20)), y:bp?bp.y:4+i*16}); });
+  if(c.nar){ var np=c.np; out.push({k:'n', text:c.nar, x:np?np.x:3, y:np?np.y:(c.narPos==='top'?3:80)}); }
+  return out; }
+var FX={on:false};
+function fxRender(){ var box=document.getElementById('ct-fx'); if(!box||!B||!B.cuts) return; var cuts=B.cuts.filter(function(c){ return c.scr||c.art; });
+  box.innerHTML='<div class="fx-bar"><label>말풍선 크기 <input type="range" min="70" max="160" step="5" value="'+(B.fz||100)+'" data-fx="fz"></label><button class="chip" type="button" data-fx="reset">말풍선 자동 위치로</button><button class="chip" type="button" data-fx="sizereset">컷 크기 원래대로</button></div><div class="fx-strip"></div><p class="small">말풍선·나레이션은 끌어서 옮긴다(컷 밖 간격에도 놓을 수 있다). 컷 아래 손잡이를 끌면 컷 높이, 「간격」으로 다음 컷과의 거리를 바꾼다.</p>';
+  var st=box.querySelector('.fx-strip'), W=st.clientWidth||360, fz=(B.fz||100)/100;
+  st.style.setProperty('--fx-f', (W*20/800*fz)+'px');
+  cuts.forEach(function(c,i){ var gap=fxGap(c, cuts[i-1]), d=document.createElement('div'); d.className='fx-cut'; d.dataset.n=c.n; d.style.marginTop=(gap*W/800)+'px'; d.style.aspectRatio=String(1/fxRatio(c));
+    d.innerHTML='<span class="fx-num">'+c.n+'</span><span class="fx-gap"><select data-fxg="'+c.n+'" aria-label="'+c.n+'번 컷 앞 간격">'+[['','간격 자동'],['8','붙임'],['60','보통'],['140','여백'],['260','긴 여백']].map(function(o){ return '<option value="'+o[0]+'"'+(String(c.gpx==null?'':c.gpx)===o[0]?' selected':'')+'>'+o[1]+'</option>'; }).join('')+'</select></span><span class="fx-h" data-fxh="'+c.n+'" title="끌어서 컷 높이">⇕</span>';
+    fxBubbles(c).forEach(function(b){ var e=document.createElement('span'); e.className='fx-b'+(b.k==='n'?' fx-n':'')+(b.think?' th':''); e.textContent=b.text; e.style.left=b.x+'%'; e.style.top=b.y+'%'; e.dataset.k=b.k; if(b.i!=null) e.dataset.i=b.i; d.appendChild(e); });
+    st.appendChild(d);
+    cutImg(c, 800).then(function(cv){ var im=document.createElement('img'); im.alt=c.n+'번 컷'; im.src=cv.toDataURL('image/jpeg',.82); d.insertBefore(im, d.firstChild); }); });
+  fxWire(st); }
+function fxWire(st){ var drag=null;
+  st.addEventListener('pointerdown', function(e){ var b=e.target.closest('.fx-b'), h=e.target.closest('.fx-h'); if(!b&&!h) return; e.preventDefault(); var cut=e.target.closest('.fx-cut'), r=cut.getBoundingClientRect();
+    drag={b:b, h:h, cut:cut, r:r, sx:e.clientX, sy:e.clientY, x0:b?parseFloat(b.style.left):0, y0:b?parseFloat(b.style.top):0, h0:r.height}; try{ st.setPointerCapture(e.pointerId); }catch(er){} });
+  st.addEventListener('pointermove', function(e){ if(!drag) return; var dx=e.clientX-drag.sx, dy=e.clientY-drag.sy;
+    if(drag.b){ drag.b.style.left=Math.max(-10,Math.min(95,drag.x0+dx/drag.r.width*100))+'%'; drag.b.style.top=Math.max(-60,Math.min(150,drag.y0+dy/drag.r.height*100))+'%'; }
+    if(drag.h){ var nh=Math.max(drag.r.width*.25, Math.min(drag.r.width*2.2, drag.h0+dy)); drag.cut.style.aspectRatio=String(drag.r.width/nh); } });
+  var up=function(){ if(!drag) return; var c=B.cuts[+drag.cut.dataset.n-1];
+    if(drag.b){ var x=parseFloat(drag.b.style.left), y=parseFloat(drag.b.style.top); if(drag.b.dataset.k==='n') c.np={x:x,y:y}; else { c.bp=c.bp||[]; c.bp[+drag.b.dataset.i]={x:x,y:y}; } }
+    if(drag.h){ var rr=drag.cut.getBoundingClientRect(); c.fr=Math.round(rr.height/rr.width*100)/100; }
+    drag=null; save(); };
+  st.addEventListener('pointerup', up); st.addEventListener('pointercancel', up); }
+document.addEventListener('change', function(e){ var t=e.target; if(t.dataset && t.dataset.fxg && B){ var c=B.cuts[+t.dataset.fxg-1]; if(t.value==='') delete c.gpx; else c.gpx=+t.value; save(); fxRender(); } });
+document.addEventListener('input', function(e){ var t=e.target; if(t.dataset && t.dataset.fx==='fz' && B){ B.fz=+t.value; save(); var st=document.querySelector('#ct-fx .fx-strip'); if(st) st.style.setProperty('--fx-f', ((st.clientWidth||360)*20/800*B.fz/100)+'px'); } });
+document.addEventListener('click', function(e){ var t=e.target; if(!t.dataset||!B) return;
+  if(t.dataset.fx==='reset'){ B.cuts.forEach(function(c){ delete c.bp; delete c.np; }); save(); fxRender(); }
+  if(t.dataset.fx==='sizereset'){ B.cuts.forEach(function(c){ delete c.fr; delete c.gpx; }); save(); fxRender(); }
+  if(t.id==='ct-fxopen'){ FX.on=!FX.on; var box=document.getElementById('ct-fx'); box.hidden=!FX.on; t.textContent=FX.on?'최종 편집 닫기':'✏ 최종 편집 열기 (말풍선 위치·컷 크기)'; if(FX.on) fxRender(); } });
+// 최종 편집 기준으로 완성 콘티 그리기
+function drawFx(g, c, W, H, y0, fz){ fxBubbles(c).forEach(function(b){ var f=Math.round(22*fz), x=W*b.x/100, y=y0+H*b.y/100, mw=W*(b.k==='n'?.7:.45);
+  g.font=(b.k==='n'?'':'bold ')+f+'px sans-serif'; var tw=g.measureText(b.text).width+f*1.6, bw=Math.min(mw, tw), lines=1, tmp=document.createElement('canvas').getContext('2d'); tmp.font=g.font; (function(){ var line='', n=1; String(b.text).split('').forEach(function(ch){ var tt=line+ch; if(tmp.measureText(tt).width>bw-f*1.6+6 && line){ n++; line=ch; } else line=tt; }); lines=n; })(); var bh=lines*f*1.3+f*.8;
+  g.save(); if(b.k==='n'){ g.fillStyle='#fffbe6'; g.fillRect(x,y,bw,bh); g.strokeStyle='#111'; g.lineWidth=1.5; g.strokeRect(x,y,bw,bh); }
+  else { g.fillStyle='#fff'; g.strokeStyle='#111'; g.lineWidth=2.5; if(b.think) g.setLineDash([6,5]); g.beginPath(); if(g.roundRect) g.roundRect(x,y,bw,bh,bh/2); else g.rect(x,y,bw,bh); g.fill(); g.stroke(); }
+  g.restore(); g.fillStyle='#111'; wrapText(g, b.text, x+f*.8, y+f*1.25, bw-f*1.6+6, f*1.3); }); }
+function buildStrip(withText){ var W=800, cuts=B.cuts.filter(function(c){ return c.scr || c.art; }), fz=(B.fz||100)/100;
+  return Promise.all(cuts.map(function(c){ return cutImg(c, W); })).then(function(cs){ var hs=cuts.map(function(c){ return Math.round(W*fxRatio(c)); }), gaps=cuts.map(function(c,i){ return fxGap(c, cuts[i-1]); });
+    var H=hs.reduce(function(a,h,i){ return a+h+gaps[i]; },0)+80, out=document.createElement('canvas'); out.width=W; out.height=H; var g=out.getContext('2d'); g.fillStyle='#fff'; g.fillRect(0,0,W,H); var y=0, ys=[];
+    cs.forEach(function(cv,i){ y+=gaps[i]; ys.push(y); var h=hs[i], k=Math.max(W/cv.width, h/cv.height), w2=cv.width*k, h2=cv.height*k; g.save(); g.beginPath(); g.rect(0,y,W,h); g.clip(); g.drawImage(cv,(W-w2)/2,y+(h-h2)/2,w2,h2); g.restore(); g.strokeStyle='#111'; g.lineWidth=3; g.strokeRect(1.5,y,W-3,h); y+=h; });
+    if(withText) cuts.forEach(function(c,i){ drawFx(g, c, W, hs[i], ys[i], fz); });
     return out; }); }
 function dlCanvas(cv, name){ return new Promise(function(res){ cv.toBlob(function(b){ var f=new File([b], name, {type:'image/png'}); res(f); }, 'image/png'); }); }
 function exportStrips(){ if(!B||!B.cuts||!B.cuts.length) return stat('콘티가 없다'); stat('완성 콘티를 만드는 중… (컷이 많으면 오래 걸린다)');
@@ -14902,12 +14952,12 @@ function grokAll(){ var C=animClips(); if(!C.length) return; stat('클립 '+C.le
   step(0); }
 function renderS8(){ var box=document.getElementById('ct-s8'); if(!box) return; if(!B||!B.cuts||!B.cuts.length){ box.innerHTML='<p class="small">4단계에서 콘티를 먼저 만든다.</p>'; return; }
   var C=animClips(), tot=C.reduce(function(a,c){ return a+c.sec; },0), drawn=B.cuts.filter(function(c){ return c.art; }).length, n=B.cuts.filter(function(c){ return c.scr; }).length;
-  box.innerHTML='<div class="sv-all"><b>📜 완성 콘티</b> <span class="small">모든 컷을 장면 순서대로 이어 붙인 세로 한 장</span><p class="small">'+n+'컷 중 GPT 완성 그림 '+drawn+'컷 · 나머지는 시트 합성 → 3D·선 그림 순으로 쓴다.</p><div class="sv-act"><button class="chip ct-go" type="button" id="ct-strip">완성 콘티 만들기 (대사 있는 판 + 대사 없는 판)</button></div></div>'+
+  box.innerHTML='<div class="sv-all"><b>📜 완성 콘티</b> <span class="small">모든 컷을 일렬로 놓고 그 위에 말풍선·나레이션을 얹는다</span><p class="small">'+n+'컷 중 GPT 완성 그림 '+drawn+'컷 · 나머지는 시트 합성 → 3D·선 그림 순으로 쓴다.</p><div class="sv-act"><button class="chip" type="button" id="ct-fxopen">'+(FX.on?'최종 편집 닫기':'✏ 최종 편집 열기 (말풍선 위치·컷 크기)')+'</button><button class="chip ct-go" type="button" id="ct-strip">완성 콘티 만들기 (대사 있는 판 + 대사 없는 판)</button></div><div id="ct-fx"'+(FX.on?'':' hidden')+'></div></div>'+
     '<div class="sv-all"><b>🎬 Grok 애니메이션 프롬프트</b> <span class="small">한 클립 = 15초 · '+C.length+'개 클립</span><p class="small">Grok Imagine은 한 번에 클립 하나를 만든다. 「📤 Grok으로」는 그 클립의 <b>시작 프레임</b>, 모든 컷을 순서대로 붙인 <b>키프레임 시트</b>, 인물 시트, 요청문을 같이 준다. 「📦 전체 클립 한번에」는 모든 클립 그림과 요청문 파일(grok-prompts.txt)을 한꺼번에 준다.</p><div class="sv-act"><button class="chip ct-go" type="button" data-an="grokall">📦 전체 클립 한번에 (장면 그림 + 요청문)</button><button class="chip" type="button" data-an="copy">전체 요청문 복사</button></div>'+
     '<ol class="an-l">'+C.map(function(cl,i){ var t=0; return '<li><b>클립 '+(i+1)+'</b> <span class="small">'+cl.cuts.length+'컷 · '+cl.sec.toFixed(1)+'초'+(cl.scene?' · '+cesc(dispNm(cl.scene.name||'')):'')+(cl.cutWhy?' · 다음 클립으로 끊음: '+cl.cutWhy:'')+'</span>'+
       (cl.warn.length?'<p class="an-w">⚠ '+cl.warn.map(cesc).join(' / ')+'</p>':'')+'<table class="an-t"><tr><th>시간</th><th>컷</th><th>화면</th><th>대사</th></tr>'+cl.cuts.map(function(o){ var a=t; t+=o.sec; return '<tr><td>'+a.toFixed(1)+'–'+t.toFixed(1)+'초</td><td>'+o.c.n+'</td><td>'+cesc(shotName(o.c.k))+' · '+cesc(o.c.scr||'')+'</td><td>'+cesc(String(o.c.line||'').replace(/\n/g,' / '))+(o.c.nar?' <i>(나레이션) '+cesc(o.c.nar)+'</i>':'')+'</td></tr>'; }).join('')+'</table>'+
       '<div class="sv-act"><button class="chip ct-go" type="button" data-an="grok" data-i="'+i+'">📤 Grok으로 (시작 프레임·시트)</button><button class="chip" type="button" data-an="one" data-i="'+i+'">요청문 복사</button></div></li>'; }).join('')+'</ol>'+
-    '<p class="small">시간은 샷 크기와 대사 길이로 짐작했다(한국어 초당 6~7자). 15초가 넘거나 장면이 바뀌거나 컷 6개·대사 5줄을 넘으면 다음 클립으로 끊고, 모자라면 비율대로 늘려 클립마다 딱 15초로 맞춘다. 시간을 바꾸려면 6단계에서 대사를 줄이거나 컷을 나눈다.</p></div>'; }
+    '<p class="small">시간은 샷 크기와 대사 길이로 짐작했다(한국어 초당 6~7자). 15초가 넘거나 장면이 바뀌거나 컷 6개·대사 5줄을 넘으면 다음 클립으로 끊고, 모자라면 비율대로 늘려 클립마다 딱 15초로 맞춘다. 시간을 바꾸려면 6단계에서 대사를 줄이거나 컷을 나눈다.</p></div>';  if(FX.on) fxRender(); }
 document.addEventListener('click', function(e){ var t=e.target; if(!B) return;
   if(t.id==='ct-strip'){ exportStrips(); return; }
   var a=t.closest&&t.closest('[data-an]'); if(!a) return; var C=animClips(), k=a.dataset.an;
