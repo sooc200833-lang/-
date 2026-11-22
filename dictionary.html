@@ -1466,6 +1466,10 @@ body.dk-drag, body.dk-drag *{user-select:none!important; -webkit-user-select:non
 .as-hd.on{outline:3px solid #1e63ff}
 .as-h4{margin:.6rem 0 .1rem; font-size:.9rem}
 .as-box .as-adj{position:sticky; top:-.8rem; z-index:3; background:var(--paper,#fff); border:1px solid var(--rule-hard); padding:.4rem .5rem; margin:.4rem 0; box-shadow:0 2px 6px rgba(0,0,0,.12)}
+.as-c.bad{opacity:.55}
+.as-edt{grid-column:1/-1; border:2px solid var(--note); padding:.4rem; display:grid; gap:.35rem; background:var(--paper,#fff)}
+.as-edw{display:grid; place-items:center; background:conic-gradient(#ddd 25%,#fff 0 50%,#ddd 0 75%,#fff 0) 0 0/14px 14px; min-height:180px; overflow:hidden}
+.as-edw canvas{touch-action:none; cursor:grab; background:none!important; max-width:none}
 .as-split{margin-top:.6rem; border-top:1px solid var(--rule); padding-top:.4rem}
 .as-c canvas{max-width:100%; object-fit:contain}
 .as-box .as-mode .chip[aria-pressed=true]{background:var(--ink); color:var(--paper)}
@@ -15982,9 +15986,9 @@ function asNeck(c){ var w=c.width, h=c.height, d=c.getContext('2d').getImageData
   for(y=0;y<h;y++){ var l=-1,r=-1; for(x=0;x<w;x++) if(d[(y*w+x)*4+3]>40){ if(l<0) l=x; r=x; } W.push(l<0?0:r-l+1); cx.push(l<0?w/2:(l+r)/2); }
   var best=b, bw=1e9; for(y=a;y<=b;y++){ var sm=(W[y-1]||W[y]||0)+(W[y]||0)+(W[y+1]||W[y]||0); if(W[y]>0 && sm<bw){ bw=sm; best=y; } }
   return {x:cx[best], y:best}; }
-function asAssemble(hc, bc, cfg, flipH, flipB, s0){
-  var H=asTrim(hc,flipH), Bd=asTrim(bc,flipB), hw=H.width*s0, hh=H.height*s0, ax=asAnchor(Bd,true), nk=asNeck(H), nx=nk.x*s0, ny=nk.y*s0, dep=cfg.ov/100*hh;
-  var hxPos=ax-nx+cfg.dx/100*Bd.width, hyPos=dep-ny+cfg.dy/100*hh, x0=Math.min(0,hxPos), y0=Math.min(0,hyPos), x1=Math.max(Bd.width,hxPos+hw), y1=Math.max(Bd.height,hyPos+hh), pad=6;
+function asAssemble(hc, bc, cfg, flipH, flipB, s0, o){ o=o||{}; var ks=o.ks||1;
+  var H=asTrim(hc,flipH), Bd=asTrim(bc,flipB), hw=H.width*s0*ks, hh=H.height*s0*ks, ax=asAnchor(Bd,true), nk=asNeck(H), nx=nk.x*s0*ks, ny=nk.y*s0*ks, dep=cfg.ov/100*hh;
+  var hxPos=ax-nx+cfg.dx/100*Bd.width+(o.ox||0)/100*Bd.width, hyPos=dep-ny+cfg.dy/100*hh+(o.oy||0)/100*Bd.width, x0=Math.min(0,hxPos), y0=Math.min(0,hyPos), x1=Math.max(Bd.width,hxPos+hw), y1=Math.max(Bd.height,hyPos+hh), pad=6;
   var out=document.createElement('canvas'); out.width=Math.ceil(x1-x0+pad*2); out.height=Math.ceil(y1-y0+pad*2); var g=out.getContext('2d'); g.imageSmoothingQuality='high';
   var dh=function(){ g.drawImage(H, hxPos-x0+pad, hyPos-y0+pad, hw, hh); }, db=function(){ g.drawImage(Bd, -x0+pad, -y0+pad); };
   if(cfg.over){ db(); dh(); } else { dh(); db(); } return out; }
@@ -15992,6 +15996,12 @@ function asCombos(cfg){ var L=[]; AS_ANG.forEach(function(a){ L.push({nm:a[0], h
   var P=[['올려보기', 1, 2],['내려보기', 3, 0]]; if(cfg.pit) P.forEach(function(p){ AS_ANG.slice(0,5).forEach(function(a){ L.push({nm:a[0]+' · '+p[0], hr:p[1], hc:a[3], br:p[2], bc:a[5], fb:a[7], pit:p[0]}); }); });
   return L; }
 var AS_BC=['정면','3/4','옆','3/4 뒤','뒤'], AS_BR=['위에서','눈높이','아래에서'];
+// 머리 칸과 몸통 칸이 어울리는지: 2=추천, 1=쓸 만함, 0=안 맞음(돌림 방향이 다르거나 시점 높이가 정반대). 시트 배치가 기본(머리 5×6, 몸통 5×3)이 아니면 거르지 않는다.
+function asFit(cfg, hr, hc, br, bc){ if(cfg.hs.cols!==5||cfg.hs.rows!==6||cfg.bs.cols!==5||cfg.bs.rows!==3) return 1;
+  var col, rows;
+  if(hr===5){ col=hc===2?4:3; if(bc!==col && !(bc===3||bc===4)) return 0; return bc===col?(br===1?2:1):(br===1?1:0); }
+  col=hc===2?0:(hc===1||hc===3)?1:2; if(bc!==col) return 0;
+  rows=[[2],[2,1],[1],[1,0],[0]][hr]; if(br===rows[0]) return 2; if(rows.indexOf(br)>-1 || Math.abs(br-rows[0])===1 && hr===2) return 1; return 0; }
 function asmOpen(ch){ var S=ch.serial||{}; if(!S.head||!S.body) return stat('1·2번 시트를 먼저 넣는다');
   var cfg=Object.assign({k:62, dx:0, dy:0, ov:8, over:true, pit:false, mode:'pick', flip:false, picks:[], sel:[2,2], hs:{tol:18, pad:4, cols:5, rows:6, even:false, ox:0, oy:0}, bs:{tol:18, pad:4, cols:5, rows:3, even:false, ox:0, oy:0}, up:2}, S.cfg||{}); if(cfg.up==null) cfg.up=2; ['hs','bs'].forEach(function(w){ if(cfg[w]&&cfg[w].tol===34) cfg[w].tol=18; }); if(!Array.isArray(cfg.picks)) cfg.picks=[]; cfg.sel=null;
   var m=document.createElement('div'); m.className='se-modal'; m.innerHTML='<div class="se-box as-box" role="dialog" aria-modal="true" aria-label="연재 시트 자동 조립기"><div class="se-head"><b>🔧 '+cesc(ch.name)+' 조립기</b><button type="button" class="se-x" aria-label="닫기">✕</button></div>'+
@@ -16011,7 +16021,14 @@ function asmOpen(ch){ var S=ch.serial||{}; if(!S.head||!S.body) return stat('1·
     else if(a==='mode'){ cfg.mode=b.dataset.v; keep(); asAsm(true); }
     else if(a==='head'){ cfg.sel=[+b.dataset.r,+b.dataset.c]; keep(); asPaintSheets(); asAsm(true); var ln=m.querySelector('.as-line'); if(ln) try{ ln.scrollIntoView({block:'start',behavior:'smooth'}); }catch(er){} }
     else if(a==='pick'){ var k=b.dataset.k, i=cfg.picks.findIndex(function(q){ return q.k===k; }); if(i>-1) cfg.picks.splice(i,1); else cfg.picks.push({k:k, hr:cfg.sel[0], hc:cfg.sel[1], br:+b.dataset.br, bc:+b.dataset.bc, fb:+b.dataset.fb}); keep(); asAsm(true); }
-    else if(a==='clr'){ cfg.picks=[]; keep(); asAsm(true); } });
+    else if(a==='clr'){ cfg.picks=[]; AS.ed=null; keep(); asAsm(true); }
+    else if(a==='ed'){ var ei=+b.dataset.i; AS.ed=AS.ed===ei?null:ei; asAsm(); var eb=m.querySelector('.as-edt'); if(eb) try{ eb.scrollIntoView({block:'center',behavior:'smooth'}); }catch(er){} }
+    else if(a==='edz'){ var pq=cfg.picks[AS.ed]; if(pq){ pq.ks=Math.max(.4,Math.min(2.5,(pq.ks||1)*(+b.dataset.v))); keep(); asEdDraw(); } }
+    else if(a==='edm'){ var pq2=cfg.picks[AS.ed]; if(pq2){ var dd=b.dataset.v.split(','); pq2.ox=(pq2.ox||0)+(+dd[0]); pq2.oy=(pq2.oy||0)+(+dd[1]); keep(); asEdDraw(); } }
+    else if(a==='edr'){ var pq3=cfg.picks[AS.ed]; if(pq3){ delete pq3.ox; delete pq3.oy; delete pq3.ks; keep(); asEdDraw(); } }
+    else if(a==='edx'){ AS.ed=null; asAsm(); }
+    else if(a==='edd'){ var pq4=cfg.picks[AS.ed], cv4=pq4&&asEdCv(pq4); if(cv4) asDl(asUp(cv4), (AS.ch.name||'char')+'_조립_'+(AS.ed+1)+'.png'); }
+    else if(a==='edrm'){ cfg.picks.splice(AS.ed,1); AS.ed=null; keep(); asAsm(true); } });
   m.addEventListener('input', function(e){ var t=e.target; if(!t.dataset.k) return; var w=t.dataset.w, k=t.dataset.k, v=t.type==='checkbox'?t.checked:(t.type==='range'||t.type==='number'||k==='up'?+t.value:t.value); if(w) cfg[w][k]=v; else cfg[k]=v; keep(); if(w&&/^(tol|pad|cols|rows|ox|oy)$/.test(k)) later(); else asAsm(); });
   m.addEventListener('change', function(e){ var t=e.target; if(t.dataset.k&&t.type==='checkbox'){ var w=t.dataset.w, k=t.dataset.k; if(w) cfg[w][k]=t.checked; else cfg[k]=t.checked; keep(); if(w) asRun(true); else asAsm(true); } });
 }
@@ -16031,8 +16048,8 @@ function asAsm(rebuild){ if(!AS||!AS.hs||!AS.bs) return; var cfg=AS.cfg, box=AS.
       (cfg.mode==='auto'?'<label class="ce-chk"><input type="checkbox" data-k="pit"'+(cfg.pit?' checked':'')+'> 올려보기·내려보기도 만들기</label>':'<label class="ce-chk"><input type="checkbox" data-k="flip"'+(cfg.flip?' checked':'')+'> 좌우 반전한 몸통도 나열</label>')+'</div>';
     box.innerHTML='<div class="filterbar as-mode"><button type="button" class="chip" data-as="mode" data-v="pick" aria-pressed="'+(cfg.mode==='pick')+'">머리 골라 몸통 나열</button><button type="button" class="chip" data-as="mode" data-v="auto" aria-pressed="'+(cfg.mode==='auto')+'">각도 자동 짝짓기</button></div>'+
       ''+
-      (cfg.mode==='pick'?'<h4 class="as-h4">① 머리 고르기</h4><p class="small">쓸 머리를 누른다.</p><div class="as-heads"></div>'+(cfg.sel?ADJ+'<h4 class="as-h4">② 이 머리에 붙일 몸통 고르기</h4><p class="small">고른 머리('+(cfg.sel[0]+1)+'행 '+(cfg.sel[1]+1)+'열)를 몸통마다 붙여 봤다. 쓸 것을 눌러 담는다(✓). 다른 머리를 골라 계속 담을 수 있다.</p><div class="as-grid2 as-line"></div>':'')+'<h4 class="as-h4">③ 담은 것</h4><div class="filterbar"><span class="small">담은 것 '+cfg.picks.length+'개</span>'+(cfg.picks.length?'<button type="button" class="chip" data-as="clr">비우기</button>':'')+'</div>':ADJ)+'<div class="as-grid2 as-res"></div>'+
-      '<div class="filterbar"><button type="button" class="chip ct-go" data-as="sheet">⬇ 조립 시트 PNG</button><button type="button" class="chip" data-as="save">💾 연재 시트에 저장</button><button type="button" class="chip" data-as="close">닫기</button></div><p class="small">결과 칸을 누르면 그 칸만 PNG로 받는다.</p>'; }
+      (cfg.mode==='pick'?'<h4 class="as-h4">① 머리 고르기</h4><p class="small">쓸 머리를 누른다.</p><div class="as-heads"></div>'+(cfg.sel?ADJ+'<h4 class="as-h4">② 이 머리에 붙일 몸통 고르기</h4><p class="small">고른 머리('+(cfg.sel[0]+1)+'행 '+(cfg.sel[1]+1)+'열)에 어울리는 몸통만 붙여 봤다(★ 추천 먼저, ↔는 좌우 반전). 쓸 것을 눌러 담는다(✓).</p><div class="small as-hid"></div><div class="as-grid2 as-line"></div>':'')+'<h4 class="as-h4">③ 담은 것 — 눌러서 손가락으로 위치 조절</h4><div class="filterbar"><span class="small">담은 것 '+cfg.picks.length+'개</span>'+(cfg.picks.length?'<button type="button" class="chip" data-as="clr">비우기</button>':'')+'</div>':ADJ)+'<div class="as-grid2 as-res"></div>'+
+      '<div class="filterbar"><button type="button" class="chip ct-go" data-as="sheet">⬇ 조립 시트 PNG</button><button type="button" class="chip" data-as="save">💾 연재 시트에 저장</button><button type="button" class="chip" data-as="close">닫기</button></div><p class="small">'+(cfg.mode==='pick'?'담은 칸을 누르면 위치 조절 창이 열린다.':'결과 칸을 누르면 그 칸만 PNG로 받는다.')+'</p>'; }
   var hF=asCell(AS.hs,2,2)||(cfg.sel&&asCell(AS.hs,cfg.sel[0],cfg.sel[1]))||AS.hs.cells.filter(function(q){ return q.bb; })[0], bF=asCell(AS.bs,1,0)||asCell(AS.bs,0,0), res=box.querySelector('.as-res'); res.innerHTML=''; AS.out=[];
   if(!hF||!bF){ res.innerHTML='<p class="small st-warn">기준 칸을 못 찾았다. 위 상자가 칸에 맞는지 확인하고 「균등 나누기」나 배경 지우기 세기를 바꾼다.</p>'; return; }
   var hT=asTrim(hF), bT=asTrim(bF), s0=(cfg.k/100)*bT.width/hT.width, mk=function(c,label,on,data){ var cell=document.createElement('button'); cell.type='button'; cell.className='as-c'+(on?' on':''); Object.keys(data).forEach(function(k){ cell.dataset[k]=data[k]; });
@@ -16040,11 +16057,37 @@ function asAsm(rebuild){ if(!AS||!AS.hs||!AS.bs) return; var cfg=AS.cfg, box=AS.
     var cv=asAssemble(hc,bc,cfg,0,c.fb,s0); cell.appendChild(asThumb(cv,170,190)); cell.insertAdjacentHTML('beforeend','<span class="small">'+(on?'✓ ':'')+cesc(label)+'</span>'); return {el:cell,cv:cv}; };
   if(cfg.mode==='pick'){ var hd=box.querySelector('.as-heads'); hd.innerHTML=''; AS.hs.cells.forEach(function(q){ if(!q.bb) return; var b=document.createElement('button'); b.type='button'; b.className='as-hd'+(cfg.sel&&cfg.sel[0]===q.r&&cfg.sel[1]===q.c?' on':''); b.dataset.as='head'; b.dataset.r=q.r; b.dataset.c=q.c; b.setAttribute('aria-label',(q.r+1)+'행 '+(q.c+1)+'열 머리'); b.appendChild(asThumb(asTrim(q),90,90)); hd.appendChild(b); });
     var ln=box.querySelector('.as-line'), fl=cfg.flip?[0,1]:[0]; if(ln){ ln.innerHTML='';
-    for(var br=0;br<cfg.bs.rows;br++) for(var bc=0;bc<cfg.bs.cols;bc++) fl.forEach(function(fb){ var k=cfg.sel[0]+'.'+cfg.sel[1]+'.'+br+'.'+bc+'.'+fb, on=cfg.picks.some(function(q){ return q.k===k; }); var o=mk({hr:cfg.sel[0],hc:cfg.sel[1],br:br,bc:bc,fb:fb}, (AS_BR[br]||('행'+(br+1)))+' '+(AS_BC[bc]||('열'+(bc+1)))+(fb?' ↔':''), on, {as:'pick',k:k,br:br,bc:bc,fb:fb}); ln.appendChild(o.el); }); }
+    var cand=[], hid=0; for(var br=0;br<cfg.bs.rows;br++) for(var bc=0;bc<cfg.bs.cols;bc++){ var ft=asFit(cfg,cfg.sel[0],cfg.sel[1],br,bc), dir=bc>=1&&bc<=3; if(!ft && !cfg.all){ hid++; continue; } (dir&&!cfg.all?[0,1]:fl).forEach(function(fb){ cand.push({br:br,bc:bc,fb:fb,ft:ft}); }); }
+    cand.sort(function(a,b){ return b.ft-a.ft; });
+    cand.forEach(function(c){ var k=cfg.sel[0]+'.'+cfg.sel[1]+'.'+c.br+'.'+c.bc+'.'+c.fb, on=cfg.picks.some(function(q){ return q.k===k; }); var o=mk({hr:cfg.sel[0],hc:cfg.sel[1],br:c.br,bc:c.bc,fb:c.fb}, (c.ft===2?'★ ':c.ft===0?'✕ ':'')+(AS_BR[c.br]||('행'+(c.br+1)))+' '+(AS_BC[c.bc]||('열'+(c.bc+1)))+(c.fb?' ↔':''), on, {as:'pick',k:k,br:c.br,bc:c.bc,fb:c.fb}); if(c.ft===0) o.el.classList.add('bad'); ln.appendChild(o.el); });
+    var nt=box.querySelector('.as-hid'); if(nt) nt.innerHTML=(hid?'방향·시점이 안 맞는 몸통 '+hid+'개는 뺐다. ':'')+'<label class="ce-chk"><input type="checkbox" data-k="all"'+(cfg.all?' checked':'')+'> 안 맞는 것도 다 보기</label>'; }
     if(!cfg.picks.length) res.innerHTML='<p class="small">아직 담은 게 없다.</p>';
     cfg.picks.forEach(function(q,i){ var c={hr:q.hr,hc:q.hc,br:q.br,bc:q.bc,fb:q.fb}, nm='머리'+(q.hr+1)+'-'+(q.hc+1)+' + '+(AS_BR[q.br]||'')+' '+(AS_BC[q.bc]||'')+(q.fb?' ↔':''), hc2=asCell(AS.hs,c.hr,c.hc), bc2=asCell(AS.bs,c.br,c.bc); if(!hc2||!bc2){ AS.out.push(null); return; }
-      var cv=asAssemble(hc2,bc2,cfg,0,c.fb,s0); AS.out.push({nm:nm, cv:cv}); var cell=document.createElement('button'); cell.type='button'; cell.className='as-c'; cell.dataset.as='cell'; cell.dataset.i=i; cell.appendChild(asThumb(cv,170,190)); cell.insertAdjacentHTML('beforeend','<span class="small">'+cesc(nm)+'</span>'); res.appendChild(cell); });
+      var cv=asAssemble(hc2,bc2,cfg,0,c.fb,s0,q); AS.out.push({nm:nm, cv:cv}); var cell=document.createElement('button'); cell.type='button'; cell.className='as-c'+(AS.ed===i?' on':''); cell.dataset.as='ed'; cell.dataset.i=i; cell.appendChild(asThumb(cv,170,190)); cell.insertAdjacentHTML('beforeend','<span class="small">'+((q.ox||q.oy||(q.ks&&q.ks!==1))?'✋ ':'')+cesc(nm)+'</span>'); res.appendChild(cell); });
+    AS.s0=s0; if(AS.ed!=null && cfg.picks[AS.ed]) res.insertBefore(asEdBox(AS.ed), res.firstChild); else AS.ed=null;
   } else { asCombos(cfg).forEach(function(c,i){ var o=mk(c,c.nm,false,{as:'cell',i:i}); res.appendChild(o.el); AS.out.push(o.cv?{nm:c.nm,cv:o.cv}:null); }); } }
+function asEdCv(q){ var hc=asCell(AS.hs,q.hr,q.hc), bc=asCell(AS.bs,q.br,q.bc); return hc&&bc?asAssemble(hc,bc,AS.cfg,0,q.fb,AS.s0,q):null; }
+function asEdBox(i){ var d=document.createElement('div'); d.className='as-edt';
+  d.innerHTML='<div class="so-h"><b class="small">✋ '+(i+1)+'번 위치 조절 — 머리를 끌어 옮기고, 두 손가락으로 벌려 크기</b></div><div class="as-edw"><canvas></canvas></div>'+
+    '<div class="filterbar"><button type="button" class="chip" data-as="edz" data-v="0.95">머리 －</button><button type="button" class="chip" data-as="edz" data-v="1.05">머리 ＋</button>'+
+    '<button type="button" class="chip" data-as="edm" data-v="-1,0" aria-label="왼쪽">◀</button><button type="button" class="chip" data-as="edm" data-v="0,-1" aria-label="위">▲</button><button type="button" class="chip" data-as="edm" data-v="0,1" aria-label="아래">▼</button><button type="button" class="chip" data-as="edm" data-v="1,0" aria-label="오른쪽">▶</button></div>'+
+    '<div class="filterbar"><button type="button" class="chip" data-as="edr">되돌리기</button><button type="button" class="chip" data-as="edd">⬇ 이 칸 PNG</button><button type="button" class="chip" data-as="edrm">담은 것에서 빼기</button><button type="button" class="chip ct-go" data-as="edx">완료</button></div>';
+  var cv=d.querySelector('canvas'); AS.edCv=cv; AS.edDisp=0; setTimeout(asEdDraw,0);
+  var P={}, st=null, pdist=function(){ var k=Object.keys(P); if(k.length<2) return 0; var a=P[k[0]], b=P[k[1]]; return Math.hypot(a.x-b.x,a.y-b.y); };
+  cv.addEventListener('pointerdown', function(e){ cv.setPointerCapture(e.pointerId); P[e.pointerId]={x:e.clientX,y:e.clientY}; var q=AS.cfg.picks[AS.ed]; if(!q) return; st={ox:q.ox||0, oy:q.oy||0, ks:q.ks||1, x:e.clientX, y:e.clientY, d:pdist()}; e.preventDefault(); });
+  cv.addEventListener('pointermove', function(e){ if(!P[e.pointerId]||!st) return; P[e.pointerId]={x:e.clientX,y:e.clientY}; var q=AS.cfg.picks[AS.ed]; if(!q) return; var bw=AS.edBw||100, sc=AS.edDisp||1;
+    if(Object.keys(P).length>=2){ var dn=pdist(); if(!st.d){ st.d=dn; st.ks=q.ks||1; } else q.ks=Math.max(.4,Math.min(2.5, st.ks*dn/st.d)); }
+    else { q.ox=st.ox+(e.clientX-st.x)/sc/bw*100; q.oy=st.oy+(e.clientY-st.y)/sc/bw*100; }
+    asEdDraw(); e.preventDefault(); });
+  var up=function(e){ delete P[e.pointerId]; var q=AS.cfg.picks[AS.ed]; if(q&&Object.keys(P).length===1){ var k=Object.keys(P)[0]; st={ox:q.ox||0, oy:q.oy||0, ks:q.ks||1, x:P[k].x, y:P[k].y, d:0}; }
+    if(!Object.keys(P).length){ st=null; if(AS.ch&&AS.ch.serial){ AS.ch.serial.cfg=AS.cfg; save(); } asThumbRefresh(); } };
+  cv.addEventListener('pointerup', up); cv.addEventListener('pointercancel', up);
+  return d; }
+function asEdDraw(){ if(!AS||AS.ed==null||!AS.edCv) return; var q=AS.cfg.picks[AS.ed]; if(!q) return; var bc=asCell(AS.bs,q.br,q.bc); if(!bc) return; AS.edBw=bc.bb[2]-bc.bb[0]+1; var o=asEdCv(q); if(!o) return;
+  var cv=AS.edCv, wrap=cv.parentNode, maxW=Math.max(160,(wrap.clientWidth||300)-4), maxH=Math.min(420, window.innerHeight*.5); if(!AS.edDisp) AS.edDisp=Math.min(3, maxW/o.width, maxH/o.height);
+  var sc=AS.edDisp, dpr=Math.min(3,window.devicePixelRatio||2); cv.width=Math.round(o.width*sc*dpr); cv.height=Math.round(o.height*sc*dpr); cv.style.width=Math.round(o.width*sc)+'px'; cv.style.height=Math.round(o.height*sc)+'px';
+  var g=cv.getContext('2d'); g.imageSmoothingQuality='high'; g.drawImage(o,0,0,cv.width,cv.height); }
+function asThumbRefresh(){ if(!AS||AS.ed==null) return; var q=AS.cfg.picks[AS.ed], cell=AS.m.querySelector('.as-res .as-c[data-i="'+AS.ed+'"]'), o=q&&asEdCv(q); if(!cell||!o) return; if(AS.out[AS.ed]) AS.out[AS.ed].cv=o; var old=cell.querySelector('canvas'); if(old) old.replaceWith(asThumb(o,170,190)); var sp=cell.querySelector('span'); if(sp && !/^✋/.test(sp.textContent)) sp.textContent='✋ '+sp.textContent; }
 function asDl(cv, name){ cv.toBlob(function(b){ var a=document.createElement('a'); a.href=URL.createObjectURL(b); a.download=name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(function(){ URL.revokeObjectURL(a.href); },4000); }); }
 function asUp(cv){ var k=(AS&&AS.cfg.up)||1; if(k<=1) return cv; var c=document.createElement('canvas'); c.width=cv.width*k; c.height=cv.height*k; var g=c.getContext('2d'); g.imageSmoothingEnabled=true; g.imageSmoothingQuality='high'; g.drawImage(cv,0,0,c.width,c.height); return c; }
 function asCellPng(i){ var o=AS&&AS.out&&AS.out[i]; if(o) asDl(asUp(o.cv), (AS.ch.name||'char')+'_'+o.nm.replace(/[^\w가-힣]+/g,'_')+'.png'); }
