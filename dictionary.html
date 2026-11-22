@@ -14822,7 +14822,7 @@ function serFigDir(f){ return f.hc<2?'L':f.hc>2?'R':''; }
 function serFigPick(nm, face, ang){ var S=serOf(nm), A=window.__ppArt; if(!S||!S.figs||!A) return null;
   var want=face==='back'?4:(face==='left'||face==='right')?2:(face==='left45'||face==='right45')?1:0, pit=ang==='high'?0:ang==='low'?2:1, dir=face==='left'||face==='left45'?'L':face==='right'||face==='right45'?'R':'', best=null, bs=-1;
   S.figs.forEach(function(f,i){ if(!f||!A.get(f.id)) return; var sc=0; if(f.bc===want) sc+=10; else if(want===4&&f.bc===3) sc+=6; else if(want===0&&f.bc===1) sc+=3; else return; if(f.br===pit) sc+=3; else if(Math.abs(f.br-pit)===1) sc+=1;
-    var fd=serFigDir(f); if(!dir||!fd||fd===dir) sc+=1; if(sc>bs){ bs=sc; best={i:i, flip:!!(dir&&fd&&fd!==dir)}; } }); return best; }
+    var fd=serFigDir(f); if(!dir||!fd||fd===dir) sc+=1; if(sc>bs){ bs=sc; best={i:i, flip:!!(dir&&fd&&fd!==dir), weak:f.bc!==want}; } }); return best; }
 function serFigName(f){ return (['위에서','눈높이','아래에서'][f.br]||'')+' '+(['정면','3/4','옆','3/4 뒤','뒤'][f.bc]||'')+(serFigDir(f)==='L'?'(왼)':serFigDir(f)==='R'?'(오른)':''); }
 function srcUrl(nm, src){ src=String(src||'b0'); if(src.indexOf('f:')===0) return faceUrl(nm, src.slice(2));
   if(src.indexOf('e:')===0){ var S1=serOf(nm); return serEmoOk(S1,src.slice(2))||''; }
@@ -14865,8 +14865,8 @@ function compAuto(c){ var k=c.k||'ms', Z={ls:100,fs:118,stand:118,two:130,ms:145
     var src=(close||!srcUrl(p.nm,fi))&&faceUrl(p.nm,emo)?'f:'+emo:fi, sflip=null, S=B.serUse===false?null:serOf(p.nm);
     if(S){ var ek=serEmoKey(emo)+'.'+serFaceCol(wp.face); if(wp.face==='back') ek='';
       if(close && ek && serEmoOk(S,ek) && (serEmoKey(emo)!=='n' || (c.ang!=='high'&&c.ang!=='low'))){ src='e:'+ek; sflip=false; }
-      else if(close){ var hk=serHeadNear(S, serHeadKey(wp.face, c.ang)), angled=(wp.face&&wp.face!=='front')||c.ang==='high'||c.ang==='low'; if(hk && (angled || !faceUrl(p.nm,emo) || emo==='n')){ src='h:'+hk; sflip=false; } }
-      else { var fp=serFigPick(p.nm, wp.face, c.ang); if(fp){ src='s:'+fp.i; sflip=fp.flip; } else if(!srcUrl(p.nm,src)){ var hk2=serHeadNear(S, serHeadKey(wp.face, c.ang)); if(hk2){ src='h:'+hk2; sflip=false; } } } }
+      else if(close){ var hk0=serHeadKey(wp.face, c.ang), hk=serHeadOk(S,hk0)?hk0:(faceUrl(p.nm,emo)?null:serHeadNear(S, hk0)), angled=(wp.face&&wp.face!=='front')||c.ang==='high'||c.ang==='low'; if(hk && (angled || !faceUrl(p.nm,emo) || emo==='n')){ src='h:'+hk; sflip=false; } }
+      else { var fp=serFigPick(p.nm, wp.face, c.ang); if(fp && !(fp.weak && srcUrl(p.nm,fi))){ src='s:'+fp.i; sflip=fp.flip; } else if(!srcUrl(p.nm,src)){ var hk2=serHeadNear(S, serHeadKey(wp.face, c.ang)); if(hk2){ src='h:'+hk2; sflip=false; } } } }
     var face=src.indexOf('f:')===0||src.indexOf('h:')===0;
     var H=face?(k==='cu'||k==='ecu'?115:k==='bs'?85:55):(k==='ls'?42:k==='fs'||k==='stand'?82:k==='ms'||k==='two'?150:k==='bs'?210:95);
     var cy=face?((k==='cu'||k==='ecu'?-5:14)+H/2):(H>100?8+H/2:100-(k==='ls'?10:2)-H/2);
