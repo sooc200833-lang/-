@@ -1455,6 +1455,7 @@ body.dk-drag, body.dk-drag *{user-select:none!important; -webkit-user-select:non
 .as-card{border:1px solid var(--rule-hard); padding:.35rem; display:grid; gap:.25rem; font-size:.8rem; min-width:0}
 .as-card.on{border-color:var(--note); box-shadow:0 0 0 2px var(--note)}
 .as-th,.as-pvw{background:conic-gradient(#ddd 25%,#fff 0 50%,#ddd 0 75%,#fff 0) 0 0/14px 14px; display:grid; place-items:center; min-height:90px}
+.as-pack .as-th{background:#fff}
 .as-th img{max-width:100%; max-height:150px; display:block}
 .as-pvw canvas{max-width:100%; height:auto; display:block}
 .as-nm,.as-card select,#as-q{font:inherit; min-width:0; width:100%; box-sizing:border-box}
@@ -20547,6 +20548,7 @@ function addAsset(name, kind, dataUrl, extra){ var x=Object.assign({id:uid(), na
 function box(g,W,H,r){ if(r<1) return g; var t=new Float32Array(g.length), o=new Float32Array(g.length), x,y,i,s,n,k=r*2+1;
   for(y=0;y<H;y++){ s=0; for(x=-r;x<=r;x++) s+=g[y*W+Math.min(W-1,Math.max(0,x))]; for(x=0;x<W;x++){ t[y*W+x]=s/k; s+=g[y*W+Math.min(W-1,x+r+1)]-g[y*W+Math.max(0,x-r)]; } }
   for(x=0;x<W;x++){ s=0; for(y=-r;y<=r;y++) s+=t[Math.min(H-1,Math.max(0,y))*W+x]; for(y=0;y<H;y++){ o[y*W+x]=s/k; s+=t[Math.min(H-1,y+r+1)*W+x]-t[Math.max(0,y-r)*W+x]; } } return o; }
+function pctTh(a,frac){ var h=new Uint32Array(256), n=a.length, i; for(i=0;i<n;i++){ var v=a[i]; h[v<0?0:v>255?255:v|0]++; } var tg=n*frac, c=0; for(i=255;i>=0;i--){ c+=h[i]; if(c>=tg) return i; } return 0; }
 function sobel(g,W,H){ var o=new Float32Array(W*H), x,y,i; for(y=1;y<H-1;y++) for(x=1;x<W-1;x++){ i=y*W+x; var gx=-g[i-W-1]-2*g[i-1]-g[i+W-1]+g[i-W+1]+2*g[i+1]+g[i+W+1], gy=-g[i-W-1]-2*g[i-W]-g[i-W+1]+g[i+W-1]+2*g[i+W]+g[i+W+1]; o[i]=Math.sqrt(gx*gx+gy*gy)/4; } return o; }
 function dilate(s,W,H,k){ while(k-->0){ var t=new Float32Array(s.length), o=new Float32Array(s.length), x,y,i;
   for(y=0;y<H;y++) for(x=0;x<W;x++){ i=y*W+x; t[i]=Math.max(s[i], x>0?s[i-1]:0, x<W-1?s[i+1]:0); }
@@ -20555,9 +20557,9 @@ function hex(h){ var c=String(h||'#222222').replace('#',''); return [parseInt(c.
 function lineArt(src, o){ var W=src.width, H=src.height, n=W*H, d=src.getContext('2d').getImageData(0,0,W,H).data, g=new Float32Array(n), al=new Float32Array(n), hasA=false, i;
   for(i=0;i<n;i++){ var a=d[i*4+3]/255; if(a<.98) hasA=true; al[i]=a*255; g[i]=(0.299*d[i*4]+0.587*d[i*4+1]+0.114*d[i*4+2])*a+255*(1-a); }
   if(o.sm>0) g=box(g,W,H,o.sm);
-  var s=new Float32Array(n), th=(100-o.sens)*.7+3, soft=14;
-  if(o.mode==='sketch'){ var m=box(g,W,H,Math.max(3,Math.round(Math.max(W,H)/150))), th2=(100-o.sens)*.35; for(i=0;i<n;i++){ var v=m[i]-g[i]; s[i]=Math.max(0,Math.min(1,(v-th2)/soft)); } }
-  else { var mg=sobel(g,W,H); for(i=0;i<n;i++) s[i]=Math.max(0,Math.min(1,(mg[i]-th)/soft)); }
+  var s=new Float32Array(n), th=(100-o.sens)*.7+3, soft=14, dn=(o.dens||7)/100;
+  if(o.mode==='sketch'){ var m=box(g,W,H,Math.max(3,Math.round(Math.max(W,H)/150))), th2=(100-o.sens)*.35, dv=new Float32Array(n); for(i=0;i<n;i++) dv[i]=m[i]-g[i]; if(o.auto) th2=Math.max(3,Math.min(40,pctTh(dv,dn))); for(i=0;i<n;i++){ var v=m[i]-g[i]; s[i]=Math.max(0,Math.min(1,(v-th2)/soft)); } }
+  else { var mg=sobel(g,W,H); if(o.auto) th=Math.max(4,Math.min(40,pctTh(mg,dn))); for(i=0;i<n;i++) s[i]=Math.max(0,Math.min(1,(mg[i]-th)/soft)); }
   if(hasA){ var ae=sobel(box(al,W,H,1),W,H); for(i=0;i<n;i++) s[i]=Math.max(s[i], Math.min(1,ae[i]/40)); for(i=0;i<n;i++) if(al[i]<10) s[i]=0; }
   s=dilate(s,W,H,o.thick||0);
   var ink=hex(o.ink), L=cv(W,H), lc=L.getContext('2d'), out=lc.createImageData(W,H), od=out.data;
@@ -20575,7 +20577,7 @@ function zip(files){ var enc=new TextEncoder(), parts=[], cen=[], off=0;
   return new Blob(parts.concat(cen,[new Uint8Array(e.buffer)]),{type:'application/zip'}); }
 function save1(blob, name){ var a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(function(){ URL.revokeObjectURL(a.href); },4000); }
 function fname(s){ return String(s||'asset').replace(/[\\/:*?"<>|\s]+/g,'_').slice(0,40)||'asset'; }
-function extOf(u){ return /^data:image\/png/.test(u)?'png':'jpg'; }
+function extOf(u){ var m=/^data:image\/(\w+)/.exec(u); return m?(m[1]==='jpeg'?'jpg':m[1]):'png'; }
 function dl(x, k){ var u=url(x[k]); if(!u) return msg('그 그림이 이 브라우저에 없다'); fetch(u).then(function(r){ return r.blob(); }).then(function(b){ save1(b, fname(x.name)+'_'+({orig:'원본',line:'선화',cut:'컷아웃'})[k]+'.'+extOf(u)); msg('내려받았다 — 다른 앱에서도 쓴다'); }); }
 function dlZip(list){ var jobs=[]; list.forEach(function(x){ ['orig','line','cut'].forEach(function(k){ var u=url(x[k]); if(u) jobs.push(fetch(u).then(function(r){ return r.arrayBuffer(); }).then(function(b){ return {name:fname(x.kind)+'/'+fname(x.name)+'_'+({orig:'원본',line:'선화',cut:'컷아웃'})[k]+'.'+extOf(u), data:new Uint8Array(b)}; })); }); });
   if(!jobs.length) return msg('내려받을 그림이 없다'); msg('묶는 중…'); Promise.all(jobs).then(function(fs){ save1(zip(fs),'에셋모음.zip'); msg(fs.length+'장을 ZIP 한 파일로 내려받았다'); }); }
@@ -20593,7 +20595,7 @@ function render(){
   root.innerHTML='<p class="small as-intro">배경·사물 그림을 모아 두고, 선화로 뽑거나 배경을 지워 PNG·ZIP으로 내려받는다. 콘티 구성기의 장면 배경으로도 바로 쓴다. 그림은 이 브라우저에만 저장되니 중요한 건 내려받아 둔다.</p>'+
     '<div class="filterbar as-bar"><label class="chip sv-up">📥 그림 올리기<input type="file" accept="image/*" multiple hidden id="as-up"></label><button class="chip" type="button" id="as-imp">🔄 콘티 구성기에서 가져오기</button><button class="chip" type="button" id="as-zip">⬇ 지금 목록 ZIP</button></div>'+
     '<div class="filterbar">'+['전체'].concat(KINDS).map(function(k){ return '<button class="chip" type="button" data-fil="'+k+'" aria-pressed="'+(FIL===k)+'">'+k+(k==='전체'?'':' '+LIB.items.filter(function(x){ return x.kind===k; }).length)+'</button>'; }).join('')+'<input type="search" id="as-q" placeholder="이름 검색" value="'+esc(Q)+'"></div>'+
-    '<p class="small" id="as-msg">'+esc(MSG)+'</p><div id="as-ed"></div>'+
+    '<p class="small" id="as-msg">'+esc(MSG)+'</p><div id="as-ed"></div>'+packHTML()+'<h3 class="as-h">내 에셋</h3>'+
     (L.length?'<div class="as-grid">'+L.map(function(x){ var u=best(x); return '<div class="as-card'+(E&&E.id===x.id?' on':'')+'" data-id="'+x.id+'"><div class="as-th">'+(u?'<img alt="'+esc(x.name)+'" src="'+u+'">':'<span class="small st-warn">이 브라우저에 그림 없음</span>')+'</div>'+
       '<input class="as-nm" data-f="name" value="'+esc(x.name)+'" aria-label="이름"><select data-f="kind" aria-label="종류">'+KINDS.map(function(k){ return '<option'+(k===x.kind?' selected':'')+'>'+k+'</option>'; }).join('')+'</select>'+
       '<div class="small as-bd">'+(x.orig?'원본 ':'')+(x.line?'· 선화 ':'')+(x.cut?'· 컷아웃':'')+'</div>'+
@@ -20601,6 +20603,19 @@ function render(){
       :'<p class="small">아직 비어 있다. 「그림 올리기」나 「콘티 구성기에서 가져오기」로 넣는다.</p>');
   if(E) paintEd();
 }
+// ---- 기본 에셋 팩 (assets/pack/index.json — 공개 라이선스 사진·클립아트를 미리 선화로 만들어 둔 것)
+var PK=null, PKLOAD=0, PKOPEN=false, PKN=60;
+function packLoad(){ if(PK||PKLOAD) return; PKLOAD=1; fetch('assets/pack/index.json').then(function(r){ if(!r.ok) throw 0; return r.json(); }).then(function(j){ PK=j; render(); }).catch(function(){ PK=[]; PKLOAD=0; render(); }); }
+function pkList(){ return (PK||[]).filter(function(x){ return (FIL==='전체'||x.kind===FIL) && (!Q || (x.name+' '+(x.tags||'')).toLowerCase().indexOf(Q.toLowerCase())>-1); }); }
+function packHTML(){ packLoad(); var L=pkList(), shown=L.slice(0,PKN), n=PK?PK.length:0;
+  return '<details class="as-pack" id="as-pack"'+(PKOPEN?' open':'')+'><summary><b>📦 기본 에셋 팩</b> <span class="small">'+(PK?(n?n+'장 — 공개(CC0·퍼블릭 도메인) 사진·클립아트를 선화로 만들어 둔 것':'아직 팩이 없다'):'불러오는 중…')+'</span></summary>'+
+    (n?'<p class="small">위의 종류·검색이 여기에도 적용된다. 「내 에셋에 담기」를 누르면 선따기·배경 지우기를 더 할 수 있다.</p><div class="as-grid">'+shown.map(function(x){ return '<div class="as-card" data-pk="'+esc(x.id)+'"><div class="as-th"><img loading="lazy" alt="'+esc(x.name)+'" src="assets/pack/'+esc(x.line)+'"></div><b class="small">'+esc(x.name)+'</b><span class="small as-bd">'+esc(x.kind)+' · '+esc(x.license)+'</span>'+
+      '<div class="as-act"><button type="button" class="chip" data-p="take">내 에셋에 담기</button><details><summary class="small">⬇ 내려받기</summary><button type="button" class="chip" data-p="dl-line">선화 PNG</button><button type="button" class="chip" data-p="dl-orig">원본</button></details></div><details><summary class="small">출처</summary><p class="small">'+esc(x.credit)+' · <a href="'+esc(x.page)+'" target="_blank" rel="noopener">원문</a></p></details></div>'; }).join('')+'</div>'+(L.length>shown.length?'<div class="filterbar"><button type="button" class="chip" data-p="more">더 보기 ('+(L.length-shown.length)+')</button></div>':'')+'<div class="filterbar"><button type="button" class="chip" data-p="zip">⬇ 지금 목록 ZIP ('+L.length+'장)</button></div>':'')+'</details>'; }
+function packFile(x,k){ return fetch('assets/pack/'+x[k]).then(function(r){ return r.blob(); }); }
+function packTake(x){ msg('담는 중…'); Promise.all([packFile(x,'orig'), packFile(x,'line')]).then(function(bs){ var rd=function(b){ return new Promise(function(res){ var r=new FileReader(); r.onload=function(){ res(r.result); }; r.readAsDataURL(b); }); }; return Promise.all(bs.map(rd)); }).then(function(u){
+  var id=uid(), it={id:id, name:x.name, kind:x.kind, at:Date.now(), orig:id+'o', line:id+'l', from:'기본 팩'}; return A().put(it.orig,u[0]).then(function(){ return A().put(it.line,u[1]); }).then(function(){ LIB.items.unshift(it); save(); render(); msg('「'+x.name+'」을 내 에셋에 담았다'); }); }).catch(function(){ msg('담지 못했다'); }); }
+function packZip(L){ if(!L.length) return; msg('묶는 중… ('+L.length+'장)'); var jobs=[]; L.forEach(function(x){ ['line','orig'].forEach(function(k){ jobs.push(fetch('assets/pack/'+x[k]).then(function(r){ return r.arrayBuffer(); }).then(function(b){ return {name:fname(x.kind)+'/'+fname(x.name)+'_'+x.id.slice(-6)+'_'+(k==='line'?'선화':'원본')+x[k].replace(/^.*\./,'.'), data:new Uint8Array(b)}; })); }); });
+  Promise.all(jobs).then(function(fs){ fs.push({name:'출처_라이선스.txt', data:new TextEncoder().encode(L.map(function(x){ return x.name+' | '+x.license+' | '+x.credit+' | '+x.page; }).join('\n'))}); save1(zip(fs),'기본에셋팩.zip'); msg(L.length+'장을 ZIP으로 내려받았다 (출처 목록 포함)'); }).catch(function(){ msg('묶지 못했다'); }); }
 // 편집기
 function paintEd(){ var x=find(E.id), box=document.getElementById('as-ed'); if(!x||!box){ E=null; return; }
   var rg=function(l,k,mn,mx,st){ return '<label>'+l+' <input type="range" data-e="'+k+'" min="'+mn+'" max="'+mx+'" step="'+(st||1)+'" value="'+E[k]+'"></label>'; };
@@ -20608,7 +20623,7 @@ function paintEd(){ var x=find(E.id), box=document.getElementById('as-ed'); if(!
     '<div class="as-pvw"><canvas id="as-pv"></canvas></div>'+
     '<div class="filterbar"><label class="small">방식 <select data-e="mode"><option value="edge"'+(E.mode==='edge'?' selected':'')+'>윤곽선 (사물·사진·건물)</option><option value="sketch"'+(E.mode==='sketch'?' selected':'')+'>스케치 (그림자 있는 그림)</option></select></label>'+
     '<label class="small">바탕 <select data-e="base"><option value="transparent"'+(E.base==='transparent'?' selected':'')+'>투명</option><option value="white"'+(E.base==='white'?' selected':'')+'>흰색</option><option value="trace"'+(E.base==='trace'?' selected':'')+'>원본을 연하게 (밑그림용)</option></select></label></div>'+
-    rg('선 민감도 (높을수록 선이 많다)','sens',1,100)+rg('단순화 (잔선 줄이기)','sm',0,4)+rg('선 굵기','thick',0,3)+
+    '<label class="ce-chk"><input type="checkbox" data-e="auto"'+(E.auto?' checked':'')+'> 선 양 자동 조절 (그림마다 알맞게)</label>'+(E.auto?rg('선 양 (높을수록 선이 많다)','dens',2,18):rg('선 민감도 (높을수록 선이 많다)','sens',1,100))+rg('단순화 (잔선 줄이기)','sm',0,4)+rg('선 굵기','thick',0,3)+
     '<label>선 색 <input type="color" data-e="ink" value="'+E.ink+'"></label>'+
     '<label class="ce-chk"><input type="checkbox" data-e="rm"'+(E.rm?' checked':'')+'> 배경 지우기 (사물만 남기기)</label>'+(E.rm?rg('지우기 세기','tol',5,90):'')+
     '<label class="ce-chk"><input type="checkbox" data-e="orig"'+(E.orig?' checked':'')+'> 원본 미리보기</label>'+
@@ -20623,17 +20638,19 @@ function result(full){ var c=work(full); if(!c) return null; return E.orig?c:lin
 var T=0; function preview(){ clearTimeout(T); T=setTimeout(function(){ var pv=document.getElementById('as-pv'); if(!pv||!E) return; var r=result(false); if(!r) return; pv.width=r.width; pv.height=r.height; var g=pv.getContext('2d'); g.clearRect(0,0,pv.width,pv.height); g.drawImage(r,0,0); },60); }
 function saveVer(kind){ var x=find(E.id), c=kind==='cut'?work(true):lineArt(work(true), E); if(!c) return; var u=c.toDataURL('image/png'), id=x.id+(kind==='cut'?'c':'l'); A().put(id,u).then(function(){ x[kind]=id; save(); render(); msg((kind==='cut'?'컷아웃':'선화')+'을 저장했다 — 카드의 「내려받기」로 PNG를 받는다'); }); }
 document.addEventListener('input', function(e){ var t=e.target; if(!root.contains(t)) return; if(t.id==='as-q'){ Q=t.value; var f=document.getElementById('as-q'); render(); var q2=document.getElementById('as-q'); if(q2){ q2.focus(); q2.setSelectionRange(Q.length,Q.length); } return; }
-  if(t.dataset.e&&E){ var k=t.dataset.e; E[k]=t.type==='checkbox'?t.checked:(t.type==='range'?+t.value:t.value); if(k==='rm'||k==='orig'){ if(k==='rm'&&E.rm&&E.tol==null) E.tol=34; paintEd(); } else preview(); } });
+  if(t.dataset.e&&E){ var k=t.dataset.e; E[k]=t.type==='checkbox'?t.checked:(t.type==='range'?+t.value:t.value); if(k==='rm'||k==='orig'||k==='auto'){ if(k==='rm'&&E.rm&&E.tol==null) E.tol=34; paintEd(); } else preview(); } });
 document.addEventListener('change', function(e){ var t=e.target; if(!root.contains(t)) return;
   if(t.id==='as-up'){ var fs=[].slice.call(t.files||[]); if(!fs.length||!A()) return; msg('올리는 중…'); var kind=FIL==='전체'?'기타':FIL;
     fs.reduce(function(p,f){ return p.then(function(){ return fromFile(f).then(function(u){ if(u) return addAsset(f.name.replace(/\.[^.]+$/,''), kind, u); }); }); }, Promise.resolve()).then(function(){ t.value=''; render(); msg(fs.length+'장을 넣었다. 「✎ 선따기·지우기」로 선화를 뽑는다'); }); return; }
   var c=t.closest&&t.closest('.as-card'); if(c&&t.dataset.f){ var x=find(c.dataset.id); if(x){ x[t.dataset.f]=t.value; save(); if(t.dataset.f==='kind') render(); } return; }
   if(t.dataset.e&&E){ E[t.dataset.e]=t.type==='checkbox'?t.checked:t.value; if(t.type!=='color') preview(); } });
 document.addEventListener('click', function(e){ var t=e.target; if(!t.closest||!root.contains(t)) return;
-  var fb=t.closest('[data-fil]'); if(fb){ FIL=fb.dataset.fil; render(); return; }
+  var fb=t.closest('[data-fil]'); if(fb){ FIL=fb.dataset.fil; PKN=60; render(); return; }
   if(t.closest('#as-imp')){ importProj(); return; } if(t.closest('#as-zip')){ dlZip(list()); return; }
+  var pb=t.closest('[data-p]'); if(pb){ var pc=pb.closest('.as-card'), px=pc&&(PK||[]).filter(function(q){ return q.id===pc.dataset.pk; })[0], pa=pb.dataset.p; PKOPEN=true;
+    if(pa==='take'&&px) packTake(px); else if(pa==='more'){ PKN+=60; render(); } else if(pa==='zip') packZip(pkList()); else if(pa.indexOf('dl-')===0&&px){ var kk=pa.slice(3); packFile(px,kk).then(function(b){ save1(b, fname(px.name)+'_'+(kk==='line'?'선화':'원본')+px[kk].replace(/^.*\./,'.')); msg('내려받았다'); }); } return; }
   var a=t.closest('[data-a]'); if(!a) return; var card=a.closest('.as-card'), act=a.dataset.a, x=card?find(card.dataset.id):(E&&find(E.id));
-  if(act==='edit'&&x){ E={id:x.id, mode:'edge', sens:55, sm:1, thick:0, ink:'#222222', base:'transparent', rm:false, tol:34, orig:false}; render(); try{ document.getElementById('as-ed').scrollIntoView({block:'nearest'}); }catch(er){} return; }
+  if(act==='edit'&&x){ E={id:x.id, mode:'edge', auto:true, dens:11, sens:82, sm:1, thick:0, ink:'#222222', base:'transparent', rm:false, tol:34, orig:false}; render(); try{ document.getElementById('as-ed').scrollIntoView({block:'nearest'}); }catch(er){} return; }
   if(act==='close'){ E=null; render(); return; }
   if(act==='del'&&x){ if(a.dataset.arm!=='1'){ a.dataset.arm='1'; a.textContent='한 번 더'; return; } LIB.items=LIB.items.filter(function(q){ return q!==x; }); if(E&&E.id===x.id) E=null; save(); render(); return; }
   if(act.indexOf('dl-')===0&&x){ dl(x, act.slice(3)); return; }
@@ -20641,6 +20658,7 @@ document.addEventListener('click', function(e){ var t=e.target; if(!t.closest||!
   if(act==='dlnow'){ var r=result(true); if(r) r.toBlob(function(b){ save1(b, fname(x.name)+'_미리보기.png'); msg('내려받았다'); }); return; }
   if(act==='usebg'&&x){ var sc=document.getElementById('as-sc'), v=+sc.value; if(!v||!window.__ctSetBg) return msg('콘티 구성기에 장면이 있어야 쓸 수 있다'); var k=x.line?'line':x.cut?'cut':'orig', id=x[k]; if(window.__ctSetBg(v,id)) msg('장면 '+v+'번 배경으로 썼다 ('+({orig:'원본',line:'선화',cut:'컷아웃'})[k]+')'); else msg('그 장면을 못 찾았다'); return; } });
 window.PAGE_ON=window.PAGE_ON||{}; var prev=window.PAGE_ON.assets; window.PAGE_ON.assets=function(){ if(prev) try{ prev(); }catch(e){} LIB=load(); render(); };
+root.addEventListener('toggle', function(e){ if(e.target.id==='as-pack') PKOPEN=e.target.open; }, true);
 document.addEventListener('pp-art-ready', function(){ render(); });
 render();
 })();
