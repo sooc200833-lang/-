@@ -1465,6 +1465,8 @@ body.dk-drag, body.dk-drag *{user-select:none!important; -webkit-user-select:non
 .as-hd canvas{max-width:100%; background:none!important}
 .as-hd.on{outline:3px solid #1e63ff}
 .as-h4{margin:.6rem 0 .1rem; font-size:.9rem}
+.as-box .as-adj{position:sticky; top:-.8rem; z-index:3; background:var(--paper,#fff); border:1px solid var(--rule-hard); padding:.4rem .5rem; margin:.4rem 0; box-shadow:0 2px 6px rgba(0,0,0,.12)}
+.as-split{margin-top:.6rem; border-top:1px solid var(--rule); padding-top:.4rem}
 .as-c canvas{max-width:100%; object-fit:contain}
 .as-box .as-mode .chip[aria-pressed=true]{background:var(--ink); color:var(--paper)}
 .as-line .as-c{min-height:150px}
@@ -15923,7 +15925,7 @@ function ctCopy(t){ (navigator.clipboard&&navigator.clipboard.writeText?navigato
    기존 「GPT 시트」(전신 4 + 표정 6)와 따로 둔다. 시트 따기·장면 합성에는 쓰지 않고, 사람이 보고 쓰는 참고 시트다.
    1) 머리 5×6(좌우 돌림 × 위아래·뒤) 2) 몸통 5×3(돌림 × 시점 높이) 3) 두 시트를 첨부해 전신 여러 각도로 조립 */
 var SER_OPEN_I=0, SER_POSES='정면 / 3/4 / 옆 / 뒤 / 로우앵글 3/4 / 하이앵글 3/4', SER_SHOW='';
-function serOut(){ return '⚠ OUTPUT: PNG with a FULLY TRANSPARENT background (alpha) — if impossible, flat pure white #FFFFFF, no floor, no shadow, no gradient. NO text, NO labels, NO grid lines, NO numbers.\n'; }
+function serOut(){ return '⚠ OUTPUT: PNG with a FULLY TRANSPARENT background (alpha) — if impossible, flat pure white #FFFFFF, no floor, no shadow, no gradient. NO text, NO labels, NO grid lines, NO numbers. Use the LARGEST image size available; each figure should fill most of its cell with clear gaps between cells.\n'; }
 function serHead(ch){
   return serOut()+'HEAD TURNAROUND SHEET for '+ch.name+'. Draw ONE image: a grid of the SAME head, 5 columns x 6 rows, equal spacing, each cell the whole head with hair and neck down to the collarbone.\n'+
     'COLUMNS (left to right) = turn: left profile (90°), 3/4 left, front, 3/4 right, right profile.\n'+
@@ -15991,11 +15993,15 @@ function asCombos(cfg){ var L=[]; AS_ANG.forEach(function(a){ L.push({nm:a[0], h
   return L; }
 var AS_BC=['정면','3/4','옆','3/4 뒤','뒤'], AS_BR=['위에서','눈높이','아래에서'];
 function asmOpen(ch){ var S=ch.serial||{}; if(!S.head||!S.body) return stat('1·2번 시트를 먼저 넣는다');
-  var cfg=Object.assign({k:62, dx:0, dy:0, ov:8, over:true, pit:false, mode:'pick', flip:false, picks:[], sel:[2,2], hs:{tol:34, pad:4, cols:5, rows:6, even:false, ox:0, oy:0}, bs:{tol:34, pad:4, cols:5, rows:3, even:false, ox:0, oy:0}}, S.cfg||{}); if(!Array.isArray(cfg.picks)) cfg.picks=[]; cfg.sel=null;
+  var cfg=Object.assign({k:62, dx:0, dy:0, ov:8, over:true, pit:false, mode:'pick', flip:false, picks:[], sel:[2,2], hs:{tol:18, pad:4, cols:5, rows:6, even:false, ox:0, oy:0}, bs:{tol:18, pad:4, cols:5, rows:3, even:false, ox:0, oy:0}, up:2}, S.cfg||{}); if(cfg.up==null) cfg.up=2; ['hs','bs'].forEach(function(w){ if(cfg[w]&&cfg[w].tol===34) cfg[w].tol=18; }); if(!Array.isArray(cfg.picks)) cfg.picks=[]; cfg.sel=null;
   var m=document.createElement('div'); m.className='se-modal'; m.innerHTML='<div class="se-box as-box" role="dialog" aria-modal="true" aria-label="연재 시트 자동 조립기"><div class="se-head"><b>🔧 '+cesc(ch.name)+' 조립기</b><button type="button" class="se-x" aria-label="닫기">✕</button></div>'+
-    '<p class="small">머리·몸통 시트를 칸으로 나눈다. 칸 상자가 어긋나면 「배경 지우기」·「균등 나누기」·이동으로 맞춘다.</p><div class="as-sh" data-w="hs"></div><div class="as-sh" data-w="bs"></div><div class="as-asm"></div></div>';
+    '<p class="small st-warn as-q" hidden></p><div class="as-asm"></div><details class="as-split"><summary class="small">✂ 칸 나누기 조절 (머리·몸통 칸이 어긋날 때)</summary><div class="as-sh" data-w="hs"></div><div class="as-sh" data-w="bs"></div></details></div>';
   document.body.appendChild(m); AS={ch:ch, cfg:cfg, m:m, hs:null, bs:null, srcH:null, srcB:null};
-  Promise.all([asCanvas(S.head), asCanvas(S.body)]).then(function(r){ AS.srcH=r[0]; AS.srcB=r[1]; asRun(true); });
+  Promise.all([asCanvas(S.head), asCanvas(S.body)]).then(function(r){ AS.srcH=r[0]; AS.srcB=r[1]; asRun(true);
+    var A=window.__ppArt, old=[S.head,S.body].some(function(id){ return /^data:image\/jpeg/.test(A.get(id)||'') && /^x/.test(id); }), q=m.querySelector('.as-q'), bw=r[1]?Math.round(r[1].width/cfg.bs.cols):0;
+    var t=[]; if(old) t.push('⚠ 이 시트는 예전 방식(1100px로 줄인 JPEG)으로 저장돼 있어 깨져 보인다. 연재 시트 1·2번에서 「그림 바꾸기」로 원본을 다시 올린다.');
+    if(bw && bw<380) t.push('몸통 한 칸이 가로 약 '+bw+'px라 결과도 그 크기다. 더 선명하게 하려면 GPT에 시트를 줄별로 나눠(한 장에 5칸) 그려 달라고 한다. 「내보낼 크기」는 부드럽게 키울 뿐 선을 더 만들지는 않는다.');
+    if(t.length){ q.hidden=false; q.textContent=t.join(' '); } });
   var T=0; var later=function(){ clearTimeout(T); T=setTimeout(function(){ asRun(true); },160); }, keep=function(){ ch.serial.cfg=cfg; save(); };
   m.addEventListener('click', function(e){ if(e.target===m||e.target.closest('.se-x')){ m.remove(); AS=null; return; }
     var cv=e.target.closest('.as-sh[data-w="hs"] canvas'); if(cv&&AS.hs){ var rc=cv.getBoundingClientRect(), sc=cv.width/rc.width, x=(e.clientX-rc.left)*sc/(cv.width/AS.srcH.width), y=(e.clientY-rc.top)*sc/(cv.height/AS.srcH.height), hit=null;
@@ -16006,7 +16012,7 @@ function asmOpen(ch){ var S=ch.serial||{}; if(!S.head||!S.body) return stat('1·
     else if(a==='head'){ cfg.sel=[+b.dataset.r,+b.dataset.c]; keep(); asPaintSheets(); asAsm(true); var ln=m.querySelector('.as-line'); if(ln) try{ ln.scrollIntoView({block:'start',behavior:'smooth'}); }catch(er){} }
     else if(a==='pick'){ var k=b.dataset.k, i=cfg.picks.findIndex(function(q){ return q.k===k; }); if(i>-1) cfg.picks.splice(i,1); else cfg.picks.push({k:k, hr:cfg.sel[0], hc:cfg.sel[1], br:+b.dataset.br, bc:+b.dataset.bc, fb:+b.dataset.fb}); keep(); asAsm(true); }
     else if(a==='clr'){ cfg.picks=[]; keep(); asAsm(true); } });
-  m.addEventListener('input', function(e){ var t=e.target; if(!t.dataset.k) return; var w=t.dataset.w, k=t.dataset.k, v=t.type==='checkbox'?t.checked:(t.type==='range'||t.type==='number'?+t.value:t.value); if(w) cfg[w][k]=v; else cfg[k]=v; keep(); if(w&&/^(tol|pad|cols|rows|ox|oy)$/.test(k)) later(); else asAsm(); });
+  m.addEventListener('input', function(e){ var t=e.target; if(!t.dataset.k) return; var w=t.dataset.w, k=t.dataset.k, v=t.type==='checkbox'?t.checked:(t.type==='range'||t.type==='number'||k==='up'?+t.value:t.value); if(w) cfg[w][k]=v; else cfg[k]=v; keep(); if(w&&/^(tol|pad|cols|rows|ox|oy)$/.test(k)) later(); else asAsm(); });
   m.addEventListener('change', function(e){ var t=e.target; if(t.dataset.k&&t.type==='checkbox'){ var w=t.dataset.w, k=t.dataset.k; if(w) cfg[w][k]=t.checked; else cfg[k]=t.checked; keep(); if(w) asRun(true); else asAsm(true); } });
 }
 function asRun(full){ if(!AS||!AS.srcH||!AS.srcB) return; var cfg=AS.cfg; AS.hs=asSplit(AS.srcH, cfg.hs); AS.bs=asSplit(AS.srcB, cfg.bs); asPaintSheets(); asAsm(true); }
@@ -16021,11 +16027,11 @@ function asPaintSheets(){ var cfg=AS.cfg, rg=function(w,l,k,mn,mx){ return '<lab
 function asThumb(cv, mw, mh){ var dpr=Math.min(3,window.devicePixelRatio||2), th=document.createElement('canvas'), sc=Math.min(1,mw/cv.width,mh/cv.height), cw=Math.max(1,Math.round(cv.width*sc)), ch=Math.max(1,Math.round(cv.height*sc)); th.width=Math.min(cv.width,Math.round(cw*dpr)); th.height=Math.min(cv.height,Math.round(ch*dpr)); th.style.width=cw+'px'; th.style.height=ch+'px'; var g=th.getContext('2d'); g.imageSmoothingQuality='high'; g.drawImage(cv,0,0,th.width,th.height); return th; }
 function asAsm(rebuild){ if(!AS||!AS.hs||!AS.bs) return; var cfg=AS.cfg, box=AS.m.querySelector('.as-asm');
   var R=function(l,k,mn,mx){ return '<label>'+l+' <input type="range" data-k="'+k+'" min="'+mn+'" max="'+mx+'" value="'+cfg[k]+'"></label>'; };
-  if(rebuild||!box.dataset.on){ box.dataset.on='1';
+  if(rebuild||!box.dataset.on){ box.dataset.on='1'; var ADJ='<div class="as-ctl as-adj"><b class="small">조절</b>'+R('머리 크기','k',35,140)+R('가로 맞춤','dx',-40,40)+R('위아래 맞춤','dy',-40,40)+R('목 깊이 (머리를 몸통에 묻는 정도)','ov',-10,40)+'<label>내보낼 크기 <select data-k="up">'+[1,2,3].map(function(v){ return '<option value="'+v+'"'+(+cfg.up===v?' selected':'')+'>'+v+'배</option>'; }).join('')+'</select></label>'+'<label class="ce-chk"><input type="checkbox" data-k="over"'+(cfg.over?' checked':'')+'> 머리를 몸통 위에</label>'+
+      (cfg.mode==='auto'?'<label class="ce-chk"><input type="checkbox" data-k="pit"'+(cfg.pit?' checked':'')+'> 올려보기·내려보기도 만들기</label>':'<label class="ce-chk"><input type="checkbox" data-k="flip"'+(cfg.flip?' checked':'')+'> 좌우 반전한 몸통도 나열</label>')+'</div>';
     box.innerHTML='<div class="filterbar as-mode"><button type="button" class="chip" data-as="mode" data-v="pick" aria-pressed="'+(cfg.mode==='pick')+'">머리 골라 몸통 나열</button><button type="button" class="chip" data-as="mode" data-v="auto" aria-pressed="'+(cfg.mode==='auto')+'">각도 자동 짝짓기</button></div>'+
-      '<div class="as-ctl"><b class="small">조립 설정</b>'+R('머리 크기','k',35,140)+R('가로 맞춤','dx',-40,40)+R('위아래 맞춤','dy',-40,40)+R('목 깊이 (머리를 몸통에 묻는 정도)','ov',-10,40)+'<label class="ce-chk"><input type="checkbox" data-k="over"'+(cfg.over?' checked':'')+'> 머리를 몸통 위에</label>'+
-      (cfg.mode==='auto'?'<label class="ce-chk"><input type="checkbox" data-k="pit"'+(cfg.pit?' checked':'')+'> 올려보기·내려보기도 만들기</label>':'<label class="ce-chk"><input type="checkbox" data-k="flip"'+(cfg.flip?' checked':'')+'> 좌우 반전한 몸통도 나열</label>')+'</div>'+
-      (cfg.mode==='pick'?'<h4 class="as-h4">① 머리 고르기</h4><p class="small">쓸 머리를 누른다.</p><div class="as-heads"></div>'+(cfg.sel?'<h4 class="as-h4">② 이 머리에 붙일 몸통 고르기</h4><p class="small">고른 머리('+(cfg.sel[0]+1)+'행 '+(cfg.sel[1]+1)+'열)를 몸통마다 붙여 봤다. 쓸 것을 눌러 담는다(✓). 다른 머리를 골라 계속 담을 수 있다.</p><div class="as-grid2 as-line"></div>':'')+'<h4 class="as-h4">③ 담은 것</h4><div class="filterbar"><span class="small">담은 것 '+cfg.picks.length+'개</span>'+(cfg.picks.length?'<button type="button" class="chip" data-as="clr">비우기</button>':'')+'</div>':'')+'<div class="as-grid2 as-res"></div>'+
+      ''+
+      (cfg.mode==='pick'?'<h4 class="as-h4">① 머리 고르기</h4><p class="small">쓸 머리를 누른다.</p><div class="as-heads"></div>'+(cfg.sel?ADJ+'<h4 class="as-h4">② 이 머리에 붙일 몸통 고르기</h4><p class="small">고른 머리('+(cfg.sel[0]+1)+'행 '+(cfg.sel[1]+1)+'열)를 몸통마다 붙여 봤다. 쓸 것을 눌러 담는다(✓). 다른 머리를 골라 계속 담을 수 있다.</p><div class="as-grid2 as-line"></div>':'')+'<h4 class="as-h4">③ 담은 것</h4><div class="filterbar"><span class="small">담은 것 '+cfg.picks.length+'개</span>'+(cfg.picks.length?'<button type="button" class="chip" data-as="clr">비우기</button>':'')+'</div>':ADJ)+'<div class="as-grid2 as-res"></div>'+
       '<div class="filterbar"><button type="button" class="chip ct-go" data-as="sheet">⬇ 조립 시트 PNG</button><button type="button" class="chip" data-as="save">💾 연재 시트에 저장</button><button type="button" class="chip" data-as="close">닫기</button></div><p class="small">결과 칸을 누르면 그 칸만 PNG로 받는다.</p>'; }
   var hF=asCell(AS.hs,2,2)||(cfg.sel&&asCell(AS.hs,cfg.sel[0],cfg.sel[1]))||AS.hs.cells.filter(function(q){ return q.bb; })[0], bF=asCell(AS.bs,1,0)||asCell(AS.bs,0,0), res=box.querySelector('.as-res'); res.innerHTML=''; AS.out=[];
   if(!hF||!bF){ res.innerHTML='<p class="small st-warn">기준 칸을 못 찾았다. 위 상자가 칸에 맞는지 확인하고 「균등 나누기」나 배경 지우기 세기를 바꾼다.</p>'; return; }
@@ -16040,12 +16046,13 @@ function asAsm(rebuild){ if(!AS||!AS.hs||!AS.bs) return; var cfg=AS.cfg, box=AS.
       var cv=asAssemble(hc2,bc2,cfg,0,c.fb,s0); AS.out.push({nm:nm, cv:cv}); var cell=document.createElement('button'); cell.type='button'; cell.className='as-c'; cell.dataset.as='cell'; cell.dataset.i=i; cell.appendChild(asThumb(cv,170,190)); cell.insertAdjacentHTML('beforeend','<span class="small">'+cesc(nm)+'</span>'); res.appendChild(cell); });
   } else { asCombos(cfg).forEach(function(c,i){ var o=mk(c,c.nm,false,{as:'cell',i:i}); res.appendChild(o.el); AS.out.push(o.cv?{nm:c.nm,cv:o.cv}:null); }); } }
 function asDl(cv, name){ cv.toBlob(function(b){ var a=document.createElement('a'); a.href=URL.createObjectURL(b); a.download=name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(function(){ URL.revokeObjectURL(a.href); },4000); }); }
-function asCellPng(i){ var o=AS&&AS.out&&AS.out[i]; if(o) asDl(o.cv, (AS.ch.name||'char')+'_'+o.nm.replace(/[^\w가-힣]+/g,'_')+'.png'); }
+function asUp(cv){ var k=(AS&&AS.cfg.up)||1; if(k<=1) return cv; var c=document.createElement('canvas'); c.width=cv.width*k; c.height=cv.height*k; var g=c.getContext('2d'); g.imageSmoothingEnabled=true; g.imageSmoothingQuality='high'; g.drawImage(cv,0,0,c.width,c.height); return c; }
+function asCellPng(i){ var o=AS&&AS.out&&AS.out[i]; if(o) asDl(asUp(o.cv), (AS.ch.name||'char')+'_'+o.nm.replace(/[^\w가-힣]+/g,'_')+'.png'); }
 function asSheetPng(){ var L=(AS.out||[]).filter(Boolean); if(!L.length) return; var cw=0, chh=0; L.forEach(function(o){ cw=Math.max(cw,o.cv.width); chh=Math.max(chh,o.cv.height); }); var cols=Math.min(6,L.length), rows=Math.ceil(L.length/cols), c=document.createElement('canvas'); c.width=cols*cw; c.height=rows*chh; var g=c.getContext('2d');
-  L.forEach(function(o,i){ var r=Math.floor(i/cols), q=i%cols; g.drawImage(o.cv, q*cw+(cw-o.cv.width)/2, r*chh+(chh-o.cv.height)); }); asDl(c, (AS.ch.name||'char')+'_연재조립시트.png'); }
+  L.forEach(function(o,i){ var r=Math.floor(i/cols), q=i%cols; g.drawImage(o.cv, q*cw+(cw-o.cv.width)/2, r*chh+(chh-o.cv.height)); }); asDl(asUp(c), (AS.ch.name||'char')+'_연재조립시트.png'); }
 function asSave(){ var L=(AS.out||[]).filter(Boolean); if(!L.length) return; var cw=0, chh=0; L.forEach(function(o){ cw=Math.max(cw,o.cv.width); chh=Math.max(chh,o.cv.height); }); var cols=Math.min(6,L.length), rows=Math.ceil(L.length/cols), c=document.createElement('canvas'); c.width=cols*cw; c.height=rows*chh; var g=c.getContext('2d');
   L.forEach(function(o,i){ var r=Math.floor(i/cols), q=i%cols; g.drawImage(o.cv, q*cw+(cw-o.cv.width)/2, r*chh+(chh-o.cv.height)); }); var id='as'+Date.now().toString(36), ch=AS.ch;
-  window.__ppArt.put(id, c.toDataURL('image/png')).then(function(){ ch.serial=ch.serial||{}; ch.serial.out=id; ch.serial.cfg=AS.cfg; save(); renderSerial(); stat('조립 시트를 연재 시트 3번 자리에 저장했다 (투명 PNG)'); }); }
+  window.__ppArt.put(id, asUp(c).toDataURL('image/png')).then(function(){ ch.serial=ch.serial||{}; ch.serial.out=id; ch.serial.cfg=AS.cfg; save(); renderSerial(); stat('조립 시트를 연재 시트 3번 자리에 저장했다 (투명 PNG)'); }); }
 function renderSerial(){
   var box=document.getElementById('ct-serialbox'); if(!box) return; var cs=chars();
   if(!cs.length){ box.innerHTML='<p class="small">인물이 있어야 쓸 수 있다.</p>'; return; }
