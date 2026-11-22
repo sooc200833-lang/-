@@ -20528,7 +20528,7 @@ render();
 // 목록은 localStorage assetLib, 그림은 IndexedDB(art)에 있다(이 브라우저에만 있으니 중요한 건 내려받아 둔다).
 (function(){
 var root=document.getElementById('assets-root'); if(!root) return;
-var KEY='assetLib', KINDS=['배경','사물','기타'], LIB=load(), FIL='전체', Q='', E=null, MSG='';
+var KEY='assetLib', KINDS=['배경','사물','기타'], LIB=load(), FIL='전체', CAT='전체', Q='', E=null, MSG='';
 function load(){ try{ var o=JSON.parse(localStorage.getItem(KEY)||'null'); if(o&&Array.isArray(o.items)) return o; }catch(e){} return {v:1, items:[]}; }
 function save(){ try{ localStorage.setItem(KEY, JSON.stringify(LIB)); }catch(e){ msg('저장 공간이 부족하다 — 내려받고 지운다'); } }
 function esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
@@ -20588,17 +20588,17 @@ function importProj(){ var b=null; try{ b=JSON.parse(localStorage.getItem('conti
   var SA=b.sheetArts||{}; Object.keys(SA).forEach(function(k){ add(SA[k], k==='lineup'?'등장인물 라인업':k+' 시트', /사물/.test(k)?'사물':'기타'); });
   Promise.all(tasks).then(function(){ render(); msg(n?n+'장을 가져왔다':'가져올 새 그림이 없다(배경·사물 시트가 이 브라우저에 있어야 한다)'); }); }
 // ---- 화면
-function list(){ return LIB.items.filter(function(x){ return (FIL==='전체'||x.kind===FIL) && (!Q || (x.name||'').toLowerCase().indexOf(Q.toLowerCase())>-1); }); }
+function list(){ return LIB.items.filter(function(x){ return (FIL==='전체'||x.kind===FIL) && (CAT==='전체'||(x.cat||'기타')===CAT) && (!Q || (x.name||'').toLowerCase().indexOf(Q.toLowerCase())>-1); }); }
 function render(){
   if(!A()){ root.innerHTML='<p class="small">그림 저장소를 여는 중…</p>'; return; }
   var L=list();
   root.innerHTML='<p class="small as-intro">배경·사물 그림을 모아 두고, 선화로 뽑거나 배경을 지워 PNG·ZIP으로 내려받는다. 콘티 구성기의 장면 배경으로도 바로 쓴다. 그림은 이 브라우저에만 저장되니 중요한 건 내려받아 둔다.</p>'+
     '<div class="filterbar as-bar"><label class="chip sv-up">📥 그림 올리기<input type="file" accept="image/*" multiple hidden id="as-up"></label><button class="chip" type="button" id="as-imp">🔄 콘티 구성기에서 가져오기</button><button class="chip" type="button" id="as-zip">⬇ 지금 목록 ZIP</button></div>'+
     '<div class="filterbar">'+['전체'].concat(KINDS).map(function(k){ return '<button class="chip" type="button" data-fil="'+k+'" aria-pressed="'+(FIL===k)+'">'+k+(k==='전체'?'':' '+LIB.items.filter(function(x){ return x.kind===k; }).length)+'</button>'; }).join('')+'<input type="search" id="as-q" placeholder="이름 검색" value="'+esc(Q)+'"></div>'+
-    '<p class="small" id="as-msg">'+esc(MSG)+'</p><div id="as-ed"></div>'+packHTML()+'<h3 class="as-h">내 에셋</h3>'+
+    catBar()+'<p class="small" id="as-msg">'+esc(MSG)+'</p><div id="as-ed"></div>'+packHTML()+'<h3 class="as-h">내 에셋</h3>'+
     (L.length?'<div class="as-grid">'+L.map(function(x){ var u=best(x); return '<div class="as-card'+(E&&E.id===x.id?' on':'')+'" data-id="'+x.id+'"><div class="as-th">'+(u?'<img alt="'+esc(x.name)+'" src="'+u+'">':'<span class="small st-warn">이 브라우저에 그림 없음</span>')+'</div>'+
       '<input class="as-nm" data-f="name" value="'+esc(x.name)+'" aria-label="이름"><select data-f="kind" aria-label="종류">'+KINDS.map(function(k){ return '<option'+(k===x.kind?' selected':'')+'>'+k+'</option>'; }).join('')+'</select>'+
-      '<div class="small as-bd">'+(x.orig?'원본 ':'')+(x.line?'· 선화 ':'')+(x.cut?'· 컷아웃':'')+'</div>'+
+      '<div class="small as-bd">'+(x.cat?esc(x.cat)+' · ':'')+(x.orig?'원본 ':'')+(x.line?'· 선화 ':'')+(x.cut?'· 컷아웃':'')+'</div>'+
       '<div class="as-act"><button type="button" class="chip" data-a="edit">✎ 선따기·지우기</button><details><summary class="small">⬇ 내려받기</summary>'+['orig','line','cut'].filter(function(k){ return x[k]; }).map(function(k){ return '<button type="button" class="chip" data-a="dl-'+k+'">'+({orig:'원본',line:'선화',cut:'컷아웃'})[k]+' PNG</button>'; }).join('')+'</details><button type="button" class="chip" data-a="del" aria-label="지우기">🗑</button></div></div>'; }).join('')+'</div>'
       :'<p class="small">아직 비어 있다. 「그림 올리기」나 「콘티 구성기에서 가져오기」로 넣는다.</p>');
   if(E) paintEd();
@@ -20606,14 +20606,21 @@ function render(){
 // ---- 기본 에셋 팩 (assets/pack/index.json — 공개 라이선스 사진·클립아트를 미리 선화로 만들어 둔 것)
 var PK=null, PKLOAD=0, PKOPEN=false, PKN=60;
 function packLoad(){ if(PK||PKLOAD) return; PKLOAD=1; fetch('assets/pack/index.json').then(function(r){ if(!r.ok) throw 0; return r.json(); }).then(function(j){ PK=j; render(); }).catch(function(){ PK=[]; PKLOAD=0; render(); }); }
-function pkList(){ return (PK||[]).filter(function(x){ return (FIL==='전체'||x.kind===FIL) && (!Q || (x.name+' '+(x.tags||'')).toLowerCase().indexOf(Q.toLowerCase())>-1); }); }
+function pkList(){ return (PK||[]).filter(function(x){ return (FIL==='전체'||x.kind===FIL) && (CAT==='전체'||x.cat===CAT) && (!Q || (x.name+' '+(x.tags||'')).toLowerCase().indexOf(Q.toLowerCase())>-1); }); }
+function catBar(){ var cs={}; (PK||[]).concat(LIB.items).forEach(function(x){ if(FIL!=='전체'&&x.kind!==FIL) return; var c=x.cat||'기타'; cs[c]=(cs[c]||0)+1; }); var ks=Object.keys(cs); if(ks.length<2) return '';
+  return '<div class="filterbar as-cats"><span class="small">분류</span>'+['전체'].concat(ks).map(function(k){ return '<button class="chip" type="button" data-cat="'+esc(k)+'" aria-pressed="'+(CAT===k)+'">'+esc(k)+(k==='전체'?'':' '+cs[k])+'</button>'; }).join('')+'</div>'; }
 function packHTML(){ packLoad(); var L=pkList(), shown=L.slice(0,PKN), n=PK?PK.length:0;
   return '<details class="as-pack" id="as-pack"'+(PKOPEN?' open':'')+'><summary><b>📦 기본 에셋 팩</b> <span class="small">'+(PK?(n?n+'장 — 공개(CC0·퍼블릭 도메인) 사진·클립아트를 선화로 만들어 둔 것':'아직 팩이 없다'):'불러오는 중…')+'</span></summary>'+
-    (n?'<p class="small">위의 종류·검색이 여기에도 적용된다. 「내 에셋에 담기」를 누르면 선따기·배경 지우기를 더 할 수 있다.</p><div class="as-grid">'+shown.map(function(x){ return '<div class="as-card" data-pk="'+esc(x.id)+'"><div class="as-th"><img loading="lazy" alt="'+esc(x.name)+'" src="assets/pack/'+esc(x.line)+'"></div><b class="small">'+esc(x.name)+'</b><span class="small as-bd">'+esc(x.kind)+' · '+esc(x.license)+'</span>'+
-      '<div class="as-act"><button type="button" class="chip" data-p="take">내 에셋에 담기</button><details><summary class="small">⬇ 내려받기</summary><button type="button" class="chip" data-p="dl-line">선화 PNG</button><button type="button" class="chip" data-p="dl-orig">원본</button></details></div><details><summary class="small">출처</summary><p class="small">'+esc(x.credit)+' · <a href="'+esc(x.page)+'" target="_blank" rel="noopener">원문</a></p></details></div>'; }).join('')+'</div>'+(L.length>shown.length?'<div class="filterbar"><button type="button" class="chip" data-p="more">더 보기 ('+(L.length-shown.length)+')</button></div>':'')+'<div class="filterbar"><button type="button" class="chip" data-p="zip">⬇ 지금 목록 ZIP ('+L.length+'장)</button></div>':'')+'</details>'; }
+    (n?'<p class="small">위의 종류·검색이 여기에도 적용된다. 「내 에셋에 담기」를 누르면 선따기·배경 지우기를 더 할 수 있다.</p><div class="as-grid">'+shown.map(function(x){ return '<div class="as-card" data-pk="'+esc(x.id)+'"><div class="as-th"><img loading="lazy" alt="'+esc(x.name)+'" src="assets/pack/'+esc(x.line)+'"></div><b class="small">'+esc(x.name)+'</b><span class="small as-bd">'+esc(x.kind)+' · '+esc(x.cat||'')+' · '+esc(x.license)+'</span>'+
+      '<div class="as-act"><button type="button" class="chip" data-p="take">내 에셋에 담기</button><details><summary class="small">⬇ 내려받기</summary><button type="button" class="chip" data-p="dl-line">선화 PNG</button><button type="button" class="chip" data-p="dl-orig">원본</button></details></div><details><summary class="small">출처</summary><p class="small">'+esc(x.credit)+' · <a href="'+esc(x.page)+'" target="_blank" rel="noopener">원문</a></p></details></div>'; }).join('')+'</div>'+(L.length>shown.length?'<div class="filterbar"><button type="button" class="chip" data-p="more">더 보기 ('+(L.length-shown.length)+')</button></div>':'')+'<div class="filterbar"><button type="button" class="chip ct-go" data-p="all">📥 지금 목록 전부 내 에셋에 담기 ('+L.filter(function(x){ return !packHave()[x.id]; }).length+'장)</button><button type="button" class="chip" data-p="zip">⬇ 지금 목록 ZIP ('+L.length+'장)</button></div>':'')+'</details>'; }
 function packFile(x,k){ return fetch('assets/pack/'+x[k]).then(function(r){ return r.blob(); }); }
 function packTake(x){ msg('담는 중…'); Promise.all([packFile(x,'orig'), packFile(x,'line')]).then(function(bs){ var rd=function(b){ return new Promise(function(res){ var r=new FileReader(); r.onload=function(){ res(r.result); }; r.readAsDataURL(b); }); }; return Promise.all(bs.map(rd)); }).then(function(u){
-  var id=uid(), it={id:id, name:x.name, kind:x.kind, at:Date.now(), orig:id+'o', line:id+'l', from:'기본 팩'}; return A().put(it.orig,u[0]).then(function(){ return A().put(it.line,u[1]); }).then(function(){ LIB.items.unshift(it); save(); render(); msg('「'+x.name+'」을 내 에셋에 담았다'); }); }).catch(function(){ msg('담지 못했다'); }); }
+  var id=uid(), it={id:id, name:x.name, kind:x.kind, cat:x.cat, pk:x.id, at:Date.now(), orig:id+'o', line:id+'l', from:'기본 팩'}; return A().put(it.orig,u[0]).then(function(){ return A().put(it.line,u[1]); }).then(function(){ LIB.items.unshift(it); save(); render(); msg('「'+x.name+'」을 내 에셋에 담았다'); }); }).catch(function(){ msg('담지 못했다'); }); }
+function packHave(){ var h={}; LIB.items.forEach(function(x){ if(x.pk) h[x.pk]=1; }); return h; }
+function takeOne(x){ return Promise.all([packFile(x,'orig'), packFile(x,'line')]).then(function(bs){ var rd=function(b){ return new Promise(function(res){ var r=new FileReader(); r.onload=function(){ res(r.result); }; r.readAsDataURL(b); }); }; return Promise.all(bs.map(rd)); }).then(function(u){
+  var id=uid(), it={id:id, name:x.name, kind:x.kind, cat:x.cat, pk:x.id, at:Date.now(), orig:id+'o', line:id+'l', from:'기본 팩'}; return A().put(it.orig,u[0]).then(function(){ return A().put(it.line,u[1]); }).then(function(){ LIB.items.push(it); }); }); }
+function packTakeAll(L){ var h=packHave(), todo=L.filter(function(x){ return !h[x.id]; }); if(!todo.length) return msg('이미 다 담겨 있다'); var i=0, fail=0;
+  (function nx(){ if(i>=todo.length){ save(); render(); msg(todo.length-fail+'장을 내 에셋에 담았다'+(fail?' ('+fail+'장 실패)':'')+' — 분류별로 골라 쓴다'); return; } msg('담는 중… '+(i+1)+'/'+todo.length); var x=todo[i++]; takeOne(x).then(nx, function(){ fail++; nx(); }); })(); }
 function packZip(L){ if(!L.length) return; msg('묶는 중… ('+L.length+'장)'); var jobs=[]; L.forEach(function(x){ ['line','orig'].forEach(function(k){ jobs.push(fetch('assets/pack/'+x[k]).then(function(r){ return r.arrayBuffer(); }).then(function(b){ return {name:fname(x.kind)+'/'+fname(x.name)+'_'+x.id.slice(-6)+'_'+(k==='line'?'선화':'원본')+x[k].replace(/^.*\./,'.'), data:new Uint8Array(b)}; })); }); });
   Promise.all(jobs).then(function(fs){ fs.push({name:'출처_라이선스.txt', data:new TextEncoder().encode(L.map(function(x){ return x.name+' | '+x.license+' | '+x.credit+' | '+x.page; }).join('\n'))}); save1(zip(fs),'기본에셋팩.zip'); msg(L.length+'장을 ZIP으로 내려받았다 (출처 목록 포함)'); }).catch(function(){ msg('묶지 못했다'); }); }
 // 편집기
@@ -20645,10 +20652,11 @@ document.addEventListener('change', function(e){ var t=e.target; if(!root.contai
   var c=t.closest&&t.closest('.as-card'); if(c&&t.dataset.f){ var x=find(c.dataset.id); if(x){ x[t.dataset.f]=t.value; save(); if(t.dataset.f==='kind') render(); } return; }
   if(t.dataset.e&&E){ E[t.dataset.e]=t.type==='checkbox'?t.checked:t.value; if(t.type!=='color') preview(); } });
 document.addEventListener('click', function(e){ var t=e.target; if(!t.closest||!root.contains(t)) return;
-  var fb=t.closest('[data-fil]'); if(fb){ FIL=fb.dataset.fil; PKN=60; render(); return; }
+  var fb=t.closest('[data-fil]'); if(fb){ FIL=fb.dataset.fil; CAT='전체'; PKN=60; render(); return; }
+  var cb=t.closest('[data-cat]'); if(cb){ CAT=cb.dataset.cat; PKN=60; render(); return; }
   if(t.closest('#as-imp')){ importProj(); return; } if(t.closest('#as-zip')){ dlZip(list()); return; }
   var pb=t.closest('[data-p]'); if(pb){ var pc=pb.closest('.as-card'), px=pc&&(PK||[]).filter(function(q){ return q.id===pc.dataset.pk; })[0], pa=pb.dataset.p; PKOPEN=true;
-    if(pa==='take'&&px) packTake(px); else if(pa==='more'){ PKN+=60; render(); } else if(pa==='zip') packZip(pkList()); else if(pa.indexOf('dl-')===0&&px){ var kk=pa.slice(3); packFile(px,kk).then(function(b){ save1(b, fname(px.name)+'_'+(kk==='line'?'선화':'원본')+px[kk].replace(/^.*\./,'.')); msg('내려받았다'); }); } return; }
+    if(pa==='take'&&px) packTake(px); else if(pa==='more'){ PKN+=60; render(); } else if(pa==='zip') packZip(pkList()); else if(pa==='all') packTakeAll(pkList()); else if(pa.indexOf('dl-')===0&&px){ var kk=pa.slice(3); packFile(px,kk).then(function(b){ save1(b, fname(px.name)+'_'+(kk==='line'?'선화':'원본')+px[kk].replace(/^.*\./,'.')); msg('내려받았다'); }); } return; }
   var a=t.closest('[data-a]'); if(!a) return; var card=a.closest('.as-card'), act=a.dataset.a, x=card?find(card.dataset.id):(E&&find(E.id));
   if(act==='edit'&&x){ E={id:x.id, mode:'edge', auto:true, dens:11, sens:82, sm:1, thick:0, ink:'#222222', base:'transparent', rm:false, tol:34, orig:false}; render(); try{ document.getElementById('as-ed').scrollIntoView({block:'nearest'}); }catch(er){} return; }
   if(act==='close'){ E=null; render(); return; }
