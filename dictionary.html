@@ -13733,7 +13733,7 @@ function srcAll(){   // 대강 이야기 + 참고 글을 하나로
 /* ---------- 저장 ---------- */
 var B=null;
 function load(){ try{ B=JSON.parse(localStorage.getItem('contiBoard')||'null'); }catch(e){ B=null; } }
-function save(){ if(window.__stale) return; try{ if(B){ B.at=Date.now(); localStorage.setItem('contiBoard', JSON.stringify(B)); if(B.sid && typeof stTouch==='function') stTouch(); } }catch(e){} }   // 드라이브에서 받은 뒤(새로고침 전)에는 덮어쓰지 않는다. 바꾸면 드라이브에도 올라간다(GD_KEYS)
+function save(){ if(window.__stale) return; try{ if(B){ B.at=Date.now(); localStorage.setItem('contiBoard', JSON.stringify(B)); if(typeof stTouch==='function') stTouch(); } }catch(e){} }   // 드라이브에서 받은 뒤(새로고침 전)에는 덮어쓰지 않는다. 바꾸면 드라이브에도 올라간다(GD_KEYS)
 function srcGet(){ try{ return JSON.parse(localStorage.getItem('contiSrc')||'null'); }catch(e){ return null; } }
 
 /* ---------- 클리셰의 연출 도구 → 구도 순서 ---------- */
@@ -16651,15 +16651,17 @@ function stSave(name, asNew, quiet){
   else if(name){ it.name=String(name).trim().slice(0,40)||it.name; it.named=1; delete it.auto; }
   if(name && !it.named){ it.named=1; delete it.auto; }
   if(!it.id){ it.id=(typeof recId==='function')?recId():String(now); }
-  B.sid=it.id; stKeep(); var m=stMeta(B); Object.keys(m).forEach(function(k){ it[k]=m[k]; });
+  B.sid=it.id; if(!quiet) delete B.stOff; stKeep(); var m=stMeta(B); Object.keys(m).forEach(function(k){ it[k]=m[k]; });
   recPut('contiSaved', it); stLinkPaint(); if(!quiet) stat('콘티 저장소에 「'+it.name+'」로 저장했다.');
   return it;
 }
 var stT=0;
 function stKeep(){ if(window.__stale || !B) return; try{ B.at=Date.now(); localStorage.setItem('contiBoard', JSON.stringify(B)); }catch(e){} }   // 잇기(sid)만 판에 적는다(save를 거치면 다시 stTouch)
 function stTouch(){   // save()가 부른다: 이어진 콘티를 조용히 고친다
-  if(!B || !B.sid) return; clearTimeout(stT);
-  stT=setTimeout(function(){ if(window.__stale || !B || !B.sid) return; if(!stItem(B.sid)){ delete B.sid; stKeep(); stLinkPaint(); return; } stSave('', false, true); }, 2000);
+  if(!B) return; if(!B.sid && !(stAuto() && boardHasWork() && !B.stOff)) return; clearTimeout(stT);
+  stT=setTimeout(function(){ if(window.__stale || !B || running) return;
+    if(!B.sid){ if(!stAuto() || !boardHasWork() || B.stOff) return; var sv=stSave('', false, true); if(sv){ sv.auto=1; try{ recPut('contiSaved', sv); }catch(er){} } return; }   // 처음 쓴 콘티도 바로 저장소에 넣는다
+    if(!stItem(B.sid)){ delete B.sid; B.stOff=1; stKeep(); stLinkPaint(); return; } stSave('', false, true); }, 2000);   // 저장소에서 지운 콘티는 다시 넣지 않는다(직접 저장하면 다시)
 }
 function stLoad(id){
   var it=stItem(id); if(!it){ stat('저장소에서 그 콘티를 찾지 못했다.'); return false; }
