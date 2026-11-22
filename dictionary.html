@@ -1451,6 +1451,11 @@ body.dk-drag, body.dk-drag *{user-select:none!important; -webkit-user-select:non
 .ct-scene .pl{font-weight:600}
 .ct-scene .sm{color:var(--ink-2)}
 .ct-scene em{font-style:normal; font-size:.72rem; color:var(--paper); background:var(--note); padding:0 .35rem; border-radius:2px}
+.ct-serial{margin:.5rem 0; border:1px solid var(--rule-hard); padding:.4rem .5rem}
+.ct-serial summary{cursor:pointer}
+.ct-serial .se-st{border-top:1px solid var(--rule); margin-top:.5rem; padding-top:.4rem; display:grid; gap:.3rem}
+.ct-serial .se-img{max-width:100%; border:1px solid var(--rule)}
+.ct-serial .se-po input{width:100%; font:inherit; box-sizing:border-box}
 .ct-scorg{border:1px solid var(--rule-hard); background:var(--paper); padding:.5rem; margin:.4rem 0; display:grid; gap:.4rem; font-size:.82rem}
 .ct-scorg[hidden]{display:none}
 .ct-scorg .so-h{display:flex; justify-content:space-between; align-items:center; gap:.4rem}
@@ -2845,6 +2850,7 @@ button.pl-card[disabled]{cursor:default}
   <div class="filterbar"><button class="chip" id="ct-fromcast" type="button">등장인물 페이지에서 가져오기</button><button class="chip" id="ct-addch" type="button">＋ 인물 추가</button></div>
   <div id="ct-chkout"></div>
   <div id="ct-chars"></div>
+  <details class="ct-grp ct-serial" id="ct-serial"><summary><b>🧪 연재용 시트 (머리·몸 따로) — 테스트</b></summary><div id="ct-serialbox"></div></details>
   <div id="ct-props"></div>
   </div>
 
@@ -13537,6 +13543,7 @@ function renderChars(){
       '<details class="ct-chmore"><summary class="small">더 보기</summary><div class="filterbar">'+(window.__castUpsert?'<button class="chip" type="button" data-cs="'+i+'">'+(window.__castFind&&window.__castFind(ch.name)?'등장인물 페이지에 반영':'등장인물 페이지에 넣기')+'</button>':'')+'<button class="chip" type="button" data-cd="'+i+'">지우기</button></div></details>');
     box.appendChild(f);
   });
+  try{ renderSerial(); }catch(e){}
 }
 function editChar(i){
   var ch=chars()[i], box=document.getElementById('ct-chars'); if(!ch||!box) return;
@@ -15824,6 +15831,63 @@ document.addEventListener('change', function(e){ if(e.target.id==='ct-colon'){ t
 setTimeout(function(){ var cb=document.getElementById('ct-colon'); if(cb) cb.checked=colOn(); },0);
 document.addEventListener('pp-art-ready', function(){ window.__ppReady=1; if(B){ try{ renderChars(); }catch(e){} try{ renderBoard(); }catch(e){} try{ renderSteps(); }catch(e){} } });
 function ctCopy(t){ (navigator.clipboard&&navigator.clipboard.writeText?navigator.clipboard.writeText(t):Promise.reject()).then(function(){ stat('그림 요청문을 복사했다 — ChatGPT에 붙여 넣고, 받은 그림은 컷 편집기 「그림 올리기」'); }, function(){ stat('복사하지 못했다'); }); }
+
+/* ---------- 연재용 시트: 머리 다각도 + 몸통 다각도 → 조립 전신 (2026-11-22, 테스트) ----------
+   기존 「GPT 시트」(전신 4 + 표정 6)와 따로 둔다. 시트 따기·장면 합성에는 쓰지 않고, 사람이 보고 쓰는 참고 시트다.
+   1) 머리 5×6(좌우 돌림 × 위아래·뒤) 2) 몸통 5×3(돌림 × 시점 높이) 3) 두 시트를 첨부해 전신 여러 각도로 조립 */
+var SER_OPEN_I=0, SER_POSES='정면 / 3/4 / 옆 / 뒤 / 로우앵글 3/4 / 하이앵글 3/4', SER_SHOW='';
+function serOut(){ return '⚠ OUTPUT: PNG with a FULLY TRANSPARENT background (alpha) — if impossible, flat pure white #FFFFFF, no floor, no shadow, no gradient. NO text, NO labels, NO grid lines, NO numbers.\n'; }
+function serHead(ch){
+  return serOut()+'HEAD TURNAROUND SHEET for '+ch.name+'. Draw ONE image: a grid of the SAME head, 5 columns x 6 rows, equal spacing, each cell the whole head with hair and neck down to the collarbone.\n'+
+    'COLUMNS (left to right) = turn: left profile (90°), 3/4 left, front, 3/4 right, right profile.\n'+
+    'ROWS (top to bottom) = tilt: chin raised strongly (seen from below), chin slightly raised, level, chin slightly lowered, head bowed strongly (top of head visible), and the LAST ROW = back of the head (back, back 3/4 left, back 3/4 right, back looking up, back looking down).\n'+
+    'Calm neutral expression, mouth closed, eyes open. IDENTICAL hair, face proportions, ears, skin tone, head size and neck in all 30 cells, perspective-correct head construction like an artist\'s head-angle reference chart.\n'+
+    'Appearance: '+chLookEn(ch)+'\n'+(ch.sheetArt?'A character sheet of this character is attached — copy the face and hair exactly.\n':'')+'Korean webtoon style, clean line art, flat colors.';
+}
+function serBody(ch){
+  return serOut()+'BODY (TORSO) TURNAROUND SHEET for '+ch.name+'. Draw ONE image: a grid of the SAME headless torso, 5 columns x 3 rows, equal spacing. Each cell: from the base of the neck (NO head) down to the hips, with both arms and hands relaxed at the sides.\n'+
+    'COLUMNS (left to right) = turn: front, 3/4 front, side, 3/4 back, back.\n'+
+    'ROWS (top to bottom) = camera height: seen from above (high angle), eye level, seen from below (low angle).\n'+
+    'The neck base must sit at the SAME place and size in every cell so a head can be attached. IDENTICAL build, shoulder width, outfit and colors in all 15 cells; show how the outfit folds and layers from every side.\n'+
+    'Appearance and outfit: '+chLookEn(ch)+'\n'+(ch.sheetArt?'A character sheet of this character is attached — copy the build and outfit exactly.\n':'')+'Korean webtoon style, clean line art, flat colors.';
+}
+function serAsm(ch, poses){
+  return serOut()+'Image 1 = the HEAD turnaround sheet, image 2 = the BODY turnaround sheet of the same character, '+ch.name+'.\n'+
+    'Draw ONE image: full-body figures of '+ch.name+', side by side, same height, standing on one invisible line, in this order: '+poses+'.\n'+
+    'For each figure take the head angle from image 1 and the torso angle from image 2 that match the pose (turn and camera height), join them at the neck, and add arms, hands, legs and feet that fit the outfit. Head about 1/7 of the total height. The face, hair, build and outfit must stay IDENTICAL in every figure.\n'+
+    'Korean webtoon style, clean line art, flat colors.';
+}
+function serSend(text, ims){ ctCopy(text); var A=window.__ppArt; var list=(ims||[]).filter(function(x){ return x && x.u; });
+  if(list.length) return sendGpt(text, list); stat('요청문을 복사했다 — ChatGPT에 붙여 넣는다'); window.open('https://chatgpt.com/'+(text.length<1800?'?q='+encodeURIComponent(text):''),'_blank','noopener'); }
+function renderSerial(){
+  var box=document.getElementById('ct-serialbox'); if(!box) return; var cs=chars();
+  if(!cs.length){ box.innerHTML='<p class="small">인물이 있어야 쓸 수 있다.</p>'; return; }
+  var i=Math.min(SER_OPEN_I, cs.length-1), ch=cs[i], A=window.__ppArt, S=ch.serial||{};
+  var u=function(k){ return S[k] && A ? A.get(S[k]) : ''; };
+  var row=function(k, no, title, hint, extra){ return '<div class="se-st"><b>'+no+'. '+title+'</b> <span class="small">'+hint+'</span>'+(u(k)?'<img class="se-img" alt="'+cesc(ch.name+' '+title)+'" src="'+u(k)+'">':'')+extra+
+    '<div class="filterbar"><button class="chip ct-go" type="button" data-ser="gpt-'+k+'">🖌 GPT로 그리기</button><button class="chip" type="button" data-ser="cp-'+k+'">요청문 복사</button><button class="chip" type="button" data-ser="sh-'+k+'">보기</button>'+
+    '<label class="chip sv-up">'+(u(k)?'그림 바꾸기':'📥 그린 그림 넣기')+'<input type="file" accept="image/*" hidden data-serup="'+k+'"></label>'+(u(k)?'<button class="chip" type="button" data-ser="rm-'+k+'">빼기</button>':'')+'</div>'+(SER_SHOW===ch.name+k?'<textarea class="pk-pr" rows="8" readonly>'+cesc(k==='head'?serHead(ch):k==='body'?serBody(ch):serAsm(ch,SER_POSES))+'</textarea>':'')+'</div>'; };
+  box.innerHTML='<p class="small">연재용으로 쓸 때 머리와 몸을 따로 다각도로 그리고, 두 시트를 합쳐 전신을 만드는 테스트다. 기존 「GPT 시트」와는 따로 저장되고 시트 따기·컷 합성에는 쓰이지 않는다. 먼저 한 명으로 돼 보는지 본다.</p>'+
+    '<label class="small">인물 <select id="se-who">'+cs.map(function(x,k){ return '<option value="'+k+'"'+(k===i?' selected':'')+'>'+cesc(x.name)+'</option>'; }).join('')+'</select></label>'+
+    row('head',1,'머리 다각도 시트','5×6 — 좌우 돌림 × 위아래, 마지막 줄은 뒤통수','')+
+    row('body',2,'몸통 다각도 시트','5×3 — 돌림 × 시점 높이, 머리 없이 목 아래부터','')+
+    row('out',3,'조립 전신 시트','1·2번 그림을 같이 첨부해 전신 여러 각도로','<label class="small se-po">만들 각도·자세 (／로 구분) <input id="se-po" type="text" value="'+cesc(SER_POSES)+'"></label>'+((u('head')&&u('body'))?'':'<p class="small st-warn">1·2번 그림을 먼저 넣으면 3번에 같이 첨부된다.</p>'));
+}
+document.addEventListener('change', function(e){ var t=e.target; if(!t.closest || !t.closest('#ct-serialbox')) return;
+  if(t.id==='se-who'){ SER_OPEN_I=+t.value; SER_SHOW=''; renderSerial(); return; }
+  if(t.id==='se-po'){ SER_POSES=t.value.trim()||SER_POSES; return; }
+  if(t.dataset.serup && window.__ppArt && t.files[0]){ var ch=chars()[SER_OPEN_I]; if(!ch) return; var k=t.dataset.serup;
+    window.__ppArt.fromFile(t.files[0]).then(function(id){ ch.serial=ch.serial||{}; ch.serial[k]=id; save(); renderSerial(); stat(ch.name+' 연재용 시트('+({head:'머리',body:'몸통',out:'조립'}[k])+')를 넣었다'); }); } });
+document.addEventListener('click', function(e){ var b=e.target.closest && e.target.closest('#ct-serialbox [data-ser]'); if(!b) return; var cs=chars(), ch=cs[SER_OPEN_I]; if(!ch) return;
+  var m=b.dataset.ser.split('-'), a=m[0], k=m[1], A=window.__ppArt, S=ch.serial||{}, img=function(id,nm){ return id&&A&&A.get(id)?{name:nm,u:A.get(id)}:null; };
+  var po=document.getElementById('se-po'); if(po) SER_POSES=po.value.trim()||SER_POSES;
+  var q=k==='head'?serHead(ch):k==='body'?serBody(ch):serAsm(ch, SER_POSES);
+  if(a==='sh'){ SER_SHOW=SER_SHOW===ch.name+k?'':ch.name+k; renderSerial(); return; }
+  if(a==='cp'){ ctCopy(q); return; }
+  if(a==='rm'){ if(ch.serial){ delete ch.serial[k]; save(); renderSerial(); } return; }
+  if(a==='gpt'){ var ims=k==='out'?[img(S.head,ch.name+' 머리 시트'), img(S.body,ch.name+' 몸통 시트')]:[img(ch.sheetArt, ch.name+' 시트')];
+    if(k==='out' && ims.filter(Boolean).length<2){ stat('1·2번 그림을 먼저 넣으면 같이 첨부한다. 지금은 요청문만 복사한다.'); ims=[]; }
+    serSend(q, ims); } });
 document.addEventListener('click', function(e){ var t=e.target;
   if(t.id==='ct-gptall'){ if(!B||!B.cuts||!B.cuts.length) return stat('콘티 컷이 없다'); var q=ctGptPrompt(B.cuts.filter(function(c){ return c.scr; }).slice(0,30)); ctCopy(q); setTimeout(function(){ window.open('https://chatgpt.com/?q='+encodeURIComponent(q.slice(0,6000)),'_blank','noopener'); },150); }
   if(t.id==='ct-faces'){ if(window.__ppFix) window.__ppFix.openFaces((B&&B.chars&&B.chars[0]&&B.chars[0].name)||''); } });
