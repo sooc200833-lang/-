@@ -1488,7 +1488,9 @@ body.dk-drag, body.dk-drag *{user-select:none!important; -webkit-user-select:non
 .as-edbox .ce-chk{display:flex}
 .ct-serial{margin:.5rem 0; border:1px solid var(--rule-hard); padding:.4rem .5rem}
 .ct-serial summary{cursor:pointer}
-.ct-serial .se-st{border-top:1px solid var(--rule); margin-top:.5rem; padding-top:.4rem; display:grid; gap:.3rem}
+.ct-serial .se-st{border-top:1px solid var(--rule); margin-top:.5rem; padding-top:.4rem; display:grid; grid-template-columns:minmax(0,1fr); gap:.3rem}
+.ct-serial .ser-emo{display:grid; width:100%; box-sizing:border-box; grid-template-columns:4.2em repeat(5,minmax(0,1fr)); gap:2px; align-items:center; background:#fff; padding:2px}
+.ct-serial .ser-emo img{width:100%; height:auto; display:block}
 .ct-serial .se-img{max-width:100%; border:1px solid var(--rule)}
 .ct-serial .se-po input{width:100%; font:inherit; box-sizing:border-box}
 .ct-scorg{border:1px solid var(--rule-hard); background:var(--paper); padding:.5rem; margin:.4rem 0; display:grid; gap:.4rem; font-size:.82rem}
@@ -14786,7 +14788,7 @@ function bodyUrl(nm, face){ var ch=chOf(nm), A=window.__ppArt; if(!ch||!ch.bodie
 function cutAssets(c){ var x=null; try{ x=sceneOfCut(c.n); }catch(e){} var g=x&&B.sceneBg&&B.sceneBg[x.a], A=window.__ppArt, bg=g&&g.art&&A?A.get(g.art):'';
   var w=[]; try{ w=whoOf(c).map(function(o){ return o.name; }).filter(Boolean); }catch(e){} if(!w.length) w=ctWho(c);
   var close=/^(cu|bs|ecu)$/.test(c.k), people=w.slice(0,3).map(function(nm){ var wp=(c.wp||{})[nm]||{}, emo=emoOfCut(c,nm), f=faceUrl(nm,emo), b=bodyUrl(nm,wp.face);
-    var S=serOf(nm), su=''; if(S){ var hk=serHeadNear(S, serHeadKey(wp.face, c.ang)), fp=serFigPick(nm, wp.face, c.ang); su=close?(hk?srcUrl(nm,'h:'+hk):fp?srcUrl(nm,'s:'+fp.i):''):(fp?srcUrl(nm,'s:'+fp.i):hk?srcUrl(nm,'h:'+hk):''); }
+    var S=serOf(nm), su=''; if(S){ var hk=S.heads?serHeadNear(S, serHeadKey(wp.face, c.ang)):null, fp=serFigPick(nm, wp.face, c.ang), eu=serEmoOk(S, serEmoKey(emo)+'.'+serFaceCol(wp.face))||serEmoOk(S,'n.2')||''; su=close&&eu?eu:close?(hk?srcUrl(nm,'h:'+hk):fp?srcUrl(nm,'s:'+fp.i):''):(fp?srcUrl(nm,'s:'+fp.i):hk?srcUrl(nm,'h:'+hk):eu); }
     return {nm:nm, x:wp.x, u:close?(f||b||su):(b||f||su), isFace:close?!!f:!b&&!!f, flip:wp.face==='left'||wp.face==='left45'}; }).filter(function(p){ return p.u; });
   return {bg:bg, people:people}; }
 // ===== 컷 구성 (시트·배경 합성): 배경 위치·확대·흐림, 인물 위치·크기·그림·반전, 인물 추가. 3D는 컷마다 체크했을 때만 =====
@@ -14797,10 +14799,15 @@ var EMOEN={n:'neutral',smile:'gentle smile',grin:'big grin',shy:'shy blush',pani
 // ch.serial.heads{'행.열':id} = 머리 30칸, ch.serial.figs[{id,hr,hc,br,bc}] = 조립기에서 담아 저장한 서 있는 전신.
 // 소스 이름: 'h:행.열' 연재 머리, 's:번호' 연재 전신. 머리 열 0·1=왼쪽을 봄, 3·4=오른쪽을 봄(본판 시트 전신은 오른쪽을 봄 기준이라 왼쪽이면 뒤집는다).
 var SER_RN=['크게 올려봄','올려봄','수평','내려봄','크게 숙임','뒤통수'], SER_CN=['왼옆','왼3/4','정면','오른3/4','오른옆'];
-function serOf(nm){ var ch=chOf(nm); return ch&&ch.serial&&(ch.serial.heads||ch.serial.figs)?ch.serial:null; }
+// 표정 각도 시트: 행=표정(SER_EMO), 열=수평 5각도. ch.serial.emo{'표정.열':id}
+var SER_EMO=[['n','무표정','calm neutral, mouth closed'],['smile','미소','gentle smile'],['angry','화남','angry, furrowed brows, gritted teeth'],['sad','슬픔','sad, teary eyes, downturned mouth'],['shock','놀람','shocked, wide eyes, mouth open'],['shy','당황·부끄','flustered blush, sweat drop']];
+function serEmoKey(emo){ var m={grin:'smile',smirk:'smile',cry:'sad',hurt:'sad',panic:'shy',menace:'angry',blank:'n',think:'n'}; emo=m[emo]||emo; return SER_EMO.some(function(q){ return q[0]===emo; })?emo:'n'; }
+function serEmoOk(S,k){ return S&&S.emo&&S.emo[k]&&window.__ppArt&&window.__ppArt.get(S.emo[k]); }
+function serFaceCol(face){ var c={left:0,left45:1,right45:3,right:4}[face]; return c==null?2:c; }
+function serOf(nm){ var ch=chOf(nm); return ch&&ch.serial&&(ch.serial.heads||ch.serial.figs||ch.serial.emo)?ch.serial:null; }
 function serHeadKey(face, ang){ if(face==='back') return '5.2'; var c={left:0,left45:1,right45:3,right:4}[face]; if(c==null) c=2; var r=ang==='low'?1:ang==='high'?3:2; return r+'.'+c; }
 function serHeadOk(S, k){ return S&&S.heads&&S.heads[k]&&window.__ppArt&&window.__ppArt.get(S.heads[k]); }
-function serHeadNear(S, k){ if(serHeadOk(S,k)) return k; var r=+k.split('.')[0], c=+k.split('.')[1], best=null, bd=99;
+function serHeadNear(S, k){ if(!S||!S.heads) return null; if(serHeadOk(S,k)) return k; var r=+k.split('.')[0], c=+k.split('.')[1], best=null, bd=99;
   Object.keys((S&&S.heads)||{}).forEach(function(q){ if(!serHeadOk(S,q)) return; var a=+q.split('.')[0], b=+q.split('.')[1], d=Math.abs(b-c)*2+Math.abs(a-r); if((r===5)!==(a===5)) d+=10; if(d<bd){ bd=d; best=q; } }); return bd<=4?best:null; }
 function serFigDir(f){ return f.hc<2?'L':f.hc>2?'R':''; }
 function serFigPick(nm, face, ang){ var S=serOf(nm), A=window.__ppArt; if(!S||!S.figs||!A) return null;
@@ -14809,10 +14816,12 @@ function serFigPick(nm, face, ang){ var S=serOf(nm), A=window.__ppArt; if(!S||!S
     var fd=serFigDir(f); if(!dir||!fd||fd===dir) sc+=1; if(sc>bs){ bs=sc; best={i:i, flip:!!(dir&&fd&&fd!==dir)}; } }); return best; }
 function serFigName(f){ return (['위에서','눈높이','아래에서'][f.br]||'')+' '+(['정면','3/4','옆','3/4 뒤','뒤'][f.bc]||'')+(serFigDir(f)==='L'?'(왼)':serFigDir(f)==='R'?'(오른)':''); }
 function srcUrl(nm, src){ src=String(src||'b0'); if(src.indexOf('f:')===0) return faceUrl(nm, src.slice(2));
+  if(src.indexOf('e:')===0){ var S1=serOf(nm); return serEmoOk(S1,src.slice(2))||''; }
   if(src.indexOf('h:')===0||src.indexOf('s:')===0){ var S0=serOf(nm), A0=window.__ppArt; if(!S0||!A0) return ''; if(src[0]==='h') return (S0.heads&&S0.heads[src.slice(2)]&&A0.get(S0.heads[src.slice(2)]))||''; var f0=(S0.figs||[])[+src.slice(2)]; return f0&&A0.get(f0.id)||''; } var ch=chOf(nm), A=window.__ppArt, i=+src.slice(1)||0; return ch&&ch.bodies&&A?(A.get(ch.bodies[i]||ch.bodies[0])||''):''; }
 function srcOpts(nm){ var o=[], ch=chOf(nm), F=window.__ppFix, m=F&&F.spr&&F.spr[nm]; if(ch&&ch.bodies) ['b0','b1','b2','b3'].forEach(function(k,i){ if(ch.bodies[i]) o.push([k,'전신 '+VIEWN[k]]); });
   if(m) Object.keys(m).forEach(function(k){ o.push(['f:'+k,'얼굴 '+((F.EMN||{})[k]||k)]); });
   var S=serOf(nm), A=window.__ppArt; if(S&&A){ (S.figs||[]).forEach(function(f,i){ if(f&&A.get(f.id)) o.push(['s:'+i,'연재 전신 '+serFigName(f)]); });
+    SER_EMO.forEach(function(e){ for(var c=0;c<5;c++) if(serEmoOk(S,e[0]+'.'+c)) o.push(['e:'+e[0]+'.'+c,'연재 표정 '+e[1]+' '+SER_CN[c]]); });
     Object.keys(S.heads||{}).sort().forEach(function(k){ if(serHeadOk(S,k)){ var r=+k.split('.')[0], c=+k.split('.')[1]; o.push(['h:'+k,'연재 얼굴 '+(SER_RN[r]||r)+' '+(r===5?'':(SER_CN[c]||c))]); } }); }
   return o; }
 function hasArt(nm){ return srcOpts(nm).length>0; }
@@ -14845,7 +14854,9 @@ function compAuto(c){ var k=c.k||'ms', Z={ls:100,fs:118,stand:118,two:130,ms:145
   var a=cutAssets(c), n=a.people.length, X=n===1?[50]:n===2?[30,70]:[20,50,80];
   var ppl=a.people.map(function(p,i){ var wp=(c.wp||{})[p.nm]||{}, close=/^(cu|bs|ecu)$/.test(k), emo=emoOfCut(c,p.nm), fi=wp.face==='back'?'b3':(wp.face==='left'||wp.face==='right')?'b2':(wp.face==='left45'||wp.face==='right45')?'b1':'b0';
     var src=(close||!srcUrl(p.nm,fi))&&faceUrl(p.nm,emo)?'f:'+emo:fi, sflip=null, S=B.serUse===false?null:serOf(p.nm);
-    if(S){ if(close){ var hk=serHeadNear(S, serHeadKey(wp.face, c.ang)), angled=(wp.face&&wp.face!=='front')||c.ang==='high'||c.ang==='low'; if(hk && (angled || !faceUrl(p.nm,emo) || emo==='n')){ src='h:'+hk; sflip=false; } }
+    if(S){ var ek=serEmoKey(emo)+'.'+serFaceCol(wp.face); if(wp.face==='back') ek='';
+      if(close && ek && serEmoOk(S,ek) && (serEmoKey(emo)!=='n' || (c.ang!=='high'&&c.ang!=='low'))){ src='e:'+ek; sflip=false; }
+      else if(close){ var hk=serHeadNear(S, serHeadKey(wp.face, c.ang)), angled=(wp.face&&wp.face!=='front')||c.ang==='high'||c.ang==='low'; if(hk && (angled || !faceUrl(p.nm,emo) || emo==='n')){ src='h:'+hk; sflip=false; } }
       else { var fp=serFigPick(p.nm, wp.face, c.ang); if(fp){ src='s:'+fp.i; sflip=fp.flip; } else if(!srcUrl(p.nm,src)){ var hk2=serHeadNear(S, serHeadKey(wp.face, c.ang)); if(hk2){ src='h:'+hk2; sflip=false; } } } }
     var face=src.indexOf('f:')===0||src.indexOf('h:')===0;
     var H=face?(k==='cu'||k==='ecu'?115:k==='bs'?85:55):(k==='ls'?42:k==='fs'||k==='stand'?82:k==='ms'||k==='two'?150:k==='bs'?210:95);
@@ -14963,10 +14974,11 @@ function cePaintCtl(){ var c=CE.c, cp=c.comp, rng=function(lab,attr,v,min,max,st
 function posWord(x){ return x<25?'far left':x<42?'left':x<58?'center':x<75?'right':'far right'; }
 var SHOTEN={els:'extreme long shot',ls:'long shot',fs:'full shot',ms:'medium shot',bs:'bust shot',cu:'close-up',ecu:'extreme close-up',two:'two-shot',ots:'over-the-shoulder shot',stand:'full shot',back:'shot from behind'};
 var ANGEN={'':'eye-level camera',high:'high angle (camera looking down)',low:'low angle (camera looking up)',dutch:'dutch angle (tilted frame)'};
-function cropOf(p){ if(p.src.indexOf('f:')===0||p.src.indexOf('h:')===0) return {en:'head and shoulders', ko:'얼굴·어깨'}; var top=p.y-p.s/2, bot=p.y+p.s/2, vis=(Math.min(100,bot)-Math.max(0,top))/p.s;
+function cropOf(p){ if(p.src.indexOf('f:')===0||p.src.indexOf('h:')===0||p.src.indexOf('e:')===0) return {en:'head and shoulders', ko:'얼굴·어깨'}; var top=p.y-p.s/2, bot=p.y+p.s/2, vis=(Math.min(100,bot)-Math.max(0,top))/p.s;
   if(bot<=102 && top>=-2) return {en:'whole body visible', ko:'전신'}; if(bot>100){ var f=(100-top)/p.s; return f>.85?{en:'cropped at the knees',ko:'무릎에서 잘림'}:f>.6?{en:'cropped at the waist',ko:'허리에서 잘림'}:f>.4?{en:'cropped at the chest',ko:'가슴에서 잘림'}:{en:'only head and shoulders in frame',ko:'얼굴만'}; }
   return vis<.7?{en:'partly out of frame at the top',ko:'위가 잘림'}:{en:'mostly visible',ko:'대부분 보임'}; }
-function viewOf(p){ if(p.src.indexOf('h:')===0){ var r=+p.src.slice(2).split('.')[0], c=+p.src.slice(2).split('.')[1]; return {en:'head '+(['tilted far up, seen from below','tilted up','level','tilted down','bowed down, seen from above','seen from behind'][r]||'')+(r===5?'':', '+(['profile facing left','3/4 facing left','facing the viewer','3/4 facing right','profile facing right'][c]||''))+(p.flip?' (mirrored)':'')+', neutral expression', ko:'연재 얼굴 '+(SER_RN[r]||'')+' '+(r===5?'':SER_CN[c]||'')}; }
+function viewOf(p){ if(p.src.indexOf('e:')===0){ var ep=p.src.slice(2).split('.'), eq=SER_EMO.filter(function(q){ return q[0]===ep[0]; })[0]||SER_EMO[0], cc=+ep[1]; return {en:(['profile facing left','3/4 facing left','facing the viewer','3/4 facing right','profile facing right'][cc]||'')+', expression: '+eq[2], ko:'연재 표정 '+eq[1]+' '+(SER_CN[cc]||'')}; }
+  if(p.src.indexOf('h:')===0){ var r=+p.src.slice(2).split('.')[0], c=+p.src.slice(2).split('.')[1]; return {en:'head '+(['tilted far up, seen from below','tilted up','level','tilted down','bowed down, seen from above','seen from behind'][r]||'')+(r===5?'':', '+(['profile facing left','3/4 facing left','facing the viewer','3/4 facing right','profile facing right'][c]||''))+(p.flip?' (mirrored)':'')+', neutral expression', ko:'연재 얼굴 '+(SER_RN[r]||'')+' '+(r===5?'':SER_CN[c]||'')}; }
   if(p.src.indexOf('s:')===0){ var S=serOf(p.nm), f=S&&S.figs&&S.figs[+p.src.slice(2)]; if(f) return {en:'standing, '+(['front view','3/4 view','side profile','3/4 back view','back to the viewer'][f.bc]||'')+', camera '+(['from above','at eye level','from below'][f.br]||'')+(p.flip?' (mirrored)':''), ko:'연재 전신 '+serFigName(f)+(p.flip?'(뒤집음)':'')}; }
   var f=p.src.indexOf('f:')===0, e=p.src.slice(2), F=window.__ppFix||{};
   return f?{en:'facing the viewer, expression: '+(EMOEN[e]||e), ko:'얼굴 '+((F.EMN||{})[e]||e)}:{en:({b0:'front view',b1:'3/4 view',b2:'side profile',b3:'back to the viewer'})[p.src]+(p.flip?' (mirrored)':''), ko:({b0:'정면',b1:'3/4',b2:'옆모습',b3:'뒷모습'})[p.src]+(p.flip?'(뒤집음)':'')}; }
@@ -15963,6 +15975,13 @@ function serHead(ch){
     'Calm neutral expression, mouth closed, eyes open. IDENTICAL hair, face proportions, ears, skin tone, head size and neck in all 30 cells, perspective-correct head construction like an artist\'s head-angle reference chart.\n'+
     'Appearance: '+chLookEn(ch)+'\n'+(ch.sheetArt?'A character sheet of this character is attached — copy the face and hair exactly.\n':'')+'Korean webtoon style, clean line art, flat colors.';
 }
+function serEmo(ch){
+  return serOut()+'EXPRESSION SHEET for '+ch.name+'. Draw ONE image: a grid of the SAME head, 5 columns x '+SER_EMO.length+' rows, equal spacing, each cell the whole head with hair, neck and shoulders down to the collarbone, head level (no tilt).\n'+
+    'COLUMNS (left to right) = turn: left profile (90°), 3/4 left, front, 3/4 right, right profile.\n'+
+    'ROWS (top to bottom) = expression: '+SER_EMO.map(function(q,i){ return (i+1)+') '+q[2]; }).join('; ')+'. Each row keeps ONE expression across all 5 angles.\n'+
+    'IDENTICAL hair, face proportions, head size and neck in every cell; only the expression and the turn change.\n'+
+    'Appearance: '+chLookEn(ch)+'\n'+'A head turnaround sheet of this character is attached — copy the face and hair exactly.\nKorean webtoon style, clean line art, flat colors.';
+}
 function serBody(ch){
   return serOut()+'BODY (TORSO) TURNAROUND SHEET for '+ch.name+'. Draw ONE image: a grid of the SAME headless torso, 5 columns x 3 rows, equal spacing. Each cell: from the base of the neck (NO head) down to the hips, with both arms and hands relaxed at the sides.\n'+
     'COLUMNS (left to right) = turn: front, 3/4 front, side, 3/4 back, back.\n'+
@@ -16135,15 +16154,17 @@ function renderSerial(){
   var u=function(k){ return S[k] && A ? A.get(S[k]) : ''; };
   var row=function(k, no, title, hint, extra){ return '<div class="se-st"><b>'+no+'. '+title+'</b> <span class="small">'+hint+'</span>'+(u(k)?'<img class="se-img" alt="'+cesc(ch.name+' '+title)+'" src="'+u(k)+'">':'')+extra+
     '<div class="filterbar"><button class="chip ct-go" type="button" data-ser="gpt-'+k+'">🖌 GPT로 그리기</button><button class="chip" type="button" data-ser="cp-'+k+'">요청문 복사</button><button class="chip" type="button" data-ser="sh-'+k+'">보기</button>'+
-    '<label class="chip sv-up">'+(u(k)?'그림 바꾸기':'📥 그린 그림 넣기')+'<input type="file" accept="image/*" hidden data-serup="'+k+'"></label>'+(u(k)?'<button class="chip" type="button" data-ser="rm-'+k+'">빼기</button>':'')+'</div>'+(SER_SHOW===ch.name+k?'<textarea class="pk-pr" rows="8" readonly>'+cesc(k==='head'?serHead(ch):k==='body'?serBody(ch):serAsm(ch,SER_POSES))+'</textarea>':'')+'</div>'; };
-  var nH=Object.keys(S.heads||{}).length, nF=(S.figs||[]).length;
-  box.innerHTML='<p class="small">머리를 각도별로, 몸통을 따로 그려 조립한다. 4번에서 「저장하고 콘티에 쓰기」를 누르면 컷 구성이 자동으로 쓴다: 얼굴 클로즈업은 컷의 얼굴 방향·앵글(부감·앙각)에 맞는 머리 각도, 서 있는 컷은 조립한 전신. 표정은 없으니 정면·보통 앵글 클로즈업은 본판 시트의 표정 얼굴이 있으면 그걸 먼저 쓴다.</p>'+
-    '<div class="filterbar"><label class="ce-chk small"><input type="checkbox" id="se-use"'+(B.serUse===false?'':' checked')+'> 콘티 컷 구성에 자동으로 쓰기</label>'+(nH||nF?'<span class="small">등록됨: '+cesc(ch.name)+' 머리 '+nH+'칸 · 전신 '+nF+'개</span><button class="chip" type="button" data-ser="recomp">이 인물 컷 구성 다시 맞추기</button>':'<span class="small">'+cesc(ch.name)+'은 아직 등록 안 됨</span>')+'</div>'+
+    '<label class="chip sv-up">'+(u(k)?'그림 바꾸기':'📥 그린 그림 넣기')+'<input type="file" accept="image/*" hidden data-serup="'+k+'"></label>'+(u(k)?'<button class="chip" type="button" data-ser="rm-'+k+'">빼기</button>':'')+'</div>'+(SER_SHOW===ch.name+k?'<textarea class="pk-pr" rows="8" readonly>'+cesc(k==='head'?serHead(ch):k==='body'?serBody(ch):k==='esh'?serEmo(ch):serAsm(ch,SER_POSES))+'</textarea>':'')+'</div>'; };
+  var nH=Object.keys(S.heads||{}).length, nF=(S.figs||[]).length, nE=Object.keys(S.emo||{}).length;
+  box.innerHTML='<p class="small">인물마다 시트 3장: <b>①머리 각도</b>(위아래·좌우 30칸) <b>②표정</b>(수평 5각도 × 표정 6) <b>③몸통</b>(5×3). 표정 시트는 넣으면 바로 칸을 따서 등록되고, 머리·몸통은 4번 조립기에서 「저장하고 콘티에 쓰기」로 등록한다. 컷 구성이 자동으로 쓴다: 클로즈업은 컷의 표정·얼굴 방향에 맞는 표정 칸(부감·앙각 무표정이면 머리 각도 칸), 서 있는 컷은 조립한 전신.</p>'+
+    '<div class="filterbar"><label class="ce-chk small"><input type="checkbox" id="se-use"'+(B.serUse===false?'':' checked')+'> 콘티 컷 구성에 자동으로 쓰기</label>'+(nH||nF||nE?'<span class="small">등록됨: '+cesc(ch.name)+' 머리 '+nH+'칸 · 표정 '+nE+'칸 · 전신 '+nF+'개</span><button class="chip" type="button" data-ser="recomp">이 인물 컷 구성 다시 맞추기</button>':'<span class="small">'+cesc(ch.name)+'은 아직 등록 안 됨</span>')+'</div>'+
     '<label class="small">인물 <select id="se-who">'+cs.map(function(x,k){ return '<option value="'+k+'"'+(k===i?' selected':'')+'>'+cesc(x.name)+'</option>'; }).join('')+'</select></label>'+
     row('head',1,'머리 다각도 시트','5×6 — 좌우 돌림 × 위아래, 마지막 줄은 뒤통수','')+
-    row('body',2,'몸통 다각도 시트','5×3 — 돌림 × 시점 높이, 머리 없이 목 아래부터','')+
-    row('out',3,'조립 전신 시트','1·2번 그림을 같이 첨부해 전신 여러 각도로','<label class="small se-po">만들 각도·자세 (／로 구분) <input id="se-po" type="text" value="'+cesc(SER_POSES)+'"></label>'+((u('head')&&u('body'))?'':'<p class="small st-warn">1·2번 그림을 먼저 넣으면 3번에 같이 첨부된다.</p>'))+
-    '<div class="se-st"><b>4. 자동 조립기</b> <span class="small">GPT 없이 1·2번 시트를 칸으로 나눠 각도끼리 자동으로 짝지어 상반신을 조립한다. 칸 위치·배경 지우기 세기·머리 크기·목 위치를 고칠 수 있다.</span>'+(u('out')?'<img class="se-img" alt="조립 결과" src="'+u('out')+'">':'')+
+    row('esh',2,'표정 시트','5×'+SER_EMO.length+' — 수평 5각도 × 표정('+SER_EMO.map(function(q){ return q[1]; }).join('·')+'). 넣으면 칸을 자동으로 따서 클로즈업에 쓴다',
+      (S.emo?'<div class="ser-emo">'+SER_EMO.map(function(q){ return '<span class="small">'+q[1]+'</span>'+[0,1,2,3,4].map(function(c){ var uu=serEmoOk(S,q[0]+'.'+c); return uu?'<img alt="" src="'+uu+'">':'<i></i>'; }).join(''); }).join('')+'</div><div class="filterbar"><span class="small">따낸 표정 '+Object.keys(S.emo).length+'칸</span><label class="small">배경 지우기 <input type="range" id="se-etol" min="0" max="60" value="'+(S.etol!=null?S.etol:18)+'"></label><button class="chip" type="button" data-ser="eslice">다시 따기</button></div>':''))+
+    row('body',3,'몸통 다각도 시트','5×3 — 돌림 × 시점 높이, 머리 없이 목 아래부터','')+
+    row('out',4,'조립 전신 시트','머리·몸통 그림을 같이 첨부해 전신 여러 각도로','<label class="small se-po">만들 각도·자세 (／로 구분) <input id="se-po" type="text" value="'+cesc(SER_POSES)+'"></label>'+((u('head')&&u('body'))?'':'<p class="small st-warn">1·2번 그림을 먼저 넣으면 3번에 같이 첨부된다.</p>'))+
+    '<div class="se-st"><b>5. 자동 조립기</b> <span class="small">GPT 없이 머리·몸통 시트를 칸으로 나눠 각도끼리 자동으로 짝지어 상반신을 조립한다. 칸 위치·배경 지우기 세기·머리 크기·목 위치를 고칠 수 있다.</span>'+(u('out')?'<img class="se-img" alt="조립 결과" src="'+u('out')+'">':'')+
     '<div class="filterbar"><button class="chip ct-go" type="button" data-ser="asm"'+((u('head')&&u('body'))?'':' disabled')+'>🔧 자동으로 조립하기</button></div></div>';
 }
 document.addEventListener('change', function(e){ var t=e.target; if(!t.closest || !t.closest('#ct-serialbox')) return;
@@ -16151,7 +16172,13 @@ document.addEventListener('change', function(e){ var t=e.target; if(!t.closest |
   if(t.id==='se-po'){ SER_POSES=t.value.trim()||SER_POSES; return; }
   if(t.id==='se-use'){ B.serUse=t.checked?undefined:false; if(t.checked) delete B.serUse; save(); try{ renderBoard(); }catch(er){} stat(t.checked?'연재 시트를 컷 구성에 쓴다':'연재 시트를 컷 구성에 안 쓴다'); return; }
   if(t.dataset.serup && window.__ppArt && t.files[0]){ var ch=chars()[SER_OPEN_I]; if(!ch) return; var k=t.dataset.serup;
-    serStore(t.files[0]).then(function(id){ ch.serial=ch.serial||{}; ch.serial[k]=id; save(); renderSerial(); stat(ch.name+' 연재용 시트('+({head:'머리',body:'몸통',out:'조립'}[k])+')를 원본 화질로 넣었다'); }); } });
+    serStore(t.files[0]).then(function(id){ ch.serial=ch.serial||{}; ch.serial[k]=id; save(); renderSerial(); stat(ch.name+' 연재용 시트('+({head:'머리',body:'몸통',out:'조립',esh:'표정'}[k])+')를 원본 화질로 넣었다'); if(k==='esh') serEmoSlice(ch); }); }
+  if(t.id==='se-etol'){ var ch2=chars()[SER_OPEN_I]; if(ch2&&ch2.serial){ ch2.serial.etol=+t.value; serEmoSlice(ch2); } } });
+function serEmoSlice(ch){ var S=ch.serial||{}, A=window.__ppArt; if(!S.esh||!A) return; var src=S.esh;
+  asCanvas(src).then(function(cv){ if(!cv) return stat('표정 시트 그림을 못 읽었다'); var cfg={tol:S.etol!=null?S.etol:18, pad:4, cols:5, rows:SER_EMO.length, even:false, ox:0, oy:0}, sp=asSplit(cv,cfg);
+    if(sp.cells.filter(function(q){ return q.bb; }).length<5*SER_EMO.length*.7){ cfg.even=true; sp=asSplit(cv,cfg); }
+    var t=Date.now().toString(36), em={}, jobs=[]; sp.cells.forEach(function(q){ if(!q.bb||!SER_EMO[q.r]) return; var k=SER_EMO[q.r][0]+'.'+q.c, id='se'+t+q.r+q.c; em[k]=id; jobs.push(A.put(id, asTrim(q).toDataURL('image/png'))); });
+    Promise.all(jobs).then(function(){ ch.serial.emo=em; save(); renderSerial(); try{ renderBoard(); }catch(er){} stat('표정 '+Object.keys(em).length+'칸을 따서 등록했다'+(sp.auto&&!cfg.even?'':' (균등하게 나눔)')+' — 클로즈업 컷에 표정·방향 맞춰 자동으로 쓴다'); }); }); }
 // 시트는 화질이 중요해서 줄이지 않고(너무 크면 2600px까지만) 원래 형식 그대로 저장한다
 function serStore(f){ return new Promise(function(res){ var r=new FileReader(); r.onload=function(){ var u=r.result, id='sr'+Date.now().toString(36)+Math.random().toString(36).slice(2,4), im=new Image(); im.onload=function(){ var mx=Math.max(im.width,im.height);
     if(mx<=2600 && f.size<=7e6) return window.__ppArt.put(id,u).then(function(){ res(id); });
@@ -16159,15 +16186,16 @@ function serStore(f){ return new Promise(function(res){ var r=new FileReader(); 
 document.addEventListener('click', function(e){ var b=e.target.closest && e.target.closest('#ct-serialbox [data-ser]'); if(!b) return; var cs=chars(), ch=cs[SER_OPEN_I]; if(!ch) return;
   var m=b.dataset.ser.split('-'), a=m[0], k=m[1], A=window.__ppArt, S=ch.serial||{}, img=function(id,nm){ return id&&A&&A.get(id)?{name:nm,u:A.get(id)}:null; };
   var po=document.getElementById('se-po'); if(po) SER_POSES=po.value.trim()||SER_POSES;
-  var q=k==='head'?serHead(ch):k==='body'?serBody(ch):serAsm(ch, SER_POSES);
+  if(a==='eslice'){ serEmoSlice(ch); return; }
+  var q=k==='head'?serHead(ch):k==='body'?serBody(ch):k==='esh'?serEmo(ch):serAsm(ch, SER_POSES);
   if(a==='asm'){ asmOpen(ch); return; }
   if(a==='recomp'){ var n=0; (B.cuts||[]).forEach(function(c){ if(c.comp && c.comp.ppl && c.comp.ppl.some(function(p){ return p.nm===ch.name; })) n++; }); if(!n){ stat('직접 고친 컷 구성이 없다 — 이미 자동으로 맞춰진다'); return; }
     if(b.dataset.arm!=='1'){ b.dataset.arm='1'; b.textContent='직접 고친 컷 '+n+'개를 자동으로 — 한 번 더'; return; } snapUndo('컷 구성 되돌리기','컷 구성을 다시 맞추기 전으로 되돌렸다.');
     (B.cuts||[]).forEach(function(c){ if(c.comp && c.comp.ppl && c.comp.ppl.some(function(p){ return p.nm===ch.name; })) delete c.comp; }); save(); try{ renderBoard(); }catch(er){} renderSerial(); stat(n+'개 컷 구성을 연재 시트 기준으로 다시 맞췄다'); return; }
   if(a==='sh'){ SER_SHOW=SER_SHOW===ch.name+k?'':ch.name+k; renderSerial(); return; }
   if(a==='cp'){ ctCopy(q); return; }
-  if(a==='rm'){ if(ch.serial){ delete ch.serial[k]; save(); renderSerial(); } return; }
-  if(a==='gpt'){ var ims=k==='out'?[img(S.head,ch.name+' 머리 시트'), img(S.body,ch.name+' 몸통 시트')]:[img(ch.sheetArt, ch.name+' 시트')];
+  if(a==='rm'){ if(ch.serial){ delete ch.serial[k]; if(k==='esh') delete ch.serial.emo; save(); renderSerial(); } return; }
+  if(a==='gpt'){ var ims=k==='esh'?[img(S.head,ch.name+' 머리 시트')||img(ch.sheetArt, ch.name+' 시트')]:k==='out'?[img(S.head,ch.name+' 머리 시트'), img(S.body,ch.name+' 몸통 시트')]:[img(ch.sheetArt, ch.name+' 시트')];
     if(k==='out' && ims.filter(Boolean).length<2){ stat('1·2번 그림을 먼저 넣으면 같이 첨부한다. 지금은 요청문만 복사한다.'); ims=[]; }
     serSend(q, ims); } });
 document.addEventListener('click', function(e){ var t=e.target;
