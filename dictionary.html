@@ -15789,10 +15789,11 @@ function s4Bar(){ var box=document.getElementById('ct-s4save'), rb=document.getE
   if(rb){ if(n){ rb.hidden=false; rb.dataset.n=n; rb.textContent='▶ 이어서 쓰기 ('+n+'번 컷부터)'; } else if(!running) rb.hidden=true; }
   var it=B&&B.sid?stItem(B.sid):null;
   box.innerHTML='<div class="ct-svb"><div class="small">'+(tot?'<b>'+w+'/'+tot+'컷</b> 썼다'+(n?' · 빈 컷이 남아 「이어서 쓰기」로 계속 쓴다':' · 다 썼다'):'아직 쓴 콘티가 없다')+'</div>'+
-    '<div class="small">💾 <b>자동 저장</b>: 이 브라우저(콘티 구성기 판)에 고칠 때마다 저장된다. 새로고침해도 남는다.<br>'+(it?'📚 <b>콘티 저장소</b>: 「'+cesc(it.name)+'」에도 같이 저장되고 있다.':'📚 <b>콘티 저장소</b>에는 아직 없다 — 저장해 두면 여러 콘티를 따로 보관하고 다시 연다.')+'</div>'+
-    '<div class="filterbar">'+(it?'<button class="chip" type="button" data-s4="dup">📄 새 이름으로 따로 저장</button>':'<button class="chip ct-go" type="button" data-s4="new"'+(tot?'':' disabled')+'>💾 콘티 저장소에 저장</button>')+'<a class="chip" href="#contis">📚 저장소 열기 (저장한 콘티 목록)</a><button class="chip" type="button" data-s4="file"'+(tot?'':' disabled')+'>⬇ 백업 파일 받기</button></div></div>'; }
+    '<div class="small">💾 <b>자동 저장</b>: 이 브라우저(콘티 구성기 판)에 고칠 때마다 저장된다. 새로고침해도 남는다.<br>'+(it?'📚 <b>콘티 저장소</b>: 「'+cesc(it.name)+'」에도 같이 저장되고 있다'+(it.auto?' (AI로 다 썼을 때 이야기 첫머리로 이름 지어 자동 저장)':'')+'.':'📚 <b>콘티 저장소</b>에는 아직 없다 — 저장해 두면 여러 콘티를 따로 보관하고 다시 연다.')+'</div>'+
+    '<div class="filterbar">'+(it?'<button class="chip" type="button" data-s4="ren">✎ 이름 바꾸기</button><button class="chip" type="button" data-s4="dup">📄 새 이름으로 따로 저장</button>':'<button class="chip ct-go" type="button" data-s4="new"'+(tot?'':' disabled')+'>💾 콘티 저장소에 저장</button>')+'<a class="chip" href="#contis">📚 저장소 열기 (저장한 콘티 목록)</a><button class="chip" type="button" data-s4="file"'+(tot?'':' disabled')+'>⬇ 백업 파일 받기</button></div></div>'; }
 document.addEventListener('click', function(e){ var b=e.target.closest&&e.target.closest('#ct-s4save [data-s4]'); if(!b||!B) return; var a=b.dataset.s4;
   if(a==='new'){ var nm=prompt('저장할 이름', stDefName()); if(nm===null) return; stSave(nm, true); }
+  else if(a==='ren'){ var it0=stItem(B.sid), nm0=prompt('콘티 이름', it0?it0.name:stDefName()); if(nm0===null||!nm0.trim()) return; stSave(nm0, false); }
   else if(a==='dup'){ var it=stItem(B.sid), nm2=prompt('새 이름', (it?it.name:stDefName())+' (복제)'); if(nm2===null) return; stSave(nm2, true); }
   else if(a==='file'){ try{ saveFile('manga-backup-'+stampName()+'.json', bkDump(), 'application/json'); stat('백업 파일을 받았다 — 이 콘티·저장소·등장인물 등 글이 다 들어 있고, 즐겨찾기 페이지 「백업 파일 불러오기」로 되살린다. 그림은 빠진다.'); }catch(er){ stat('백업 파일을 만들지 못했다'); } }
   s4Bar(); });
@@ -16647,7 +16648,8 @@ function stSave(name, asNew, quiet){
   if(!B || !B.cuts || !B.cuts.length){ if(!quiet) stat('저장할 판이 없다.'); return null; }
   var it=(!asNew && B.sid)?stItem(B.sid):null, now=Date.now();
   if(!it){ it={name:String(name||'').trim().slice(0,40)||stDefName(), folder:'기본', created:now}; B.sid=null; }
-  else if(name) it.name=String(name).trim().slice(0,40)||it.name;
+  else if(name){ it.name=String(name).trim().slice(0,40)||it.name; it.named=1; delete it.auto; }
+  if(name && !it.named){ it.named=1; delete it.auto; }
   if(!it.id){ it.id=(typeof recId==='function')?recId():String(now); }
   B.sid=it.id; stKeep(); var m=stMeta(B); Object.keys(m).forEach(function(k){ it[k]=m[k]; });
   recPut('contiSaved', it); stLinkPaint(); if(!quiet) stat('콘티 저장소에 「'+it.name+'」로 저장했다.');
@@ -16673,7 +16675,7 @@ function stLinkPaint(){ try{ s4Bar(); }catch(e){}
   box.innerHTML='<div class="filterbar"><span class="small">'+(it?'저장소: <b>'+cesc(it.name)+'</b> — 고치는 대로 저장된다':'콘티 저장소에 아직 없는 판이다')+'</span>'+
     (it?'<button class="chip" type="button" data-st="dup">새 콘티로 복제</button>':'<button class="chip" type="button" data-st="new">저장소에 저장</button>')+
     '<a class="chip" href="#contis">콘티 저장소 열기</a></div>';
-  var st=document.getElementById('ct-stlink'); if(st) st.innerHTML=it?'저장소 「'+cesc(it.name)+'」':'';
+  var st=document.getElementById('ct-stlink'); if(st){ st.innerHTML=it?'📚 저장소에 저장됨 「'+cesc(it.name)+'」':''; st.title=it?'콘티 저장소에 이 이름으로 저장돼 있고, 고칠 때마다 같이 저장된다. 누르면 저장소가 열린다':''; }
 }
 document.getElementById('ct-saved').addEventListener('click', function(e){
   var b=e.target.closest && e.target.closest('button[data-st]'); if(!b) return;
@@ -17260,7 +17262,7 @@ function writeAll(fromN){
     });
   }
   function next(){
-    if(i>=list.length){ polishAll(function(pn,pnote){ running=false; setBusy(false); var sv=stAuto()?stSave('', false, true):null; stat((sv?'콘티 저장소 「'+sv.name+'」에 저장했다. ':'')+'다 썼다. '+B.cuts.filter(function(c){return c.scr;}).length+'/'+B.cuts.length+'컷.'+(pn>0?' 다듬은 컷 '+pn+'개.':'')+(pnote||'')+(srcOnly()?' 대사는 원고에 적힌 것만 넣었다. 더할 대사·나레이션은 「대사·나레이션 추천」에서 고쳐 한 번에 올린다.':'')); save(); sgAfterWrite(SPLIT_N); }); return; }
+    if(i>=list.length){ polishAll(function(pn,pnote){ running=false; setBusy(false); var sv=stAuto()?stSave('', false, true):null; if(sv&&!sv.named){ sv.auto=1; try{ recPut('contiSaved', sv); }catch(er){} } stat((sv?'콘티 저장소 「'+sv.name+'」에 저장했다. ':'')+'다 썼다. '+B.cuts.filter(function(c){return c.scr;}).length+'/'+B.cuts.length+'컷.'+(pn>0?' 다듬은 컷 '+pn+'개.':'')+(pnote||'')+(srcOnly()?' 대사는 원고에 적힌 것만 넣었다. 더할 대사·나레이션은 「대사·나레이션 추천」에서 고쳐 한 번에 올린다.':'')); save(); sgAfterWrite(SPLIT_N); }); return; }
     var ch=list[i];
     stat((i+1)+'/'+list.length+' · '+ch.a+'–'+ch.b+'번 컷'+(dispNm(ch.name)?' 「'+dispNm(ch.name)+'」':'')+' 쓰는 중…');
     aiAsk(csys(), cutPrompt(ch), Math.min(2600, 200+(ch.b-ch.a+1)*120), {temperature:0.65}).then(function(t){
