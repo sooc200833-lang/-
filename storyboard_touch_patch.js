@@ -113,4 +113,41 @@ function mount(){
 }
 window.cmp75Paint=function(){oldPaint();if(E.stage)draw();};
 window.renderCompose75=function(){if(E.stage){E.stage.destroy();E.stage=null;}oldRender();mount();};
+
+/* Gemini is user-controlled: no automatic API requests. */
+var cmp75OriginalQueue=window.cmp75AiQueue;
+var cmp75UserEnabled=false;
+window.cmp75AiQueue=function(c){if(!cmp75UserEnabled)return;return cmp75OriginalQueue&&cmp75OriginalQueue(c);};
+var previousRender75=window.renderCompose75;
+window.renderCompose75=function(){
+ previousRender75();
+ var root=document.getElementById('ct-compose75');
+ if(!root)return;
+ var controls=document.createElement('section');
+ controls.id='cmp75-gemini-manual';
+ controls.className='cmp75-person';
+ controls.innerHTML='<b>✨ Gemini 판단 (선택 사용)</b><p class="small">기본적으로 Gemini를 호출하지 않습니다. 아래 버튼을 누를 때만 판단을 요청합니다. 기존 Gemini API 키 설정을 사용합니다.</p>'+
+ '<div class="cmp75-tools"><button type="button" class="chip" id="cmp75-ai-current">현재 컷 Gemini 판단</button><button type="button" class="chip" id="cmp75-ai-all">전체 컷 Gemini 판단</button></div>'+
+ '<p class="small" id="cmp75-ai-status" aria-live="polite">자동 호출 꺼짐 · 기본 시트 합성은 API 없이 실행</p>';
+ root.insertBefore(controls,root.firstChild);
+ controls.addEventListener('click',function(e){
+  var id=e.target&&e.target.id;
+  if(id!=='cmp75-ai-current'&&id!=='cmp75-ai-all')return;
+  var status=controls.querySelector('#cmp75-ai-status');
+  if(typeof aiReady!=='function'||!aiReady()){status.textContent='Gemini API 키와 모델 설정을 먼저 확인해 주세요.';return;}
+  var cuts=id==='cmp75-ai-all'?(B&&B.cuts||[]):[cmp75Cut()];
+  cmp75UserEnabled=true;
+  try{
+   cuts.filter(Boolean).forEach(function(c){
+    var names=cmp75Cast(c).filter(function(n){return cmp75AiAmbiguous(c,n);});
+    if(!names.length)return;
+    var sig=JSON.stringify([c.n,cmp75AiText(c),names]);
+    delete CMP75_AI.done[sig];
+    cmp75OriginalQueue(c);
+   });
+   status.textContent='Gemini 판단 요청 중 · 결과는 사용자가 직접 선택한 표정을 변경하지 않습니다.';
+  }catch(err){status.textContent='요청 실패: '+err.message;}
+  finally{cmp75UserEnabled=false;}
+ });
+};
 })();
