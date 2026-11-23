@@ -2937,6 +2937,7 @@ button.pl-card[disabled]{cursor:default}
   <div class="filterbar ct-vwbar"><button class="chip on" id="ct-vw-s" type="button">장면별 보기</button><button class="chip" id="ct-vw-b" type="button">컷 그림판</button><label class="small"><input type="checkbox" id="ct-colon" checked> GPT 배경·인물로 보기</label></div>
   <div id="ct-sv"></div>
   <div id="ct-board"></div>
+  <section id="ct-six-composer"><h3>시트 기반 컷 합성 · 터치 편집</h3><div id="ct-compose75"></div></section>
   <p class="small ct-bhelp">컷을 누르면 구도·앵글·화면·대사를 고칠 수 있다. 순서는 컷을 끌어 옮긴다(폰은 길게 눌러 끌기, 키보드는 Alt+화살표). 그림은 Rough.js(MIT)로 그린다.</p>
   </div>
 
@@ -2947,13 +2948,7 @@ button.pl-card[disabled]{cursor:default}
   <div class="filterbar ct-gptbar"><button class="chip" id="ct-gptall" type="button">🖌 GPT로 전체 콘티 그리기</button><button class="chip" id="ct-faces" type="button">🎭 표정 시트</button></div>
   </div>
 
-  <div class="ct-step" data-st="7.5">
-  <h3>7.5. 시트 기반 자동 합성</h3>
-  <p class="small">7단계에서 정한 구도와 인물 방향을 바탕으로 기존 머리·몸통 시트와 장면 배경을 불러옵니다. GPT 전송이나 새 그림 생성 없이 합성합니다.</p>
-  <div id="ct-compose75"></div>
-  </div>
-
-  <div class="ct-step" data-st="8">
+<div class="ct-step" data-st="8">
   <h3>8. 완성·애니메이션</h3>
   <p class="small">모든 장면을 이어 <b>완성 콘티</b>(대사 있는 판·없는 판)를 만들고, <b>15초 애니메이션 클립</b> 프롬프트를 짠다.</p>
   <div id="ct-s8"></div>
@@ -15523,8 +15518,8 @@ document.addEventListener('click', function(e){ var t=e.target; if(!t.closest ||
     var rest=ai.filter(function(x){ return !x.done; }); renderScenes(); dlgRender(dlgCheck(), rest); stat(q[0]+'번 컷 대사를 바꿨다'); }
 });
 // ===== 단계 진행 (2026-11-21): 구체화 → 캐릭터 시트 → 대사 배정 → 콘티 → 장면·배경 → 다듬기 → 주요 컷 =====
-var STEPS=[[1,'이야기'],[2,'캐릭터'],[2.5,'연재 시트'],[3,'대사 배정'],[4,'콘티'],[5,'장면·배경'],[6,'다듬기'],[7,'주요 컷'],[7.5,'시트 합성'],[8,'완성·영상']];
-var CSTEP=(function(){ try{ return +localStorage.getItem('ctStep')||1; }catch(e){ return 1; } })();
+var STEPS=[[1,'이야기'],[2,'캐릭터'],[2.5,'연재 시트'],[3,'대사 배정'],[4,'콘티'],[5,'장면·배경'],[6,'다듬기'],[7,'주요 컷'],[8,'완성·영상']];
+var CSTEP=(function(){ try{ var v=+localStorage.getItem('ctStep')||1;return v===7.5?6:v; }catch(e){ return 1; } })();
 function stepDone(n){ var st=(document.getElementById('ct-story')||{}).value||'';
   if(n===1) return !!(B&&B.expanded) || st.length>400;
   if(n===2) return !!(B&&B.chars&&B.chars.some(function(x){ return x.sheet; }));
@@ -15696,7 +15691,7 @@ document.addEventListener('click',function(e){var t=e.target;if(!t||!t.closest||
  if(t.id==='cmp75-png'){var cv=document.getElementById('cmp75-cv');if(!cv)return;var a=document.createElement('a');a.download='webtoon_cut_'+c.n+'.png';a.href=cv.toDataURL('image/png');a.click();}
 });
 
-function renderSteps(){ stepNav(); var R={2:[renderProps], 2.5:[renderSerial], 3:[renderDlg], 4:[renderS4], 5:[renderBg], 6:[renderAdd, renderShChk, renderGptQ], 7:[renderKey], 7.5:[renderCompose75], 8:[renderS8]}[CSTEP]||[];   // 지금 보이는 단계만 그린다
+function renderSteps(){ stepNav(); var R={2:[renderProps], 2.5:[renderSerial], 3:[renderDlg], 4:[renderS4], 5:[renderBg], 6:[renderAdd, renderShChk, renderGptQ, renderCompose75], 7:[renderKey], 8:[renderS8]}[CSTEP]||[];   // 지금 보이는 단계만 그린다
   if(CSTEP===2 && window.__ppArt) setTimeout(chAutoSlice, 600);
   R.forEach(function(f){ try{ f(); }catch(e){ try{ console.warn('renderSteps', f.name, e); }catch(er){} } }); }
 
@@ -21125,5 +21120,5 @@ render();
 })();
 // [[/MOD:assets]]
 </script>
-</body>
+<script src="./storyboard_flow_autofix.js"></script><script src="./storyboard_grid_batch.js"></script><script src="./storyboard_step6_touch_native.js"></script></body>
 </html>
