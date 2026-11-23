@@ -54,7 +54,7 @@ function makeEditor(){
   var best=null,score=1e9;
   cast.forEach(function(n,i){var q=cmp75Layout(c,n,i);if(q.hidden)return;var x=q.x+q.dx,y=q.y+q.dy;
    // Characters are bottom anchored. Hit-test the visible torso region, not only the feet.
-   var height=(c.k==='cu'||c.k==='ecu'?90:c.k==='bs'?73:c.k==='ls'?35:64)*(q.scale||100)/100/7.2;
+   var height=(c.k==='cu'||c.k==='ecu'?90:c.k==='bs'?73:c.k==='ls'?35:64)*(q.scale||100)/100;
    var dx=Math.abs(p.x-x),dy=y-p.y;
    if(dx<Math.max(10,height*.55)&&dy>=-4&&dy<=height+8){var d=dx+Math.abs(dy-height*.5)*.4;if(d<score){score=d;best=n;}}
   });
@@ -64,7 +64,7 @@ function makeEditor(){
   var p=point(e),n=pick(p);if(!n)return;
   selected=n;controls();snapshot();active={id:e.pointerId,x:p.x,y:p.y};
   try{cv.setPointerCapture(e.pointerId);}catch(_){}
-  e.preventDefault();
+  e.preventDefault();e.stopImmediatePropagation();
  },true);
  cv.addEventListener('pointermove',function(e){
   if(!active||e.pointerId!==active.id)return;
