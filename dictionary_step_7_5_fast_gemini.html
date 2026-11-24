@@ -2868,6 +2868,13 @@ button.pl-card[disabled]{cursor:default}
   #conti.ct-choosing > :is(.ct-steps,.ct-step,#ct-stwarn,#ct-project-open,.lede){display:none!important}
   #ct-project-list:not([hidden]),#ct-batch-cuts{display:grid;gap:6px}
   #ct-project-list button{text-align:left;white-space:normal}
+  .st-title-row{display:flex;flex-wrap:wrap;align-items:center;gap:.4rem;min-width:0}
+  .st-title-row b{overflow-wrap:anywhere}
+  .st-title-row .ct-project-name{flex:1 1 12rem;overflow-wrap:anywhere}
+  .st-title-row .chip,.st-title-form .chip{min-height:40px}
+  .st-title-form{display:flex;flex:1 1 100%;align-items:center;gap:.4rem;flex-wrap:wrap}
+  .st-title-form input{flex:1 1 11rem;min-width:0;font:inherit;padding:.35rem .45rem}
+  .st-title-form [role="status"]:empty{display:none}
   #ct-batch-cuts{max-height:20rem;overflow:auto;margin:.5rem 0}
   #ct-batch-cuts label{display:flex;align-items:center;gap:.6rem;min-height:44px;padding:.2rem .5rem;border:1px solid var(--rule)}
   #ct-batch-cuts input{width:1.2rem;height:1.2rem;flex:none}
@@ -16882,6 +16889,35 @@ function stMeta(bd){
     chars:(bd.chars||[]).map(function(x){ return x.name; }).filter(Boolean).slice(0,6), board:JSON.stringify(bd)};
 }
 function stItem(id){ if(!id) return null; var o=recLoad('contiSaved'); return o.items[id]||null; }
+function stEditTitle(host,id,done){
+  var item=stItem(id);
+  if(!item) return;
+  var form=document.createElement('form');
+  form.className='st-title-form';
+  form.innerHTML='<input type="text" maxlength="40" aria-label="콘티 제목" required>'+
+    '<button type="submit" class="chip ct-go">저장</button><button type="button" class="chip">취소</button><span class="small" role="status"></span>';
+  var input=form.querySelector('input'), status=form.querySelector('[role="status"]');
+  input.value=item.name||'';
+  form.querySelector('[type="button"]').addEventListener('click',function(){done(false);});
+  form.addEventListener('keydown',function(e){
+    if(e.key==='Escape'&&!e.isComposing){e.preventDefault();e.stopPropagation();done(false);}
+  });
+  form.addEventListener('submit',function(e){
+    e.preventDefault();
+    var name=input.value.trim(), latest=stItem(id);
+    if(!name){status.textContent='제목을 입력해 주세요.';input.focus();return;}
+    if(!latest||window.__stale){status.textContent='최신 저장 목록을 열려면 새로고침해 주세요.';return;}
+    if(name!==latest.name){
+      latest.name=name;latest.named=1;delete latest.auto;
+      recPut('contiSaved',latest);
+      if(stItem(id)?.name!==name){status.textContent='제목을 저장하지 못했습니다. 저장 공간을 확인해 주세요.';return;}
+      stLinkPaint();
+    }
+    done(true);
+  });
+  host.replaceChildren(form);
+  input.focus();input.select();
+}
 function stDefName(){ var s=String((B&&B.story)||'').replace(/\s+/g,' ').trim(); return (s?s.slice(0,18):'콘티')+' · '+((B&&B.total)||'')+'컷'; }
 // 저장: 이어진 콘티가 있으면 그것을, 없거나 asNew면 새로
 function stSave(name, asNew, quiet){
@@ -16925,7 +16961,7 @@ document.getElementById('ct-saved').addEventListener('click', function(e){
   else if(b.dataset.st==='dup'){ var it=stItem(B.sid); stSave((it?it.name:stDefName())+' (복제)', true); }
 });
 stLinkPaint();
-window.__ctStore={load:stLoad, save:function(name, asNew){ return stSave(name, asNew); }, linked:function(){ return B&&B.sid||null; }, meta:stMeta,
+window.__ctStore={load:stLoad, editTitle:stEditTitle, save:function(name, asNew){ return stSave(name, asNew); }, linked:function(){ return B&&B.sid||null; }, meta:stMeta,
   has:function(){ return !!(B && B.cuts && B.cuts.length); }, auto:stAuto, show:function(){ if(window.__contiShow) try{ window.__contiShow(); }catch(e){} }};
 
 /* ---------- 그림으로 저장 (PNG) ---------- */
@@ -18322,24 +18358,38 @@ function enterProject(step){
   renderRefs();
   goStep(step===7.5?6:step,true);
 }
+function renderProjectList(focusId){
+  var items=recList('contiSaved').filter(function(it){return typeof it.board==='string';});
+  projectList.replaceChildren();
+  items.sort(function(a,b){return b.at-a.at;}).forEach(function(it){
+    var row=document.createElement('div'), open=document.createElement('button'), edit=document.createElement('button');
+    row.className='st-title-row';
+    open.type='button';open.className='chip ct-project-name';open.dataset.project=it.id;
+    open.textContent=it.name+' · '+(it.written||0)+'컷 작성 · '+new Date(it.at).toLocaleDateString('ko-KR');
+    edit.type='button';edit.className='chip';edit.textContent='제목 수정';
+    edit.setAttribute('aria-label',(it.name||'콘티')+' 제목 수정');
+    edit.addEventListener('click',function(){
+      stEditTitle(row,it.id,function(saved){
+        renderProjectList(it.id);
+        if(saved) stat('콘티 제목을 저장했습니다.');
+      });
+    });
+    row.append(open,edit);
+    projectList.appendChild(row);
+    if(focusId===it.id) edit.focus({preventScroll:true});
+  });
+  if(!items.length) projectList.textContent='저장된 프로젝트가 없습니다.';
+  projectList.hidden=false;
+}
 document.getElementById('ct-project-open').addEventListener('click',showProjects);
 projectGate.addEventListener('click',function(e){
   var button=e.target.closest('button');
-  if(!button) return;
+  if(!button || (!button.id && !button.dataset.project)) return;
   if(button.id==='ct-project-resume'){
     if(!running && !redoBusy && !FLOW_FIXING && !flowBusy && !batchBusy && !sheetCutBusy && !window.__stale){
       try{archiveProject();}catch(err){stat(err.message);return;}
     }
-    var items=Object.values(recLoad('contiSaved').items).filter(function(it){return typeof it.board==='string';});
-    projectList.replaceChildren();
-    items.sort(function(a,b){return b.at-a.at;}).forEach(function(it){
-      var b=document.createElement('button');
-      b.type='button'; b.className='chip'; b.dataset.project=it.id;
-      b.textContent=it.name+' · '+(it.written||0)+'컷 작성 · '+new Date(it.at).toLocaleDateString('ko-KR');
-      projectList.appendChild(b);
-    });
-    if(!items.length) projectList.textContent='저장된 프로젝트가 없습니다.';
-    projectList.hidden=false;
+    renderProjectList();
     return;
   }
   if(running || redoBusy || FLOW_FIXING || flowBusy || batchBusy || sheetCutBusy){
@@ -19482,7 +19532,7 @@ bcTabCount();
 // [[MOD:ctstore]] 콘티 저장소 — 콘티 구성기에서 저장한 콘티(contiSaved 기록 묶음)를 폴더·판형별로 모아 보고, 미리 보고, 다시 연다
 (function(){
 var root=document.getElementById('contis-root'); if(!root) return;
-var ST={q:'', mode:'', folder:'', open:{}, arm:'', ren:''};
+var ST={q:'', mode:'', folder:'', open:{}, arm:''};
 function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g,function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
 function list(){ return recList('contiSaved').sort(function(a,b){ return (b.at||0)-(a.at||0); }); }
 function folders(L){ var f=['기본']; L.forEach(function(x){ var g=x.folder||'기본'; if(f.indexOf(g)<0) f.push(g); }); return f; }
@@ -19502,16 +19552,17 @@ function render(){
     '<span class="count">'+S.length+'/'+L.length+'</span></div>';
   if(!L.length) h+='<p class="small">아직 저장한 콘티가 없다. 콘티 구성기에서 「AI로 콘티 쓰기」를 끝내면 저절로 들어오고, 「더 보기 → 저장소에 저장」으로 넣을 수도 있다.</p>';
   h+='<div class="st-list">'+S.map(function(x){
-    var op=!!ST.open[x.id], isCur=cur===x.id, ren=ST.ren===x.id;
+    var op=!!ST.open[x.id], isCur=cur===x.id;
     return '<article class="st-card'+(isCur?' cur':'')+'" data-id="'+esc(x.id)+'">'+
-      '<div class="st-h">'+(ren?'<input class="st-rn" type="text" maxlength="40" value="'+esc(x.name)+'"><button class="chip" type="button" data-sp="rnok">바꾸기</button>':'<b>'+esc(x.name||'이름 없음')+'</b>')+
+      '<div class="st-h"><div class="st-title-row"><b>'+esc(x.name||'이름 없음')+'</b>'+
+        '<button class="chip" type="button" data-sp="ren" aria-label="'+esc(x.name||'콘티')+' 제목 수정">제목 수정</button></div>'+
         (isCur?'<span class="st-cur">콘티 구성기에서 여는 중</span>':'')+'</div>'+
       '<p class="st-m small">'+(x.total||'?')+'컷 · '+(x.mode==='webtoon'?'웹툰':'만화')+' · 장면 '+(x.scenes||0)+'개 · 쓴 컷 '+(x.written||0)+'/'+(x.total||'?')+((x.folder&&x.folder!=='기본')?' · 📁 '+esc(x.folder):'')+' · '+when(x.at)+'</p>'+
       (x.story?'<p class="st-s small">'+esc(x.story)+'</p>':'')+(x.chars&&x.chars.length?'<p class="small st-ch">인물: '+esc(x.chars.join(', '))+'</p>':'')+
       '<div class="st-strip" data-n="'+(op?0:4)+'"></div>'+
       '<div class="filterbar st-a"><button class="chip st-go" type="button" data-sp="open">콘티 구성기에서 열기</button>'+
         '<button class="chip" type="button" data-sp="view">'+(op?'접기':'전체 미리 보기')+'</button>'+
-        '<button class="chip" type="button" data-sp="ren">이름 바꾸기</button><button class="chip" type="button" data-sp="dup">복제</button>'+
+        '<button class="chip" type="button" data-sp="dup">복제</button>'+
         '<label class="small">폴더 <select class="st-mv"><option'+((x.folder||'기본')==='기본'?' selected':'')+'>기본</option>'+F.filter(function(f){ return f!=='기본'; }).map(function(f){ return '<option'+(x.folder===f?' selected':'')+'>'+esc(f)+'</option>'; }).join('')+'<option value="__new">새 폴더…</option></select></label>'+
         '<button class="chip" type="button" data-sp="copy">글로 복사</button>'+
         '<button class="chip" type="button" data-sp="del">'+(ST.arm===x.id?'한 번 더 누르면 지운다':'지우기')+'</button></div>'+
@@ -19545,8 +19596,15 @@ root.addEventListener('click', function(e){
   if(!it) return;
   if(a==='open'){ location.hash='#conti'; setTimeout(function(){ if(window.__ctStore){ window.__ctStore.show(); window.__ctStore.load(id); } }, 60); return; }
   if(a==='view'){ ST.open[id]=!ST.open[id]; render(); return; }
-  if(a==='ren'){ ST.ren=id; render(); var inp=root.querySelector('.st-rn'); if(inp){ inp.focus(); inp.select(); } return; }
-  if(a==='rnok'){ var v=(card.querySelector('.st-rn').value||'').trim(); if(v){ it.name=v.slice(0,40); recPut('contiSaved', it); } ST.ren=''; render(); return; }
+  if(a==='ren'){
+    window.__ctStore.editTitle(card.querySelector('.st-title-row'),id,function(saved){
+      render();
+      var current=Array.from(root.querySelectorAll('.st-card')).find(function(row){return row.dataset.id===id;});
+      (current?.querySelector('[data-sp="ren"]')||root.querySelector('.st-q'))?.focus({preventScroll:true});
+      if(saved) toast('콘티 제목을 저장했습니다.');
+    });
+    return;
+  }
   if(a==='dup'){ var c2=JSON.parse(JSON.stringify(it)); delete c2.id; c2.name=(it.name||'콘티')+' (복제)'; c2.created=Date.now(); recPut('contiSaved', c2); render(); toast('복제했다'); return; }
   if(a==='copy'){ var bd=board(it); if(!bd) return; var tx=it.name+'\n'+textOf(bd);
     (navigator.clipboard&&navigator.clipboard.writeText?navigator.clipboard.writeText(tx):Promise.reject()).then(function(){ toast('글로 복사했다'); }, function(){ toast('복사하지 못했다'); }); return; }
@@ -19561,7 +19619,6 @@ root.addEventListener('change', function(e){
     it.folder=v.slice(0,20)||'기본'; recPut('contiSaved', it); render(); }
 });
 root.addEventListener('input', function(e){ if(e.target.classList.contains('st-q')){ ST.q=e.target.value; clearTimeout(ST.t); ST.t=setTimeout(function(){ var p=e.target.selectionStart; render(); var q=root.querySelector('.st-q'); if(q){ q.focus(); try{ q.setSelectionRange(p,p); }catch(er){} } }, 250); } });
-root.addEventListener('keydown', function(e){ if(e.key==='Enter' && e.target.classList.contains('st-rn')){ e.preventDefault(); var ok=e.target.parentNode.querySelector('[data-sp="rnok"]'); if(ok) ok.click(); } });
 function toast(t){ var s=root.querySelector('.st-toast'); if(!s){ s=document.createElement('p'); s.className='small st-toast'; s.setAttribute('role','status'); root.insertBefore(s, root.firstChild); } s.textContent=t; clearTimeout(toast.t); toast.t=setTimeout(function(){ s.textContent=''; }, 2500); }
 window.PAGE_ON=window.PAGE_ON||{};
 var prev=window.PAGE_ON.contis; window.PAGE_ON.contis=function(){ if(prev) try{ prev(); }catch(e){} render(); };
