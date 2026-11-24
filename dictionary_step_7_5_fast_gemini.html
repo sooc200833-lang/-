@@ -3018,7 +3018,7 @@ button.pl-card[disabled]{cursor:default}
     <fieldset><legend>사용할 컷</legend><div data-grok-cuts></div></fieldset>
     <p class="small" data-grok-info role="status"></p>
     <div class="filterbar">
-      <button class="chip ct-go" type="button" data-grok="draw">키프레임 요청문 GPT로 보내기</button>
+      <button class="chip ct-go" type="button" data-grok="draw">키프레임 요청문 ChatGPT로 공유</button>
       <button class="chip" type="button" data-grok="draw-web" hidden>키프레임 요청문 웹으로 열기</button>
       <label class="chip sv-up">GPT 완성 격자 올리기 <input type="file" accept="image/*" data-grok="upload" aria-label="GPT 완성 격자 올리기"></label>
       <button class="chip ct-go" type="button" data-grok="send" disabled>프레임과 프롬프트 Grok으로 보내기</button>
@@ -18927,7 +18927,7 @@ function grokGridPrompt(plan){
     '행의 격자 이미지 한 장입니다. 각 칸은 가로 16:9, 전체 비율은 '+(plan.cols*16)+':'+(plan.rows*9)+
     '입니다. 위에서 아래로, 각 행의 왼쪽부터 채우세요. 칸 사이 여백·테두리·글씨·말풍선 없이 맞붙여 주세요.'+
     (n<plan.cols*plan.rows?' 마지막 '+(plan.cols*plan.rows-n)+'칸은 비워 주세요.':'')+
-    '\n첨부된 컷과 시트가 있으면 인물 얼굴, 의상, 배경과 구도를 참고하세요. 첫 프레임부터 마지막까지 인물과 소품의 위치와 시선을 이어 주세요. 같은 장면의 연속 프레임은 자세와 표정, 카메라 움직임이 조금씩 변해야 합니다. 장소가 달라지는 곳에서만 화면을 전환합니다.\n\n'+
+    '\n첨부 이미지의 원본 컷과 시트는 인물 얼굴, 의상, 배경과 구도 참고용이며, 시간표가 있으면 순서와 시각만 참고하세요. 첫 프레임부터 마지막까지 인물과 소품의 위치와 시선을 이어 주세요. 같은 장면의 연속 프레임은 자세와 표정, 카메라 움직임이 조금씩 변해야 합니다. 장소가 달라지는 곳에서만 화면을 전환합니다.\n\n'+
     plan.beats.map(grokBeatText).join('\n\n')+'\n\n키프레임 순서\n'+plan.frames.map(function(f){
       return f.index+'칸 · '+grokTimestamp(f.time)+' · '+f.cut.n+'번 컷 · '+f.motion+(f.change?' · 장면 전환':'')+' · '+compText(f.cut);
     }).join('\n');
@@ -18991,6 +18991,25 @@ function grokReferenceKey(plan){
   return JSON.stringify([plan.signature,batchArtRevision,plan.board.chars,plan.board.sceneBg,plan.board.sheetArts,
     plan.beats.map(function(beat){return [beat.cut.art,beat.cut.comp];})]);
 }
+function grokTimingCard(plan){
+  var cv=document.createElement('canvas'), w=320,h=105;
+  cv.width=plan.cols*w+32;cv.height=plan.rows*h+112;
+  var ctx=cv.getContext('2d');
+  ctx.fillStyle='#fff';ctx.fillRect(0,0,cv.width,cv.height);
+  ctx.fillStyle='#202020';ctx.font='bold 28px sans-serif';
+  ctx.fillText(plan.duration+'초 · 키프레임 '+plan.frames.length+'장',16,42);
+  ctx.font='19px sans-serif';
+  ctx.fillText('칸 순서와 시각 참고용 · 그림에는 글씨를 넣지 마세요.',16,76,cv.width-32);
+  plan.frames.forEach(function(frame,i){
+    var x=16+i%plan.cols*w,y=96+Math.floor(i/plan.cols)*h;
+    ctx.strokeStyle='#999';ctx.strokeRect(x,y,w-8,h-8);
+    ctx.fillStyle='#202020';ctx.font='bold 22px sans-serif';
+    ctx.fillText(frame.index+'칸 · '+grokTimestamp(frame.time),x+12,y+36);
+    ctx.font='18px sans-serif';
+    ctx.fillText(frame.cut.n+'번 컷 · '+frame.motion,x+12,y+68,w-32);
+  });
+  return {name:'키프레임 시간표 · 글씨는 출력에서 제외',image:cv};
+}
 function grokReferences(plan){
   var key=grokReferenceKey(plan);
   if(grokReference?.board===plan.board&&grokReference.key===key&&!grokReference.error) return grokReference;
@@ -19002,7 +19021,8 @@ function grokReferences(plan){
   }));
   ref.pending=Promise.all([originals,batchReferenceImages(cuts)]).then(async function(images){
     var list=images[0].filter(function(item){return item?.image;}).concat(images[1]);
-    ref.file=list.length?await batchReferenceFile(list,'grok-키프레임-참고.png'):null;
+    if(!list.length) list.push(grokTimingCard(plan));
+    ref.file=await batchReferenceFile(list,'grok-키프레임-참고.png');
     ref.ready=true;
     if(ref===grokReference&&ref.announce){
       grokStatus('참고 자료가 준비됐습니다. 버튼을 다시 눌러 공유 창에서 ChatGPT를 선택하세요.');
@@ -19031,14 +19051,18 @@ async function grokSendDrawing(plan,web){
   var prompt=grokGridPrompt(plan), ref=grokReferences(plan);
   var fallback=grokEditor.querySelector('[data-grok="draw-web"]');
   grokEditor.querySelector('[data-grok-prompt]').value=prompt;
-  if(!web&&navigator.share){
+  if(!web){
+    if(!navigator.share){
+      fallback.hidden=false;
+      grokStatus('이 브라우저에서 앱 공유를 열 수 없습니다. 휴대폰의 Safari나 Chrome에서 이 사이트를 열고 다시 눌러 주세요.');
+      return;
+    }
     if(!ref.ready){
       ref.announce=true;
       grokStatus('참고 자료를 준비하고 있습니다…');
       return;
     }
-    var payload={text:prompt};
-    if(ref.file) payload.files=[ref.file];
+    var payload={files:[ref.file],text:prompt};
     if(!navigator.canShare||navigator.canShare(payload)){
       try{
         await navigator.share(payload);
