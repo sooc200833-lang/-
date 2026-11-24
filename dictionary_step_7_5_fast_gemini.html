@@ -18882,7 +18882,7 @@ async function batchUpload(input,cuts,previous){
 /* 9단계: 겹치는 콘티 묶음과 저장된 애니메이션 키프레임. */
 var grokEditor=document.getElementById('ct-grok-clip');
 var grokView=null,grokBusy=false,grokPreparing=0,grokPrepareTimer=0,grokRefs=new Map(),grokFallback=null;
-var grokPhotoUrls=new Map(),grokExpanded=new Set(),grokDbPromise;
+var grokPhotoUrls=new Map(),grokPhotoFiles=new Map(),grokExpanded=new Set(),grokDbPromise;
 function grokDatabase(){
   if(!grokDbPromise){
     grokDbPromise=new Promise(function(resolve,reject){
@@ -18973,6 +18973,7 @@ async function grokSaveSplit(plan,files,warning){
   save();
   if(board.sid&&stItem(board.sid)) stSave('',false,true);
   grokRefs.delete(plan.group);grokRefs.delete('all');
+  if(previous?.[key]) grokPhotoFiles.delete(previous[key].id);
   return record;
 }
 function grokStatus(text){grokEditor.querySelector('[data-grok-status]').textContent=text;}
@@ -18987,8 +18988,49 @@ function grokClearPhotos(details){
 function grokResetView(){
   clearTimeout(grokPrepareTimer);
   grokPreparing++;
-  grokClearPhotos();grokExpanded.clear();grokRefs.clear();
+  grokClearPhotos();grokPhotoFiles.clear();grokExpanded.clear();grokRefs.clear();
   grokFallback=null;grokView=null;
+}
+function grokLoadPhotoFiles(record){
+  var task=grokPhotoFiles.get(record.id);
+  if(!task){
+    task=grokDbTask('readonly',function(store){return store.get(record.id);}).then(function(saved){
+      if(!saved?.files.length) throw Error('이 브라우저에 저장된 사진 파일이 없습니다.');
+      return saved.files;
+    }).catch(function(err){
+      if(grokPhotoFiles.get(record.id)===task) grokPhotoFiles.delete(record.id);
+      throw err;
+    });
+    grokPhotoFiles.set(record.id,task);
+  }
+  return task;
+}
+async function grokCopyAllPhotos(files,group,status){
+  var payload={files:files};
+  if(navigator.share&&(!navigator.canShare||navigator.canShare(payload))){
+    try{
+      status.textContent='공유 창에서 복사를 누르세요.';
+      await navigator.share(payload);
+      status.textContent='공유 창에서 복사를 골랐다면 Grok에 붙여 넣으세요.';
+      return;
+    }catch(err){
+      if(err.name==='AbortError'){status.textContent='사진 복사를 취소했습니다.';return;}
+    }
+  }
+  if(window.ClipboardItem&&navigator.clipboard?.write){
+    try{
+      await navigator.clipboard.write(files.map(function(file){return new ClipboardItem({'image/png':file});}));
+      status.textContent=files.length+'장 모두 복사했습니다. Grok에 붙여 넣으세요.';
+      return;
+    }catch(e){}
+  }
+  try{
+    var items=await Promise.all(files.map(async function(file){
+      return {name:file.name,data:new Uint8Array(await file.arrayBuffer())};
+    }));
+    dlFile(new File([zipArchive(items)],'clip-'+String(group+1).padStart(2,'0')+'-photos.zip',{type:'application/zip'}));
+    status.textContent='이 브라우저에서는 여러 사진을 복사할 수 없어 PNG '+files.length+'장을 ZIP으로 저장했습니다.';
+  }catch(err){status.textContent='사진 묶음을 복사하거나 저장하지 못했습니다.';}
 }
 async function grokCopyPhoto(file,n,status){
   try{
@@ -19029,11 +19071,10 @@ async function grokShowPhotos(details,record){
   grokPhotoUrls.set(details,urls);
   preview.textContent='저장한 사진을 불러오는 중…';
   try{
-    var saved=await grokDbTask('readonly',function(store){return store.get(record.id);});
+    var files=await grokLoadPhotoFiles(record);
     if(!details.isConnected||!details.open||grokPhotoUrls.get(details)!==urls) return;
-    if(!saved?.files.length) throw Error('이 브라우저에 저장된 사진 파일이 없습니다.');
     preview.replaceChildren();
-    saved.files.forEach(function(file,i){
+    files.forEach(function(file,i){
       var url=URL.createObjectURL(file);
       urls.push(url);
       var figure=document.createElement('figure'), img=document.createElement('img'), label=document.createElement('figcaption');
@@ -19238,6 +19279,18 @@ function renderGrokClip(){
     status.className='small';status.dataset.grokCardStatus='';status.setAttribute('role','status');
     card.append(heading,actions,status);
     if(saved){
+      var photos=null;
+      var copyAll=grokButton('사진 전체 복사',async function(){
+        if(!photos) return;
+        copyAll.disabled=true;
+        try{await grokCopyAllPhotos(photos,plan.group,status);}
+        finally{copyAll.disabled=false;}
+      });
+      copyAll.disabled=true;
+      actions.insertBefore(copyAll,copy);
+      grokLoadPhotoFiles(saved).then(function(files){
+        photos=files;copyAll.disabled=false;
+      },function(err){if(card.isConnected) status.textContent=err.message;});
       var details=document.createElement('details'), summary=document.createElement('summary'), preview=document.createElement('div');
       summary.textContent='분리한 사진 '+saved.times.length+'장';
       preview.dataset.grokPreview='';
