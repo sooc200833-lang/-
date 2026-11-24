@@ -2897,7 +2897,7 @@ button.pl-card[disabled]{cursor:default}
   [data-grok-cuts] small{display:block;white-space:pre-line}
   [data-grok-preview]{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,8rem),1fr));gap:.5rem}
   [data-grok-preview] figure{margin:0;min-width:0}
-  [data-grok-preview] img,[data-grok-prompt]{display:block;width:100%}
+  [data-grok-preview] img,[data-grok-prompt],[data-grok-video-prompt]{display:block;width:100%}
   .ce-box,.batch-image-box{max-height:calc(100dvh - 1.2rem)}
   #ct-compose75 select{max-width:min(100%,30rem)}
   #ct-compose75 canvas{display:block;height:auto}
@@ -3022,10 +3022,14 @@ button.pl-card[disabled]{cursor:default}
       <button class="chip" type="button" data-grok="draw-web" hidden>키프레임 요청문 웹으로 열기</button>
       <label class="chip sv-up">GPT 완성 격자 올리기 <input type="file" accept="image/*" data-grok="upload" aria-label="GPT 완성 격자 올리기"></label>
       <button class="chip ct-go" type="button" data-grok="send" disabled>프레임과 프롬프트 Grok으로 보내기</button>
+      <button type="button" class="chip" data-grok="copy-video" hidden>Grok 프롬프트 복사</button>
     </div>
     <p class="small" role="status" data-grok-status></p>
     <div data-grok-preview aria-label="분할한 키프레임"></div>
-    <details><summary>프롬프트 보기·복사</summary><textarea rows="6" aria-label="애니메이션 프롬프트" data-grok-prompt readonly></textarea></details>
+    <details><summary>GPT 키프레임 요청문</summary><textarea rows="6" aria-label="GPT 키프레임 요청문" data-grok-prompt readonly></textarea></details>
+    <details data-grok-video hidden><summary>Grok 영상 프롬프트</summary>
+      <textarea rows="8" aria-label="Grok 영상 프롬프트" data-grok-video-prompt readonly></textarea>
+    </details>
   </section>
   <div id="ct-s8"></div>
   </div>
@@ -18898,19 +18902,19 @@ function grokPlan(){
     cumulative+=weight[i];
     var target=i===cuts.length-1?remaining:Math.round(remaining*cumulative/total);
     var take=1+target-allocated, scene=sceneOfCut(c.n), prev=i?sceneOfCut(cuts[i-1].n):null;
-    var starts=frames.length;
+    var starts=frames.length, change=i>0&&scene?.a!==prev?.a;
     for(var j=0;j<take;j++){
       var index=frames.length;
       frames.push({index:index+1,time:settings.duration*index/(n-1),cut:c,
         motion:take===1?'이 컷의 핵심 동작':(j===0?'동작 시작':j===take-1?'동작 끝':'중간 자세 '+(j+1)+'/'+take),
-        change:j===0&&i>0&&scene?.a!==prev?.a});
+        change:j===0&&change});
     }
     var end=frames.length;
-    beats.push({cut:c,start:frames[starts].time,end:end===n?settings.duration:frames[end-1].time+settings.duration/(2*(n-1)),scene:scene?.place||scene?.name||''});
+    beats.push({cut:c,start:frames[starts].time,end:end===n?settings.duration:frames[end-1].time+settings.duration/(2*(n-1)),scene:scene?.place||scene?.name||'',change:change});
     if(i>0) beats[i].start=beats[i-1].end;
     allocated=target;
   });
-  var signature=JSON.stringify([settings.duration,n,cuts.map(function(c){return [c.batchId,c.n,c.scr,c.line,c.nar,compText(c)];}),beats.map(function(b){return b.scene;})]);
+  var signature=JSON.stringify([settings.duration,n,cuts.map(function(c){return [c.batchId,c.n,c.scr,c.line,c.nar,c.cnote,compText(c)];}),beats.map(function(b){return [b.scene,b.change];})]);
   return {board:B,duration:settings.duration,cols:cols,rows:rows,frames:frames,beats:beats,signature:signature};
 }
 function grokFrameName(f){
@@ -18932,15 +18936,56 @@ function grokGridPrompt(plan){
       return f.index+'칸 · '+grokTimestamp(f.time)+' · '+f.cut.n+'번 컷 · '+f.motion+(f.change?' · 장면 전환':'')+' · '+compText(f.cut);
     }).join('\n');
 }
+function grokAudioCues(beat){
+  var cut=beat.cut;
+  var lines=String(cut.line||'').split('\n').map(lnParse).filter(function(line){return line.say;});
+  var cues=lines.map(function(line){
+    var thought=line.kind==='think'||/^\(.*\)$/.test(line.say);
+    return {speaker:line.who||(thought?'내면 독백':'이 컷의 화자'),
+      text:thought?line.say.slice(1,-1):line.say,kind:thought?'내면 독백 · 입을 움직이지 않음':'입 모양 동기화'};
+  });
+  if(cut.nar) cues.push({speaker:'내레이터',text:cut.nar,kind:'화면 밖 음성'});
+  var weights=cues.map(function(cue){return Math.max(1,cue.text.replace(/\s/g,'').length);});
+  var total=weights.reduce(function(a,b){return a+b;},0), elapsed=0;
+  return cues.map(function(cue,i){
+    var start=beat.start+(beat.end-beat.start)*elapsed/total;
+    elapsed+=weights[i];
+    var end=beat.start+(beat.end-beat.start)*elapsed/total;
+    return '['+grokTimestamp(start)+'–'+grokTimestamp(end)+'] '+cue.speaker+' · '+cue.kind+' · '+JSON.stringify(cue.text);
+  });
+}
 function grokVideoPrompt(plan){
-  return '첨부한 '+plan.frames.length+'개 PNG를 시간순 키프레임으로 사용하여 '+plan.duration+'초 길이의 가로 16:9 웹툰 애니메이션 영상 한 편을 만드세요. 각 이미지에 지정한 시점과 순서를 지켜 주세요. 같은 장면에서는 프레임 사이 인물 동작, 표정, 시선과 카메라를 자연스럽게 이어 주세요. 장소가 달라지는 지정 지점에서만 컷을 전환하세요. 인물 얼굴·의상·소품·배경을 일관되게 유지하고, 콜라주나 정지 이미지 슬라이드쇼 대신 연속 동작을 그려 주세요. 한국어 대사는 해당 구간에서 화자와 입 모양을 맞추고, 자막·말풍선·화면 글씨를 추가하지 마세요.\n\n'+
-    plan.frames.map(function(f){return grokTimestamp(f.time)+' · '+grokFrameName(f)+(f.change?' · 장면 전환':'');}).join('\n')+
-    '\n\n장면과 대사\n'+plan.beats.map(grokBeatText).join('\n\n');
+  var edits=plan.beats.filter(function(beat){return beat.change;}).map(function(beat){
+    return grokTimestamp(beat.start)+'에 '+beat.cut.n+'번 컷'+(beat.scene?' ('+beat.scene+')':'')+'으로 하드 컷.';
+  });
+  var frames=plan.frames.map(function(f){
+    return grokTimestamp(f.time)+' | '+grokFrameName(f)+' | '+f.cut.n+'번 컷 · '+f.motion+(f.change?' · 전환 뒤 첫 키프레임':'');
+  });
+  var shots=plan.beats.map(function(beat){
+    var c=beat.cut;
+    return '['+grokTimestamp(beat.start)+'–'+grokTimestamp(beat.end)+'] '+c.n+'번 컷'+
+      (beat.scene?' · '+beat.scene:'')+'\n화면: '+(c.scr||'해당 키프레임의 구도와 동작을 따른다.')+
+      '\n구도: '+compText(c)+(c.cnote?'\n연출 메모: '+c.cnote:'');
+  });
+  var audio=plan.beats.flatMap(grokAudioCues);
+  return [
+    'Grok Imagine 영상 제작 요청',
+    '출력: '+plan.duration+'초, 가로 16:9, 2D 웹툰 애니메이션 한 편. 0초의 첫 이미지로 시작하고 '+grokTimestamp(plan.duration)+'의 마지막 이미지 구도와 자세에서 끝냅니다.',
+    '키프레임: 첨부 PNG '+plan.frames.length+'장을 아래 파일명과 시각에 맞춰 사용하세요. 파일 목록에 보이는 순서가 달라도 번호 순서를 따르세요. 각 시각에서 해당 이미지의 구도·인물 자세·표정을 맞추고, 프레임 사이에는 다음 자세로 이어지는 동작을 그리세요. 정지 이미지 슬라이드쇼나 디졸브로 대체하지 마세요.',
+    '연속성: 같은 장면에서 인물 얼굴·헤어·의상·체형·소품·배경 조명을 유지하세요. 시선, 이동 방향, 손과 소품의 위치를 이어 주세요. 카메라 이동은 양쪽 키프레임의 구도를 부드럽게 연결하는 범위로 제한하세요. '+(edits.length?edits.join(' '):'장면 전체를 한 흐름으로 이어 주세요.'),
+    '키프레임 타임라인\n'+frames.join('\n'),
+    '장면별 화면과 연출\n'+shots.join('\n\n'),
+    '한국어 음성 큐\n'+(audio.length?audio.join('\n'):'대사 없이 장면에 맞는 가벼운 환경음만 사용하세요.'),
+    '대사는 적힌 문장 그대로 해당 화자가 말합니다. 발화 중인 인물만 입 모양을 맞추고, 음성 큐 바깥에는 대사를 추가하지 마세요. 화면에는 자막·말풍선·번호·워터마크를 넣지 마세요.'
+  ].join('\n\n');
 }
 function grokClearResult(){
   if(grokResult) grokResult.urls.forEach(function(url){URL.revokeObjectURL(url);});
   grokResult=null;
   grokEditor.querySelector('[data-grok-preview]').replaceChildren();
+  var video=grokEditor.querySelector('[data-grok-video]');
+  video.hidden=true;video.open=false;
+  video.querySelector('textarea').value='';
   grokEditor.querySelector('[data-grok="send"]').disabled=true;
 }
 function grokStatus(text){grokEditor.querySelector('[data-grok-status]').textContent=text;}
@@ -18954,6 +18999,8 @@ function grokRefresh(){
   grokEditor.querySelectorAll('[data-grok-cuts] input,select').forEach(function(el){el.disabled=grokBusy;});
   grokEditor.querySelectorAll('[data-grok="draw"], [data-grok="draw-web"], [data-grok="upload"]').forEach(function(el){el.disabled=grokBusy||!plan;});
   grokEditor.querySelector('[data-grok="send"]').disabled=grokBusy||!grokResult;
+  var copy=grokEditor.querySelector('[data-grok="copy-video"]');
+  copy.hidden=!grokResult;copy.disabled=grokBusy;
   return plan;
 }
 function renderGrokClip(){
@@ -18979,13 +19026,12 @@ function renderGrokClip(){
   grokEditor.querySelector('[data-grok="count"]').value=settings.count;
   grokRefresh();grokScheduleReferences();
 }
-function grokCopy(text){
-  var input=grokEditor.querySelector('[data-grok-prompt]');
+function grokCopy(text,selector){
+  var input=grokEditor.querySelector(selector||'[data-grok-prompt]');
   input.value=text;
-  return Promise.resolve(navigator.clipboard?.writeText(text)).then(function(){
-    if(navigator.clipboard?.writeText) return true;
-    grokEditor.querySelector('details').open=true;return false;
-  },function(){grokEditor.querySelector('details').open=true;return false;});
+  function reveal(){input.closest('details').open=true;return false;}
+  if(!navigator.clipboard?.writeText) return Promise.resolve(reveal());
+  return navigator.clipboard.writeText(text).then(function(){return true;},reveal);
 }
 function grokReferenceKey(plan){
   return JSON.stringify([plan.signature,batchArtRevision,plan.board.chars,plan.board.sceneBg,plan.board.sheetArts,
@@ -19129,6 +19175,9 @@ grokEditor.addEventListener('change',async function(e){
     grokClearResult();
     var urls=files.map(function(frame){return URL.createObjectURL(frame);});
     grokResult={board:B,signature:plan.signature,files:files,urls:urls,prompt:prompt,archive:archive};
+    var video=grokEditor.querySelector('[data-grok-video]');
+    video.querySelector('textarea').value=prompt;
+    video.hidden=false;
     var preview=grokEditor.querySelector('[data-grok-preview]');
     urls.forEach(function(url,j){
       var figure=document.createElement('figure'), img=document.createElement('img'), label=document.createElement('figcaption');
@@ -19143,7 +19192,14 @@ grokEditor.addEventListener('change',async function(e){
 });
 grokEditor.addEventListener('click',async function(e){
   var action=e.target.dataset.grok,plan=grokPlan();
-  if(grokBusy||!plan||!['draw','draw-web','send'].includes(action)) return;
+  if(grokBusy||!plan||!['draw','draw-web','send','copy-video'].includes(action)) return;
+  if(action==='copy-video'){
+    if(grokResult?.board===B&&grokResult.signature===plan.signature){
+      var didCopy=await grokCopy(grokResult.prompt,'[data-grok-video-prompt]');
+      grokStatus(didCopy?'Grok 영상 프롬프트를 복사했습니다.':'Grok 영상 프롬프트에서 글을 선택해 복사하세요.');
+    }
+    return;
+  }
   grokBusy=true;grokRefresh();
   try{
     if(action==='draw'||action==='draw-web'){
@@ -19152,14 +19208,18 @@ grokEditor.addEventListener('click',async function(e){
       var result=grokResult,payload={files:result.files,text:result.prompt};
       var share=!!navigator.share&&!!navigator.canShare?.(payload);
       if(share){
-        try{await navigator.share(payload);grokStatus('프레임과 프롬프트를 공유했습니다. Grok에서 확인하세요.');return;}
+        try{
+          await navigator.share(payload);
+          grokStatus('프레임과 프롬프트를 공유했습니다. Grok에서 요청문이 빠졌다면 「Grok 프롬프트 복사」로 붙여 넣으세요.');
+          return;
+        }
         catch(err){if(err.name==='AbortError'){grokStatus('공유를 취소했습니다.');return;}}
       }
-      var copied=grokCopy(result.prompt);
+      var copied=grokCopy(result.prompt,'[data-grok-video-prompt]');
       dlFile(result.archive);
       window.open('https://grok.com/imagine','_blank','noopener');
       grokStatus('ZIP을 저장했습니다. 압축을 풀어 frame-01부터 순서대로 첨부하세요. '+
-        (await copied?'복사한 프롬프트를 붙여 넣으세요.':'「프롬프트 보기·복사」에서 요청문을 복사하세요.'));
+        (await copied?'복사한 프롬프트를 붙여 넣으세요.':'「Grok 영상 프롬프트」에서 요청문을 복사하세요.'));
     }
   }catch(err){grokStatus(err.message);}
   finally{grokBusy=false;grokRefresh();}
