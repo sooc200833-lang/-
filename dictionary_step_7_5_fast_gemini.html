@@ -2889,12 +2889,11 @@ button.pl-card[disabled]{cursor:default}
   .batch-image-surface canvas{display:block;max-width:100%;max-height:55vh;object-fit:contain;touch-action:none;cursor:crosshair}
   .batch-image-crop{position:absolute;box-sizing:border-box;border:2px dashed #fff;outline:1px solid #222;pointer-events:none}
   .batch-image-box .chip{min-height:40px}
-  #ct-grok-clip fieldset{min-width:0}
   #ct-grok-clip select,#ct-grok-clip .chip{min-height:40px}
-  [data-grok-cuts]{display:grid;gap:.35rem;max-height:17rem;overflow:auto;overscroll-behavior:contain}
-  [data-grok-cuts] label,[data-grok-cuts] .grok-cut-row{display:flex;align-items:flex-start;gap:.6rem;padding:.35rem;min-height:44px}
-  [data-grok-cuts] input{flex:none;width:1.15rem;height:1.15rem}
-  [data-grok-cuts] small{display:block;white-space:pre-line}
+  [data-grok-cards]{display:grid;gap:.55rem}
+  [data-grok-cards] details{margin:.3rem 0}
+  [data-grok-card-status]:empty,[data-grok-status]:empty{display:none}
+  [data-grok-preview] .chip{margin-top:.15rem}
   [data-grok-preview]{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,8rem),1fr));gap:.5rem}
   [data-grok-preview] figure{margin:0;min-width:0}
   [data-grok-preview] img,[data-grok-prompt]{display:block;width:100%}
@@ -3004,35 +3003,34 @@ button.pl-card[disabled]{cursor:default}
   </div>
 
 <div class="ct-step" data-st="8">
-  <h3>8. 완성·애니메이션</h3>
-  <section id="ct-grok-clip" class="sv-all" hidden>
-    <h4>Grok 애니메이션</h4>
-    <div class="filterbar">
-      <label>영상 길이 <select data-grok="duration" aria-label="영상 길이">
+  <h3>8. 완성 콘티</h3>
+  <div id="ct-s8"></div>
+</div>
+<div class="ct-step" data-st="9" hidden>
+  <h3>9. Grok 애니메이션</h3>
+  <section id="ct-grok-clip" hidden>
+    <details><summary>영상 설정</summary>
+      <div class="filterbar">
+      <label>영상 길이 <select data-grok-busy data-grok="duration" aria-label="영상 길이">
         <option value="6">6초</option><option value="7">7초</option><option value="8">8초</option><option value="9">9초</option><option value="10">10초</option><option value="11">11초</option><option value="12">12초</option><option value="13">13초</option><option value="14">14초</option><option value="15">15초</option>
       </select></label>
-      <label>키프레임 <select data-grok="count" aria-label="키프레임 장수">
+      <label>키프레임 <select data-grok-busy data-grok="count" aria-label="키프레임 장수">
         <option value="0">자동 (6~14장)</option><option value="6">6장</option><option value="7">7장</option><option value="8">8장</option><option value="9">9장</option><option value="10">10장</option><option value="11">11장</option><option value="12">12장</option><option value="13">13장</option><option value="14">14장</option>
       </select></label>
-    </div>
-    <div class="filterbar"><label>콘티 묶음 <select data-grok="group" aria-label="콘티 묶음"></select></label></div>
-    <fieldset><legend>사용할 컷</legend><div data-grok-cuts></div></fieldset>
-    <p class="small" data-grok-info role="status"></p>
+      </div>
+    </details>
     <div class="filterbar">
-      <button class="chip ct-go" type="button" data-grok="draw">키프레임 요청문 ChatGPT로 공유</button>
-      <button class="chip ct-go" type="button" data-grok="draw-all" hidden>전체 묶음 GPT로 공유</button>
-      <button class="chip" type="button" data-grok="draw-web" hidden>키프레임 요청문 웹으로 열기</button>
-      <label class="chip sv-up">GPT 완성 격자 올리기 <input type="file" accept="image/*" multiple data-grok="upload" aria-label="GPT 완성 격자 올리기"></label>
-      <button class="chip ct-go" type="button" data-grok="send" disabled>프레임 묶음 공유·저장</button>
-      <button type="button" class="chip" data-grok="copy-video">영상 프롬프트 복사</button>
+      <button class="chip ct-go" type="button" data-grok="all" data-grok-busy hidden>전체 묶음 GPT로 보내기</button>
+      <small data-grok-all-ready></small>
+      <label class="chip sv-up">격자 여러 장 올리기 <input type="file" accept="image/*" multiple hidden data-grok="upload" data-grok-busy aria-label="격자 여러 장 올리기"></label>
+      <button class="chip" type="button" data-grok="web" data-grok-web data-grok-busy hidden>GPT 웹으로 열기</button>
     </div>
     <div data-grok-import hidden></div>
     <p class="small" role="status" data-grok-status></p>
-    <div data-grok-preview aria-label="분할한 키프레임"></div>
-    <details><summary>GPT 키프레임 요청문</summary><textarea rows="6" aria-label="GPT 키프레임 요청문" data-grok-prompt readonly></textarea></details>
+    <div data-grok-cards></div>
+    <details data-grok-gpt hidden><summary>GPT 키프레임 요청문</summary><textarea rows="6" aria-label="GPT 키프레임 요청문" data-grok-prompt readonly></textarea></details>
   </section>
-  <div id="ct-s8"></div>
-  </div>
+</div>
 </section>
 
 
@@ -15373,7 +15371,7 @@ document.addEventListener('click', function(e){ var b=e.target.closest&&e.target
   if(k==='tr'){ jaTranslate(b); return; }
   if(k==='ja'||k==='ko'){ var t=subText(k); if(!t) return stat(k==='ja'?'일본어 대사가 없다 — 먼저 「일본어로 옮기기」':'대사가 없다'); ctCopy(t); b.textContent='✓ 복사됨'; setTimeout(function(){ b.textContent=k==='ja'?'🇯🇵 일본어 대사 모음 복사':'🇰🇷 한글 대사 모음 복사'; },1500); return; }
   if(k==='srtja'||k==='srtko'){ var lg=k==='srtja'?'ja':'ko'; if(!subLines(lg).length) return stat(lg==='ja'?'일본어 대사가 없다 — 먼저 「일본어로 옮기기」':'대사가 없다'); dlFile(new File([subSrt(lg)], 'subtitles-'+lg+'.srt', {type:'text/plain'})); stat('자막 파일을 저장했다 (클립마다 15초씩 이어 붙인 시간)'); } });
-function renderS8(){ renderGrokClip(); var box=document.getElementById('ct-s8'); if(!box) return; if(!B||!B.cuts||!B.cuts.length){ box.innerHTML='<p class="small">4단계에서 콘티를 먼저 만든다.</p>'; return; }
+function renderS8(){ var box=document.getElementById('ct-s8'); if(!box) return; if(!B||!B.cuts||!B.cuts.length){ box.innerHTML='<p class="small">4단계에서 콘티를 먼저 만든다.</p>'; return; }
   var C=animClips(), tot=C.reduce(function(a,c){ return a+c.sec; },0), drawn=B.cuts.filter(function(c){ return c.art; }).length, n=B.cuts.filter(function(c){ return c.scr; }).length;
   box.innerHTML='<div class="sv-all"><b>📜 완성 콘티</b> <span class="small">모든 컷을 일렬로 놓고 그 위에 말풍선·나레이션을 얹는다</span><p class="small">'+n+'컷 중 GPT 완성 그림 '+drawn+'컷 · 나머지는 시트 합성 → 3D·선 그림 순으로 쓴다.</p><div class="sv-act"><button class="chip" type="button" id="ct-fxopen">'+(FX.on?'최종 편집 닫기':'✏ 최종 편집 열기 (말풍선 위치·컷 크기)')+'</button><button class="chip ct-go" type="button" id="ct-strip">완성 콘티 만들기 (대사 있는 판 + 대사 없는 판)</button></div><div id="ct-fx"'+(FX.on?'':' hidden')+'></div></div>'+
     '<details class="sv-all"><summary>기존 15초 클립·자막 도구</summary><div class="sv-all"><b>🎬 Grok 애니메이션 프롬프트</b> <span class="small">한 클립 = 15초 · '+C.length+'개 클립</span><p class="small">Grok은 <b>클립 하나씩</b> 만든다. 「📤 Grok으로」는 그 클립의 <b>최종 컷 그림을 컷마다 따로</b>(shot1, shot2…)와, 샷마다 <b>구도·상황·대사</b>가 담긴 요청문을 준다. 7단계에서 올린 GPT 완성 컷이 있으면 그 그림을 쓴다.</p><div class="sv-act"><button class="chip" type="button" data-an="list">📋 클립마다 나열해서 복사</button></div>'+subBox()+
@@ -15658,7 +15656,7 @@ document.addEventListener('click', function(e){ var t=e.target; if(!t.closest ||
     var rest=ai.filter(function(x){ return !x.done; }); renderScenes(); dlgRender(dlgCheck(), rest); stat(q[0]+'번 컷 대사를 바꿨다'); }
 });
 // ===== 단계 진행 (2026-11-21): 구체화 → 캐릭터 시트 → 대사 배정 → 콘티 → 장면·배경 → 다듬기 → 주요 컷 =====
-var STEPS=[[1,'이야기'],[2,'캐릭터'],[2.5,'연재 시트'],[3,'대사 배정'],[4,'콘티'],[5,'장면·배경'],[6,'컷 제작·다듬기'],[7,'GPT 일괄 제작'],[8,'완성·영상']];
+var STEPS=[[1,'이야기'],[2,'캐릭터'],[2.5,'연재 시트'],[3,'대사 배정'],[4,'콘티'],[5,'장면·배경'],[6,'컷 제작·다듬기'],[7,'GPT 일괄 제작'],[8,'완성 콘티'],[9,'Grok 애니메이션']];
 var CSTEP=(function(){ try{ var v=+localStorage.getItem('ctStep')||1;return v===7.5?6:v; }catch(e){ return 1; } })();
 function stepDone(n){ var st=(document.getElementById('ct-story')||{}).value||'';
   if(n===1) return !!(B&&B.expanded) || st.length>400;
@@ -15671,11 +15669,12 @@ function stepDone(n){ var st=(document.getElementById('ct-story')||{}).value||''
   if(n===7) return !!(B&&B.cuts&&B.cuts.some(function(c){ return c.key && c.art; }));
   if(n===7.5) return !!(B&&B.cuts&&B.cuts.some(function(c){return c.sheet75&&c.sheet75.ok;}));
   if(n===8) return !!(B&&B.exported);
+  if(n===9) return !!(B&&Object.keys(B.grokSavedClips||{}).length);
   return false; }
 function stepNav(){ var nv=document.getElementById('ct-steps'); if(!nv) return; var gm=gptMode(); setTimeout(function(){ var on=nv.querySelector('.ct-stb.on'); if(on) nv.scrollLeft=Math.max(0,on.offsetLeft-nv.clientWidth/2+on.offsetWidth/2); },0); try{ var w=document.getElementById('ct-stwarn'); if(!w){ w=document.createElement('div'); w.id='ct-stwarn'; nv.after(w); } w.innerHTML=storeWarn(); }catch(e){}
   document.querySelectorAll('#conti .ct-gmh').forEach(function(h){ h.innerHTML='<span class="ct-gm small">시트 여러 장을 GPT에 <button type="button" class="chip'+(gm==='all'?' on':'')+'" data-gm="all">한 번에 모두</button><button type="button" class="chip'+(gm==='step'?' on':'')+'" data-gm="step">한 장씩 (「다음」)</button></span>'; });
   nv.innerHTML=STEPS.map(function(s){ return '<button type="button" class="ct-stb'+(s[0]===CSTEP?' on':'')+(stepDone(s[0])?' done':'')+'" data-step="'+s[0]+'"'+(s[0]===CSTEP?' aria-current="step"':'')+'><i>'+(stepDone(s[0])&&s[0]!==CSTEP?'✓':s[0])+'</i>'+s[1]+'</button>'; }).join(''); }
-function goStep(n, noScroll){ if(+n!==CSTEP) try{ stat(''); }catch(e){} CSTEP=Math.max(1,Math.min(8,+n||1)); if(B && B.projectStep!==CSTEP && !root.classList.contains('ct-choosing')){B.projectStep=CSTEP;save();} try{ localStorage.setItem('ctStep',CSTEP); }catch(e){}
+function goStep(n, noScroll){ if(+n!==CSTEP) try{ stat(''); }catch(e){} if(CSTEP===9&&+n!==9) grokClearPhotos(); CSTEP=Math.max(1,Math.min(9,+n||1)); if(B && B.projectStep!==CSTEP && !root.classList.contains('ct-choosing')){B.projectStep=CSTEP;save();} try{ localStorage.setItem('ctStep',CSTEP); }catch(e){}
   document.querySelectorAll('#conti .ct-step').forEach(function(d){ d.hidden=+d.dataset.st!==CSTEP; });
   document.querySelectorAll('#conti .ct-step').forEach(function(d){ if(d.querySelector('.ct-nx')) return; var k=+d.dataset.st, f=document.createElement('div'); f.className='filterbar ct-nx';
     var ix=STEPS.findIndex(function(q){ return q[0]===k; }), pv=STEPS[ix-1], nx=STEPS[ix+1];
@@ -15822,7 +15821,7 @@ document.addEventListener('click',function(e){var t=e.target;if(!t||!t.closest||
  if(t.id==='cmp75-png'){var cv=document.getElementById('cmp75-cv');if(!cv)return;var a=document.createElement('a');a.download='webtoon_cut_'+c.n+'.png';a.href=cv.toDataURL('image/png');a.click();}
 });
 
-function renderSteps(){ stepNav(); var R={2:[renderProps], 2.5:[renderSerial], 3:[renderDlg], 4:[renderS4], 5:[renderBg], 6:[renderAdd, renderShChk, renderGptQ], 7:[renderBatch,renderKey], 8:[renderS8]}[CSTEP]||[];   // 지금 보이는 단계만 그린다
+function renderSteps(){ stepNav(); var R={2:[renderProps], 2.5:[renderSerial], 3:[renderDlg], 4:[renderS4], 5:[renderBg], 6:[renderAdd, renderShChk, renderGptQ], 7:[renderBatch,renderKey], 8:[renderS8], 9:[renderGrokClip]}[CSTEP]||[];   // 지금 보이는 단계만 그린다
   if(CSTEP===2 && window.__ppArt) setTimeout(chAutoSlice, 600);
   R.forEach(function(f){ try{ f(); }catch(e){ try{ console.warn('renderSteps', f.name, e); }catch(er){} } }); }
 
@@ -18389,7 +18388,7 @@ function enterProject(step){
   document.getElementById('ct-expout').replaceChildren();
   ['ct-chkout','ct-shq'].forEach(function(id){document.getElementById(id).replaceChildren();});
   ceClose();
-  grokClearResult(); grokView=null;
+  grokResetView();
   batchPackage=null; batchPrep=null; batchClearPreview();
   document.getElementById('ct-batch-browser').hidden=true;
   document.getElementById('ct-batch-text').value='';
@@ -18880,14 +18879,35 @@ async function batchUpload(input,cuts,previous){
   finally{batchBusy=false;URL.revokeObjectURL(url);}
 }
 
-/* 8단계에서 선택한 컷을 시간순 키프레임으로 만든다. */
+/* 9단계: 겹치는 콘티 묶음과 저장된 애니메이션 키프레임. */
 var grokEditor=document.getElementById('ct-grok-clip');
-var grokView=null,grokResult=null,grokBusy=false,grokReference=null,grokReferenceTimer=0;
+var grokView=null,grokBusy=false,grokPreparing=0,grokPrepareTimer=0,grokRefs=new Map(),grokFallback=null;
+var grokPhotoUrls=new Map(),grokExpanded=new Set(),grokDbPromise;
+function grokDatabase(){
+  if(!grokDbPromise){
+    grokDbPromise=new Promise(function(resolve,reject){
+      var request=indexedDB.open('storyboard-animation',1);
+      request.onupgradeneeded=function(){
+        request.result.createObjectStore('clips',{keyPath:'id'});
+      };
+      request.onsuccess=function(){resolve(request.result);};
+      request.onerror=request.onblocked=function(){reject(Error('이 브라우저에서 애니메이션 사진 저장소를 열 수 없습니다.'));};
+    }).catch(function(err){grokDbPromise=null;throw err;});
+  }
+  return grokDbPromise;
+}
+async function grokDbTask(mode,operation){
+  var db=await grokDatabase();
+  return new Promise(function(resolve,reject){
+    var tx=db.transaction('clips',mode), req=operation(tx.objectStore('clips'));
+    tx.oncomplete=function(){resolve(req.result);};
+    tx.onabort=tx.onerror=function(){reject(Error('분리 사진 저장소에 접근할 수 없습니다. 브라우저 저장 공간을 확인하세요.'));};
+  });
+}
 function grokOptions(board){
-  var conf=board?.grokClip||{};
-  var duration=Number.isInteger(conf.duration)&&conf.duration>=6&&conf.duration<=15?conf.duration:10;
-  var count=Number.isInteger(conf.count)&&conf.count>=6&&conf.count<=14?conf.count:0;
-  return {duration:duration,count:count,group:conf.group==='manual'?'manual':Math.max(0,Number.isInteger(conf.group)?conf.group:0),ids:Array.isArray(conf.ids)?conf.ids:[]};
+  var conf=board?.grokClip||{}, duration=+conf.duration,count=+conf.count;
+  return {duration:duration>=6&&duration<=15&&Number.isInteger(duration)?duration:10,
+    count:count>=6&&count<=14&&Number.isInteger(count)?count:0};
 }
 function grokAutoGroups(cuts){
   var written=cuts.filter(function(c){return c.scr||c.line||c.art;});
@@ -18899,77 +18919,139 @@ function grokAutoGroups(cuts){
   }
   return groups;
 }
+function grokClipKey(cuts){
+  return cuts.map(function(c){return c.batchId||'n'+c.n;}).join('|');
+}
 function grokGroupKey(cuts){
   return JSON.stringify(cuts.map(function(c){
     var scene=sceneOfCut(c.n);
     return [c.n,c.scr,c.line,c.nar,c.art,c.cnote,compText(c),scene?.a,scene?.place,scene?.name];
   }));
 }
-var grokBoundaryMemory=new WeakMap();
+function grokSaved(board,cuts){return board.grokSavedClips?.[grokClipKey(cuts)]||null;}
 function grokReadBoundary(board,index,cuts){
-  var record=grokBoundaryMemory.get(board)?.[index]||board.grokBoundaries?.[index];
-  if(!record||record.key!==grokGroupKey(cuts)) return null;
-  var url=record.url||window.__ppArt?.get(record.id);
-  return url?{id:record.id,url:url}:null;
+  var saved=grokSaved(board,cuts);
+  if(saved) return {id:saved.id};
+  var old=board.grokBoundaries?.[index];
+  if(!old||old.key!==grokGroupKey(cuts)) return null;
+  var url=window.__ppArt?.get(old.id);
+  return url?{id:old.id,url:url}:null;
 }
-async function grokStoreBoundary(plan,url){
-  if(plan.group===null) return;
-  var board=plan.board, index=plan.group, art=window.__ppArt, id='grok_tail_'+recId();
-  var memory=grokBoundaryMemory.get(board)||{}, persisted=board.grokBoundaries||{};
-  var stored=false;
-  if(art?.ok()){
-    try{await art.put(id,url,true);stored=true;}catch(e){}
+async function grokAnchor(previous){
+  if(!previous) return null;
+  if(previous.url){
+    var response=await fetch(previous.url);
+    if(response.ok) return response.blob();
+  }else{
+    var record=await grokDbTask('readonly',function(store){return store.get(previous.id);});
+    if(record?.files.length) return record.files.at(-1);
   }
-  if(B!==board||grokPlan(plan.group)?.signature!==plan.signature) throw Error('콘티가 변경됐습니다. 격자를 다시 올려 주세요.');
-  [memory,persisted].forEach(function(records){
-    Object.keys(records).forEach(function(k){if(+k>=index) delete records[k];});
-  });
-  memory[index]={key:plan.groupKey,id:id,url:url};
-  grokBoundaryMemory.set(board,memory);
-  if(stored) persisted[index]={key:plan.groupKey,id:id};
-  board.grokBoundaries=persisted;
+  throw Error('앞 묶음의 마지막 사진을 읽을 수 없습니다. 해당 격자를 다시 올려 주세요.');
+}
+async function grokSaveSplit(plan,files,warning){
+  var board=plan.board,key=plan.key;
+  var record={id:'grok_'+recId(),prompt:grokVideoPrompt(plan),times:plan.frames.map(function(f){return f.time;}),
+    duration:plan.duration,cols:plan.cols,rows:plan.rows,previous:plan.previous?.id||'',ratioWarning:warning};
+  await grokDbTask('readwrite',function(store){return store.put({id:record.id,files:files});});
+  if(B!==board||window.__stale||grokPlan(plan.group,plan.settings)?.signature!==plan.signature){
+    grokDbTask('readwrite',function(store){return store.delete(record.id);}).catch(function(){});
+    throw Error('콘티가 변경됐습니다. 격자를 다시 올려 주세요.');
+  }
+  var saved=Object.assign({},board.grokSavedClips||{});
+  saved[key]=record;
+  var previous=board.grokSavedClips;
+  board.grokSavedClips=saved;
+  try{
+    board.at=Date.now();
+    localStorage.setItem('contiBoard',JSON.stringify(board));
+  }catch(err){
+    board.grokSavedClips=previous;
+    grokDbTask('readwrite',function(store){return store.delete(record.id);}).catch(function(){});
+    throw Error('프로젝트에 분리 사진을 연결하지 못했습니다. 저장 공간을 확인하세요.');
+  }
+  // Preserve the older file record for snapshots already saved in the storyboard library.
   save();
+  if(board.sid&&stItem(board.sid)) stSave('',false,true);
+  grokRefs.delete(plan.group);grokRefs.delete('all');
+  return record;
 }
+function grokStatus(text){grokEditor.querySelector('[data-grok-status]').textContent=text;}
+function grokClearPhotos(details){
+  if(details){
+    (grokPhotoUrls.get(details)||[]).forEach(function(url){URL.revokeObjectURL(url);});
+    grokPhotoUrls.delete(details);
+    return;
+  }
+  Array.from(grokPhotoUrls.keys()).forEach(grokClearPhotos);
+}
+function grokResetView(){
+  clearTimeout(grokPrepareTimer);
+  grokPreparing++;
+  grokClearPhotos();grokExpanded.clear();grokRefs.clear();
+  grokFallback=null;grokView=null;
+}
+async function grokCopyPhoto(file,n,status){
+  try{
+    if(!window.ClipboardItem||!navigator.clipboard?.write) throw Error('사진 복사 미지원');
+    await navigator.clipboard.write([new ClipboardItem({'image/png':file})]);
+    status.textContent=n+'번 사진을 복사했습니다.';
+  }catch(e){
+    dlFile(file);
+    status.textContent='사진 복사를 지원하지 않아 '+n+'번 PNG를 저장했습니다.';
+  }
+}
+function grokCopyText(text){
+  var focus=document.activeElement, selection=document.getSelection(), ranges=[];
+  if(selection) for(var i=0;i<selection.rangeCount;i++) ranges.push(selection.getRangeAt(i).cloneRange());
+  var temp=document.createElement('textarea');
+  temp.value=text;temp.readOnly=true;temp.tabIndex=-1;
+  temp.style.cssText='position:fixed;top:0;left:0;width:1px;height:1px;opacity:0;font-size:16px;pointer-events:none';
+  document.body.appendChild(temp);
+  var copied=false;
+  try{
+    temp.focus({preventScroll:true});temp.select();temp.setSelectionRange(0,text.length);
+    copied=document.execCommand('copy');
+  }catch(e){}
+  finally{
+    temp.remove();
+    focus?.focus({preventScroll:true});
+    if(selection){selection.removeAllRanges();ranges.forEach(function(range){selection.addRange(range);});}
+  }
+  if(copied) return Promise.resolve(true);
+  return navigator.clipboard?.writeText?navigator.clipboard.writeText(text).then(function(){return true;},function(){return false;}):Promise.resolve(false);
+}
+async function grokShowPhotos(details,record){
+  var preview=details.querySelector('[data-grok-preview]');
+  if(details.open&&grokPhotoUrls.has(details)) return;
+  preview.replaceChildren();
+  if(!details.open){grokClearPhotos(details);return;}
+  var urls=[];
+  grokPhotoUrls.set(details,urls);
+  preview.textContent='저장한 사진을 불러오는 중…';
+  try{
+    var saved=await grokDbTask('readonly',function(store){return store.get(record.id);});
+    if(!details.isConnected||!details.open||grokPhotoUrls.get(details)!==urls) return;
+    if(!saved?.files.length) throw Error('이 브라우저에 저장된 사진 파일이 없습니다.');
+    preview.replaceChildren();
+    saved.files.forEach(function(file,i){
+      var url=URL.createObjectURL(file);
+      urls.push(url);
+      var figure=document.createElement('figure'), img=document.createElement('img'), label=document.createElement('figcaption');
+      var copy=document.createElement('button');
+      img.src=url;img.alt='';img.loading='lazy';
+      label.textContent=(i+1)+' · '+grokTimestamp(record.times[i]);
+      copy.type='button';copy.className='chip';copy.textContent='사진 복사';
+      copy.setAttribute('aria-label',(i+1)+'번 사진 복사');
+      copy.addEventListener('click',function(){grokCopyPhoto(file,i+1,details.parentElement.querySelector('[data-grok-card-status]'));});
+      figure.append(img,label,copy);preview.appendChild(figure);
+    });
+  }catch(err){
+    if(details.isConnected&&details.open) preview.textContent=err.message;
+    if(grokPhotoUrls.get(details)===urls) grokClearPhotos(details);
+  }
+}
+
 function grokTimestamp(seconds){return seconds.toFixed(2)+'초';}
-function grokPlan(groupOverride){
-  if(!B?.cuts.length) return null;
-  var settings=grokOptions(B), seen=new Set(settings.ids), groups=grokAutoGroups(B.cuts);
-  var choice=groupOverride??settings.group;
-  var group=choice==='manual'?null:Math.min(choice,groups.length-1);
-  var cuts=group===null?B.cuts.filter(function(c){return seen.has(c.batchId);}):groups[group];
-  var overlap=group!==null&&group>0, previous=overlap?grokReadBoundary(B,group-1,groups[group-1]):null;
-  var n=settings.count||Math.min(14,settings.duration);
-  if(!cuts.length || cuts.length>n) return null;
-  var cols=n<=8?2:3, rows=Math.ceil(n/cols);
-  var weight=cuts.map(function(c,i){return overlap&&!i?0:cutSec(c);}), remaining=n-cuts.length;
-  var total=weight.reduce(function(a,b){return a+b;},0), cumulative=0, allocated=0, frames=[], beats=[];
-  cuts.forEach(function(c,i){
-    if(overlap&&!i){
-      frames.push({index:1,time:0,cut:c,motion:'앞 묶음의 마지막 프레임으로 시작',change:false});
-      return;
-    }
-    cumulative+=weight[i];
-    var target=i===cuts.length-1?remaining:Math.round(remaining*cumulative/total);
-    var take=1+target-allocated, scene=sceneOfCut(c.n), prev=i?sceneOfCut(cuts[i-1].n):null;
-    var starts=frames.length, change=i>0&&scene?.a!==prev?.a;
-    for(var j=0;j<take;j++){
-      var index=frames.length;
-      frames.push({index:index+1,time:settings.duration*index/(n-1),cut:c,
-        motion:take===1?'이 컷의 핵심 동작':(j===0?'동작 시작':j===take-1?'동작 끝':'중간 자세 '+(j+1)+'/'+take),
-        change:j===0&&change});
-    }
-    var end=frames.length;
-    beats.push({cut:c,start:frames[starts].time,end:end===n?settings.duration:frames[end-1].time+settings.duration/(2*(n-1)),scene:scene?.place||scene?.name||'',change:change});
-    var beat=beats.at(-1), preceding=beats.at(-2);
-    if(preceding) beat.start=preceding.end;
-    else if(overlap) beat.start=change?frames[starts].time/2:0;
-    allocated=target;
-  });
-  var groupKey=grokGroupKey(cuts);
-  var signature=JSON.stringify([settings.duration,n,group,groupKey,previous?.id]);
-  return {board:B,duration:settings.duration,cols:cols,rows:rows,frames:frames,beats:beats,signature:signature,
-    group:group,groupKey:groupKey,overlap:overlap,previous:previous};
-}
 function grokFrameName(f){
   return 'frame-'+String(f.index).padStart(2,'0')+'-'+String(Math.round(f.time*1000)).padStart(5,'0')+'ms.png';
 }
@@ -19034,168 +19116,6 @@ function grokVideoPrompt(plan){
     '대사는 적힌 문장 그대로 해당 화자가 말합니다. 발화 중인 인물만 입 모양을 맞추고, 음성 큐 바깥에는 대사를 추가하지 마세요. 화면에는 자막·말풍선·번호·워터마크를 넣지 마세요.'
   ].join('\n\n');
 }
-function grokClearResult(){
-  if(grokResult) grokResult.urls.forEach(function(url){URL.revokeObjectURL(url);});
-  grokResult=null;
-  grokEditor.querySelector('[data-grok-preview]').replaceChildren();
-  grokEditor.querySelector('[data-grok="send"]').disabled=true;
-}
-var grokResults=new WeakMap(), grokAllReference=null,grokDrawingAll=false;
-function grokShowResult(plan,result){
-  grokClearResult();
-  var preview=grokEditor.querySelector('[data-grok-preview]');
-  var urls=result.files.map(function(frame){return URL.createObjectURL(frame);});
-  grokResult=Object.assign({},result,{board:plan.board,urls:urls});
-  urls.forEach(function(url,i){
-    var figure=document.createElement('figure'), img=document.createElement('img'), label=document.createElement('figcaption');
-    var copy=document.createElement('button');
-    img.src=url;img.alt='';img.loading='lazy';
-    label.textContent=plan.frames[i].index+' · '+grokTimestamp(plan.frames[i].time);
-    copy.type='button';copy.className='chip';copy.textContent='사진 복사';
-    copy.setAttribute('aria-label',(i+1)+'번 사진 복사');
-    copy.addEventListener('click',function(){grokCopyPhoto(result.files[i],i+1);});
-    figure.append(img,label,copy);preview.appendChild(figure);
-  });
-}
-async function grokCopyPhoto(file,n){
-  try{
-    if(!window.ClipboardItem||!navigator.clipboard?.write) throw Error('사진 복사 미지원');
-    await navigator.clipboard.write([new ClipboardItem({'image/png':file})]);
-    grokStatus(n+'번 사진을 복사했습니다. Grok에 붙여 넣으세요.');
-  }catch(e){
-    dlFile(file);
-    grokStatus('이 브라우저에서는 사진을 복사할 수 없어 '+n+'번 PNG를 저장했습니다.');
-  }
-}
-function grokCopyVideo(text){
-  var selection=document.getSelection(), focus=document.activeElement, ranges=[];
-  if(selection) for(var i=0;i<selection.rangeCount;i++) ranges.push(selection.getRangeAt(i).cloneRange());
-  var temp=document.createElement('textarea');
-  temp.value=text;temp.readOnly=true;temp.tabIndex=-1;
-  temp.style.cssText='position:fixed;top:0;left:0;width:1px;height:1px;opacity:0;font-size:16px;pointer-events:none';
-  document.body.appendChild(temp);
-  var copied=false;
-  try{
-    temp.focus({preventScroll:true});temp.select();temp.setSelectionRange(0,text.length);
-    copied=document.execCommand('copy');
-  }catch(e){}
-  finally{
-    temp.remove();
-    focus?.focus({preventScroll:true});
-    if(selection){selection.removeAllRanges();ranges.forEach(function(r){selection.addRange(r);});}
-  }
-  if(copied) return Promise.resolve(true);
-  return navigator.clipboard?.writeText?navigator.clipboard.writeText(text).then(function(){return true;},function(){return false;}):Promise.resolve(false);
-}
-function grokAllPlans(){
-  return grokAutoGroups(B?.cuts||[]).map(function(cuts,i){return grokPlan(i);});
-}
-function grokFileNumber(file){
-  var match=file.name.match(/(?:^|[^a-z0-9])(?:grok[-_ ]*)?clip[-_ ]*0*(\d+)(?=[^0-9]|$)/i);
-  return match?+match[1]-1:null;
-}
-function grokImportFiles(files){
-  var box=grokEditor.querySelector('[data-grok-import]');
-  box.replaceChildren();box.hidden=false;
-  var groups=grokAutoGroups(B.cuts);
-  var current=grokPlan()?.group??0;
-  var numbered=files.map(grokFileNumber);
-  var valid=numbered.every(function(n){return n!==null&&n>=0&&n<groups.length;})&&new Set(numbered).size===numbered.length;
-  if(valid) return grokSplitFiles(files.map(function(file,i){return {file:file,group:numbered[i]};}));
-  if(files.length>groups.length){box.hidden=true;grokStatus('올린 격자가 콘티 묶음 수보다 많습니다.');return;}
-  var hint=document.createElement('p'), button=document.createElement('button');
-  hint.className='small';hint.textContent='파일마다 연결할 묶음을 확인하세요.';
-  box.appendChild(hint);
-  var picks=Array.from(files).sort(function(a,b){return a.lastModified-b.lastModified||a.name.localeCompare(b.name,'ko',{numeric:true});});
-  var first=Math.min(current,groups.length-picks.length);
-  var entries=picks.map(function(file,i){
-    var row=document.createElement('label'), select=document.createElement('select');
-    row.className='filterbar';
-    groups.forEach(function(cuts,j){select.add(new Option((j+1)+'번 묶음 · '+batchTitle(cuts.map(function(c){return c.n;})),String(j)));});
-    select.value=String(first+i);
-    select.setAttribute('aria-label',file.name+'의 콘티 묶음');row.append(file.name,select);box.appendChild(row);
-    return {file:file,select:select};
-  });
-  button.type='button';button.className='chip ct-go';button.textContent='선택한 격자 한 번에 분리';
-  button.addEventListener('click',function(){
-    var mapped=entries.map(function(entry){return {file:entry.file,group:+entry.select.value};});
-    if(new Set(mapped.map(function(entry){return entry.group;})).size!==mapped.length){grokStatus('한 묶음에 격자 한 파일만 선택하세요.');return;}
-    grokSplitFiles(mapped);
-  });
-  box.appendChild(button);
-}
-
-function grokStatus(text){grokEditor.querySelector('[data-grok-status]').textContent=text;}
-function grokRefresh(){
-  var plan=grokPlan(), settings=grokOptions(B), selected=new Set(settings.ids);
-  var count=(B?.cuts||[]).filter(function(c){return selected.has(c.batchId);}).length;
-  if(grokResult&&(grokResult.board!==B||grokResult.signature!==plan?.signature)) grokClearResult();
-  var result=plan&&grokResults.get(B)?.get(plan.group);
-  if(!grokResult&&result?.signature===plan?.signature&&result) grokShowResult(plan,result);
-  grokEditor.querySelector('[data-grok-info]').textContent=plan?
-    (plan.beats.length+(plan.overlap?1:0))+'컷 · '+plan.frames.length+'장 · '+plan.cols+'열 × '+plan.rows+'행'+
-      (plan.overlap?(plan.previous?' · 앞 묶음 끝 프레임 재사용':' · 영상용 분할 전에 앞 묶음 격자를 먼저 올려 주세요.'):''):
-    count?'컷 수가 키프레임 수보다 많습니다. 선택을 줄이거나 장수를 늘려 주세요.':'영상에 넣을 컷을 선택하세요.';
-  grokEditor.querySelectorAll('[data-grok-cuts] input,select').forEach(function(el){el.disabled=grokBusy;});
-  grokEditor.querySelectorAll('[data-grok="draw"], [data-grok="draw-web"], [data-grok="upload"]').forEach(function(el){el.disabled=grokBusy||!plan;});
-  var all=grokEditor.querySelector('[data-grok="draw-all"]');
-  all.hidden=(B?grokAutoGroups(B.cuts).length:0)<2;
-  all.disabled=grokBusy;
-  var imported=grokEditor.querySelector('[data-grok-import]');
-  imported.querySelectorAll('button').forEach(function(b){b.disabled=grokBusy;});
-  grokEditor.querySelector('[data-grok="send"]').disabled=grokBusy||!grokResult;
-  var copy=grokEditor.querySelector('[data-grok="copy-video"]');
-  copy.disabled=grokBusy||!plan;
-  return plan;
-}
-function renderGrokClip(){
-  grokEditor.hidden=!B?.cuts.length;
-  if(grokEditor.hidden) return;
-  var settings=grokOptions(B), selected=new Set(settings.ids);
-  var list=grokEditor.querySelector('[data-grok-cuts]');
-  if(grokView!==B){
-    grokView=B;grokReference=null;grokAllReference=null;grokClearResult();grokStatus('');
-    grokEditor.querySelector('[data-grok-import]').hidden=true;
-    grokEditor.querySelector('[data-grok="draw-web"]').hidden=true;
-    grokEditor.querySelector('[data-grok-prompt]').value='';
-    grokEditor.querySelector('details').open=false;
-  }
-  var groups=grokAutoGroups(B.cuts), manual=settings.group==='manual';
-  var group=Math.min(settings.group,groups.length-1), select=grokEditor.querySelector('[data-grok="group"]');
-  select.replaceChildren();
-  groups.forEach(function(cuts,i){
-    select.add(new Option((i+1)+'번 묶음 · '+batchTitle(cuts.map(function(c){return c.n;})),String(i)));
-  });
-  select.add(new Option('직접 컷 선택','manual'));
-  select.value=manual?'manual':String(group);
-  list.replaceChildren();
-  (manual?B.cuts:groups[group]).forEach(function(c,i){
-    var row=document.createElement(manual?'label':'div'), text=document.createElement('span');
-    row.className='grok-cut-row';
-    if(manual){
-      var check=document.createElement('input');
-      check.type='checkbox';check.cut=c;check.checked=selected.has(c.batchId);row.appendChild(check);
-    }
-    var anchor=!manual&&group>0&&i===0;
-    text.textContent=c.n+'번 컷'+(anchor?' · 앞 묶음 연결용':'')+(c.scr?' · '+c.scr:'');
-    if(c.line&&!anchor){var lines=document.createElement('small');lines.textContent=c.line;text.appendChild(lines);}
-    row.appendChild(text);list.appendChild(row);
-  });
-  grokEditor.querySelector('[data-grok="duration"]').value=settings.duration;
-  grokEditor.querySelector('[data-grok="count"]').value=settings.count;
-  grokRefresh();grokScheduleReferences();
-}
-function grokCopy(text,selector){
-  var input=grokEditor.querySelector(selector||'[data-grok-prompt]');
-  input.value=text;
-  function reveal(){input.closest('details').open=true;return false;}
-  if(!navigator.clipboard?.writeText) return Promise.resolve(reveal());
-  return navigator.clipboard.writeText(text).then(function(){return true;},reveal);
-}
-function grokReferenceKey(plan){
-  return JSON.stringify([plan.signature,batchArtRevision,plan.board.chars,plan.board.sceneBg,plan.board.sheetArts,
-    plan.beats.map(function(beat){return [beat.cut.art,beat.cut.comp];})]);
-}
 function grokTimingCard(plan){
   var cv=document.createElement('canvas'), w=320,h=105;
   cv.width=plan.cols*w+32;cv.height=plan.rows*h+112;
@@ -19215,220 +19135,343 @@ function grokTimingCard(plan){
   });
   return {name:'키프레임 시간표 · 글씨는 출력에서 제외',image:cv};
 }
-function grokReferences(plan,plans){
-  var key=plans?JSON.stringify(plans.map(grokReferenceKey)):grokReferenceKey(plan);
-  var cached=plans?grokAllReference:grokReference;
-  if(cached?.board===plan.board&&cached.key===key&&!cached.error) return cached;
-  var ref={board:plan.board,key:key,ready:false,file:null,error:null};
-  if(plans) grokAllReference=ref; else grokReference=ref;
-  var cuts=Array.from(new Set((plans||[plan]).flatMap(function(p){return p.beats.map(function(b){return b.cut;});}))), art=window.__ppArt;
-  var anchor=!plans&&plan.previous?loadImg(plan.previous.url):Promise.resolve(null);
-  var originals=Promise.all(cuts.map(async function(c){
-    var src=c.art&&art?.get(c.art);
-    return src?{name:c.n+'번 원본 컷',image:await loadImg(src)}:null;
-  }));
-  ref.pending=Promise.all([originals,batchReferenceImages(cuts),anchor]).then(async function(images){
-    var list=images[0].filter(function(item){return item?.image;}).concat(images[1]);
-    if(images[2]) list.unshift({name:'앞 묶음 마지막 프레임 · 첫 칸에 사용',image:images[2]});
-    if(!list.length) list.push(grokTimingCard(plan));
-    ref.file=await batchReferenceFile(list,'grok-키프레임-참고.png');
-    ref.ready=true;
-    if(ref===(plans?grokAllReference:grokReference)&&ref.announce){
-      grokStatus('참고 자료가 준비됐습니다. 버튼을 다시 눌러 공유 창에서 ChatGPT를 선택하세요.');
-    }
-    return ref.file;
-  }).catch(function(err){
-    ref.error=err;
-    if(ref===(plans?grokAllReference:grokReference)&&ref.announce){
-      grokStatus('참고 자료를 준비하지 못했습니다. 보내기를 다시 눌러 주세요.');
-      grokEditor.querySelector('[data-grok="draw-web"]').hidden=false;
-    }
-    return null;
-  });
-  return ref;
-}
-function grokScheduleReferences(){
-  clearTimeout(grokReferenceTimer);
-  var plan=grokPlan();
-  if(!plan||grokReference?.key!==grokReferenceKey(plan)) grokReference=null;
-  if(!plan) return;
-  grokReferenceTimer=setTimeout(function(){
-    if(B===plan.board&&CSTEP===8&&root.classList.contains('page-on')&&!root.classList.contains('ct-choosing')){
-      grokReferences(plan);
-      var plans=grokAllPlans();
-      if(plans.length>1) grokReferences(plans[0],plans);
-    }
-  },120);
-}
-async function grokSendDrawing(plan,web,plans){
-  var prompt=plans?
-    '아래 묶음마다 별도의 격자 PNG 한 장을 그려 주세요. 모두 같은 인물 디자인과 웹툰 화풍으로 만드세요. 여러 장을 지원하지 않으면 순서대로 만들고 「다음」을 기다리세요. 파일명은 묶음 제목에 표시한 clip 번호를 사용하세요. 두 번째 묶음부터 첫 칸을 앞 묶음의 마지막 칸과 똑같이 맞추세요.\n\n'+
-      plans.map(function(p){return '묶음 '+(p.group+1)+' · clip-'+String(p.group+1).padStart(2,'0')+'.png\n'+grokGridPrompt(p);}).join('\n\n──────\n\n'):
-    grokGridPrompt(plan);
-  var ref=grokReferences(plan,plans);
-  var fallback=grokEditor.querySelector('[data-grok="draw-web"]');
-  grokEditor.querySelector('[data-grok-prompt]').value=prompt;
-  if(!web){
-    if(!navigator.share){
-      fallback.hidden=false;
-      grokStatus('이 브라우저에서 앱 공유를 열 수 없습니다. 휴대폰의 Safari나 Chrome에서 이 사이트를 열고 다시 눌러 주세요.');
+function grokPlan(group,options){
+  var board=B, groups=grokAutoGroups(board?.cuts||[]), cuts=groups[group];
+  if(!cuts?.length) return null;
+  var settings=grokOptions(options?{grokClip:options}:board), n=settings.count||Math.min(14,settings.duration);
+  var overlap=group>0, previous=overlap?grokReadBoundary(board,group-1,groups[group-1]):null;
+  var cols=n<=8?2:3,rows=Math.ceil(n/cols);
+  var weight=cuts.map(function(c,i){return overlap&&!i?0:cutSec(c);}), remaining=n-cuts.length;
+  var total=weight.reduce(function(a,b){return a+b;},0), cumulative=0, allocated=0, frames=[], beats=[];
+  cuts.forEach(function(c,i){
+    if(overlap&&!i){
+      frames.push({index:1,time:0,cut:c,motion:'앞 묶음의 마지막 프레임으로 시작',change:false});
       return;
     }
-    if(!ref.ready){
-      ref.announce=true;
+    cumulative+=weight[i];
+    var target=i===cuts.length-1?remaining:Math.round(remaining*cumulative/total);
+    var take=1+target-allocated, scene=sceneOfCut(c.n), prev=i?sceneOfCut(cuts[i-1].n):null;
+    var start=frames.length, change=i>0&&scene?.a!==prev?.a;
+    for(var j=0;j<take;j++){
+      var index=frames.length;
+      frames.push({index:index+1,time:settings.duration*index/(n-1),cut:c,
+        motion:take===1?'이 컷의 핵심 동작':(j===0?'동작 시작':j===take-1?'동작 끝':'중간 자세 '+(j+1)+'/'+take),
+        change:j===0&&change});
+    }
+    var end=frames.length, preceding=beats.at(-1);
+    beats.push({cut:c,start:preceding?preceding.end:overlap&&change?frames[start].time/2:0,
+      end:end===n?settings.duration:frames[end-1].time+settings.duration/(2*(n-1)),
+      scene:scene?.place||scene?.name||'',change:change});
+    allocated=target;
+  });
+  return {board:board,group:group,key:grokClipKey(cuts),cuts:cuts,settings:settings,duration:settings.duration,cols:cols,rows:rows,
+    frames:frames,beats:beats,previous:previous,overlap:overlap,
+    signature:JSON.stringify([group,settings.duration,n,grokGroupKey(cuts),previous?.id])};
+}
+function grokAllPlans(){
+  return grokAutoGroups(B?.cuts||[]).map(function(cuts,i){return grokPlan(i);});
+}
+function grokClipName(group){return 'clip-'+String(group+1).padStart(2,'0')+'.png';}
+function grokTitle(plan){
+  return batchTitle(plan.cuts.map(function(c){return c.n;}));
+}
+function grokButton(text,click){
+  var button=document.createElement('button');
+  button.type='button';button.className='chip';button.textContent=text;
+  button.addEventListener('click',click);
+  return button;
+}
+function grokUpdateBusy(){
+  grokEditor.querySelectorAll('[data-grok-busy], [data-grok-import] button, [data-grok-import] select').forEach(function(control){
+    control.disabled=grokBusy;
+  });
+}
+function renderGrokClip(){
+  var list=grokEditor.querySelector('[data-grok-cards]');
+  grokEditor.hidden=!B?.cuts?.length;
+  if(grokEditor.hidden){grokResetView();list.replaceChildren();return;}
+  if(grokView!==B){
+    grokResetView();grokView=B;grokStatus('');
+    var imports=grokEditor.querySelector('[data-grok-import]');
+    imports.hidden=true;imports.replaceChildren();
+    grokEditor.querySelector('[data-grok-web]').hidden=true;
+    grokEditor.querySelector('details[data-grok-gpt]').hidden=true;
+  }
+  if(B.cuts.some(function(c){return !c.batchId;})||new Set(B.cuts.map(function(c){return c.batchId;})).size!==B.cuts.length){
+    batchEnsureCutIds(B);save();
+  }
+  grokClearPhotos();
+  list.replaceChildren();
+  var defaults=grokOptions(B), plans=grokAllPlans();
+  grokEditor.querySelector('[data-grok="duration"]').value=defaults.duration;
+  grokEditor.querySelector('[data-grok="count"]').value=defaults.count;
+  grokEditor.querySelector('[data-grok="all"]').hidden=plans.length<2;
+  plans.forEach(function(plan){
+    var saved=grokSaved(B,plan.cuts), request=B.grokGridRequests?.[plan.key];
+    var layout=request?grokPlan(plan.group,request):saved||plan;
+    var card=document.createElement('article'), heading=document.createElement('strong'), actions=document.createElement('div');
+    var state=document.createElement('small'), status=document.createElement('p');
+    card.className='batch-request';card.dataset.grokCard=String(plan.group);
+    heading.textContent=grokTitle(plan)+' · '+plan.cuts.length+'컷 · '+layout.cols+'×'+layout.rows;
+    actions.className='filterbar';
+    var send=grokButton('GPT로 보내기',function(){grokSendDrawing([grokPlan(plan.group)],false);});
+    send.dataset.grokBusy='';
+    state.className='small';state.dataset.grokReady='';
+    if(saved) state.textContent='사진 저장 완료';
+    var upload=document.createElement('label'), input=document.createElement('input');
+    upload.className='chip sv-up';upload.textContent='결과 격자 올리기';
+    input.type='file';input.accept='image/*';input.hidden=true;input.dataset.grokBusy='';
+    input.setAttribute('aria-label',grokTitle(plan)+' 결과 격자 올리기');
+    input.addEventListener('change',function(){
+      var file=input.files[0];input.value='';
+      if(file) grokSplitFiles([{file:file,group:plan.group}]);
+    });
+    upload.appendChild(input);
+    actions.append(send,state,upload);
+    var copy=grokButton('영상 프롬프트 복사',async function(){
+      var current=grokPlan(plan.group);
+      if(!current) return;
+      var text=grokSaved(current.board,current.cuts)?.prompt||grokVideoPrompt(current);
+      status.textContent=await grokCopyText(text)?'영상 프롬프트를 복사했습니다.':'이 브라우저에서 복사할 수 없습니다. Safari나 Chrome에서 다시 시도해 주세요.';
+    });
+    actions.appendChild(copy);
+    status.className='small';status.dataset.grokCardStatus='';status.setAttribute('role','status');
+    card.append(heading,actions,status);
+    if(saved){
+      var details=document.createElement('details'), summary=document.createElement('summary'), preview=document.createElement('div');
+      summary.textContent='분리한 사진 '+saved.times.length+'장';
+      preview.dataset.grokPreview='';
+      details.append(summary,preview);
+      details.open=grokExpanded.has(plan.key);
+      details.addEventListener('toggle',function(){
+        if(details.open) grokExpanded.add(plan.key);
+        else grokExpanded.delete(plan.key);
+        grokShowPhotos(details,saved);
+      });
+      card.appendChild(details);
+      if(details.open) grokShowPhotos(details,saved);
+      if(saved.ratioWarning) status.textContent='격자 칸 비율이 16:9와 다릅니다.';
+      if(plan.overlap&&saved.previous!==(plan.previous?.id||'')) status.textContent='앞 묶음이 바뀌었습니다. 격자를 다시 올리면 연결 사진이 갱신됩니다.';
+    }
+    list.appendChild(card);
+  });
+  grokUpdateBusy();
+  grokScheduleReferences();
+}
+function grokRefKey(plans){
+  return JSON.stringify([batchArtRevision,B.chars,B.sceneBg,B.sheetArts,plans.map(function(plan){
+    return [plan.signature,plan.cuts.map(function(c){return [c.art,c.comp];})];
+  })]);
+}
+function grokReferences(plans){
+  var slot=plans.length>1?'all':plans[0].group, key=grokRefKey(plans), board=B;
+  var cached=grokRefs.get(slot);
+  if(cached?.key===key&&!cached.error) return cached;
+  var ref={key:key,file:null,error:null};
+  grokRefs.set(slot,ref);
+  ref.pending=(async function(){
+    var cuts=Array.from(new Set(plans.flatMap(function(p){return p.cuts;}))), art=window.__ppArt;
+    var refs=await batchReferenceImages(cuts);
+    // Decode and scale original panels one at a time so large projects do not hold full-size source images simultaneously.
+    var originals=[];
+    for(var c of cuts){
+      var src=c.art&&art?.get(c.art);
+      if(!src) continue;
+      var im=await loadImg(src);
+      if(!im) continue;
+      var cv=document.createElement('canvas'), scale=Math.min(1,480/Math.max(im.width,im.height));
+      cv.width=Math.max(1,Math.round(im.width*scale));cv.height=Math.max(1,Math.round(im.height*scale));
+      cv.getContext('2d').drawImage(im,0,0,cv.width,cv.height);
+      originals.push({name:c.n+'번 원본 컷',image:cv});
+    }
+    var images=originals.concat(refs);
+    if(plans.length===1&&plans[0].previous){
+      try{
+        var url=URL.createObjectURL(await grokAnchor(plans[0].previous));
+        try{
+          var anchor=await loadImg(url);
+          if(anchor) images.unshift({name:'앞 묶음 마지막 프레임 · 첫 칸에 사용',image:anchor});
+        }finally{URL.revokeObjectURL(url);}
+      }catch(e){}
+    }
+    if(!images.length) images.push(grokTimingCard(plans[0]));
+    var file=await batchReferenceFile(images,'grok-키프레임-참고.png');
+    if(B===board&&grokRefs.get(slot)===ref) ref.file=file;
+    return file;
+  })().catch(function(err){ref.error=err;return null;});
+  return ref;
+}
+function grokActive(){return CSTEP===9&&root.classList.contains('page-on')&&!root.classList.contains('ct-choosing');}
+function grokScheduleReferences(){
+  clearTimeout(grokPrepareTimer);
+  var generation=++grokPreparing;
+  if(!grokActive()||!B?.cuts.length) return;
+  grokPrepareTimer=setTimeout(async function(){
+    var board=B, plans=grokAllPlans(), jobs=plans.filter(function(p){return !grokSaved(board,p.cuts);}).map(function(p){return [p];});
+    if(jobs.length&&plans.length>1) jobs.push(plans);
+    for(var job of jobs){
+      if(B!==board||generation!==grokPreparing||!grokActive()) return;
+      var ref=grokReferences(job), indicator=job.length>1?grokEditor.querySelector('[data-grok-all-ready]'):
+        grokEditor.querySelector('[data-grok-card="'+job[0].group+'"] [data-grok-ready]');
+      if(!indicator) continue;
+      if(!ref.file) indicator.textContent='격자·시트 준비 중…';
+      await ref.pending;
+      if(indicator.isConnected&&generation===grokPreparing) indicator.textContent=ref.file?'격자·시트 준비 완료':'다시 시도할 수 있어요.';
+    }
+  },100);
+}
+function grokDrawPrompt(plans){
+  if(plans.length===1) return '출력 파일명: '+grokClipName(plans[0].group)+'\n\n'+grokGridPrompt(plans[0]);
+  return '아래 묶음마다 별도의 격자 PNG 한 장을 그려 주세요. 인물 디자인과 화풍을 이어 주세요. 여러 장을 한 번에 만들 수 없으면 앞 묶음부터 만들고 「다음」을 기다리세요. 두 번째 묶음부터 첫 칸을 바로 앞 묶음의 마지막 칸과 맞추세요.\n\n'+
+    plans.map(function(plan){return grokClipName(plan.group)+' · '+grokTitle(plan)+'\n'+grokGridPrompt(plan);}).join('\n\n──────\n\n');
+}
+function grokRememberRequests(plans){
+  var board=B, requests=Object.assign({},board.grokGridRequests||{});
+  plans.forEach(function(plan){
+    requests[plan.key]=plan.settings;
+    var heading=grokEditor.querySelector('[data-grok-card="'+plan.group+'"] strong');
+    if(heading) heading.textContent=grokTitle(plan)+' · '+plan.cuts.length+'컷 · '+plan.cols+'×'+plan.rows;
+  });
+  board.grokGridRequests=requests;save();
+  if(board.sid&&stItem(board.sid)) stSave('',false,true);
+}
+async function grokSendDrawing(plans,web){
+  if(grokBusy||!plans.length||plans.some(function(p){return !p||p.board!==B;})) return;
+  var board=B, prompt=grokDrawPrompt(plans), ref=grokReferences(plans);
+  var fallback=grokEditor.querySelector('[data-grok-web]');
+  grokFallback={board:board,groups:plans.map(function(p){return p.group;})};
+  if(!web){
+    if(!navigator.share){
+      fallback.hidden=false;grokStatus('이 브라우저에서는 앱 공유를 열 수 없습니다.');return;
+    }
+    if(!ref.file){
       grokStatus('참고 자료를 준비하고 있습니다…');
+      await ref.pending;
+      if(B===board) grokStatus(ref.file?'참고 자료를 준비했습니다. GPT로 보내기를 다시 누르세요.':'참고 자료를 준비하지 못했습니다. 다시 시도해 주세요.');
       return;
     }
     var payload={files:[ref.file],text:prompt};
-    if(!navigator.canShare||navigator.canShare(payload)){
-      try{
-        await navigator.share(payload);
-        fallback.hidden=true;
-        grokStatus(plans?'전체 묶음 요청문을 공유했습니다. 완성 격자는 여러 장 한 번에 올릴 수 있습니다.':'프롬프트를 공유했습니다. ChatGPT에서 그림을 만든 뒤 완성 격자를 올리세요.');
-        return;
-      }catch(err){
-        fallback.hidden=false;
-        grokStatus(err.name==='AbortError'?'공유를 취소했습니다. 다시 누르면 ChatGPT를 선택할 수 있어요.':'공유 창을 열지 못했습니다. 다시 시도하거나 웹으로 열어 주세요.');
-        return;
-      }
+    if(navigator.canShare&&!navigator.canShare(payload)){
+      fallback.hidden=false;grokStatus('이 브라우저에서는 앱 공유를 열 수 없습니다.');return;
     }
-    fallback.hidden=false;
-    grokStatus('이 브라우저에서 앱으로 공유할 수 없습니다. 웹으로 열 수 있어요.');
+    try{
+      grokRememberRequests(plans);
+      await navigator.share(payload);
+      if(B===board){fallback.hidden=true;grokStatus('GPT에 공유했습니다. 받은 결과 격자를 올려 주세요.');}
+    }catch(err){
+      if(B===board){fallback.hidden=false;grokStatus(err.name==='AbortError'?'공유를 취소했습니다.':'앱 공유에 실패했습니다. 다시 시도하거나 웹으로 열어 주세요.');}
+    }
     return;
   }
-  var copying=grokCopy(prompt);
+  grokRememberRequests(plans);
+  var copying=grokCopyText(prompt);
   batchOpenChat();
-  grokStatus('키프레임 요청문과 참고 그림을 준비하고 있습니다…');
-  var attachment=ref.ready?ref.file:await ref.pending;
-  if(B!==plan.board||(!plans&&grokPlan()?.signature!==plan.signature)) throw Error('콘티가 변경됐습니다. 요청문을 다시 만들어 주세요.');
+  var attachment=ref.file||await ref.pending;
+  if(B!==board) return;
   if(attachment) dlFile(attachment);
-  grokStatus((await copying?'프롬프트를 복사했습니다. ':'「프롬프트 보기·복사」에서 요청문을 복사하세요. ')+
-    (attachment?'저장한 참고 PNG도 ChatGPT에 첨부하세요. ':ref.error?'참고 이미지를 준비하지 못했습니다. ':'')+
-    (plans?'완성된 격자를 여러 장 선택해 올리세요.':'완성 격자 한 장을 여기로 올리세요.'));
-}
-grokEditor.addEventListener('change',async function(e){
-  var control=e.target;
-  if(!B||grokBusy) return;
-  if(control.dataset.grok!=='upload'){
-    if(!control.cut&&!['duration','count','group'].includes(control.dataset.grok)) return;
-    var settings=grokOptions(B);
-    if(control.cut){
-      batchEnsureCutIds(B);
-      settings.ids=Array.from(grokEditor.querySelectorAll('[data-grok-cuts] input:checked'),function(el){return el.cut.batchId;});
-    }else settings[control.dataset.grok]=control.value==='manual'?'manual':+control.value;
-    B.grokClip=settings;save();
-    grokStatus('');grokEditor.querySelector('[data-grok-prompt]').value='';
-    grokEditor.querySelector('[data-grok="draw-web"]').hidden=true;
-    if(control.dataset.grok==='group') renderGrokClip();
-    else{grokRefresh();grokScheduleReferences();}
-    return;
+  var copied=await copying;
+  if(!copied){
+    var details=grokEditor.querySelector('[data-grok-gpt]');
+    details.querySelector('textarea').value=prompt;
+    details.hidden=false;details.open=true;
   }
-  var picked=Array.from(control.files);control.value='';
-  if(!picked.length) return;
-  if(picked.length>1){grokImportFiles(picked);return;}
-  var plan=grokPlan();
-  if(!plan) return;
-  var named=grokFileNumber(picked[0]);
-  var group=plan.group===null?'manual':named!==null&&named>=0&&named<grokAutoGroups(B.cuts).length?named:plan.group;
-  await grokSplitFiles([{file:picked[0],group:group}]);
-});
+  grokStatus((copied?'GPT 요청문을 복사했습니다. ':'아래 GPT 요청문을 복사하세요. ')+(attachment?'다운로드한 참고 PNG를 함께 첨부하세요.':''));
+}
+function grokFileNumber(file){
+  var match=file.name.match(/(?:^|[^a-z0-9])(?:grok[-_ ]*)?clip[-_ ]*0*(\d+)(?=[^0-9]|$)/i);
+  return match?+match[1]-1:null;
+}
+function grokImportFiles(files){
+  var box=grokEditor.querySelector('[data-grok-import]'), groups=grokAutoGroups(B.cuts);
+  box.replaceChildren();box.hidden=true;
+  var numbered=files.map(grokFileNumber);
+  var valid=numbered.every(function(n){return n!==null&&n>=0&&n<groups.length;})&&new Set(numbered).size===numbered.length;
+  if(valid){grokSplitFiles(files.map(function(file,i){return {file:file,group:numbered[i]};}));return;}
+  if(files.length>groups.length){grokStatus('올린 격자가 콘티 묶음 수보다 많습니다.');return;}
+  box.hidden=false;
+  var hint=document.createElement('p');
+  hint.className='small';hint.textContent='파일마다 연결할 묶음을 확인하세요.';
+  box.appendChild(hint);
+  var picks=files.slice().sort(function(a,b){return a.lastModified-b.lastModified||a.name.localeCompare(b.name,'ko',{numeric:true});});
+  var first=groups.findIndex(function(cuts){return !grokSaved(B,cuts);});
+  first=first===-1?0:Math.min(first,groups.length-picks.length);
+  var entries=picks.map(function(file,i){
+    var row=document.createElement('label'), select=document.createElement('select');
+    row.className='filterbar';
+    groups.forEach(function(cuts,j){select.add(new Option(batchTitle(cuts.map(function(c){return c.n;})),String(j)));});
+    select.value=String(first+i);select.setAttribute('aria-label',file.name+'의 콘티 묶음');
+    row.append(file.name,select);box.appendChild(row);
+    return {file:file,select:select};
+  });
+  box.appendChild(grokButton('선택한 격자 한 번에 분리',function(){
+    var mapped=entries.map(function(entry){return {file:entry.file,group:+entry.select.value};});
+    if(new Set(mapped.map(function(entry){return entry.group;})).size!==mapped.length){grokStatus('한 묶음에 격자 한 파일만 선택하세요.');return;}
+    grokSplitFiles(mapped);
+  }));
+}
 async function grokSplitGrid(file,plan){
   var source=URL.createObjectURL(file);
   try{
     var image=await loadImg(source);
     if(!image) throw Error('격자 이미지를 열 수 없습니다.');
-    var files=[], tailUrl='';
+    var files=[], anchor=await grokAnchor(plan.previous);
     for(var i=0;i<plan.frames.length;i++){
-      if(!i&&plan.previous){
-        var first=await fetch(plan.previous.url).then(function(r){return r.blob();});
-        files.push(new File([first],grokFrameName(plan.frames[i]),{type:'image/png'}));
-        continue;
+      var blob;
+      if(!i&&anchor) blob=anchor;
+      else{
+        var cv=gridCellCanvas(image,plan,i);
+        blob=await new Promise(function(resolve){cv.toBlob(resolve,'image/png');});
       }
-      var cv=gridCellCanvas(image,plan,i);
-      var blob=await new Promise(function(resolve){cv.toBlob(resolve,'image/png');});
       if(!blob) throw Error('키프레임 이미지를 저장할 수 없습니다.');
-      if(i===plan.frames.length-1&&plan.group!==null){
-        tailUrl=await new Promise(function(resolve,reject){
-          var reader=new FileReader();
-          reader.onload=function(){resolve(reader.result);};
-          reader.onerror=function(){reject(reader.error);};
-          reader.readAsDataURL(blob);
-        });
-      }
       files.push(new File([blob],grokFrameName(plan.frames[i]),{type:'image/png'}));
     }
-    var prompt=grokVideoPrompt(plan);
-    var members=await Promise.all(files.map(async function(frame){
-      return {name:frame.name,data:new Uint8Array(await frame.arrayBuffer())};
-    }));
-    members.push({name:'grok-prompt.txt',data:new TextEncoder().encode(prompt)});
-    var archive=new File([zipArchive(members)],plan.group===null?'grok-keyframes.zip':'grok-keyframes-'+(plan.group+1)+'.zip',{type:'application/zip'});
-    if(B!==plan.board||grokPlan(plan.group===null?'manual':plan.group)?.signature!==plan.signature) throw Error('콘티가 변경됐습니다. 격자를 다시 올려 주세요.');
-    if(tailUrl) await grokStoreBoundary(plan,tailUrl);
     var ratio=(image.width/plan.cols)/(image.height/plan.rows);
-    return {signature:plan.signature,files:files,prompt:prompt,archive:archive,ratioWarning:Math.abs(ratio-16/9)>.08};
+    return grokSaveSplit(plan,files,Math.abs(ratio-16/9)>.08);
   }finally{URL.revokeObjectURL(source);}
 }
 async function grokSplitFiles(entries){
-  if(grokBusy||!B) return;
-  var board=B, results=grokResults.get(board)||new Map(), done=0, warning=false;
-  grokResults.set(board,results);
-  grokBusy=true;grokRefresh();
-  var ordered=entries.slice().sort(function(a,b){return a.group-b.group;});
-  var imported=grokEditor.querySelector('[data-grok-import]');
+  if(grokBusy||!B||!entries.length) return;
+  if(window.__stale){grokStatus('콘티를 새로고침한 뒤 다시 올려 주세요.');return;}
+  var board=B, done=0, ordered=entries.slice().sort(function(a,b){return a.group-b.group;});
+  grokBusy=true;grokUpdateBusy();
   try{
     for(var entry of ordered){
-      var plan=grokPlan(entry.group);
-      if(!plan||B!==board) throw Error('콘티 묶음이 변경됐습니다.');
-      if(plan.overlap&&!plan.previous) throw Error(plan.group+'번 묶음의 격자도 먼저 올려 주세요.');
-      grokStatus('키프레임 분리 중 · '+(done+1)+'/'+ordered.length);
-      var result=await grokSplitGrid(entry.file,plan);
-      results.set(plan.group,result);
-      done++;warning=warning||result.ratioWarning;
+      var current=grokPlan(entry.group);
+      if(!current||B!==board) throw Error('콘티 묶음이 변경됐습니다.');
+      var request=board.grokGridRequests?.[current.key];
+      var plan=request?grokPlan(entry.group,request):current;
+      if(plan.overlap&&!plan.previous) throw Error(plan.group+'번 묶음의 격자를 먼저 올려 주세요.');
+      grokStatus('키프레임 분리·저장 중 · '+(done+1)+'/'+ordered.length);
+      await grokSplitGrid(entry.file,plan);
+      done++;
     }
+    var imported=grokEditor.querySelector('[data-grok-import]');
     imported.hidden=true;imported.replaceChildren();
-    var group=ordered[0].group, settings=grokOptions(board);
-    settings.group=group;board.grokClip=settings;save();
-    grokClearResult();renderGrokClip();
-    grokStatus((done===1?'분할한 '+results.get(group==='manual'?null:group).files.length+'장 준비 완료.':done+'개 묶음 분리 완료. 콘티 묶음에서 각각 열 수 있습니다.')+
-      (warning?' 칸 비율이 16:9와 다릅니다. 미리보기에서 경계를 확인하세요.':''));
-  }catch(err){grokStatus((done?done+'개 묶음 분리됨. ':'')+err.message);}
-  finally{grokBusy=false;grokRefresh();}
-}
-grokEditor.addEventListener('click',async function(e){
-  var action=e.target.dataset.grok,plan=grokPlan();
-  if(grokBusy||!['draw','draw-all','draw-web','send','copy-video'].includes(action)) return;
-  if(action==='copy-video'){
-    if(!plan) return;
-    var didCopy=await grokCopyVideo(grokVideoPrompt(plan));
-    grokStatus(didCopy?'영상 프롬프트를 복사했습니다.':'이 브라우저에서 복사할 수 없습니다. Safari나 Chrome에서 다시 시도해 주세요.');
-    return;
+    grokStatus(done+'개 묶음의 사진과 영상 프롬프트를 저장했습니다.');
+  }catch(err){
+    grokStatus((done?done+'개 묶음 저장 완료. ':'')+err.message);
+  }finally{
+    grokBusy=false;
+    if(B===board){renderGrokClip();stepNav();}
   }
-  var all=action==='draw-all'||(action==='draw-web'&&grokDrawingAll);
-  var plans=all?grokAllPlans():null;
-  if(all){if(plans.length<2) return;plan=plans[0];}
-  if(!plan) return;
-  grokBusy=true;grokRefresh();
-  try{
-    if(action==='draw'||action==='draw-all'||action==='draw-web'){
-      grokDrawingAll=all;
-      await grokSendDrawing(plan,action==='draw-web',plans);
-    }else if(grokResult?.signature===plan.signature&&grokResult.board===B){
-      var result=grokResult,payload={files:result.files};
-      var share=!!navigator.share&&!!navigator.canShare?.(payload);
-      if(share){
-        try{
-          await navigator.share(payload);
-          grokStatus('프레임 묶음을 공유했습니다. 영상 요청문은 「영상 프롬프트 복사」를 눌러 붙여 넣으세요.');
-          return;
-        }
-        catch(err){if(err.name==='AbortError'){grokStatus('공유를 취소했습니다.');return;}}
-      }
-      dlFile(result.archive);
-      grokStatus('프레임 ZIP을 저장했습니다. 압축을 풀어 frame-01부터 첨부하고 영상 프롬프트는 따로 복사하세요.');
-    }
-  }catch(err){grokStatus(err.message);}
-  finally{grokBusy=false;grokRefresh();}
+}
+grokEditor.addEventListener('change',function(e){
+  var control=e.target, action=control.dataset.grok;
+  if(!B||grokBusy) return;
+  if(action==='duration'||action==='count'){
+    var settings=grokOptions(B);settings[action]=+control.value;
+    B.grokClip=Object.assign({},B.grokClip,settings);save();renderGrokClip();
+  }else if(action==='upload'){
+    var files=Array.from(control.files);control.value='';
+    if(files.length) grokImportFiles(files);
+  }
+});
+grokEditor.addEventListener('click',function(e){
+  var action=e.target.dataset.grok;
+  if(action==='all') grokSendDrawing(grokAllPlans(),false);
+  if(action==='web'&&grokFallback?.board===B){
+    grokSendDrawing(grokFallback.groups.map(function(group){return grokPlan(group);}),true);
+  }
 });
 
 /* 분할된 그림을 원본 컷에 연결한 채 편집한다. */
