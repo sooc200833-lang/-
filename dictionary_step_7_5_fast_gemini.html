@@ -2979,7 +2979,7 @@ button.pl-card[disabled]{cursor:default}
   <h3>7. GPT 일괄 컷 제작</h3>
   <p class="small">AI가 고른 <b>주요 컷</b>(훅·큰 컷·감정 정점·장면 끝)을 확인하고 GPT로 한 번에 그린다. 받은 그림은 컷마다 올린다.</p>
   <div id="ct-batch-panel">
-    <div class="filterbar"><button type="button" class="chip ct-go" id="ct-batch-all" data-batch="send-all" hidden>전체 묶음 GPT로 보내기</button></div>
+    <div class="filterbar"><button type="button" class="chip ct-go" id="ct-batch-all" data-batch="send-all" hidden>전체 묶음 GPT로 보내기</button><span id="ct-batch-all-status" class="small"></span></div>
     <div id="ct-batch-cuts"></div>
     <button type="button" class="chip" id="ct-batch-browser" data-batch="browser" hidden>첨부 저장하고 ChatGPT 열기</button>
     <details id="ct-batch-prompt"><summary>프롬프트 보기·복사</summary>
@@ -18346,7 +18346,7 @@ function enterProject(step){
   document.getElementById('ct-expout').replaceChildren();
   ['ct-chkout','ct-shq'].forEach(function(id){document.getElementById(id).replaceChildren();});
   ceClose();
-  batchPackage=null; batchClearPreview();
+  batchPackage=null; batchPrep=null; batchClearPreview();
   document.getElementById('ct-batch-browser').hidden=true;
   document.getElementById('ct-batch-text').value='';
   document.getElementById('ct-batch-prompt').open=false;
@@ -18486,6 +18486,9 @@ function renderBatch(){
     }
     if(!oldLayout){
       addButton('GPT로 보내기','send');
+      var status=document.createElement('span');
+      status.className='small batch-prep-status';
+      controls.appendChild(status);
     }
     var label=document.createElement('label'), input=document.createElement('input');
     label.className='chip sv-up';label.textContent='결과 격자 올리기';
@@ -18508,10 +18511,12 @@ function renderBatch(){
     if(layout.ids.every(function(id){return batchTileTarget(board,id);})) addRow(null,layout);
   });
   document.getElementById('ct-batch-all').hidden=groups.length<2;
+  document.getElementById('ct-batch-all-status').textContent='';
   document.getElementById('ct-batch-browser').hidden=true;
   if(batchPreview?.board!==B) batchClearPreview();
   renderBatchImages();
   batchStatus.textContent=groups.length?'전체 '+board.cuts.length+'컷을 '+groups.length+'개 묶음으로 나눴습니다.':'4단계에서 콘티를 만들면 컷을 자동으로 묶습니다.';
+  batchSchedulePreparation();
 }
 function batchPrompt(cuts,layout){
   return '첨부 이미지에서 이 묶음의 제목이 붙은 3D 콘티 격자를 찾아 컷마다 같은 구도를 유지하세요. '+
@@ -18560,13 +18565,111 @@ function batchCopyPrompt(prompt){
   },function(){box.open=true;return false;});
 }
 function batchSignature(board){
-  return JSON.stringify([board.cuts,board.chars,board.sceneBg,board.scenePr,board.sheetArts,board.scenes,board.skScenes,board.flow]);
+  return JSON.stringify([board.cuts,board.chars,board.sceneBg,board.scenePr,board.sheetArts,board.scenes,board.skScenes,board.flow,batchArtRevision],
+    function(key,value){return key==='batchId'?undefined:value;});
 }
-async function batchAttachment(groups,layouts){
+var batchPrep=null,batchPrepTimer=0,batchArtRevision=0;
+function batchGroupKey(cuts){
+  return cuts.map(function(c){return c.n;}).join(',');
+}
+function batchPreparation(board){
+  var signature=batchSignature(board);
+  if(batchPrep?.board!==board || batchPrep.signature!==signature){
+    batchPrep={board:board,signature:signature,files:new Map(),grids:new Map()};
+  }
+  return batchPrep;
+}
+function batchVisible(board){
+  return B===board && CSTEP===7 && root.classList.contains('page-on') &&
+    !root.classList.contains('ct-choosing') && !document.hidden;
+}
+function batchPreparedFile(prep,groups,layouts,progress){
+  var key=groups.map(batchGroupKey).join('/');
+  var entry=prep.files.get(key);
+  if(!entry){
+    entry={file:null,pending:null};
+    prep.files.set(key,entry);
+    entry.pending=batchAttachment(groups,layouts,prep,progress).then(function(file){
+      entry.file=file;
+      return file;
+    }).catch(function(err){
+      prep.files.delete(key);
+      throw err;
+    });
+  }
+  return entry;
+}
+async function batchPreparedGrid(prep,cuts,layout){
+  var key=batchGroupKey(cuts), pending=prep.grids.get(key);
+  if(!pending){
+    pending=(async function(){
+      var canvas=await batch3d(cuts,layout,prep.board.cuts.length>40?384:640);
+      var blob=await new Promise(function(resolve){canvas.toBlob(resolve,'image/png');});
+      if(!blob) throw Error('3D 격자 이미지를 만들 수 없습니다.');
+      return blob;
+    })().catch(function(err){prep.grids.delete(key);throw err;});
+    prep.grids.set(key,pending);
+  }
+  var url=URL.createObjectURL(await pending);
+  try{
+    var image=await loadImg(url);
+    if(!image) throw Error('3D 격자 이미지를 열 수 없습니다.');
+    return image;
+  }finally{URL.revokeObjectURL(url);}
+}
+function batchSchedulePreparation(){
+  clearTimeout(batchPrepTimer);
+  if(!B?.cuts.length || !window.__ppReady || !batchVisible(B)) return;
+  batchPrepTimer=setTimeout(batchPrepareVisible,120);
+}
+async function batchPrepareVisible(){
+  if(!B?.cuts.length || !batchVisible(B)) return;
+  var prep=batchPreparation(B);
+  if(prep.warming) return;
+  prep.warming=true;
+  var groups=batchGroups(prep.board.cuts), jobs=groups.map(function(cuts){return [cuts];});
+  if(groups.length>1) jobs.push(groups);
+  function current(){
+    return batchPrep===prep && batchVisible(prep.board) && batchSignature(prep.board)===prep.signature;
+  }
+  function mark(job,text){
+    if(!current()) return;
+    var target=job.length>1?document.getElementById('ct-batch-all-status'):
+      Array.from(batchPanel.querySelectorAll('.batch-request [data-batch="send"]')).find(function(b){
+        return b.cuts[0]===job[0][0];
+      })?.parentElement.querySelector('.batch-prep-status');
+    if(target) target.textContent=text;
+  }
+  try{
+    for(var job of jobs){
+      if(!current()) return;
+      var entry=batchPreparedFile(prep,job,job.map(function(cuts){return batchLayout(cuts.length);}));
+      if(!entry.file){
+        mark(job,'격자·시트 준비 중…');
+        await entry.pending;
+        if(!current()) return;
+        mark(job,'격자·시트 준비 완료');
+        await new Promise(function(resolve){setTimeout(resolve,60);});
+      }else mark(job,'격자·시트 준비 완료');
+    }
+  }catch(err){
+    mark(job,'보낼 때 다시 준비');
+  }finally{
+    prep.warming=false;
+  }
+}
+document.addEventListener('visibilitychange',batchSchedulePreparation);
+document.addEventListener('pp-art-ready',function(){
+  batchArtRevision++;
+  if(B && batchVisible(B)) batchSchedulePreparation();
+});
+
+async function batchAttachment(groups,layouts,prep,progress){
   var images=[];
   for(var i=0;i<groups.length;i++){
-    batchStatus.textContent='GPT 첨부 준비 중 · 3D 격자 '+(i+1)+'/'+groups.length;
-    var grid=await batch3d(groups[i],layouts[i],groups.length>4?320:640);
+    if(batchPrep!==prep || B!==prep.board) throw Error('콘티가 변경되었습니다.');
+    if(progress) progress(i+1,groups.length);
+    var grid=await batchPreparedGrid(prep,groups[i],layouts[i]);
     images.push({name:'묶음 '+(i+1)+' · '+batchTitle(groups[i].map(function(c){return c.n;}))+' · 3D 콘티 격자',image:grid});
   }
   var selected=groups.flat(), refs=refImgs(selected), art=window.__ppArt;
@@ -18639,17 +18742,20 @@ batchPanel.addEventListener('click',async function(e){
       });
       var prompt=sections.length===1?sections[0]:
         '묶음별로 별도의 격자 이미지 한 장을 만들어 주세요. 여러 장을 지원하면 한 번에 생성하고, 한 장씩만 가능하면 첫 번째부터 만들고 「다음」을 기다리세요. 묶음을 합쳐 한 장으로 그리지 마세요.\n\n'+sections.join('\n\n');
-      var signature=batchSignature(board);
+      var prep=batchPreparation(board), signature=prep.signature;
       var pack=batchPackage;
       if(!pack||pack.board!==board||pack.key!==key||pack.signature!==signature) pack=null;
-      var shareFile=pack?.file||new File([''],'콘티.png',{type:'image/png'});
+      var prepared=pack?null:batchPreparedFile(prep,groups,layouts,function(i,total){
+        batchStatus.textContent='GPT 첨부 준비 중 · 3D 격자 '+i+'/'+total;
+      });
+      var shareFile=pack?.file||prepared?.file||new File([''],'콘티.png',{type:'image/png'});
       var nativeShare=!!navigator.share&&!!navigator.canShare?.({files:[shareFile],text:prompt});
       var copying=nativeShare?null:batchCopyPrompt(prompt);
       if(!nativeShare) batchOpenChat();
       fallback.hidden=true;
       if(!pack){
         batchPackage=null;
-        var file=await batchAttachment(groups,layouts);
+        var file=prepared.file||await prepared.pending;
         if(B!==board||batchSignature(board)!==signature) throw Error('콘티가 변경되었습니다. GPT로 보내기를 다시 눌러 주세요.');
         pack=batchPackage={board:board,key:key,signature:signature,prompt:prompt,file:file};
       }
