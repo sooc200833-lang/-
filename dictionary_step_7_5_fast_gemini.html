@@ -5578,48 +5578,48 @@ function hsUse(h, F){
 
 window.PAGE_ON=window.PAGE_ON||{};   // 페이지를 열 때 부를 함수 (id → fn)
 var PAGES=[
- {g:'기초',id:'oneshot',t:'단편은 주인공을 판다',d:'설정에 지면을 쓰지 않는 법. 이 문서 전체의 전제.'},
- {g:'기초',id:'length',t:'첫 작품을 너무 길게 잡는 문제',d:'80화 구상이 아니라 단편 하나. 왜 단편부터인가.'},
- {g:'기초',id:'redflag',t:'편집자가 거르는 도입 3가지',d:'아침 루틴, 회고형, 비극 남용. 왜 걸러지고 무엇으로 바꾸나.'},
- {g:'기초',id:'grammar',t:'만화 연출 문법',d:'컷 크기·페이지 넘김·무음 컷 등 8가지 도구.'},
- {g:'기초',id:'authors',t:'작가별 연출 문법',d:'나루토·죠죠·아키라·원피스·핑퐁 등 12가지 대표 연출.'},
- {g:'기초',id:'poses',t:'만화 자세·구도',d:'만화에서 자주 쓰이는 유명한 자세와 구도. 언제 쓰고 무엇을 전하나.'},
- {g:'기초',id:'pagemap',t:'페이지 배분 설계',d:'도입·초반·중반·정점·마무리 다섯 구간의 지면 계산.'},
+ {g:'생성기·구성기',id:'charsheet',t:'캐릭터 시트 생성기',d:'인물 하나의 턴어라운드·표정·얼굴 각도·의상·포즈·컬러 시트를 GPT로. 생김새는 AI가 짜 주고, 받은 그림은 인물별로 모은다.'},
+ {g:'생성기·구성기',id:'shuffle',t:'랜덤 구성기',d:'소재·클리셰·엔딩을 한 번에. 연재 모드와 고정 지원.'},
+ {g:'생성기·구성기',id:'ideacomp',t:'아이디어 구성기',d:'적어 둔 아이디어로 소재·클리셰·엔딩·주인공을 골라 구성안을 만든다.'},
+ {g:'생성기·구성기',id:'conti',t:'콘티 구성기',d:'구성기의 이야기와 클리셰 컷 배정으로 컷마다 구도 그림과 글을 짠다.'},
+ {g:'색인·사전',id:'index',t:'클리셰 색인',d:'813개. 기능·연출 도구·배치·상태·지면으로 검색.'},
+ {g:'색인·사전',id:'motifidx',t:'소재 색인',d:'138개. 세계 규칙·사회 조건·인물 처지. 원작 표시 포함.'},
+ {g:'색인·사전',id:'chars',t:'캐릭터 모티브 색인',d:'291개(판타지 70). 외모·성격·결핍 세 축의 재료.'},
+ {g:'색인·사전',id:'endidx',t:'엔딩 색인',d:'334개. 구조·승패·인물·관계·세계·정서·반전·연재.'},
+ {g:'색인·사전',id:'epidx',t:'에피소드 소재 색인',d:'220개. 한 화를 채우는 작은 사건. 로맨스·개그·일상.'},
+ {g:'색인·사전',id:'ctfx',t:'콘티 연출 색인',d:'컷 여러 개를 잇는 연출 46가지. 반응 컷·교차 편집·넘김 훅·스크롤 여백을 그림 순서로 보고 콘티에 바로 넣는다.'},
+ {g:'색인·사전',id:'cutdict',t:'컷 연출 사전',d:'칸 배치가 만드는 효과 32가지(같은 구도 확대·넓히며 공개·쪼개기…)와 한 칸 연출 69가지를 배치도·효과·예시로.'},
+ {g:'색인·사전',id:'combo',t:'금지 조합과 표준 체인',d:'서로 죽이는 짝 20개, 덩어리로 움직이는 줄 9개.'},
+ {g:'색인·사전',id:'m1',t:'첫 컷 실전 등장',d:'원샷의 필수. 1–2쪽에 캐릭터를 판다.'},
+ {g:'색인·사전',id:'m2',t:'각성 · 한계 돌파',d:'참는 컷이 없으면 스프레드는 큰 그림에 그친다.'},
+ {g:'색인·사전',id:'m3',t:'기술명 외치기',d:'만화 고유의 장치. 단편에서는 하나만.'},
+ {g:'색인·사전',id:'m4',t:'전투 중 회상',d:'가장 비싼 장치. 단편은 2컷까지.'},
+ {g:'색인·사전',id:'m5',t:'관전자의 해설',d:'사건의 크기는 보는 사람이 정한다.'},
+ {g:'색인·사전',id:'m6',t:'라이벌과의 공투',d:'중요한 건 등장이 아니라 해산 컷이다.'},
+ {g:'색인·사전',id:'m7',t:'토너먼트 편',d:'연재의 산업적 발명. 단편에는 부적합.'},
+ {g:'색인·사전',id:'m8',t:'실력 은폐와 폭로',d:'상품은 능력이 아니라 반응 컷이다.'},
+ {g:'색인·사전',id:'m9',t:'적의 사연 공개',d:'작품당 두세 명으로 제한한다.'},
+ {g:'색인·사전',id:'m10',t:'최악의 첫 만남',d:'낙차를 만드는 장치. 후반에 재인용한다.'},
+ {g:'저장소',id:'texts',t:'글 보관함',d:'구성기에서 쓴 줄거리·웹소설·컷별 콘티를 모아 둔다.'},
+ {g:'저장소',id:'contis',t:'콘티 저장소',d:'콘티 구성기에서 쓴 콘티를 화·버전별로 모아 미리 보고 다시 연다.'},
+ {g:'저장소',id:'cast',t:'등장인물',d:'내 작품의 인물. 구성기가 글을 쓸 때 이름이 나오면 여기 적힌 특징을 따른다. 「베스트컷」 탭에서 자세·구도를 정해 컷을 만든다.'},
+ {g:'저장소',id:'favs',t:'즐겨찾기',d:'별표한 클리셰·소재·캐릭터를 한 화면에 모아 본다.'},
+ {g:'저장소',id:'assets',t:'에셋 모음',d:'배경·사물 그림을 모아 두고 선화(선따기)·배경 지우기를 해서 PNG·ZIP으로 내려받는다. 다른 앱에서도 쓸 수 있게.'},
+ {g:'도구',id:'probe',t:'작품 분석',d:'본 작품의 이야기에서 클리셰·소재를 찾고, 만화 이미지의 컷 연출을 읽는다.'},
+ {g:'도구',id:'arc',t:'아크 점검표',d:'장편용. 네 칸을 채워 점검하고 장르별 예시 48개.'},
+ {g:'도구',id:'ai',t:'AI 연결',d:'구글 제미나이 키를 넣고 비틀기·연관짓기·글쓰기를 쓴다.'},
  {g:'놀이',id:'play',t:'클리셰 플레이',d:'AI가 진행하는 웹툰 한 편을 직접 플레이. 숨은 클리셰 카드가 터지면 따르거나 뒤집는다.'},
  {g:'놀이',id:'castplay',t:'캐스팅 플레이',d:'시작 소재·클리셰·주인공을 직접 고르고, 장르에 맞는 조연·엑스트라를 AI로 미리 만든 뒤 플레이. 중요 장면은 직접 구도를 잡는다.'},
- {g:'도구',id:'charsheet',t:'캐릭터 시트 생성기',d:'인물 하나의 턴어라운드·표정·얼굴 각도·의상·포즈·컬러 시트를 GPT로. 생김새는 AI가 짜 주고, 받은 그림은 인물별로 모은다.'},
- {g:'도구',id:'shuffle',t:'랜덤 구성기',d:'소재·클리셰·엔딩을 한 번에. 연재 모드와 고정 지원.'},
- {g:'도구',id:'ideacomp',t:'아이디어 구성기',d:'적어 둔 아이디어로 소재·클리셰·엔딩·주인공을 골라 구성안을 만든다.'},
- {g:'도구',id:'texts',t:'글 보관함',d:'구성기에서 쓴 줄거리·웹소설·컷별 콘티를 모아 둔다.'},
- {g:'도구',id:'conti',t:'콘티 구성기',d:'구성기의 이야기와 클리셰 컷 배정으로 컷마다 구도 그림과 글을 짠다.'},
- {g:'도구',id:'ctfx',t:'콘티 연출 색인',d:'컷 여러 개를 잇는 연출 46가지. 반응 컷·교차 편집·넘김 훅·스크롤 여백을 그림 순서로 보고 콘티에 바로 넣는다.'},
- {g:'도구',id:'assets',t:'에셋 모음',d:'배경·사물 그림을 모아 두고 선화(선따기)·배경 지우기를 해서 PNG·ZIP으로 내려받는다. 다른 앱에서도 쓸 수 있게.'},
- {g:'도구',id:'cutdict',t:'컷 연출 사전',d:'칸 배치가 만드는 효과 32가지(같은 구도 확대·넓히며 공개·쪼개기…)와 한 칸 연출 69가지를 배치도·효과·예시로.'},
- {g:'도구',id:'contis',t:'콘티 저장소',d:'콘티 구성기에서 쓴 콘티를 화·버전별로 모아 미리 보고 다시 연다.'},
- {g:'도구',id:'arc',t:'아크 점검표',d:'장편용. 네 칸을 채워 점검하고 장르별 예시 48개.'},
- {g:'도구',id:'epidx',t:'에피소드 소재 색인',d:'220개. 한 화를 채우는 작은 사건. 로맨스·개그·일상.'},
- {g:'도구',id:'ai',t:'AI 연결',d:'구글 제미나이 키를 넣고 비틀기·연관짓기·글쓰기를 쓴다.'},
- {g:'도구',id:'probe',t:'작품 분석',d:'본 작품의 이야기에서 클리셰·소재를 찾고, 만화 이미지의 컷 연출을 읽는다.'},
- {g:'도구',id:'index',t:'클리셰 색인',d:'813개. 기능·연출 도구·배치·상태·지면으로 검색.'},
- {g:'도구',id:'motifidx',t:'소재 색인',d:'138개. 세계 규칙·사회 조건·인물 처지. 원작 표시 포함.'},
- {g:'도구',id:'chars',t:'캐릭터 모티브 색인',d:'291개(판타지 70). 외모·성격·결핍 세 축의 재료.'},
- {g:'도구',id:'cast',t:'등장인물',d:'내 작품의 인물. 구성기가 글을 쓸 때 이름이 나오면 여기 적힌 특징을 따른다. 「베스트컷」 탭에서 자세·구도를 정해 컷을 만든다.'},
- {g:'도구',id:'endidx',t:'엔딩 색인',d:'334개. 구조·승패·인물·관계·세계·정서·반전·연재.'},
- {g:'도구',id:'favs',t:'즐겨찾기',d:'별표한 클리셰·소재·캐릭터를 한 화면에 모아 본다.'},
- {g:'도구',id:'combo',t:'금지 조합과 표준 체인',d:'서로 죽이는 짝 20개, 덩어리로 움직이는 줄 9개.'},
- {g:'사전 본편',id:'m1',t:'첫 컷 실전 등장',d:'원샷의 필수. 1–2쪽에 캐릭터를 판다.'},
- {g:'사전 본편',id:'m2',t:'각성 · 한계 돌파',d:'참는 컷이 없으면 스프레드는 큰 그림에 그친다.'},
- {g:'사전 본편',id:'m3',t:'기술명 외치기',d:'만화 고유의 장치. 단편에서는 하나만.'},
- {g:'사전 본편',id:'m4',t:'전투 중 회상',d:'가장 비싼 장치. 단편은 2컷까지.'},
- {g:'사전 본편',id:'m5',t:'관전자의 해설',d:'사건의 크기는 보는 사람이 정한다.'},
- {g:'사전 본편',id:'m6',t:'라이벌과의 공투',d:'중요한 건 등장이 아니라 해산 컷이다.'},
- {g:'사전 본편',id:'m7',t:'토너먼트 편',d:'연재의 산업적 발명. 단편에는 부적합.'},
- {g:'사전 본편',id:'m8',t:'실력 은폐와 폭로',d:'상품은 능력이 아니라 반응 컷이다.'},
- {g:'사전 본편',id:'m9',t:'적의 사연 공개',d:'작품당 두세 명으로 제한한다.'},
- {g:'사전 본편',id:'m10',t:'최악의 첫 만남',d:'낙차를 만드는 장치. 후반에 재인용한다.'},
- {g:'제작',id:'advice',t:'제작 실무 노트',d:'사전을 원고로 바꾸는 순서. 단계별 실수와 증상별 진단.'},
- {g:'마무리',id:'final',t:'원샷 최종 점검',d:'투고 전 체크리스트.'},
- {g:'마무리',id:'refs',t:'참고 문서',d:'나무위키 클리셰 계열 링크.'}
+ {g:'배우기',id:'oneshot',t:'단편은 주인공을 판다',d:'설정에 지면을 쓰지 않는 법. 이 문서 전체의 전제.'},
+ {g:'배우기',id:'length',t:'첫 작품을 너무 길게 잡는 문제',d:'80화 구상이 아니라 단편 하나. 왜 단편부터인가.'},
+ {g:'배우기',id:'redflag',t:'편집자가 거르는 도입 3가지',d:'아침 루틴, 회고형, 비극 남용. 왜 걸러지고 무엇으로 바꾸나.'},
+ {g:'배우기',id:'grammar',t:'만화 연출 문법',d:'컷 크기·페이지 넘김·무음 컷 등 8가지 도구.'},
+ {g:'배우기',id:'authors',t:'작가별 연출 문법',d:'나루토·죠죠·아키라·원피스·핑퐁 등 12가지 대표 연출.'},
+ {g:'배우기',id:'poses',t:'만화 자세·구도',d:'만화에서 자주 쓰이는 유명한 자세와 구도. 언제 쓰고 무엇을 전하나.'},
+ {g:'배우기',id:'pagemap',t:'페이지 배분 설계',d:'도입·초반·중반·정점·마무리 다섯 구간의 지면 계산.'},
+ {g:'배우기',id:'advice',t:'제작 실무 노트',d:'사전을 원고로 바꾸는 순서. 단계별 실수와 증상별 진단.'},
+ {g:'배우기',id:'final',t:'원샷 최종 점검',d:'투고 전 체크리스트.'},
+ {g:'배우기',id:'refs',t:'참고 문서',d:'나무위키 클리셰 계열 링크.'}
 ];
 (function(){
 // 게이지
@@ -11612,22 +11612,18 @@ var DK_SVG={
   trashFull:'<svg viewBox="0 0 46 38" aria-hidden="true"><path class="dk-ff" d="M14 5.5l7-3 4 3.5 6-2 2 4.5z"/><path d="M11.5 8.5h23l-2.2 27.5H13.7z"/><path class="ln" d="M8.5 8.5h29"/><path class="ln" d="M18.5 14v17M23 14v17M27.5 14v17"/></svg>'
 };
 function dkLoad(){ var o=null; try{ o=JSON.parse(localStorage.getItem('deskLayout')||'null'); }catch(e){}
-  if(!o||typeof o!=='object') o={}; if(!o.pos||typeof o.pos!=='object') o.pos={}; return o; }
+  if(!o||typeof o!=='object') o={}; if(!o.pos||typeof o.pos!=='object') o.pos={};
+  if(!o.pos['g:색인·사전']){
+    var old=o.pos['g:색인']||o.pos['g:사전 본편'];
+    if(old) o.pos['g:색인·사전']=old;
+  }
+  return o; }
 function dkSave(L){ if(window.__stale) return; L.v=1; L.at=Date.now(); try{ localStorage.setItem('deskLayout', JSON.stringify(L)); }catch(e){} }
 // 정보 페이지 묶음(g:갈래)과 꺼내 둔 페이지(p:id). 바로 가기가 있는 페이지는 묶음에서 뺀다
-var DK_SCP=[];   // 예전 바로 가기(즐겨찾기·등장인물·글 보관함·콘티)는 이제 「저장소」·「도구」 묶음 안에 있다
-var DK_CAT={play:'놀이', castplay:'놀이', favs:'저장소', cast:'저장소', texts:'저장소', contis:'저장소',
-  index:'색인', motifidx:'색인', chars:'색인', endidx:'색인', epidx:'색인', ctfx:'색인', cutdict:'색인', combo:'색인',
-  shuffle:'도구', ideacomp:'도구', assets:'도구', conti:'도구', arc:'도구', probe:'도구', ai:'도구',
-  oneshot:'배우기', length:'배우기', redflag:'배우기', grammar:'배우기', authors:'배우기', poses:'배우기', pagemap:'배우기', advice:'배우기', final:'배우기', refs:'배우기'};
-var DK_CAT_ORDER=['놀이','저장소','색인','도구','배우기','사전 본편'];
-function dkCat(p){ if(DK_CAT[p.id]) return DK_CAT[p.id]; var t=String(p.t||'');
-  if(/보관함|저장소/.test(t)) return '저장소'; if(/색인|사전$|목록/.test(t) && p.g!=='사전 본편') return '색인'; if(/구성기|분석|점검표|연결/.test(t)) return '도구';
-  if(p.g==='기초'||p.g==='제작'||p.g==='마무리') return '배우기'; return p.g; }
-function dkVis(p){ return !/^(contis|conti)$/.test(p.id) || !!document.getElementById(p.id); }   // 콘티 페이지가 없는 판(시험용 등)에서는 빼기
-function dkGroups(){ var gs=[]; PAGES.forEach(function(p){ if(!dkVis(p)) return; var c=dkCat(p); if(gs.indexOf(c)<0) gs.push(c); });
-  return gs.sort(function(a,b){ var i=DK_CAT_ORDER.indexOf(a), j=DK_CAT_ORDER.indexOf(b); return (i<0?99:i)-(j<0?99:j); }); }
-function dkGroupPages(g){ return PAGES.filter(function(p){ return dkCat(p)===g && dkVis(p); }); }
+var DK_SCP=[];
+function dkVis(p){ return !/^(contis|conti)$/.test(p.id) || !!document.getElementById(p.id); }
+function dkGroups(){ return Array.from(new Set(PAGES.filter(dkVis).map(function(p){return p.g;}))); }
+function dkGroupPages(g){ return PAGES.filter(function(p){ return p.g===g && dkVis(p); }); }
 function dkPage(id){ for(var i=0;i<PAGES.length;i++) if(PAGES[i].id===id) return PAGES[i]; return null; }
 function dkPins(){ var L=DK.L||dkLoad(); return (Array.isArray(L.pins)?L.pins:[]).filter(function(id){ return !!dkPage(id) && DK_SCP.indexOf(id)<0; }); }
 function dkLabel(id, def){ var L=DK.L||dkLoad(); return (L.names && L.names[id]) || def; }
@@ -11663,7 +11659,7 @@ function dkIcon(id, c, g, cnt){
   if(f!==null){ label=f; glyph=DK_SVG.folder; n=cnt[f]||0; if(f===CURFOLDER) cls+=' cur';
     aria='폴더 '+f+', 항목 '+n+'개'+(f===CURFOLDER?', 지금 폴더':''); }
   else if(id==='s:trash'){ label='휴지통'; glyph=DK.trash.length?DK_SVG.trashFull:DK_SVG.trash; n=DK.trash.length; aria='휴지통'; }
-  else if(id.indexOf('g:')===0){ var gg=id.slice(2); label=dkLabel(id, gg==='놀이'?'클리셰 플레이':gg); glyph=DK_SVG[{'놀이':'game','저장소':'store','색인':'idx','도구':'tool','배우기':'book'}[gg]]||DK_SVG.group; n=dkGroupPages(gg).length; aria=label+' 묶음, '+n+'개'; }
+  else if(id.indexOf('g:')===0){ var gg=id.slice(2); label=dkLabel(id, gg==='놀이'?'클리셰 플레이':gg); glyph=DK_SVG[{'놀이':'game','저장소':'store','색인·사전':'idx','생성기·구성기':'tool','도구':'tool','배우기':'book'}[gg]]||DK_SVG.group; n=dkGroupPages(gg).length; aria=label+' 묶음, '+n+'개'; }
   else if(id.indexOf('p:')===0){ var pg=dkPage(id.slice(2)); label=dkLabel(id, pg?pg.t:id.slice(2)); glyph=DK_SVG.page; aria=label+' 열기'; }
   else { DK_SC.forEach(function(s){ if(s.id===id) sc=s; }); label=dkLabel(id, sc.t); glyph=DK_SVG[sc.g];
     n=id==='s:favs'?Object.keys(FAV).length:(id==='s:cast'?dkRec('mangaCast'):(id==='s:texts'?dkRec('mangaTexts'):(id==='s:contis'?dkRec('contiSaved'):0))); aria=label+' 열기'; }
