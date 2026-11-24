@@ -3019,6 +3019,7 @@ button.pl-card[disabled]{cursor:default}
     <p class="small" data-grok-info role="status"></p>
     <div class="filterbar">
       <button class="chip ct-go" type="button" data-grok="draw">키프레임 요청문 GPT로 보내기</button>
+      <button class="chip" type="button" data-grok="draw-web" hidden>키프레임 요청문 웹으로 열기</button>
       <label class="chip sv-up">GPT 완성 격자 올리기 <input type="file" accept="image/*" data-grok="upload" aria-label="GPT 완성 격자 올리기"></label>
       <button class="chip ct-go" type="button" data-grok="send" disabled>프레임과 프롬프트 Grok으로 보내기</button>
     </div>
@@ -18877,7 +18878,7 @@ async function batchUpload(input,cuts,previous){
 
 /* 8단계에서 선택한 컷을 시간순 키프레임으로 만든다. */
 var grokEditor=document.getElementById('ct-grok-clip');
-var grokView=null,grokResult=null,grokBusy=false;
+var grokView=null,grokResult=null,grokBusy=false,grokReference=null,grokReferenceTimer=0;
 function grokOptions(board){
   var conf=board?.grokClip||{};
   var duration=Number.isInteger(conf.duration)&&conf.duration>=6&&conf.duration<=15?conf.duration:10;
@@ -18951,7 +18952,7 @@ function grokRefresh(){
     count+'컷 · '+plan.frames.length+'장 · '+plan.cols+'열 × '+plan.rows+'행':
     count?'컷 수가 키프레임 수보다 많습니다. 선택을 줄이거나 장수를 늘려 주세요.':'영상에 넣을 컷을 선택하세요.';
   grokEditor.querySelectorAll('[data-grok-cuts] input,select').forEach(function(el){el.disabled=grokBusy;});
-  grokEditor.querySelectorAll('[data-grok="draw"], [data-grok="upload"]').forEach(function(el){el.disabled=grokBusy||!plan;});
+  grokEditor.querySelectorAll('[data-grok="draw"], [data-grok="draw-web"], [data-grok="upload"]').forEach(function(el){el.disabled=grokBusy||!plan;});
   grokEditor.querySelector('[data-grok="send"]').disabled=grokBusy||!grokResult;
   return plan;
 }
@@ -18961,7 +18962,8 @@ function renderGrokClip(){
   var settings=grokOptions(B), selected=new Set(settings.ids);
   var list=grokEditor.querySelector('[data-grok-cuts]');
   if(grokView!==B){
-    grokView=B;grokClearResult();grokStatus('');
+    grokView=B;grokReference=null;grokClearResult();grokStatus('');
+    grokEditor.querySelector('[data-grok="draw-web"]').hidden=true;
     grokEditor.querySelector('[data-grok-prompt]').value='';
     grokEditor.querySelector('details').open=false;
   }
@@ -18975,7 +18977,7 @@ function renderGrokClip(){
   });
   grokEditor.querySelector('[data-grok="duration"]').value=settings.duration;
   grokEditor.querySelector('[data-grok="count"]').value=settings.count;
-  grokRefresh();
+  grokRefresh();grokScheduleReferences();
 }
 function grokCopy(text){
   var input=grokEditor.querySelector('[data-grok-prompt]');
@@ -18984,6 +18986,84 @@ function grokCopy(text){
     if(navigator.clipboard?.writeText) return true;
     grokEditor.querySelector('details').open=true;return false;
   },function(){grokEditor.querySelector('details').open=true;return false;});
+}
+function grokReferenceKey(plan){
+  return JSON.stringify([plan.signature,batchArtRevision,plan.board.chars,plan.board.sceneBg,plan.board.sheetArts,
+    plan.beats.map(function(beat){return [beat.cut.art,beat.cut.comp];})]);
+}
+function grokReferences(plan){
+  var key=grokReferenceKey(plan);
+  if(grokReference?.board===plan.board&&grokReference.key===key&&!grokReference.error) return grokReference;
+  var ref=grokReference={board:plan.board,key:key,ready:false,file:null,error:null};
+  var cuts=plan.beats.map(function(b){return b.cut;}), art=window.__ppArt;
+  var originals=Promise.all(cuts.map(async function(c){
+    var src=c.art&&art?.get(c.art);
+    return src?{name:c.n+'번 원본 컷',image:await loadImg(src)}:null;
+  }));
+  ref.pending=Promise.all([originals,batchReferenceImages(cuts)]).then(async function(images){
+    var list=images[0].filter(function(item){return item?.image;}).concat(images[1]);
+    ref.file=list.length?await batchReferenceFile(list,'grok-키프레임-참고.png'):null;
+    ref.ready=true;
+    if(ref===grokReference&&ref.announce){
+      grokStatus('참고 자료가 준비됐습니다. 버튼을 다시 눌러 공유 창에서 ChatGPT를 선택하세요.');
+    }
+    return ref.file;
+  }).catch(function(err){
+    ref.error=err;
+    if(ref===grokReference&&ref.announce){
+      grokStatus('참고 자료를 준비하지 못했습니다. 보내기를 다시 눌러 주세요.');
+      grokEditor.querySelector('[data-grok="draw-web"]').hidden=false;
+    }
+    return null;
+  });
+  return ref;
+}
+function grokScheduleReferences(){
+  clearTimeout(grokReferenceTimer);
+  var plan=grokPlan();
+  if(!plan||grokReference?.key!==grokReferenceKey(plan)) grokReference=null;
+  if(!plan) return;
+  grokReferenceTimer=setTimeout(function(){
+    if(B===plan.board&&CSTEP===8&&root.classList.contains('page-on')&&!root.classList.contains('ct-choosing')) grokReferences(plan);
+  },120);
+}
+async function grokSendDrawing(plan,web){
+  var prompt=grokGridPrompt(plan), ref=grokReferences(plan);
+  var fallback=grokEditor.querySelector('[data-grok="draw-web"]');
+  grokEditor.querySelector('[data-grok-prompt]').value=prompt;
+  if(!web&&navigator.share){
+    if(!ref.ready){
+      ref.announce=true;
+      grokStatus('참고 자료를 준비하고 있습니다…');
+      return;
+    }
+    var payload={text:prompt};
+    if(ref.file) payload.files=[ref.file];
+    if(!navigator.canShare||navigator.canShare(payload)){
+      try{
+        await navigator.share(payload);
+        fallback.hidden=true;
+        grokStatus('프롬프트를 공유했습니다. ChatGPT에서 그림을 만든 뒤 완성 격자를 올리세요.');
+        return;
+      }catch(err){
+        fallback.hidden=false;
+        grokStatus(err.name==='AbortError'?'공유를 취소했습니다. 다시 누르면 ChatGPT를 선택할 수 있어요.':'공유 창을 열지 못했습니다. 다시 시도하거나 웹으로 열어 주세요.');
+        return;
+      }
+    }
+    fallback.hidden=false;
+    grokStatus('이 브라우저에서 앱으로 공유할 수 없습니다. 웹으로 열 수 있어요.');
+    return;
+  }
+  var copying=grokCopy(prompt);
+  batchOpenChat();
+  grokStatus('키프레임 요청문과 참고 그림을 준비하고 있습니다…');
+  var attachment=ref.ready?ref.file:await ref.pending;
+  if(B!==plan.board||grokPlan()?.signature!==plan.signature) throw Error('콘티가 변경됐습니다. 요청문을 다시 만들어 주세요.');
+  if(attachment) dlFile(attachment);
+  grokStatus((await copying?'프롬프트를 복사했습니다. ':'「프롬프트 보기·복사」에서 요청문을 복사하세요. ')+
+    (attachment?'저장한 참고 PNG도 ChatGPT에 첨부하세요. ':ref.error?'참고 이미지를 준비하지 못했습니다. ':'')+
+    '완성 격자 한 장을 여기로 올리세요.');
 }
 grokEditor.addEventListener('change',async function(e){
   var control=e.target;
@@ -18997,7 +19077,8 @@ grokEditor.addEventListener('change',async function(e){
     }else settings[control.dataset.grok]=+control.value;
     B.grokClip=settings;save();
     grokStatus('');grokEditor.querySelector('[data-grok-prompt]').value='';
-    grokRefresh();return;
+    grokEditor.querySelector('[data-grok="draw-web"]').hidden=true;
+    grokRefresh();grokScheduleReferences();return;
   }
   var file=control.files[0];control.value='';
   var plan=grokPlan();
@@ -19038,27 +19119,11 @@ grokEditor.addEventListener('change',async function(e){
 });
 grokEditor.addEventListener('click',async function(e){
   var action=e.target.dataset.grok,plan=grokPlan();
-  if(grokBusy||!plan||!['draw','send'].includes(action)) return;
+  if(grokBusy||!plan||!['draw','draw-web','send'].includes(action)) return;
   grokBusy=true;grokRefresh();
   try{
-    if(action==='draw'){
-      var prompt=grokGridPrompt(plan), copying=grokCopy(prompt);
-      batchOpenChat();
-      grokStatus('키프레임 요청문과 참고 그림을 준비하고 있습니다…');
-      var cuts=plan.beats.map(function(b){return b.cut;}), refs=await batchReferenceImages(cuts);
-      var art=window.__ppArt;
-      var originals=await Promise.all(cuts.map(async function(c){
-        var src=c.art&&art?.get(c.art);
-        return src?{name:c.n+'번 원본 컷',image:await loadImg(src)}:null;
-      }));
-      var images=originals.filter(function(item){return item?.image;}).concat(refs);
-      if(images.length){
-        var attachment=await batchReferenceFile(images,'grok-키프레임-참고.png');
-        if(B!==plan.board||grokPlan()?.signature!==plan.signature) throw Error('콘티가 변경됐습니다. 요청문을 다시 만들어 주세요.');
-        dlFile(attachment);
-      }
-      grokStatus((await copying?'프롬프트를 복사했습니다. ':'「프롬프트 보기·복사」에서 요청문을 복사하세요. ')+
-        (images.length?'저장한 참고 PNG도 ChatGPT에 첨부하세요. ':'')+'완성 격자 한 장을 여기로 올리세요.');
+    if(action==='draw'||action==='draw-web'){
+      await grokSendDrawing(plan,action==='draw-web');
     }else if(grokResult?.signature===plan.signature&&grokResult.board===B){
       var result=grokResult,payload={files:result.files,text:result.prompt};
       var share=!!navigator.share&&!!navigator.canShare?.(payload);
