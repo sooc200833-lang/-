@@ -2892,7 +2892,7 @@ button.pl-card[disabled]{cursor:default}
   #ct-grok-clip fieldset{min-width:0}
   #ct-grok-clip select,#ct-grok-clip .chip{min-height:40px}
   [data-grok-cuts]{display:grid;gap:.35rem;max-height:17rem;overflow:auto;overscroll-behavior:contain}
-  [data-grok-cuts] label{display:flex;align-items:flex-start;gap:.6rem;padding:.35rem;min-height:44px}
+  [data-grok-cuts] label,[data-grok-cuts] .grok-cut-row{display:flex;align-items:flex-start;gap:.6rem;padding:.35rem;min-height:44px}
   [data-grok-cuts] input{flex:none;width:1.15rem;height:1.15rem}
   [data-grok-cuts] small{display:block;white-space:pre-line}
   [data-grok-preview]{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,8rem),1fr));gap:.5rem}
@@ -3015,6 +3015,7 @@ button.pl-card[disabled]{cursor:default}
         <option value="0">자동 (6~14장)</option><option value="6">6장</option><option value="7">7장</option><option value="8">8장</option><option value="9">9장</option><option value="10">10장</option><option value="11">11장</option><option value="12">12장</option><option value="13">13장</option><option value="14">14장</option>
       </select></label>
     </div>
+    <div class="filterbar"><label>콘티 묶음 <select data-grok="group" aria-label="콘티 묶음"></select></label></div>
     <fieldset><legend>사용할 컷</legend><div data-grok-cuts></div></fieldset>
     <p class="small" data-grok-info role="status"></p>
     <div class="filterbar">
@@ -18887,18 +18888,66 @@ function grokOptions(board){
   var conf=board?.grokClip||{};
   var duration=Number.isInteger(conf.duration)&&conf.duration>=6&&conf.duration<=15?conf.duration:10;
   var count=Number.isInteger(conf.count)&&conf.count>=6&&conf.count<=14?conf.count:0;
-  return {duration:duration,count:count,ids:Array.isArray(conf.ids)?conf.ids:[]};
+  return {duration:duration,count:count,group:conf.group==='manual'?'manual':Math.max(0,Number.isInteger(conf.group)?conf.group:0),ids:Array.isArray(conf.ids)?conf.ids:[]};
+}
+function grokAutoGroups(cuts){
+  var written=cuts.filter(function(c){return c.scr||c.line||c.art;});
+  var source=written.length?written:cuts, groups=[];
+  for(var start=0;start<source.length;start+=5){
+    var group=source.slice(start,start+6);
+    if(start&&group.length===1) break;
+    groups.push(group);
+  }
+  return groups;
+}
+function grokGroupKey(cuts){
+  return JSON.stringify(cuts.map(function(c){
+    var scene=sceneOfCut(c.n);
+    return [c.n,c.scr,c.line,c.nar,c.art,c.cnote,compText(c),scene?.a,scene?.place,scene?.name];
+  }));
+}
+var grokBoundaryMemory=new WeakMap();
+function grokReadBoundary(board,index,cuts){
+  var record=grokBoundaryMemory.get(board)?.[index]||board.grokBoundaries?.[index];
+  if(!record||record.key!==grokGroupKey(cuts)) return null;
+  var url=record.url||window.__ppArt?.get(record.id);
+  return url?{id:record.id,url:url}:null;
+}
+async function grokStoreBoundary(plan,url){
+  if(plan.group===null) return;
+  var board=plan.board, index=plan.group, art=window.__ppArt, id='grok_tail_'+recId();
+  var memory=grokBoundaryMemory.get(board)||{}, persisted=board.grokBoundaries||{};
+  var stored=false;
+  if(art?.ok()){
+    try{await art.put(id,url,true);stored=true;}catch(e){}
+  }
+  if(B!==board||grokPlan()?.signature!==plan.signature) throw Error('콘티가 변경됐습니다. 격자를 다시 올려 주세요.');
+  [memory,persisted].forEach(function(records){
+    Object.keys(records).forEach(function(k){if(+k>=index) delete records[k];});
+  });
+  memory[index]={key:plan.groupKey,id:id,url:url};
+  grokBoundaryMemory.set(board,memory);
+  if(stored) persisted[index]={key:plan.groupKey,id:id};
+  board.grokBoundaries=persisted;
+  save();
 }
 function grokTimestamp(seconds){return seconds.toFixed(2)+'초';}
 function grokPlan(){
-  var settings=grokOptions(B), seen=new Set(settings.ids);
-  var cuts=(B?.cuts||[]).filter(function(c){return seen.has(c.batchId);});
+  if(!B?.cuts.length) return null;
+  var settings=grokOptions(B), seen=new Set(settings.ids), groups=grokAutoGroups(B.cuts);
+  var group=settings.group==='manual'?null:Math.min(settings.group,groups.length-1);
+  var cuts=group===null?B.cuts.filter(function(c){return seen.has(c.batchId);}):groups[group];
+  var overlap=group!==null&&group>0, previous=overlap?grokReadBoundary(B,group-1,groups[group-1]):null;
   var n=settings.count||Math.min(14,settings.duration);
   if(!cuts.length || cuts.length>n) return null;
   var cols=n<=8?2:3, rows=Math.ceil(n/cols);
-  var weight=cuts.map(cutSec), remaining=n-cuts.length;
+  var weight=cuts.map(function(c,i){return overlap&&!i?0:cutSec(c);}), remaining=n-cuts.length;
   var total=weight.reduce(function(a,b){return a+b;},0), cumulative=0, allocated=0, frames=[], beats=[];
   cuts.forEach(function(c,i){
+    if(overlap&&!i){
+      frames.push({index:1,time:0,cut:c,motion:'앞 묶음의 마지막 프레임으로 시작',change:false});
+      return;
+    }
     cumulative+=weight[i];
     var target=i===cuts.length-1?remaining:Math.round(remaining*cumulative/total);
     var take=1+target-allocated, scene=sceneOfCut(c.n), prev=i?sceneOfCut(cuts[i-1].n):null;
@@ -18911,11 +18960,15 @@ function grokPlan(){
     }
     var end=frames.length;
     beats.push({cut:c,start:frames[starts].time,end:end===n?settings.duration:frames[end-1].time+settings.duration/(2*(n-1)),scene:scene?.place||scene?.name||'',change:change});
-    if(i>0) beats[i].start=beats[i-1].end;
+    var beat=beats.at(-1), preceding=beats.at(-2);
+    if(preceding) beat.start=preceding.end;
+    else if(overlap) beat.start=change?frames[starts].time/2:0;
     allocated=target;
   });
-  var signature=JSON.stringify([settings.duration,n,cuts.map(function(c){return [c.batchId,c.n,c.scr,c.line,c.nar,c.cnote,compText(c)];}),beats.map(function(b){return [b.scene,b.change];})]);
-  return {board:B,duration:settings.duration,cols:cols,rows:rows,frames:frames,beats:beats,signature:signature};
+  var groupKey=grokGroupKey(cuts);
+  var signature=JSON.stringify([settings.duration,n,group,groupKey,previous?.id]);
+  return {board:B,duration:settings.duration,cols:cols,rows:rows,frames:frames,beats:beats,signature:signature,
+    group:group,groupKey:groupKey,overlap:overlap,previous:previous};
 }
 function grokFrameName(f){
   return 'frame-'+String(f.index).padStart(2,'0')+'-'+String(Math.round(f.time*1000)).padStart(5,'0')+'ms.png';
@@ -18932,6 +18985,7 @@ function grokGridPrompt(plan){
     '입니다. 위에서 아래로, 각 행의 왼쪽부터 채우세요. 칸 사이 여백·테두리·글씨·말풍선 없이 맞붙여 주세요.'+
     (n<plan.cols*plan.rows?' 마지막 '+(plan.cols*plan.rows-n)+'칸은 비워 주세요.':'')+
     '\n첨부 이미지의 원본 컷과 시트는 인물 얼굴, 의상, 배경과 구도 참고용이며, 시간표가 있으면 순서와 시각만 참고하세요. 첫 프레임부터 마지막까지 인물과 소품의 위치와 시선을 이어 주세요. 같은 장면의 연속 프레임은 자세와 표정, 카메라 움직임이 조금씩 변해야 합니다. 장소가 달라지는 곳에서만 화면을 전환합니다.\n\n'+
+    (plan.overlap?'첫 칸은 앞 묶음 마지막 컷의 연결용 프레임입니다. 첨부에 「앞 묶음 마지막 프레임」이 있으면 같은 이미지와 구도로 첫 칸을 맞추고, 이전 컷의 동작이나 대사를 다시 시작하지 마세요.\n\n':'')+
     plan.beats.map(grokBeatText).join('\n\n')+'\n\n키프레임 순서\n'+plan.frames.map(function(f){
       return f.index+'칸 · '+grokTimestamp(f.time)+' · '+f.cut.n+'번 컷 · '+f.motion+(f.change?' · 장면 전환':'')+' · '+compText(f.cut);
     }).join('\n');
@@ -18973,7 +19027,8 @@ function grokVideoPrompt(plan){
     '출력: '+plan.duration+'초, 가로 16:9, 2D 웹툰 애니메이션 한 편. 0초의 첫 이미지로 시작하고 '+grokTimestamp(plan.duration)+'의 마지막 이미지 구도와 자세에서 끝냅니다.',
     '키프레임: 첨부 PNG '+plan.frames.length+'장을 아래 파일명과 시각에 맞춰 사용하세요. 파일 목록에 보이는 순서가 달라도 번호 순서를 따르세요. 각 시각에서 해당 이미지의 구도·인물 자세·표정을 맞추고, 프레임 사이에는 다음 자세로 이어지는 동작을 그리세요. 정지 이미지 슬라이드쇼나 디졸브로 대체하지 마세요.',
     '연속성: 같은 장면에서 인물 얼굴·헤어·의상·체형·소품·배경 조명을 유지하세요. 시선, 이동 방향, 손과 소품의 위치를 이어 주세요. 카메라 이동은 양쪽 키프레임의 구도를 부드럽게 연결하는 범위로 제한하세요. '+(edits.length?edits.join(' '):'장면 전체를 한 흐름으로 이어 주세요.'),
-    '키프레임 타임라인\n'+frames.join('\n'),
+    (plan.overlap?'클립 연결: 0.00초 첫 파일은 바로 앞 영상의 마지막 프레임과 같은 정렬점입니다. 이 자세에서 바로 이어 움직이고, 이전 컷의 동작이나 대사를 다시 재생하거나 첫 프레임을 길게 멈춰 두지 마세요.\n\n':'')+
+      '키프레임 타임라인\n'+frames.join('\n'),
     '장면별 화면과 연출\n'+shots.join('\n\n'),
     '한국어 음성 큐\n'+(audio.length?audio.join('\n'):'대사 없이 장면에 맞는 가벼운 환경음만 사용하세요.'),
     '대사는 적힌 문장 그대로 해당 화자가 말합니다. 발화 중인 인물만 입 모양을 맞추고, 음성 큐 바깥에는 대사를 추가하지 마세요. 화면에는 자막·말풍선·번호·워터마크를 넣지 마세요.'
@@ -18994,10 +19049,12 @@ function grokRefresh(){
   var count=(B?.cuts||[]).filter(function(c){return selected.has(c.batchId);}).length;
   if(grokResult&&(grokResult.board!==B||grokResult.signature!==plan?.signature)) grokClearResult();
   grokEditor.querySelector('[data-grok-info]').textContent=plan?
-    count+'컷 · '+plan.frames.length+'장 · '+plan.cols+'열 × '+plan.rows+'행':
+    (plan.beats.length+(plan.overlap?1:0))+'컷 · '+plan.frames.length+'장 · '+plan.cols+'열 × '+plan.rows+'행'+
+      (plan.overlap?(plan.previous?' · 앞 묶음 끝 프레임 재사용':' · 영상용 분할 전에 앞 묶음 격자를 먼저 올려 주세요.'):''):
     count?'컷 수가 키프레임 수보다 많습니다. 선택을 줄이거나 장수를 늘려 주세요.':'영상에 넣을 컷을 선택하세요.';
   grokEditor.querySelectorAll('[data-grok-cuts] input,select').forEach(function(el){el.disabled=grokBusy;});
   grokEditor.querySelectorAll('[data-grok="draw"], [data-grok="draw-web"], [data-grok="upload"]').forEach(function(el){el.disabled=grokBusy||!plan;});
+  grokEditor.querySelector('[data-grok="upload"]').disabled=grokBusy||!plan||(plan.overlap&&!plan.previous);
   grokEditor.querySelector('[data-grok="send"]').disabled=grokBusy||!grokResult;
   var copy=grokEditor.querySelector('[data-grok="copy-video"]');
   copy.hidden=!grokResult;copy.disabled=grokBusy;
@@ -19014,13 +19071,26 @@ function renderGrokClip(){
     grokEditor.querySelector('[data-grok-prompt]').value='';
     grokEditor.querySelector('details').open=false;
   }
+  var groups=grokAutoGroups(B.cuts), manual=settings.group==='manual';
+  var group=Math.min(settings.group,groups.length-1), select=grokEditor.querySelector('[data-grok="group"]');
+  select.replaceChildren();
+  groups.forEach(function(cuts,i){
+    select.add(new Option((i+1)+'번 묶음 · '+batchTitle(cuts.map(function(c){return c.n;})),String(i)));
+  });
+  select.add(new Option('직접 컷 선택','manual'));
+  select.value=manual?'manual':String(group);
   list.replaceChildren();
-  B.cuts.forEach(function(c){
-    var row=document.createElement('label'), check=document.createElement('input'), text=document.createElement('span');
-    check.type='checkbox';check.cut=c;check.checked=selected.has(c.batchId);
-    text.textContent=c.n+'번 컷'+(c.scr?' · '+c.scr:'');
-    if(c.line){var lines=document.createElement('small');lines.textContent=c.line;text.appendChild(lines);}
-    row.append(check,text);list.appendChild(row);
+  (manual?B.cuts:groups[group]).forEach(function(c,i){
+    var row=document.createElement(manual?'label':'div'), text=document.createElement('span');
+    row.className='grok-cut-row';
+    if(manual){
+      var check=document.createElement('input');
+      check.type='checkbox';check.cut=c;check.checked=selected.has(c.batchId);row.appendChild(check);
+    }
+    var anchor=!manual&&group>0&&i===0;
+    text.textContent=c.n+'번 컷'+(anchor?' · 앞 묶음 연결용':'')+(c.scr?' · '+c.scr:'');
+    if(c.line&&!anchor){var lines=document.createElement('small');lines.textContent=c.line;text.appendChild(lines);}
+    row.appendChild(text);list.appendChild(row);
   });
   grokEditor.querySelector('[data-grok="duration"]').value=settings.duration;
   grokEditor.querySelector('[data-grok="count"]').value=settings.count;
@@ -19061,12 +19131,14 @@ function grokReferences(plan){
   if(grokReference?.board===plan.board&&grokReference.key===key&&!grokReference.error) return grokReference;
   var ref=grokReference={board:plan.board,key:key,ready:false,file:null,error:null};
   var cuts=plan.beats.map(function(b){return b.cut;}), art=window.__ppArt;
+  var anchor=plan.previous?loadImg(plan.previous.url):Promise.resolve(null);
   var originals=Promise.all(cuts.map(async function(c){
     var src=c.art&&art?.get(c.art);
     return src?{name:c.n+'번 원본 컷',image:await loadImg(src)}:null;
   }));
-  ref.pending=Promise.all([originals,batchReferenceImages(cuts)]).then(async function(images){
+  ref.pending=Promise.all([originals,batchReferenceImages(cuts),anchor]).then(async function(images){
     var list=images[0].filter(function(item){return item?.image;}).concat(images[1]);
+    if(images[2]) list.unshift({name:'앞 묶음 마지막 프레임 · 첫 칸에 사용',image:images[2]});
     if(!list.length) list.push(grokTimingCard(plan));
     ref.file=await batchReferenceFile(list,'grok-키프레임-참고.png');
     ref.ready=true;
@@ -19139,30 +19211,45 @@ grokEditor.addEventListener('change',async function(e){
   var control=e.target;
   if(!B||grokBusy) return;
   if(control.dataset.grok!=='upload'){
-    if(!control.cut&&control.dataset.grok!=='duration'&&control.dataset.grok!=='count') return;
+    if(!control.cut&&!['duration','count','group'].includes(control.dataset.grok)) return;
     var settings=grokOptions(B);
     if(control.cut){
       batchEnsureCutIds(B);
       settings.ids=Array.from(grokEditor.querySelectorAll('[data-grok-cuts] input:checked'),function(el){return el.cut.batchId;});
-    }else settings[control.dataset.grok]=+control.value;
+    }else settings[control.dataset.grok]=control.value==='manual'?'manual':+control.value;
     B.grokClip=settings;save();
     grokStatus('');grokEditor.querySelector('[data-grok-prompt]').value='';
     grokEditor.querySelector('[data-grok="draw-web"]').hidden=true;
-    grokRefresh();grokScheduleReferences();return;
+    if(control.dataset.grok==='group') renderGrokClip();
+    else{grokRefresh();grokScheduleReferences();}
+    return;
   }
   var file=control.files[0];control.value='';
   var plan=grokPlan();
-  if(!file||!plan) return;
+  if(!file||!plan||(plan.overlap&&!plan.previous)) return;
   grokBusy=true;grokRefresh();grokStatus('키프레임을 나누고 있습니다…');
   var source=URL.createObjectURL(file);
   try{
     var image=await loadImg(source);
     if(!image) throw Error('격자 이미지를 열 수 없습니다.');
-    var files=[];
+    var files=[], tailUrl='';
     for(var i=0;i<plan.frames.length;i++){
+      if(!i&&plan.previous){
+        var first=await fetch(plan.previous.url).then(function(r){return r.blob();});
+        files.push(new File([first],grokFrameName(plan.frames[i]),{type:'image/png'}));
+        continue;
+      }
       var cv=gridCellCanvas(image,plan,i);
       var blob=await new Promise(function(resolve){cv.toBlob(resolve,'image/png');});
       if(!blob) throw Error('키프레임 이미지를 저장할 수 없습니다.');
+      if(i===plan.frames.length-1&&plan.group!==null){
+        tailUrl=await new Promise(function(resolve,reject){
+          var reader=new FileReader();
+          reader.onload=function(){resolve(reader.result);};
+          reader.onerror=function(){reject(reader.error);};
+          reader.readAsDataURL(blob);
+        });
+      }
       files.push(new File([blob],grokFrameName(plan.frames[i]),{type:'image/png'}));
     }
     var prompt=grokVideoPrompt(plan);
@@ -19170,8 +19257,9 @@ grokEditor.addEventListener('change',async function(e){
       return {name:frame.name,data:new Uint8Array(await frame.arrayBuffer())};
     }));
     members.push({name:'grok-prompt.txt',data:new TextEncoder().encode(prompt)});
-    var archive=new File([zipArchive(members)],'grok-keyframes.zip',{type:'application/zip'});
+    var archive=new File([zipArchive(members)],plan.group===null?'grok-keyframes.zip':'grok-keyframes-'+(plan.group+1)+'.zip',{type:'application/zip'});
     if(B!==plan.board||grokPlan()?.signature!==plan.signature) throw Error('콘티가 변경됐습니다. 격자를 다시 올려 주세요.');
+    if(tailUrl) await grokStoreBoundary(plan,tailUrl);
     grokClearResult();
     var urls=files.map(function(frame){return URL.createObjectURL(frame);});
     grokResult={board:B,signature:plan.signature,files:files,urls:urls,prompt:prompt,archive:archive};
