@@ -3018,7 +3018,7 @@ button.pl-card[disabled]{cursor:default}
     <fieldset><legend>사용할 컷</legend><div data-grok-cuts></div></fieldset>
     <p class="small" data-grok-info role="status"></p>
     <div class="filterbar">
-      <button class="chip ct-go" type="button" data-grok="draw">키프레임 요청문 GPT로 보내기</button>
+      <button class="chip ct-go" type="button" data-grok="draw">키프레임 요청문 ChatGPT로 공유</button>
       <button class="chip" type="button" data-grok="draw-web" hidden>키프레임 요청문 웹으로 열기</button>
       <label class="chip sv-up">GPT 완성 격자 올리기 <input type="file" accept="image/*" data-grok="upload" aria-label="GPT 완성 격자 올리기"></label>
       <button class="chip ct-go" type="button" data-grok="send" disabled>프레임과 프롬프트 Grok으로 보내기</button>
@@ -19031,7 +19031,12 @@ async function grokSendDrawing(plan,web){
   var prompt=grokGridPrompt(plan), ref=grokReferences(plan);
   var fallback=grokEditor.querySelector('[data-grok="draw-web"]');
   grokEditor.querySelector('[data-grok-prompt]').value=prompt;
-  if(!web&&navigator.share){
+  if(!web){
+    if(!navigator.share){
+      fallback.hidden=false;
+      grokStatus('이 브라우저에서 앱 공유를 열 수 없습니다. 휴대폰의 Safari나 Chrome에서 이 사이트를 열고 다시 눌러 주세요.');
+      return;
+    }
     if(!ref.ready){
       ref.announce=true;
       grokStatus('참고 자료를 준비하고 있습니다…');
