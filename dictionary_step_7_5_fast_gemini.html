@@ -2890,6 +2890,8 @@ button.pl-card[disabled]{cursor:default}
   .ct-image-gallery label:has(input:checked){outline:2px solid var(--accent,#506d9b)}
   .ct-image-gallery input{position:absolute;top:.35rem;left:.35rem}
   .ct-image-gallery img{display:block;width:100%;height:100px;object-fit:contain}
+  .ct-image-gallery .ct-image-reference{min-width:0;display:grid;justify-items:center;gap:.25rem}
+  .ct-image-reference .chip{min-height:36px}
   .ct-image-talk{display:grid;grid-template-columns:minmax(7rem,.4fr) minmax(0,1fr) auto;align-items:start;gap:.4rem;margin:.35rem 0}
   @media(max-width:460px){.ct-image-talk{grid-template-columns:minmax(0,1fr) auto}.ct-image-talk textarea{grid-column:1/-1;grid-row:2}}
   #ct-project-list:not([hidden]),#ct-batch-cuts{display:grid;gap:6px}
@@ -19551,6 +19553,7 @@ function imageRenderCast(board){
   board.chars.forEach(function(ch){(ch.imageFaceIds||[]).forEach(function(id){owners.set(id,ch.name);});});
   var hasReferences=Array.from(owners.keys()).some(function(id){return art?.get(id);});
   var faces=(board.imageFaces||[]).filter(function(face){return cutNumber.has(face.cutId)&&art?.get(face.id);});
+  var faceCuts=new Map(faces.map(function(face){return [face.id,cutNumber.get(face.cutId)];}));
   var picker=faces.length?'<div class="filterbar"><button type="button" class="chip ct-go" data-image-cast="bulk">AI로 전체 인물 시트 만들기</button></div><p class="small">직접 묶으려면 같은 인물의 사진을 고르고 이름을 붙이세요.</p>'+
     '<div class="ct-image-gallery" aria-label="인물 이미지 갤러리">'+faces.map(function(face){
       return '<label title="'+cesc(face.look||'')+'"><input type="checkbox" value="'+cesc(face.id)+'" aria-label="'+cutNumber.get(face.cutId)+'번 컷 인물 이미지 선택">'+
@@ -19558,19 +19561,23 @@ function imageRenderCast(board){
         '<span class="small">'+cutNumber.get(face.cutId)+'번 컷'+(owners.has(face.id)?' · '+cesc(owners.get(face.id)):'')+'</span></label>';
     }).join('')+'</div>':'<p class="small">저장된 인물 이미지가 없어요. 시트에 인물을 직접 추가해 3단계에서 연결할 수 있어요.</p>';
   host.insertAdjacentHTML('beforeend',picker+'<div class="ct-image-form">'+
-    '<label>캐릭터 이름 <input type="text" aria-label="캐릭터 이름" maxlength="12" list="ct-image-character-names"></label>'+
+    '<p class="small" data-image-edit-help hidden>이 시트에 남길 사진만 선택한 뒤 수정 내용을 저장하세요.</p><label>캐릭터 이름 <input type="text" aria-label="캐릭터 이름" maxlength="12" list="ct-image-character-names"></label>'+
     '<datalist id="ct-image-character-names">'+board.chars.map(function(c){return '<option value="'+cesc(c.name)+'"></option>';}).join('')+'</datalist>'+
     '<label>이야기 속 역할 <input type="text" aria-label="이야기 속 역할" maxlength="60" data-image-profile="role"></label>'+
     '<label>외형<textarea rows="2" aria-label="외형" maxlength="200" data-image-profile="look"></textarea></label>'+
     '<label>성격과 말투<textarea rows="2" aria-label="성격과 말투" maxlength="240" data-image-profile="acting"></textarea></label>'+
     '<div class="filterbar"><button type="button" class="chip" data-image-cast="suggest">AI로 이름·배역 추천</button>'+
-    '<button type="button" class="chip ct-go" data-image-cast="save">캐릭터 시트에 담기</button></div>'+
+    '<button type="button" class="chip ct-go" data-image-cast="save">캐릭터 시트에 담기</button><button type="button" class="chip" data-image-cast="cancel" hidden>수정 취소</button></div>'+
     '<p class="small" role="status"></p></div>'+
     (board.chars.length?'<h4>캐릭터 시트</h4>'+(hasReferences?'<div class="filterbar"><button type="button" class="chip ct-go" data-image-send="all">전체 시트 GPT로 보내기</button></div>':'')+'<div class="ct-image-cards">'+board.chars.map(function(ch,i){
-      var images=(ch.imageFaceIds||[]).map(function(id){return art?.get(id);}).filter(Boolean);
+      var images=(ch.imageFaceIds||[]).map(function(id){return {id:id,src:art?.get(id)};}).filter(function(image){return image.src;});
       var sheet=ch.sheet||{};
       return '<article class="ct-image-card"><strong>'+cesc(ch.name)+'</strong>'+
-        (images.length?'<div class="ct-image-gallery">'+images.map(function(src){return '<img loading="lazy" alt="'+cesc(ch.name)+' 참고 이미지" src="'+cesc(src)+'">';}).join('')+'</div>':'')+
+        (images.length?'<div class="ct-image-gallery">'+images.map(function(image,j){
+          var number=faceCuts.get(image.id), label=number?number+'번 컷 · 사진 '+(j+1):'사진 '+(j+1);
+          return '<div class="ct-image-reference"><img loading="lazy" alt="'+cesc(ch.name)+' 참고 이미지" src="'+cesc(image.src)+'">'+
+            '<button type="button" class="chip" data-image-remove-photo="'+cesc(image.id)+'" data-image-owner="'+i+'" aria-label="'+cesc(ch.name+' '+label+' 빼기')+'">빼기</button></div>';
+        }).join('')+'</div>':'')+
         '<p class="small">'+cesc([ch.role,sheet.look,sheet.speech].filter(Boolean).join(' · '))+'</p>'+
         '<div class="filterbar"><button type="button" class="chip" data-image-edit-character="'+i+'">시트 수정</button>'+
         (images.length?'<button type="button" class="chip" data-image-download-sheet="'+i+'">참고 시트 PNG 저장</button>':'')+
@@ -19579,6 +19586,11 @@ function imageRenderCast(board){
         (ch.sheetArt?' <span class="small">시트 그림 저장됨</span>':'')+'</div></article>';
     }).join('')+'</div>':''));
   if(hasReferences) imagePrepareSheets(board);
+}
+function imageSetSheetPhotos(character,ids){
+  var former=character.imageFaceIds||[];
+  if(!ids.includes(character.comicRef)&&(ids.length||former.includes(character.comicRef))) character.comicRef=ids[0]||'';
+  character.imageFaceIds=ids;
 }
 function imagePrepareSheets(board){
   var art=window.__ppArt;
@@ -19757,6 +19769,15 @@ document.getElementById('ct-image-cast').addEventListener('click',function(e){
     return;
   }
   var nameField=host.querySelector('[aria-label="캐릭터 이름"]'), status=host.querySelector('[role=status]');
+  if(button.dataset.imageRemovePhoto!=null){
+    var owner=board.chars[+button.dataset.imageOwner], id=button.dataset.imageRemovePhoto;
+    if(!owner?.imageFaceIds?.includes(id)) return;
+    imageSetSheetPhotos(owner,owner.imageFaceIds.filter(function(photo){return photo!==id;}));
+    save();imageRenderCast(board);
+    host.querySelector('[data-image-edit-character="'+button.dataset.imageOwner+'"]').focus({preventScroll:true});
+    host.querySelector('[role=status]').textContent=owner.name+' 시트에서 사진을 뺐어요. 갤러리에서 다시 담을 수 있어요.';
+    return;
+  }
   if(button.dataset.imageEditCharacter!=null){
     var edit=board.chars[+button.dataset.imageEditCharacter];
     if(!edit) return;
@@ -19766,10 +19787,18 @@ document.getElementById('ct-image-cast').addEventListener('click',function(e){
       host.querySelector('[data-image-profile="'+key+'"]').value=key==='role'?edit.role||'':key==='look'?edit.sheet?.look||'':edit.sheet?.speech||'';
     });
     host.querySelectorAll('.ct-image-gallery input').forEach(function(input){input.checked=(edit.imageFaceIds||[]).includes(input.value);});
-    nameField.focus();return;
+    host.querySelector('[data-image-edit-help]').hidden=false;
+    host.querySelector('[data-image-cast="save"]').textContent='시트 수정 저장';
+    host.querySelector('[data-image-cast="cancel"]').hidden=false;
+    host.querySelectorAll('[data-image-remove-photo],[data-image-cast="bulk"]').forEach(function(control){control.disabled=true;});
+    host.querySelector('.ct-image-gallery')?.scrollIntoView({block:'start'});
+    status.textContent=edit.name+' 시트 수정 중';return;
   }
   if(!action) return;
-  var checked=new Set(Array.from(host.querySelectorAll('.ct-image-gallery input:checked'),function(input){return input.value;}));
+  if(action==='cancel'){imageRenderCast(board);return;}
+  var photoInputs=Array.from(host.querySelectorAll('.ct-image-gallery input'));
+  var visible=new Set(photoInputs.map(function(input){return input.value;}));
+  var checked=new Set(photoInputs.filter(function(input){return input.checked;}).map(function(input){return input.value;}));
   var selected=(board.imageFaces||[]).filter(function(face){return checked.has(face.id);});
   if(action==='suggest'){imageSuggestCast(board,selected,host);return;}
   var name=comicName(nameField.value);
@@ -19790,15 +19819,15 @@ document.getElementById('ct-image-cast').addEventListener('click',function(e){
   if(!ch){ch={name:name,look:{},sheet:{kind:'조연'}};board.chars.push(ch);}
   if(!ch.sheet) ch.sheet={kind:'조연'};
   var field=function(key){return host.querySelector('[data-image-profile="'+key+'"]').value.trim();};
-  ch.role=field('role')||ch.role||'';
-  ch.sheet.look=field('look')||ch.sheet.look||selected.map(function(face){return face.look;}).filter(Boolean)[0]||'';
-  ch.sheet.speech=field('acting')||ch.sheet.speech||'';
+  var editing=!!host.dataset.editName;
+  ch.role=editing?field('role'):field('role')||ch.role||'';
+  ch.sheet.look=editing?field('look'):field('look')||ch.sheet.look||selected.map(function(face){return face.look;}).filter(Boolean)[0]||'';
+  ch.sheet.speech=editing?field('acting'):field('acting')||ch.sheet.speech||'';
   ch.note=ch.sheet.look;
   selected.forEach(function(face){
     board.chars.forEach(function(other){
       if(other!==ch&&other.imageFaceIds?.includes(face.id)){
-        other.imageFaceIds=other.imageFaceIds.filter(function(id){return id!==face.id;});
-        if(other.comicRef===face.id) other.comicRef=other.imageFaceIds[0]||'';
+        imageSetSheetPhotos(other,other.imageFaceIds.filter(function(id){return id!==face.id;}));
         var source=board.cuts.find(function(c){return c.batchId===face.cutId;});
         if(source&&!board.imageFaces.some(function(f){return f.cutId===face.cutId&&other.imageFaceIds.includes(f.id);})) source.who=(source.who||[]).filter(function(n){return n!==other.name;});
         moved++;
@@ -19807,10 +19836,12 @@ document.getElementById('ct-image-cast').addEventListener('click',function(e){
     var cut=board.cuts.find(function(c){return c.batchId===face.cutId;});
     if(cut) cut.who=Array.from(new Set((cut.who||[]).concat(name)));
   });
-  ch.imageFaceIds=Array.from(new Set((ch.imageFaceIds||[]).concat(selected.map(function(face){return face.id;}))));
-  ch.comicRef=ch.imageFaceIds[0]||ch.comicRef||'';
+  var previous=ch.imageFaceIds||[], kept=editing?previous.filter(function(id){return !visible.has(id)||checked.has(id);}):previous;
+  var ids=Array.from(new Set(kept.concat(selected.map(function(face){return face.id;}))));
+  var removed=previous.length-kept.length;
+  imageSetSheetPhotos(ch,ids);
   board.imageDialogueReviewed=false;imageSaveDialogue(board);imageRenderCast(board);stepNav();
-  host.querySelector('[role=status]').textContent=name+' 시트에 저장했어요.'+(moved?' 다른 시트에서 옮긴 사진 '+moved+'장.':'');
+  host.querySelector('[role=status]').textContent=name+' 시트에 저장했어요.'+(removed?' 시트에서 뺀 사진 '+removed+'장.':'')+(moved?' 다른 시트에서 옮긴 사진 '+moved+'장.':'');
 });
 var imageStoryPanel=document.getElementById('ct-image-story'), imageStoryJobs=new WeakSet();
 function imageRenderStory(board){
