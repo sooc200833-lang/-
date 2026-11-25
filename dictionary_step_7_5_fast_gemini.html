@@ -17107,7 +17107,12 @@ document.getElementById('ct-saved').addEventListener('click', function(e){
   else if(b.dataset.st==='dup'){ var it=stItem(B.sid); stSave((it?it.name:stDefName())+' (복제)', true); }
 });
 stLinkPaint();
-window.__ctStore={load:stLoad, open:function(id){ if(stLoad(id)) enterProject(B.projectStep||1); }, editTitle:stEditTitle, save:function(name, asNew){ return stSave(name, asNew); }, linked:function(){ return B&&B.sid||null; }, meta:stMeta,
+window.__ctStore={load:stLoad, open:function(id){
+  var item=stItem(id);
+  if(!item||!!item.imageComposer!==ctImageMode||running||redoBusy||flowBusy||batchBusy||sheetCutBusy||grokBusy||comicBusy||window.__stale) return;
+  try{if(B?.sid!==id) archiveProject();if(stLoad(id)) enterProject(B.projectStep||1);}
+  catch(err){stat(err.message);}
+}, editTitle:stEditTitle, save:function(name, asNew){ return stSave(name, asNew); }, linked:function(){ return B&&B.sid||null; }, meta:stMeta,
   has:function(){ return !!(B && B.cuts && B.cuts.length); }, auto:stAuto, show:function(){ if(window.__contiShow) try{ window.__contiShow(); }catch(e){} }};
 
 /* ---------- 그림으로 저장 (PNG) ---------- */
