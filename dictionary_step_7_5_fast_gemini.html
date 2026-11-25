@@ -2890,6 +2890,7 @@ button.pl-card[disabled]{cursor:default}
   .batch-image-crop{position:absolute;box-sizing:border-box;border:2px dashed #fff;outline:1px solid #222;pointer-events:none}
   .batch-image-box .chip{min-height:40px}
   #ct-grok-clip select,#ct-grok-clip .chip{min-height:40px}
+  [data-grok-cut-editor] .filterbar label,[data-grok-cut-editor] select{max-width:100%}
   [data-grok-cards]{display:grid;gap:.55rem}
   [data-grok-cards] details{margin:.3rem 0}
   [data-grok-card-status]:empty,[data-grok-status]:empty{display:none}
@@ -19122,7 +19123,7 @@ function grokGridPrompt(plan){
     '\n첨부 이미지의 원본 컷과 시트는 인물 얼굴, 의상, 배경과 구도 참고용이며, 시간표가 있으면 순서와 시각만 참고하세요. 첫 프레임부터 마지막까지 인물과 소품의 위치와 시선을 이어 주세요. 같은 장면의 연속 프레임은 자세와 표정, 카메라 움직임이 조금씩 변해야 합니다. 장소가 달라지는 곳에서만 화면을 전환합니다.\n\n'+
     (plan.overlap?'첫 칸은 앞 묶음 마지막 컷의 연결용 프레임입니다. 첨부에 「앞 묶음 마지막 프레임」이 있으면 같은 이미지와 구도로 첫 칸을 맞추고, 이전 컷의 동작이나 대사를 다시 시작하지 마세요.\n\n':'')+
     (GROK_MOOD[plan.settings.mood]?'그림의 분위기: '+GROK_MOOD[plan.settings.mood]+'.\n\n':'')+
-    '컷별 장면 톤이 적혀 있으면 표정과 반응 타이밍에 반영하세요. 개그와 진지한 부분이 이어질 때는 분위기가 바뀌는 순간을 살리세요.\n\n'+
+    '컷별 장면 톤이 적혀 있으면 표정과 반응 타이밍에 반영하세요. [컷 지정]이 있는 컷에는 그 지시를 우선 적용하세요. 개그와 진지한 부분이 이어질 때는 분위기가 바뀌는 순간을 살리세요.\n\n'+
     plan.beats.map(function(beat){return grokBeatText(beat)+'\n동작 설계: '+grokShotDirection(beat)+grokToneText(plan.board,beat.cut,false);}).join('\n\n')+'\n\n키프레임 순서\n'+plan.frames.map(function(f){
       return f.index+'칸 · '+grokTimestamp(f.time)+' · '+f.cut.n+'번 컷 · '+f.motion+(f.change?' · 장면 전환':'')+' · '+compText(f.cut);
     }).join('\n');
@@ -19227,14 +19228,24 @@ function grokPaintVoiceRecommendations(voices){
   });
 }
 var GROK_TONE_LABELS={comedy:'개그',serious:'진지',transition:'톤 전환',neutral:'보통'};
+var GROK_CUT_TONES={
+  serious:{label:'진지',visual:'시선과 작은 표정 변화에 집중하고, 반응을 서두르지 마세요.',sound:'대사를 또렷하게 살리고 효과음은 절제하세요.'},
+  comedy:{label:'개그',visual:'상황이 먼저 읽히게 한 뒤, 대사나 행동 바로 뒤에 짧은 쉼과 리액션을 살리세요.',sound:'웃음 포인트 전후로 대사가 겹치지 않게 하세요.'},
+  reveal:{label:'진지 → 개그',visual:'컷 초반의 구도와 표정을 진지하게 유지하세요. 웃음 포인트가 드러난 뒤 한 박자 쉬고 리액션을 보여 주세요.',sound:'웃음 포인트 직전까지 진지한 말투와 호흡을 유지하세요. 전환 순간은 짧게 비우고 효과음은 리액션이 시작된 뒤 필요한 경우에만 쓰세요.'}
+};
 function grokToneSource(cut){
   return JSON.stringify([cut.scr,cut.line,cut.nar,cut.cnote]);
 }
-function grokToneText(board,cut,withSound){
+function grokAiTone(board,cut){
   var entry=board.grokAiTones?.[cut.batchId];
-  if(!entry||entry.source!==grokToneSource(cut)) return '';
-  return '\n장면 톤: '+GROK_TONE_LABELS[entry.tone]+(entry.visual?' · '+entry.visual:'')+
-    (withSound&&entry.sound?'\n대사·음향 연출: '+entry.sound:'');
+  return entry?.source===grokToneSource(cut)?entry:null;
+}
+function grokToneText(board,cut,withSound){
+  var manual=board.grokCutDirection?.[cut.batchId], preset=GROK_CUT_TONES[manual?.tone];
+  var entry=preset||grokAiTone(board,cut);
+  return (entry?'\n장면 톤: '+(preset?'[컷 지정] '+preset.label:GROK_TONE_LABELS[entry.tone])+
+    (entry.visual?' · '+entry.visual:'')+(withSound&&entry.sound?'\n대사·음향 연출: '+entry.sound:''):'')+
+    (withSound&&manual?.note?'\n컷별 영상 우선 메모: '+manual.note:'');
 }
 async function grokRecommendVoices(){
   if(!B||grokBusy||grokAiBoard||window.__stale) return;
@@ -19298,6 +19309,11 @@ async function grokRecommendVoices(){
     board.grokAiTones={...board.grokAiTones,...Object.fromEntries(tones)};
     save();
     grokPaintVoiceRecommendations(grokVoiceProfiles(board).profiles);
+    grokEditor.querySelectorAll('[data-grok-cut-editor]').forEach(function(editor){
+      var id=editor.querySelector('[data-grok-cut="id"]').value;
+      var cut=board.cuts.find(function(c){return c.batchId===id;});
+      if(cut) grokPaintCutTone(editor,board,cut);
+    });
     status.textContent='AI 추천 반영 · 목소리 '+suggested.size+'명 · 장면 '+tones.size+'컷';
   }catch(err){
     if(B===board) status.textContent=err instanceof SyntaxError?'AI 추천 형식을 읽을 수 없어요. 다시 시도해 주세요.':err.message;
@@ -19401,7 +19417,7 @@ function grokVideoPrompt(plan){
     (plan.overlap?'클립 연결: 0.00초 첫 파일은 바로 앞 영상의 마지막 프레임과 같은 정렬점입니다. 이 자세에서 바로 이어 움직이고, 이전 컷의 동작이나 대사를 다시 재생하거나 첫 프레임을 길게 멈춰 두지 마세요.\n\n':'')+
       '키프레임 타임라인\n'+frames.join('\n'),
     '전체 분위기: '+mood+'.'+(settings.direction?'\n연기·음향 우선 메모: '+settings.direction:''),
-    '장면별 화면과 연출\n전체 분위기는 기본값으로 삼고, 개그·진지·톤 전환은 컷별 맥락에 맞춰 연출하세요. 개그는 대사 뒤 반응과 짧은 쉼을 살리고, 진지한 대목은 효과음을 절제하고 대사와 표정에 집중하세요. 원문 대사, 배경음악 설정, 연기·음향 우선 메모를 지키세요.\n\n'+shots.join('\n\n'),
+    '장면별 화면과 연출\n전체 분위기와 연기·음향 메모는 기본값입니다. [컷 지정]과 컷별 영상 우선 메모를 해당 컷에 우선 적용하세요. 개그는 대사 뒤 반응과 짧은 쉼을 살리고, 진지한 대목은 효과음을 절제하고 대사와 표정에 집중하세요. 원문 대사와 배경음악 설정을 지키세요.\n\n'+shots.join('\n\n'),
     ...(casting.length?['캐릭터별 목소리\n같은 인물은 컷과 영상 묶음이 달라져도 음색·기본 음역·발음 습관을 유지하세요. 그 인물의 감정 연기 방식에 맞춰 각 음성 큐의 감정을 표현하고, 감정에 따라 호흡·강세·말하는 속도를 조절하세요.\n'+casting.join('\n')]:[]),
     '한국어 음성 큐\n'+(audio.length?audio.map(function(cue){return cue.text;}).join('\n'):'대사 없이 장면에 맞는 낮은 환경음으로 연출하세요.'),
     '환경음·효과음\n'+plan.beats.map(grokSoundCue).join('\n')+'\n'+transition,
@@ -19474,6 +19490,35 @@ function grokButton(text,click){
   button.addEventListener('click',click);
   return button;
 }
+function grokPaintCutTone(editor,board,cut){
+  var manual=board.grokCutDirection?.[cut.batchId], ai=grokAiTone(board,cut);
+  var hint=editor.querySelector('[data-grok-cut-tone-hint]');
+  hint.textContent=manual?.tone?'이 컷의 지정 톤을 적용해요.':ai?'AI 추천 · '+GROK_TONE_LABELS[ai.tone]:'전체 분위기를 적용해요.';
+}
+function grokFillCutEditor(editor,board,cut){
+  var manual=board.grokCutDirection?.[cut.batchId];
+  editor.querySelector('[data-grok-cut="tone"]').value=manual?.tone||'';
+  editor.querySelector('[data-grok-cut="note"]').value=manual?.note||'';
+  grokPaintCutTone(editor,board,cut);
+}
+function grokCutEditor(plan,previous){
+  var editor=document.createElement('details');
+  editor.dataset.grokCutEditor=plan.key;
+  editor.innerHTML='<summary>컷별 연출</summary><div class="filterbar">'+
+    '<label>편집할 컷 <select data-grok-cut="id" data-grok-busy>'+plan.beats.map(function(beat){
+      var cut=beat.cut, preview=String(cut.scr||cut.line||cut.nar||'').replace(/\s+/g,' ').trim();
+      return '<option value="'+cesc(cut.batchId)+'">'+cut.n+'번 컷'+(preview?' · '+cesc(preview.slice(0,28))+(preview.length>28?'…':''):'')+'</option>';
+    }).join('')+'</select></label>'+
+    '<label>컷 분위기 <select data-grok-cut="tone" data-grok-busy><option value="">자동</option>'+Object.keys(GROK_CUT_TONES).map(function(key){
+      return '<option value="'+key+'">'+GROK_CUT_TONES[key].label+'</option>';
+    }).join('')+'</select></label><small data-grok-cut-tone-hint></small></div>'+
+    '<label>컷별 영상 메모 <input type="text" maxlength="240" data-grok-cut="note" data-grok-busy style="display:block;width:100%;box-sizing:border-box" placeholder="헛기침 뒤 한 박자 쉬고 쳐다보게"></label>';
+  var cut=plan.beats.find(function(beat){return beat.cut.batchId===previous?.id;})?.cut||plan.beats[0].cut;
+  editor.open=!!previous?.open;
+  editor.querySelector('[data-grok-cut="id"]').value=cut.batchId;
+  grokFillCutEditor(editor,plan.board,cut);
+  return editor;
+}
 function grokUpdateBusy(){
   grokEditor.querySelectorAll('[data-grok-busy], [data-grok-import] button, [data-grok-import] select').forEach(function(control){
     control.disabled=grokBusy||(control.dataset.grok==='voice-ai'&&!!grokAiBoard);
@@ -19483,7 +19528,12 @@ function renderGrokClip(){
   var list=grokEditor.querySelector('[data-grok-cards]');
   grokEditor.hidden=!B?.cuts?.length;
   if(grokEditor.hidden){grokResetView();list.replaceChildren();return;}
-  if(grokView!==B){
+  var cutEditors=new Map();
+  if(grokView===B){
+    list.querySelectorAll('[data-grok-cut-editor]').forEach(function(editor){
+      cutEditors.set(editor.dataset.grokCutEditor,{open:editor.open,id:editor.querySelector('[data-grok-cut="id"]').value});
+    });
+  }else{
     grokResetView();grokView=B;grokStatus('');
     var voiceSettings=grokEditor.querySelector('[data-grok-voice-settings]');
     voiceSettings.open=false;voiceSettings.querySelector('[data-grok-voices]').replaceChildren();
@@ -19536,7 +19586,7 @@ function renderGrokClip(){
     });
     actions.appendChild(copy);
     status.className='small';status.dataset.grokCardStatus='';status.setAttribute('role','status');
-    card.append(heading,actions,status);
+    card.append(heading,actions,status,grokCutEditor(plan,cutEditors.get(plan.key)));
     if(saved){
       var photos=null;
       var copyAll=grokButton('사진 전체 복사',async function(){
@@ -19770,7 +19820,18 @@ async function grokSplitFiles(entries){
 grokEditor.addEventListener('change',function(e){
   var control=e.target, action=control.dataset.grok;
   if(!B||grokBusy) return;
-  if(control.dataset.grokVoice){
+  if(control.dataset.grokCut){
+    if(window.__stale) return;
+    var editor=control.closest('[data-grok-cut-editor]'), field=control.dataset.grokCut;
+    var id=editor.querySelector('[data-grok-cut="id"]').value;
+    var cut=B.cuts.find(function(c){return c.batchId===id;});
+    if(!cut) return;
+    if(field==='id'){grokFillCutEditor(editor,B,cut);return;}
+    var directions={...B.grokCutDirection}, direction={...directions[id],[field]:control.value.trim()};
+    if(direction.tone||direction.note) B.grokCutDirection={...directions,[id]:direction};
+    else{delete directions[id];B.grokCutDirection=directions;}
+    save();grokPaintCutTone(editor,B,cut);
+  }else if(control.dataset.grokVoice){
     if(window.__stale) return;
     var name=control.closest('[data-speaker]').dataset.speaker, field=control.dataset.grokVoice;
     var profiles={...B.grokVoices}, voice={...profiles[name],[field]:control.value.trim().slice(0,180)};
