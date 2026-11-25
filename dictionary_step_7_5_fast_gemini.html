@@ -19505,11 +19505,11 @@ function grokCutEditor(plan,previous){
   var editor=document.createElement('details');
   editor.dataset.grokCutEditor=plan.key;
   editor.innerHTML='<summary>컷별 연출</summary><div class="filterbar">'+
-    '<label>편집할 컷 <select data-grok-cut="id" data-grok-busy>'+plan.beats.map(function(beat){
+    '<label>편집할 컷 <select aria-label="편집할 컷" data-grok-cut="id" data-grok-busy>'+plan.beats.map(function(beat){
       var cut=beat.cut, preview=String(cut.scr||cut.line||cut.nar||'').replace(/\s+/g,' ').trim();
       return '<option value="'+cesc(cut.batchId)+'">'+cut.n+'번 컷'+(preview?' · '+cesc(preview.slice(0,28))+(preview.length>28?'…':''):'')+'</option>';
     }).join('')+'</select></label>'+
-    '<label>컷 분위기 <select data-grok-cut="tone" data-grok-busy><option value="">자동</option>'+Object.keys(GROK_CUT_TONES).map(function(key){
+    '<label>컷 분위기 <select aria-label="컷 분위기" data-grok-cut="tone" data-grok-busy><option value="">자동</option>'+Object.keys(GROK_CUT_TONES).map(function(key){
       return '<option value="'+key+'">'+GROK_CUT_TONES[key].label+'</option>';
     }).join('')+'</select></label><small data-grok-cut-tone-hint></small></div>'+
     '<label>컷별 영상 메모 <input type="text" maxlength="240" data-grok-cut="note" data-grok-busy style="display:block;width:100%;box-sizing:border-box" placeholder="헛기침 뒤 한 박자 쉬고 쳐다보게"></label>';
