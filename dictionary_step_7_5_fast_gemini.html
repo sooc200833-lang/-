@@ -20400,7 +20400,10 @@ batchPanel.addEventListener('click',async function(e){
   button.disabled=true;
   try{
     if(action==='send'||action==='send-all'){
-      var groups=action==='send'?[button.cuts]:batchGroups(board.cuts);
+      var currentGroups=batchGroups(board.cuts);
+      var groups=action==='send'?[button.cuts]:currentGroups;
+      var second=currentGroups[1];
+      var isSecond=function(cuts){return second&&cuts.length===second.length&&cuts.every(function(c,i){return c===second[i];});};
       if(!groups.length || groups.flat().some(function(c){return !board.cuts.includes(c);})) throw Error('콘티 컷이 변경되었습니다.');
       var layouts=groups.map(function(cuts){return batchRequest(board,cuts);});
       batchSaveRequests(board);
@@ -20412,10 +20415,13 @@ batchPanel.addEventListener('click',async function(e){
       });
       var key=layouts.map(function(layout){return batchKey(layout.ids);}).join('/');
       var sections=groups.map(function(cuts,i){
-        return '묶음 '+(i+1)+' · '+batchTitle(cuts.map(function(c){return c.n;}))+'\n'+batchPrompt(cuts,layouts[i]);
+        var layout=layouts[i];
+        var count=isSecond(cuts)?'이 격자에는 아래에 나온 원본 '+cuts.length+'컷만 순서대로 그리세요. '+layout.cols+'열 × '+layout.rows+'행을 유지하고 목록에 없는 컷을 추가하지 마세요.\n':'';
+        return '묶음 '+(i+1)+' · '+batchTitle(cuts.map(function(c){return c.n;}))+'\n'+count+batchPrompt(cuts,layout);
       });
       var prompt=sections.length===1?sections[0]:
         '묶음별로 별도의 격자 이미지 한 장을 만들어 주세요. 여러 장을 지원하면 한 번에 생성하고, 한 장씩만 가능하면 첫 번째부터 만들고 「다음」을 기다리세요. 묶음을 합쳐 한 장으로 그리지 마세요.\n\n'+sections.join('\n\n');
+      if(groups.some(isSecond)) document.getElementById('ct-batch-text').value=prompt;
       var prep=batchPreparation(board), signature=prep.signature;
       var pack=batchPackage;
       if(!pack||pack.board!==board||pack.key!==key||pack.signature!==signature) pack=null;
