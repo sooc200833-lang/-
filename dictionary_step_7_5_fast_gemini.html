@@ -20735,11 +20735,11 @@ function grokLoadPhotoFiles(record){
   }
   return task;
 }
-async function grokCopyAllPhotos(files,group,status){
+async function grokCopyAllPhotos(files,group,status,originals){
   var payload={files:files};
   if(navigator.share&&(!navigator.canShare||navigator.canShare(payload))){
     try{
-      status.textContent='공유 창에서 복사를 누르세요.';
+      status.textContent='공유 창에서 복사하거나 보낼 앱을 선택하세요.';
       await navigator.share(payload);
       status.textContent='공유 창에서 복사를 골랐다면 Grok에 붙여 넣으세요.';
       return;
@@ -20747,9 +20747,11 @@ async function grokCopyAllPhotos(files,group,status){
       if(err.name==='AbortError'){status.textContent='사진 복사를 취소했습니다.';return;}
     }
   }
-  if(window.ClipboardItem&&navigator.clipboard?.write){
+  if(window.ClipboardItem&&navigator.clipboard?.write&&(files.length===1||files.every(function(file){return file.type==='image/png';}))){
     try{
-      await navigator.clipboard.write(files.map(function(file){return new ClipboardItem({'image/png':file});}));
+      await navigator.clipboard.write(files.map(function(file){
+        return new ClipboardItem({'image/png':file.type==='image/png'?file:grokClipboardPng(file)});
+      }));
       status.textContent=files.length+'장 모두 복사했습니다. Grok에 붙여 넣으세요.';
       return;
     }catch(e){}
@@ -20758,18 +20760,29 @@ async function grokCopyAllPhotos(files,group,status){
     var items=await Promise.all(files.map(async function(file){
       return {name:file.name,data:new Uint8Array(await file.arrayBuffer())};
     }));
-    dlFile(new File([zipArchive(items)],'clip-'+String(group+1).padStart(2,'0')+'-photos.zip',{type:'application/zip'}));
-    status.textContent='이 브라우저에서는 여러 사진을 복사할 수 없어 PNG '+files.length+'장을 ZIP으로 저장했습니다.';
+    dlFile(new File([zipArchive(items)],'clip-'+String(group+1).padStart(2,'0')+(originals?'-originals.zip':'-photos.zip'),{type:'application/zip'}));
+    status.textContent='이 브라우저에서는 사진을 복사할 수 없어 '+files.length+'장을 ZIP으로 저장했습니다.';
   }catch(err){status.textContent='사진 묶음을 복사하거나 저장하지 못했습니다.';}
+}
+async function grokClipboardPng(file){
+  var url=URL.createObjectURL(file);
+  try{
+    var image=await loadImg(url);
+    if(!image) throw Error('사진을 열 수 없습니다.');
+    var canvas=document.createElement('canvas');
+    canvas.width=image.naturalWidth;canvas.height=image.naturalHeight;
+    canvas.getContext('2d').drawImage(image,0,0);
+    return await dlCanvas(canvas,'clipboard.png');
+  }finally{URL.revokeObjectURL(url);}
 }
 async function grokCopyPhoto(file,n,status){
   try{
     if(!window.ClipboardItem||!navigator.clipboard?.write) throw Error('사진 복사 미지원');
-    await navigator.clipboard.write([new ClipboardItem({'image/png':file})]);
+    await navigator.clipboard.write([new ClipboardItem({'image/png':file.type==='image/png'?file:grokClipboardPng(file)})]);
     status.textContent=n+'번 사진을 복사했습니다.';
   }catch(e){
     dlFile(file);
-    status.textContent='사진 복사를 지원하지 않아 '+n+'번 PNG를 저장했습니다.';
+    status.textContent='사진 복사를 지원하지 않아 '+n+'번 사진 파일을 저장했습니다.';
   }
 }
 function grokCopyText(text){
@@ -21076,9 +21089,11 @@ function grokPromptLimit(text,limit){
 function grokPromptSnippet(value,limit){
   return grokPromptLimit(String(value||'').replace(/\s+/g,' ').trim(),limit);
 }
-function grokVideoTiming(plan){
-  return '영상 길이: '+plan.duration+'초, 가로 16:9 웹툰 애니메이션.\n'+
-    '키프레임 '+plan.frames.length+'장 · 파일 번호 순서의 시각(초): '+plan.frames.map(function(frame){return frame.time.toFixed(2);}).join(', ');
+function grokVideoTiming(plan,originalNumbers){
+  var duration='영상 길이: '+plan.duration+'초, 가로 16:9 웹툰 애니메이션.\n';
+  if(originalNumbers) return duration+'첨부 원본 컷: '+originalNumbers.join(', ')+'번. cut-번호 파일을 같은 번호의 컷에 사용하세요. 사진의 인물·의상·구도·배경을 유지하고 컷 사이의 동작을 이어 주세요.';
+  return duration+'키프레임 '+plan.frames.length+'장 · 파일 번호 순서의 시각(초): '+plan.frames.map(function(frame){return frame.time.toFixed(2);}).join(', ')+
+    '. 각 시각의 구도와 인물 자세를 해당 이미지에 맞추고 사이 동작을 이어 주세요.';
 }
 function grokBeatRange(beat){
   return '['+grokTimestamp(beat.start)+'–'+grokTimestamp(beat.end)+']';
@@ -21130,7 +21145,7 @@ function grokRetimeVideoEdit(text,plan,previousDuration){
   var duration=plan.duration;
   var lengthLabel=/((?:영상|재생|클립|전체|총)\s*(?:길이|시간|분량)\s*[:：=]?\s*|^총\s*)(\d+(?:\.\d+)?)(\s*초)/gm;
   var lengthBefore=/\b(\d+(?:\.\d+)?)(\s*초(?:짜리|\s*분량의)?\s*(?:영상|클립|분량))/g;
-  text=text.replace(/^\s*(?:영상 길이: \d+초, 가로 16:9 웹툰 애니메이션\.\n키프레임 \d+장 · 파일 번호 순서의 시각\(초\): [\d., ]+|\d+초, 가로 16:9 웹툰 애니메이션\. 키프레임 \d+장을 파일명에 적힌 번호와 시각\(ms\)에 맞춰 움직임으로 연결\.)\n*/,
+  text=text.replace(/^\s*(?:영상 길이: \d+초, 가로 16:9 웹툰 애니메이션\.\n키프레임 \d+장 · 파일 번호 순서의 시각\(초\): [\d., ]+(?:각 시각의 구도와 인물 자세를 해당 이미지에 맞추고 사이 동작을 이어 주세요\.)?|\d+초, 가로 16:9 웹툰 애니메이션\. 키프레임 \d+장을 파일명에 적힌 번호와 시각\(ms\)에 맞춰 움직임으로 연결\.)\n*/,
     function(header){
       previousDuration=previousDuration||Number(header.match(/(\d+)초/)?.[1]);
       return '';
@@ -21224,18 +21239,24 @@ function grokVideoEditor(plan,saved,opened,status){
     delete board.grokVideoEdits?.[key];
     aiStatus.textContent='';paint();save();
   });
-  var copy=grokButton('영상 프롬프트 복사',async function(){
+  async function copyPrompt(originalNumbers){
     if(B!==board) return;
     paint();
     var text=textarea.value.trim();
     if(!text){status.textContent='복사할 영상 프롬프트를 입력해 주세요.';return;}
-    status.textContent=await grokCopyText(timing+text)?'영상 프롬프트를 복사했습니다.':'이 브라우저에서 복사할 수 없습니다. Safari나 Chrome에서 다시 시도해 주세요.';
-  });
+    var header=originalNumbers?grokVideoTiming(output,originalNumbers)+'\n\n':timing;
+    if(originalNumbers&&output.overlap){
+      text=text.replace('첫 이미지는 앞 영상의 마지막 자세에서 이어지는 프레임.','첫 컷은 앞 묶음과 겹치는 장면이니 동작을 이어 주세요.');
+    }
+    status.textContent=await grokCopyText(header+grokPromptLimit(text,GROK_PROMPT_LIMIT-header.length))?
+      '영상 프롬프트를 복사했습니다.':'이 브라우저에서 복사할 수 없습니다. Safari나 Chrome에서 다시 시도해 주세요.';
+  }
+  var copy=grokButton('영상 프롬프트 복사',function(){copyPrompt();});
   var controls=document.createElement('div');controls.className='filterbar';controls.append(revise,reset);
   details.append(summary,timingPreview,textarea,count,controls,aiStatus);
   details.open=opened;
   details.addEventListener('toggle',function(){if(details.open) paint();});
-  return {details:details,copy:copy};
+  return {details:details,copy:copy,copyPrompt:copyPrompt};
 }
 function grokTimingCard(plan){
   var cv=document.createElement('canvas'), w=320,h=105;
@@ -21338,6 +21359,37 @@ function grokUpdateBusy(){
     control.disabled=grokBusy||(control.dataset.grok==='voice-ai'&&!!grokAiBoard);
   });
 }
+function grokOriginalControls(plan,status,video){
+  var art=window.__ppArt, photos=[];
+  var sources=plan.cuts.map(function(cut){
+    return {number:cut.n,url:art?.get(cut.art)||art?.get(cut.comicArt)};
+  }).filter(function(source){return source.url;});
+  var copy=grokButton('원본 사진 복사·공유',async function(){
+    if(!photos.length){status.textContent='이 묶음에 복사할 원본 컷 사진이 없어요.';return;}
+    copy.disabled=true;
+    try{await grokCopyAllPhotos(photos.map(function(photo){return photo.file;}),plan.group,status,true);}
+    finally{copy.disabled=false;}
+  });
+  var prompt=grokButton('원본 사진용 프롬프트 복사',function(){
+    if(!photos.length){status.textContent='이 묶음에 복사할 원본 컷 사진이 없어요.';return;}
+    video.copyPrompt(photos.map(function(photo){return photo.number;}));
+  });
+  var actions=document.createElement('div');
+  actions.className='filterbar';actions.append(copy,prompt);
+  if(sources.length){
+    copy.disabled=prompt.disabled=true;
+    Promise.allSettled(sources.map(async function(source){
+      var name='cut-'+String(source.number).padStart(3,'0'), file=await dataFile(source.url,name);
+      if(file.type==='image/webp') file=new File([file],name+'.webp',{type:file.type});
+      return {number:source.number,file:file};
+    })).then(function(results){
+      photos=results.filter(function(result){return result.status==='fulfilled';}).map(function(result){return result.value;});
+      if(photos.length) copy.textContent='원본 사진 '+photos.length+'장 복사·공유';
+      copy.disabled=prompt.disabled=false;
+    });
+  }
+  return actions;
+}
 function renderGrokClip(){
   var list=grokEditor.querySelector('[data-grok-cards]');
   grokEditor.hidden=!B?.cuts?.length;
@@ -21403,7 +21455,7 @@ function renderGrokClip(){
     var copy=video.copy;
     actions.appendChild(copy);
     status.className='small';status.dataset.grokCardStatus='';status.setAttribute('role','status');
-    card.append(heading,uploadHint,actions,status,gptVisualEditor(B,plan.cuts),video.details,grokCutEditor(plan,cutEditors.get(plan.key)));
+    card.append(heading,uploadHint,actions,grokOriginalControls(plan,status,video),status,gptVisualEditor(B,plan.cuts),video.details,grokCutEditor(plan,cutEditors.get(plan.key)));
     if(saved){
       var photos=null;
       var copyAll=grokButton('사진 전체 복사',async function(){
