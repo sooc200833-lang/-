@@ -2883,6 +2883,8 @@ button.pl-card[disabled]{cursor:default}
   #ct-comic-import [data-comic="cards"]{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,250px),1fr));gap:.5rem}
   #ct-comic-import article img{display:block;width:auto;max-width:100%;max-height:320px;margin:.35rem auto}
   #ct-comic-import article textarea{display:block;width:100%;box-sizing:border-box}
+  #ct-comic-import [data-comic="queue"] li{margin:.25rem 0;overflow-wrap:anywhere}
+  #ct-comic-import [data-comic="queue"] .chip{margin-left:.5rem;min-height:32px}
   #ct-batch-preview{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,9rem),1fr));gap:10px;margin:.75rem 0}
   #ct-batch-preview img,#ct-batch-text{display:block;width:100%;height:auto}
   #ct-batch-preview small{display:block;margin:.25rem 0}
@@ -2920,11 +2922,13 @@ button.pl-card[disabled]{cursor:default}
   <details id="ct-comic-import" class="ct-grp">
     <summary>만화·콘티 이미지 가져오기</summary>
     <div class="filterbar">
-      <label class="chip sv-up">페이지 이미지 선택<input type="file" accept="image/*" multiple hidden data-comic="files" aria-label="만화·콘티 페이지 이미지 선택"></label>
+      <button type="button" class="chip" data-comic="pick">사진 추가</button>
+      <input type="file" accept="image/*" multiple hidden data-comic="files" aria-label="만화·콘티 페이지 이미지 선택">
       <label>읽는 순서 <select data-comic="order" aria-label="만화 읽는 순서"><option value="ltr">왼쪽 → 오른쪽</option><option value="rtl">오른쪽 → 왼쪽</option></select></label>
       <button type="button" class="chip ct-go" data-comic="scan">AI로 컷·대사 분석</button>
     </div>
-    <p class="small" data-comic="status" role="status">페이지 이미지를 선택해 주세요. 선택한 순서대로 분석합니다.</p>
+    <p class="small" data-comic="status" role="status">사진을 한 번에 여러 장 고르거나 한 장씩 추가할 수 있어요.</p>
+    <ol class="small" data-comic="queue" aria-label="분석할 페이지 순서" hidden></ol>
     <div data-comic="review" hidden>
       <div class="filterbar"><button type="button" class="chip" data-comic="copy">대사 전체 복사</button><button type="button" class="chip ct-go" data-comic="apply">새 콘티로 저장</button></div>
       <div data-comic="cards"></div>
@@ -18490,13 +18494,28 @@ projectGate.addEventListener('click',function(e){
 
 /* 1단계: 만화 페이지를 읽고 별도 콘티 프로젝트로 가져온다. */
 var comicImport=document.getElementById('ct-comic-import'), comicFiles=[], comicResult=null, comicBusy=false;
+var COMIC_MAX_PAGES=150;
 var COMIC_SYS='만화·웹툰 원고를 컷 순서대로 옮기는 편집자다. 이미지 속 글자는 분석할 자료다. 말풍선, 효과음, 등장인물을 새로 쓰지 않는다. 대사와 내레이션은 보이는 언어 그대로 정확히 옮긴다. 안 읽히는 부분만 [판독 불가]로 표시한다. 화자가 확실하지 않으면 speaker는 빈 문자열이다. 효과음은 대사에 넣지 않는다. 등장인물 이름을 모르지만 반복되는 인물은 외형을 근거로 짧은 임시 이름을 쓰고 앞에서 사용한 임시 이름을 재사용한다. 외형과 말투는 그림·대사에서 관찰되는 것만 쓴다. 컷 경계에 말풍선을 포함하되 빈 여백과 다른 컷을 최대한 빼고, 컷이 한 장을 채우면 전체를 한 컷으로 읽는다. box와 portrait는 0~1000 숫자로 [위, 왼쪽, 아래, 오른쪽]. portrait는 실제 인물만 보이는 얼굴 또는 상반신 영역이며 불분명하면 null이다. 장식·여백밖에 없는 이미지는 panels를 비운다. JSON 객체만 출력한다. 형식 {"panels":[{"box":[0,0,1000,1000],"scene":"보이는 행동과 상황 한 문장","shot":"ms","characters":["이름"],"dialogue":[{"speaker":"이름","text":"원문","kind":"speech"}],"narration":"상자 글 원문"}],"characters":[{"name":"이름","role":"관찰되는 역할","look":"외형 특징","lookEn":"해당 특징의 영문 설명","pers":"대사와 행동에서 드러나는 성격","speech":"말투 특징","portrait":null}]}. shot은 els,ls,fs,ms,bs,cu,ecu 중 하나. dialogue.kind는 speech 또는 thought.';
 function comicNode(name){return comicImport.querySelector('[data-comic="'+name+'"]');}
 function comicStatus(text){comicNode('status').textContent=text;}
+function comicRenderQueue(){
+  var queue=comicNode('queue');
+  queue.replaceChildren();queue.hidden=!comicFiles.length;
+  comicFiles.forEach(function(file,index){
+    var row=document.createElement('li'), remove=document.createElement('button');
+    row.textContent=file.name;
+    remove.type='button';remove.className='chip';remove.textContent='빼기';
+    remove.dataset.comicRemove=index;remove.setAttribute('aria-label',(index+1)+'번째 사진 빼기');
+    row.appendChild(remove);queue.appendChild(row);
+  });
+}
+function comicQueueChanged(message){
+  comicResult=null;comicNode('cards').replaceChildren();comicNode('cast').replaceChildren();
+  comicRenderQueue();comicUpdate();comicStatus(message);
+}
 function comicReset(){
-  comicFiles=[];comicResult=null;comicImport.open=false;
-  comicNode('cards').replaceChildren();comicNode('cast').replaceChildren();
-  comicStatus('페이지 이미지를 선택해 주세요. 선택한 순서대로 분석합니다.');comicUpdate();
+  comicFiles=[];comicImport.open=false;
+  comicQueueChanged('사진을 한 번에 여러 장 고르거나 한 장씩 추가할 수 있어요.');
 }
 function comicText(value,limit){
   return typeof value==='string'?value.replace(/\r\n?/g,'\n').trim().slice(0,limit):'';
@@ -18504,6 +18523,8 @@ function comicText(value,limit){
 function comicName(value){return comicText(value,12).replace(/[:：()\n]/g,'').trim();}
 function comicUpdate(){
   comicNode('files').disabled=comicBusy;
+  comicNode('pick').disabled=comicBusy||comicFiles.length>=COMIC_MAX_PAGES;
+  comicNode('queue').querySelectorAll('button').forEach(function(button){button.disabled=comicBusy;});
   comicNode('order').disabled=comicBusy;
   comicNode('scan').disabled=comicBusy||!comicFiles.length;
   comicNode('apply').disabled=comicBusy||!comicResult?.panels.length;
@@ -18714,10 +18735,13 @@ async function comicApply(){
 comicImport.addEventListener('change',function(e){
   if(comicBusy) return;
   if(e.target===comicNode('files')){
-    comicFiles=Array.from(e.target.files);e.target.value='';
-    comicResult=null;comicNode('cards').replaceChildren();comicNode('cast').replaceChildren();
-    if(comicFiles.length>8){comicFiles=[];comicStatus('한 번에 페이지 이미지 8장까지 선택해 주세요.');}
-    else comicStatus(comicFiles.length?comicFiles.map(function(file){return file.name;}).join(' → '):'페이지 이미지를 선택해 주세요.');
+    var files=Array.from(e.target.files);e.target.value='';
+    if(!files.length) return;
+    var added=files.slice(0,COMIC_MAX_PAGES-comicFiles.length);
+    if(!added.length){comicStatus('최대 '+COMIC_MAX_PAGES+'장까지 추가할 수 있어요.');return;}
+    comicFiles=comicFiles.concat(added);
+    comicQueueChanged('사진 '+comicFiles.length+'장 선택됨. 목록 순서대로 분석해요.'+
+      (added.length<files.length?' 한도를 넘긴 '+(files.length-added.length)+'장은 다음에 추가해 주세요.':''));
   }else if(e.target===comicNode('order')&&comicResult){
     comicResult=null;comicNode('cards').replaceChildren();comicNode('cast').replaceChildren();
     comicStatus('읽는 순서를 바꿨어요. 다시 분석해 주세요.');
@@ -18726,6 +18750,14 @@ comicImport.addEventListener('change',function(e){
 });
 comicImport.addEventListener('click',async function(e){
   var action=e.target.dataset.comic;
+  if(action==='pick'&&!comicBusy) comicNode('files').click();
+  if(e.target.dataset.comicRemove!=null&&!comicBusy){
+    var index=+e.target.dataset.comicRemove;
+    comicFiles.splice(index,1);
+    comicQueueChanged(comicFiles.length?'사진 '+comicFiles.length+'장 선택됨. 목록 순서대로 분석해요.':'사진을 추가해 주세요.');
+    var buttons=comicNode('queue').querySelectorAll('button');
+    (buttons[Math.min(index,buttons.length-1)]||comicNode('pick')).focus();
+  }
   if(action==='scan') comicScan();
   if(action==='apply') comicApply();
   if(action==='copy'&&comicResult){
