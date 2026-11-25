@@ -3116,10 +3116,13 @@ button.pl-card[disabled]{cursor:default}
       </div>
       <label>연기·음향 메모 <input type="text" maxlength="240" data-grok="direction" data-grok-busy aria-label="연기·음향 메모" style="display:block;width:100%;box-sizing:border-box" placeholder="마지막 말은 작게, 잔 부딪는 소리만 또렷하게"></label>
     </details>
+    <div class="filterbar">
+      <button class="chip" type="button" data-grok="voice-ai" data-grok-busy>AI로 배경음악·효과음·목소리 추천</button>
+    </div>
+    <p class="small" role="status" data-grok-voice-status></p>
+    <p class="small" data-grok-music hidden></p>
     <details data-grok-voice-settings>
       <summary>캐릭터 목소리</summary>
-      <button class="chip" type="button" data-grok="voice-ai" data-grok-busy>AI로 목소리·컷 분위기 추천</button>
-      <p class="small" role="status" data-grok-voice-status></p>
       <div data-grok-voices></div>
     </details>
     <div class="filterbar">
@@ -20838,6 +20841,15 @@ function grokVoiceProfiles(board){
   if(hasNarration) profileFor('내레이터');
   return {profiles:profiles,forName:profileFor};
 }
+function grokMusicRecommendation(board,settings){
+  return settings.score!=='off'&&board.grokAiMusic?.mood===settings.mood?board.grokAiMusic.text:'';
+}
+function grokPaintMusicRecommendation(board){
+  var preview=grokEditor.querySelector('[data-grok-music]');
+  var music=grokMusicRecommendation(board,grokOptions(board));
+  preview.hidden=!music;
+  preview.textContent=music?'AI 추천 배경음악 · '+music:'';
+}
 function grokRenderVoices(board){
   var settings=grokEditor.querySelector('[data-grok-voice-settings]');
   var host=settings.querySelector('[data-grok-voices]');
@@ -20898,7 +20910,7 @@ async function grokRecommendVoices(){
   if(!B||grokBusy||grokAiBoard||window.__stale) return;
   var status=grokEditor.querySelector('[data-grok-voice-status]');
   if(!aiReady()){status.textContent='상단 AI 연결에서 키를 설정한 후 추천을 받을 수 있어요.';return;}
-  var board=B, cast=grokVoiceProfiles(board), examples=new Map();
+  var board=B, cast=grokVoiceProfiles(board), examples=new Map(), settings=grokOptions(board);
   var cuts=board.cuts.filter(function(cut){return cut.scr||cut.line||cut.nar||cut.cnote;});
   cuts.forEach(function(cut){
     var scene=String(cut.scr||'').slice(0,230);
@@ -20917,28 +20929,30 @@ async function grokRecommendVoices(){
       return lines[Math.round(i*(lines.length-1)/Math.max(1,count-1))];
     })};
   });
-  var scenes=cuts.map(function(cut){return {id:cut.batchId,n:cut.n,scene:String(cut.scr||'').slice(0,350),
+  var scenes=cuts.map(function(cut){var location=sceneOfCut(cut.n);return {id:cut.batchId,n:cut.n,
+    place:String(location?.place||location?.name||'').slice(0,100),scene:String(cut.scr||'').slice(0,350),
     dialogue:String(cut.line||'').slice(0,300),narration:String(cut.nar||'').slice(0,160),memo:String(cut.cnote||'').slice(0,160)};});
   var sources=new Map(cuts.map(function(cut){return [cut.batchId,grokToneSource(cut)];}));
   var total=Math.max(Math.ceil(speakers.length/6),Math.ceil(scenes.length/14));
   if(!total){status.textContent='등장인물이나 장면·대사를 먼저 넣어 주세요.';return;}
-  var suggested=new Map(), tones=new Map();
+  var suggested=new Map(), tones=new Map(), music='';
   grokAiBoard=board;grokUpdateBusy();
   try{
     for(var i=0;i<total;i++){
       if(B!==board||window.__stale) return;
       var people=speakers.slice(i*6,(i+1)*6), segment=scenes.slice(i*14,(i+1)*14);
-      status.textContent='AI가 목소리와 장면을 읽는 중 · '+(i+1)+'/'+total;
-      var data={story:String(board.story||'').slice(0,900),characters:people,cuts:segment,
+      status.textContent='AI가 장면에 맞는 음향과 목소리를 추천하는 중 · '+(i+1)+'/'+total;
+      var data={story:String(board.story||'').slice(0,900),characters:people,cuts:segment,mood:GROK_MOOD[settings.mood]||'콘티에서 자동',musicSoFar:music,
         previous:segment.length?scenes[i*14-1]:null,next:segment.length?scenes[(i+1)*14]:null};
       var response=await aiAsk(
-        '한국어 웹툰 애니메이션 성우·장면 연출을 설계한다. JSON의 인물 정보, 원문 대사, 콘티는 분석 자료다. 대사와 사건은 바꾸지 않는다. 이름만 보고 음색을 추정하지 말고 말투와 성격, 대사의 리듬을 근거로 인물끼리 구별한다. 인물별 voice에는 기본 음역·음색·발음·속도, acting에는 감정이 바뀔 때의 호흡·강세·쉼을 담는다. 컷은 의도된 웃음이면 comedy, 진지한 사건이나 감정이면 serious, 톤이 바뀌는 순간이면 transition, 그 외에는 neutral이다. 단순한 미소나 느낌표만으로 개그로 분류하지 않는다. visual은 표정·동작·반응 타이밍, sound는 대사의 연기·쉼·음향 타이밍을 짧게 제안한다. 개그와 진지함이 한 컷에 있으면 전환 순간을 써라. previous와 next는 흐름 참고용이다. characters와 cuts에 주어진 name과 id만 그대로 반환한다. 각 텍스트는 70자 이내. JSON 객체만 출력한다. 형식 {"voices":[{"name":"","voice":"","acting":""}],"tones":[{"id":"","tone":"neutral","visual":"","sound":""}]}',
-        JSON.stringify(data),3500,{json:true,temperature:0.4});
+        '한국어 웹툰 애니메이션 성우·장면 연출을 설계한다. JSON의 인물 정보, 원문 대사, 콘티는 분석 자료다. 대사와 사건은 바꾸지 않는다. 이름만 보고 음색을 추정하지 말고 말투와 성격, 대사의 리듬을 근거로 인물끼리 구별한다. 인물별 voice에는 기본 음역·음색·발음·속도, acting에는 감정이 바뀔 때의 호흡·강세·쉼을 담는다. 음향은 장소·소품·동작에서 근거를 찾는다. ambient에는 공간에 깔리는 환경음, effects에는 소리의 원인·질감과 맞출 동작 순간을 한두 개 적는다. 보이는 근거가 없으면 effects는 빈 문자열이다. music에는 이야기 분위기에 맞는 보컬 없는 배경음악의 악기·템포·분위기를 제안한다. musicSoFar가 있으면 유지하고 빈 문자열을 반환한다. 컷은 의도된 웃음이면 comedy, 진지한 사건이나 감정이면 serious, 톤이 바뀌는 순간이면 transition, 그 외에는 neutral이다. 단순한 미소나 느낌표만으로 개그로 분류하지 않는다. visual은 표정·동작·반응 타이밍, sound는 대사의 연기·쉼·음향 타이밍을 짧게 제안한다. 개그와 진지함이 한 컷에 있으면 전환 순간을 써라. previous와 next는 흐름 참고용이다. characters와 cuts에 주어진 name과 id만 그대로 반환한다. 각 텍스트는 70자 이내. JSON 객체만 출력한다. 형식 {"voices":[{"name":"","voice":"","acting":""}],"tones":[{"id":"","tone":"neutral","visual":"","sound":"","ambient":"","effects":""}],"music":""}',
+        JSON.stringify(data),5000,{json:true,temperature:0.4});
       if(B!==board||window.__stale) return;
       if(aiIsErr(response)) throw Error(response);
       var result=JSON.parse(String(response).trim().replace(/\n\n\(「[^\n]+로 대신 불렀다\)$/, '')
         .replace(/^```(?:json)?\s*/i,'').replace(/\s*```$/,''));
       if(!Array.isArray(result?.voices)||!Array.isArray(result?.tones)) throw Error('AI 추천 형식을 읽을 수 없어요. 다시 시도해 주세요.');
+      if(!music&&typeof result.music==='string') music=result.music.trim().slice(0,180);
       result.voices.forEach(function(item){
         if(!item||!people.some(function(person){return person.name===item.name;})) return;
         var voice=typeof item.voice==='string'?item.voice.trim().slice(0,180):'';
@@ -20948,20 +20962,25 @@ async function grokRecommendVoices(){
       result.tones.forEach(function(item){
         if(!item||!segment.some(function(cut){return cut.id===item.id;})||!Object.prototype.hasOwnProperty.call(GROK_TONE_LABELS,item.tone)) return;
         tones.set(item.id,{source:sources.get(item.id),tone:item.tone,
-          visual:typeof item.visual==='string'?item.visual.trim().slice(0,120):'',sound:typeof item.sound==='string'?item.sound.trim().slice(0,120):''});
+          visual:typeof item.visual==='string'?item.visual.trim().slice(0,120):'',sound:typeof item.sound==='string'?item.sound.trim().slice(0,120):'',
+          ambient:typeof item.ambient==='string'?item.ambient.trim().slice(0,120):'',
+          effects:typeof item.effects==='string'?item.effects.trim().slice(0,180):''});
       });
     }
-    if(!suggested.size&&!tones.size) throw Error('사용할 수 있는 추천이 없어요. 다시 시도해 주세요.');
+    if(!suggested.size&&!tones.size&&!music) throw Error('사용할 수 있는 추천이 없어요. 다시 시도해 주세요.');
     board.grokAiVoices={...board.grokAiVoices,...Object.fromEntries(suggested)};
     board.grokAiTones={...board.grokAiTones,...Object.fromEntries(tones)};
+    if(music) board.grokAiMusic={mood:settings.mood,text:music};
     save();
+    grokPaintMusicRecommendation(board);
     grokPaintVoiceRecommendations(grokVoiceProfiles(board).profiles);
     grokEditor.querySelectorAll('[data-grok-cut-editor]').forEach(function(editor){
       var id=editor.querySelector('[data-grok-cut="id"]').value;
       var cut=board.cuts.find(function(c){return c.batchId===id;});
       if(cut) grokPaintCutTone(editor,board,cut);
     });
-    status.textContent='AI 추천 반영 · 목소리 '+suggested.size+'명 · 장면 '+tones.size+'컷';
+    var soundCount=Array.from(tones.values()).filter(function(tone){return tone.ambient||tone.effects;}).length;
+    status.textContent='AI 추천 반영 · 목소리 '+suggested.size+'명 · 장면 '+tones.size+'컷 · 음향 '+soundCount+'컷'+(music?' · 배경음악':'');
   }catch(err){
     if(B===board) status.textContent=err instanceof SyntaxError?'AI 추천 형식을 읽을 수 없어요. 다시 시도해 주세요.':err.message;
   }finally{
@@ -20992,8 +21011,8 @@ function grokVoiceDirection(c,line,settings,onlySpeaker){
   if(settings.mood==='warm') return '부드럽고 안정적인 호흡으로 상대에게 말함';
   return '장면에 맞는 절제된 일상 말투. 문장 부호에 맞춰 숨과 쉼을 나눔';
 }
-function grokSoundCue(beat){
-  var place=beat.scene, scr=String(beat.cut.scr||'');
+function grokSoundCue(beat,board){
+  var place=beat.scene, scr=String(beat.cut.scr||''), ai=grokAiTone(board,beat.cut);
   var ambient=/비가|빗소리|빗방울|빗줄기/.test(scr+' '+place)?'잔잔한 빗소리':
     /술집|선술집|주점|식당|카페/.test(place)?'멀리 웅성거리는 낮은 실내 배경음':
     /숲|산길|공원/.test(place)?'낮은 바람과 나뭇잎 소리':
@@ -21003,8 +21022,8 @@ function grokSoundCue(beat){
   if(/발소리|걷[는고다]|걸[어었]|달려|뛰어/.test(scr)) effects.push('발이 바닥에 닿는 순간 발소리');
   if(/잔을\s*(?:내려놓|부딪)|잔이\s*(?:떨어|부딪)|컵을\s*내려놓/.test(scr)) effects.push('잔이 표면이나 다른 물체에 닿는 순간 짧은 접촉음');
   if(/몸이\s*부딪|바닥에\s*(?:쓰러|떨어)|충돌|내리치|쾅/.test(scr)) effects.push('충격 프레임에 짧은 충돌음과 짧은 잔향');
-  return '['+grokTimestamp(beat.start)+'–'+grokTimestamp(beat.end)+'] '+beat.cut.n+'번 컷 · '+ambient+
-    (effects.length?' · '+effects.join(' / '):' · 화면에서 원인이 확인되는 효과음만 사용');
+  return '['+grokTimestamp(beat.start)+'–'+grokTimestamp(beat.end)+'] '+beat.cut.n+'번 컷 · 환경음: '+(ai?.ambient||ambient)+
+    ' · 효과음: '+(ai?.effects||(effects.length?effects.join(' / '):'화면에 나오는 동작이나 소품에 맞춰 동작이 일어나는 순간에 소리를 넣으세요.'));
 }
 
 function grokAudioCues(beat,settings,voices){
@@ -21051,14 +21070,17 @@ function grokVideoPrompt(plan){
     return '• '+person.name+' · 기본 목소리: '+voice+(acting?' · 감정 연기 방식: '+acting:'');
   });
   var mood=GROK_MOOD[settings.mood]||'콘티의 사건과 반응에 맞춰 컷 사이 감정이 이어지도록 연기';
-  var music=settings.score==='off'?'배경음악 없이 환경음·효과음·목소리만 사용합니다.':
-    '음악이 정서를 살리는 구간에만 보컬 없는 절제된 배경음악을 깔고, 중요한 대사와 반응 직전에는 음량을 낮추거나 잠깐 비워 주세요.';
+  var recommendedMusic=grokMusicRecommendation(plan.board,settings);
+  var music=settings.score==='off'?'배경음악 없이 환경음·효과음·목소리만 사용하세요.':
+    '0초부터 영상 끝까지 분위기에 맞는 보컬 없는 배경음악을 들리게 유지하세요. 대사 중에는 음악 볼륨을 낮추고 대사가 끝나면 자연스럽게 올리세요.'+
+    (recommendedMusic?' 배경음악 스타일: '+recommendedMusic:'');
   var transition=edits.length?
     '자연스러운 장소 전환에서는 다음 장소의 환경음을 화면보다 살짝 먼저 들리게 하고(J컷), 반응의 여운이 중요하면 이전 환경음을 잠깐 이어 주세요(L컷). 급작스러운 전환이 의도된 곳은 소리도 함께 끊으세요.':
     '같은 장소에서는 컷 사이 환경음을 끊지 말고 공간의 크기와 거리감을 유지하세요.';
   return [
     'Grok Imagine 영상 제작 요청',
     '출력: '+plan.duration+'초, 가로 16:9, 2D 웹툰 애니메이션 한 편. 0초의 첫 이미지로 시작하고 '+grokTimestamp(plan.duration)+'의 마지막 이미지 구도와 자세에서 끝냅니다.',
+    '오디오 포함: '+music+' 대사를 또렷하게 살리고 환경음과 효과음을 아래 큐에 맞춰 믹싱하세요.',
     '키프레임: 첨부 PNG '+plan.frames.length+'장을 아래 파일명과 시각에 맞춰 사용하세요. 파일 목록에 보이는 순서가 달라도 번호 순서를 따르세요. 각 시각에서 해당 이미지의 구도·인물 자세·표정을 맞추고, 프레임 사이에는 다음 자세로 이어지는 동작을 그리세요. 정지 이미지 슬라이드쇼나 디졸브로 대체하지 마세요.',
     '연속성: 같은 장면에서 인물 얼굴·헤어·의상·체형·소품·배경 조명을 유지하세요. 시선, 이동 방향, 손과 소품의 위치를 이어 주세요. 카메라 이동은 양쪽 키프레임의 구도를 부드럽게 연결하는 범위로 제한하세요. '+(edits.length?edits.join(' '):'장면 전체를 한 흐름으로 이어 주세요.'),
     (plan.overlap?'클립 연결: 0.00초 첫 파일은 바로 앞 영상의 마지막 프레임과 같은 정렬점입니다. 이 자세에서 바로 이어 움직이고, 이전 컷의 동작이나 대사를 다시 재생하거나 첫 프레임을 길게 멈춰 두지 마세요.\n\n':'')+
@@ -21067,8 +21089,7 @@ function grokVideoPrompt(plan){
     '장면별 화면과 연출\n전체 분위기와 연기·음향 메모는 기본값입니다. [컷 지정]과 컷별 영상 우선 메모를 해당 컷에 우선 적용하세요. 개그는 대사 뒤 반응과 짧은 쉼을 살리고, 진지한 대목은 효과음을 절제하고 대사와 표정에 집중하세요. 원문 대사와 배경음악 설정을 지키세요.\n\n'+shots.join('\n\n'),
     ...(casting.length?['캐릭터별 목소리\n같은 인물은 컷과 영상 묶음이 달라져도 음색·기본 음역·발음 습관을 유지하세요. 그 인물의 감정 연기 방식에 맞춰 각 음성 큐의 감정을 표현하고, 감정에 따라 호흡·강세·말하는 속도를 조절하세요.\n'+casting.join('\n')]:[]),
     '한국어 음성 큐\n'+(audio.length?audio.map(function(cue){return cue.text;}).join('\n'):'대사 없이 장면에 맞는 낮은 환경음으로 연출하세요.'),
-    '환경음·효과음\n'+plan.beats.map(grokSoundCue).join('\n')+'\n'+transition,
-    '음악·믹싱: '+music+' 목소리가 항상 또렷하게 들리도록 음악과 큰 효과음을 뒤로 물리고, 장면의 여운은 짧은 쉼으로 남겨 주세요.',
+    '환경음·효과음\n'+plan.beats.map(function(beat){return grokSoundCue(beat,plan.board);}).join('\n')+'\n'+transition,
     '대사는 적힌 문장 그대로 해당 화자가 말합니다. 발화 중인 인물만 입 모양을 맞추고, 음성 큐 바깥에는 대사를 추가하지 마세요. 화면에는 자막·말풍선·번호·워터마크를 넣지 마세요.'
   ].join('\n\n');
 }
@@ -21141,6 +21162,8 @@ function grokPaintCutTone(editor,board,cut){
   var manual=board.grokCutDirection?.[cut.batchId], ai=grokAiTone(board,cut);
   var hint=editor.querySelector('[data-grok-cut-tone-hint]');
   hint.textContent=manual?.tone?'이 컷의 지정 톤을 적용해요.':ai?'AI 추천 · '+GROK_TONE_LABELS[ai.tone]:'전체 분위기를 적용해요.';
+  if(ai?.ambient) hint.textContent+=' · 환경음: '+ai.ambient;
+  if(ai?.effects) hint.textContent+=' · 효과음: '+ai.effects;
 }
 function grokFillCutEditor(editor,board,cut){
   var manual=board.grokCutDirection?.[cut.batchId];
@@ -21184,7 +21207,7 @@ function renderGrokClip(){
     grokResetView();grokView=B;grokStatus('');
     var voiceSettings=grokEditor.querySelector('[data-grok-voice-settings]');
     voiceSettings.open=false;voiceSettings.querySelector('[data-grok-voices]').replaceChildren();
-    voiceSettings.querySelector('[data-grok-voice-status]').textContent='';
+    grokEditor.querySelector('[data-grok-voice-status]').textContent='';
     var imports=grokEditor.querySelector('[data-grok-import]');
     imports.hidden=true;imports.replaceChildren();
     grokEditor.querySelector('[data-grok-web]').hidden=true;
@@ -21200,6 +21223,7 @@ function renderGrokClip(){
   grokEditor.querySelector('[data-grok="count"]').value=defaults.count;
   ['mood','score','direction'].forEach(function(key){grokEditor.querySelector('[data-grok="'+key+'"]').value=defaults[key];});
   grokRenderVoices(B);
+  grokPaintMusicRecommendation(B);
   grokEditor.querySelector('[data-grok="all"]').hidden=plans.length<2;
   plans.forEach(function(plan){
     var saved=grokSaved(B,plan.cuts), request=B.grokGridRequests?.[plan.key];
