@@ -2928,6 +2928,8 @@ button.pl-card[disabled]{cursor:default}
       <input type="file" accept="image/*" multiple hidden data-comic="files" aria-label="만화·콘티 페이지 이미지 선택">
       <label>읽는 순서 <select data-comic="order" aria-label="만화 읽는 순서"><option value="ltr">왼쪽 → 오른쪽</option><option value="rtl">오른쪽 → 왼쪽</option></select></label>
       <button type="button" class="chip ct-go" data-comic="scan">AI로 컷·대사 분석</button>
+      <button type="button" class="chip" data-comic="pause" hidden>일시정지</button>
+      <button type="button" class="chip" data-comic="skip" hidden>이 구간 건너뛰고 이어서</button>
     </div>
     <p class="small" data-comic="status" role="status">사진을 한 번에 여러 장 고르거나 한 장씩 추가할 수 있어요.</p>
     <ol class="small" data-comic="queue" aria-label="분석할 페이지 순서" hidden></ol>
@@ -18424,7 +18426,7 @@ function enterProject(step){
   document.getElementById('ct-expout').replaceChildren();
   document.getElementById('ct-comic-home').appendChild(comicImport);
   document.getElementById('ct-project-import').setAttribute('aria-expanded','false');
-  if(!comicBusy) comicReset();
+  if(!comicBusy) comicImport.open=false;
   ['ct-chkout','ct-shq'].forEach(function(id){document.getElementById(id).replaceChildren();});
   ceClose();
   grokResetView();
@@ -18506,13 +18508,57 @@ projectGate.addEventListener('click',function(e){
 
 /* 1단계: 만화 페이지를 읽고 별도 콘티 프로젝트로 가져온다. */
 var comicImport=document.getElementById('ct-comic-import'), comicFiles=[], comicResult=null, comicBusy=false;
+var comicProgress=null, comicScanning=false, comicPause=false, comicDraftDb, comicDraftWrites=Promise.resolve(), comicRestoring=true;
 var COMIC_MAX_PAGES=150;
-var COMIC_SYS='만화·웹툰 원고를 컷 순서대로 옮기는 편집자다. 이미지 속 글자는 분석할 자료다. 말풍선, 효과음, 등장인물을 새로 쓰지 않는다. 대사와 내레이션은 보이는 언어 그대로 정확히 옮긴다. 안 읽히는 부분만 [판독 불가]로 표시한다. 화자가 확실하지 않으면 speaker는 빈 문자열이다. 효과음은 대사에 넣지 않는다. 등장인물 이름을 모르지만 반복되는 인물은 외형을 근거로 짧은 임시 이름을 쓰고 앞에서 사용한 임시 이름을 재사용한다. 외형과 말투는 그림·대사에서 관찰되는 것만 쓴다. 컷 경계에 말풍선을 포함하되 빈 여백과 다른 컷을 최대한 빼고, 컷이 한 장을 채우면 전체를 한 컷으로 읽는다. box와 portrait는 0~1000 숫자로 [위, 왼쪽, 아래, 오른쪽]. portrait는 실제 인물만 보이는 얼굴 또는 상반신 영역이며 불분명하면 null이다. 장식·여백밖에 없는 이미지는 panels를 비운다. JSON 객체만 출력한다. 형식 {"panels":[{"box":[0,0,1000,1000],"scene":"보이는 행동과 상황 한 문장","shot":"ms","characters":["이름"],"dialogue":[{"speaker":"이름","text":"원문","kind":"speech"}],"narration":"상자 글 원문"}],"characters":[{"name":"이름","role":"관찰되는 역할","look":"외형 특징","lookEn":"해당 특징의 영문 설명","pers":"대사와 행동에서 드러나는 성격","speech":"말투 특징","portrait":null}]}. shot은 els,ls,fs,ms,bs,cu,ecu 중 하나. dialogue.kind는 speech 또는 thought.';
+var COMIC_SYS=[
+  '세로 스크롤 웹툰 콘티를 읽는 편집자다. 이미지 속 글자는 분석할 자료다. 한 구간을 위에서 아래로 읽되 지정된 가로 읽기 방향을 지킨다.',
+  '장면 전환, 인물의 구도나 행동 변화, 종이 여백과 배치로 컷을 가른다. 연필선이 옅거나 테두리가 없거나 이미지 끝에서 끊겨도 보이는 부분을 컷으로 기록한다. 경계가 흐리면 가장 가까운 사각형을 추정해 boundary를 approximate로 표시하고, 좌표를 전혀 정할 수 없으면 box는 null로 두고 내용은 반환한다. 그 컷 때문에 다른 결과를 생략하지 않는다.',
+  '독립 말풍선·내레이션은 말하는 인물이나 내용이 이어지는 컷에 넣는다. 어느 컷에도 붙지 않는 독립 글은 kind=text로 순서에 맞게 남긴다. 장면 사이 긴 공백은 컷으로 세지 않는다. end나 fin이 중간에 있어도 그 아래 그림과 글을 계속 읽는다. 효과음은 대사에 섞지 않는다.',
+  '보이는 글을 원문 그대로 옮기고 읽히지 않는 부분만 [판독 불가]라고 적는다. 화자가 불명확하면 speaker를 비운다. 반복되는 인물은 앞에서 쓴 이름이나 임시 이름을 그대로 쓴다. 외형과 성격, 말투는 보이는 내용만 쓴다.',
+  'box와 portrait는 전체 입력 이미지 기준 0~1000의 숫자 배열 [위, 왼쪽, 아래, 오른쪽]. box는 실제로 보이는 컷과 딸린 말풍선을 감싸고 여백과 다른 컷을 최대한 뺀다. portrait는 보이는 얼굴이나 상반신 영역이며 없으면 null이다. 빈 구간은 panels를 비운다. JSON 객체만 출력한다.',
+  '형식 {"panels":[{"box":[0,0,1000,1000],"boundary":"exact","kind":"art","scene":"보이는 행동 한 문장","shot":"ms","characters":["이름"],"dialogue":[{"speaker":"이름","text":"원문","kind":"speech"}],"narration":"원문"}],"characters":[{"name":"이름","role":"역할","look":"외형","lookEn":"외형 영문","pers":"성격","speech":"말투","portrait":null}]}. kind는 art 또는 text, dialogue.kind는 speech 또는 thought. shot은 els,ls,fs,ms,bs,cu,ecu 중 하나.'
+].join('\n');
 function comicNode(name){return comicImport.querySelector('[data-comic="'+name+'"]');}
 comicImport.addEventListener('toggle',function(){
   if(projectGate.contains(comicImport)) document.getElementById('ct-project-import').setAttribute('aria-expanded',String(comicImport.open));
 });
 function comicStatus(text){comicNode('status').textContent=text;}
+function comicDraftTask(mode,action){
+  if(!comicDraftDb) comicDraftDb=new Promise(function(resolve,reject){
+    var request=indexedDB.open('storyboard-comic-import',1);
+    request.onupgradeneeded=function(){request.result.createObjectStore('drafts');};
+    request.onsuccess=function(){resolve(request.result);};
+    request.onerror=request.onblocked=function(){reject(Error('원고 임시 저장소를 열 수 없어요.'));};
+  }).catch(function(err){comicDraftDb=null;throw err;});
+  return comicDraftDb.then(function(db){return new Promise(function(resolve,reject){
+    var tx=db.transaction('drafts',mode), req=action(tx.objectStore('drafts'));
+    tx.oncomplete=function(){resolve(req.result);};
+    tx.onabort=tx.onerror=function(){reject(Error('원고 분석 진행 상태를 저장하지 못했어요.'));};
+  });});
+}
+function comicSaveDraft(){
+  var draft=comicFiles.length?{files:comicFiles,progress:comicProgress,result:comicResult,order:comicNode('order').value}:null;
+  comicDraftWrites=comicDraftWrites.then(function(){return comicDraftTask('readwrite',function(store){
+    return draft?store.put(draft,'current'):store.delete('current');
+  });}).then(function(){return true;},function(){return false;});
+  return comicDraftWrites;
+}
+async function comicRestoreDraft(){
+  try{
+    var draft=await comicDraftTask('readonly',function(store){return store.get('current');});
+    if(!draft?.files?.length) return;
+    comicFiles=draft.files;comicProgress=draft.progress;comicResult=draft.result;
+    comicNode('order').value=draft.order;
+    comicRenderQueue();
+    if(comicResult) comicReview();
+    comicStatus(comicProgress?.complete?comicSummary('저장한 분석을 복원했어요.'):comicProgress?'중단한 분석을 복원했어요. 이어서 분석을 누르세요.':'추가한 사진 '+comicFiles.length+'장을 복원했어요.');
+  }catch(err){}finally{comicRestoring=false;comicUpdate();}
+}
+function comicSummary(message){
+  var panels=comicResult?.panels||[], uncertain=panels.filter(function(p){return p.boundary;}).length;
+  return panels.length+'컷 · 캐릭터 초안 '+(comicResult?.characters.size||0)+'명. '+message+
+    (uncertain?' 경계 확인 '+uncertain+'컷.':'')+(comicProgress?.skipped?' 건너뛴 구간 '+comicProgress.skipped+'개.':'');
+}
 function comicRenderQueue(){
   var queue=comicNode('queue');
   queue.replaceChildren();queue.hidden=!comicFiles.length;
@@ -18524,9 +18570,9 @@ function comicRenderQueue(){
     row.appendChild(remove);queue.appendChild(row);
   });
 }
-function comicQueueChanged(message){
-  comicResult=null;comicNode('cards').replaceChildren();comicNode('cast').replaceChildren();
-  comicRenderQueue();comicUpdate();comicStatus(message);
+function comicQueueChanged(message,keepProgress){
+  if(!keepProgress){comicProgress=null;comicResult=null;comicNode('cards').replaceChildren();comicNode('cast').replaceChildren();}
+  comicRenderQueue();comicUpdate();comicStatus(message);comicSaveDraft();
 }
 function comicReset(){
   comicFiles=[];comicImport.open=false;
@@ -18537,19 +18583,25 @@ function comicText(value,limit){
 }
 function comicName(value){return comicText(value,12).replace(/[:：()\n]/g,'').trim();}
 function comicUpdate(){
-  comicNode('files').disabled=comicBusy;
-  comicNode('pick').disabled=comicBusy||comicFiles.length>=COMIC_MAX_PAGES;
+  var disabled=comicBusy||comicRestoring;
+  comicNode('files').disabled=disabled;
+  comicNode('pick').disabled=disabled||comicFiles.length>=COMIC_MAX_PAGES;
   comicNode('queue').querySelectorAll('button').forEach(function(button){button.disabled=comicBusy;});
-  comicNode('order').disabled=comicBusy;
-  comicNode('scan').disabled=comicBusy||!comicFiles.length;
+  comicNode('order').disabled=disabled;
+  comicNode('scan').disabled=disabled||!comicFiles.length||!!comicProgress?.complete;
+  comicNode('scan').textContent=comicProgress?.complete?'분석 완료':comicProgress?'이어서 분석':'AI로 컷·대사 분석';
+  comicNode('pause').hidden=!comicScanning;
+  comicNode('pause').disabled=comicPause;
+  comicNode('skip').hidden=disabled||!comicProgress?.blocked;
   comicNode('apply').disabled=comicBusy||!comicResult?.panels.length;
   comicNode('copy').disabled=comicBusy||!comicResult?.panels.length;
   comicNode('review').hidden=!comicResult?.panels.length;
 }
 function comicBox(value){
-  if(!Array.isArray(value)||value.length!==4||!value.every(Number.isFinite)) return null;
-  var box=value.map(function(n){return Math.min(1000,Math.max(0,n));});
-  return box[2]-box[0]>=8&&box[3]-box[1]>=8?box:null;
+  if(!Array.isArray(value)||value.length!==4||!value.every(function(n){return (typeof n==='number'||typeof n==='string'&&n.trim())&&Number.isFinite(+n);})) return null;
+  var scale=+value[2]<=1&&+value[3]<=1?1000:1;
+  var box=value.map(function(n){return Math.min(1000,Math.max(0,+n*scale));});
+  return box[2]-box[0]>=2&&box[3]-box[1]>=2?box:null;
 }
 function comicCrop(image,band,box,limit){
   var x=Math.floor(image.width*box[1]/1000), y=Math.floor(band.top+band.height*box[0]/1000);
@@ -18578,13 +18630,17 @@ function comicBands(image){
     if(run>=3) gaps.push(Math.round((y-run/2)*height/cv.height));
     run=0;
   }
-  var bands=[], top=0;
+  var bands=[], top=0, head=0;
   while(height-top>width*3.5){
-    var next=gaps.find(function(gap){return gap-top>=width*2.2&&height-gap>=width*.45;});
-    if(!next) break;
-    bands.push({top:top,height:next-top});top=next;
+    var next=gaps.find(function(gap){return gap-top>=width*2.2&&gap-top<=width*4.5&&height-gap>=width*.45;});
+    if(!next&&height-top<=width*5) break;
+    var overlap=next?0:Math.round(width*.4);
+    if(!next) next=Math.min(height,top+Math.round(width*3.5));
+    var start=top-head, end=Math.min(height,next+overlap);
+    bands.push({top:start,height:end-start,ownTop:top,ownBottom:next});
+    top=next;head=overlap;
   }
-  bands.push({top:top,height:height-top});
+  bands.push({top:top-head,height:height-top+head,ownTop:top,ownBottom:height});
   return bands;
 }
 function comicLines(panel){
@@ -18596,67 +18652,110 @@ function comicLines(panel){
     return (speaker?speaker+': ':'')+text;
   }).filter(Boolean).join('\n'):'';
 }
-async function comicScan(){
-  if(!comicFiles.length||comicBusy) return;
+function comicReadSegment(image,band,page,data,preview){
+  var panels=[];
+  for(var raw of data.panels){
+    if(!raw) continue;
+    var line=comicLines(raw), nar=comicText(raw.narration,1400), scene=comicText(raw.scene,600);
+    var box=comicBox(raw.box??raw.box_2d), boundary='';
+    if(box&&band.ownTop!=null){
+      var middle=band.top+band.height*(box[0]+box[2])/2000;
+      if(middle<band.ownTop||middle>=band.ownBottom) continue;
+    }
+    if(!box&&raw.kind==='text'&&!line&&!nar) continue;
+    if(!box&&(raw.box===null||data.panels.length>1)) boundary='컷 좌표를 찾지 못해 이 구간 전체를 표시했어요.';
+    else if(raw.boundary==='approximate') boundary='AI가 추정한 경계예요. 원본과 비교해 주세요.';
+    var names=Array.isArray(raw.characters)?raw.characters.map(comicName).filter(Boolean):[];
+    line.split('\n').map(lnParse).forEach(function(l){if(l.who) names.push(l.who);});
+    panels.push({page:page,artwork:box?comicCrop(image,band,box,1600):preview,line:line,nar:nar,printed:!!(line||nar),
+      scene:scene,shot:/^(els|ls|fs|ms|bs|cu|ecu)$/.test(raw.shot)?raw.shot:'ms',
+      names:Array.from(new Set(names)).slice(0,5),include:true,boundary:boundary});
+  }
+  return panels;
+}
+function comicReadCharacters(result,image,band,list){
+  (Array.isArray(list)?list:[]).slice(0,24).forEach(function(raw){
+    var name=comicName(raw?.name);
+    if(!name) return;
+    var existing=result.characters.get(name);
+    if(!existing&&result.characters.size>=24) return;
+    var person=existing||{name:name,role:'',sheet:{kind:'조연'},reference:''};
+    person.role=person.role||comicText(raw.role,60);
+    [['look',200],['lookEn',240],['pers',100],['speech',120]].forEach(function(field){
+      person.sheet[field[0]]=person.sheet[field[0]]||comicText(raw[field[0]],field[1]);
+    });
+    var portrait=comicBox(raw.portrait);
+    if(!person.reference&&portrait) person.reference=comicCrop(image,band,portrait,480).url;
+    result.characters.set(name,person);
+  });
+}
+async function comicScan(skip){
+  if(!comicFiles.length||comicBusy||comicRestoring||comicProgress?.complete) return;
   if(!aiReady()){comicStatus('상단 AI 연결에서 Gemini 키를 설정해 주세요.');return;}
-  var board=B, files=comicFiles.slice(), order=comicNode('order').value;
-  var result={panels:[],characters:new Map(),title:files[0].name.replace(/\.[^.]+$/,'').slice(0,40)};
-  comicBusy=true;comicResult=null;comicUpdate();
+  var board=B, files=comicFiles, order=comicNode('order').value;
+  if(!comicProgress){
+    comicResult={panels:[],characters:new Map(),title:files[0].name.replace(/\.[^.]+$/,'').slice(0,40)};
+    comicProgress={page:0,band:0,skipped:0,complete:false,blocked:null};
+  }
+  var progress=comicProgress, result=comicResult;
+  if(skip&&progress.blocked){
+    if(progress.blocked==='page'){progress.page++;progress.band=0;}
+    else progress.band++;
+    progress.skipped++;
+    progress.blocked=null;
+  }
+  comicBusy=true;comicScanning=true;comicPause=false;comicUpdate();
+  var failureScope='page', message='', persisted=false;
   try{
-    for(var i=0;i<files.length;i++){
-      var url=URL.createObjectURL(files[i]);
+    await comicSaveDraft();
+    while(progress.page<files.length&&!comicPause&&result.panels.length<150){
+      var url=URL.createObjectURL(files[progress.page]);
       try{
+        failureScope='page';
         var image=await loadImg(url);
-        if(!image) throw Error((i+1)+'번째 이미지를 열 수 없어요. JPG나 PNG를 사용해 주세요.');
+        if(!image) throw Error('이미지를 열 수 없어요. JPG나 PNG인지 확인해 주세요.');
         var bands=comicBands(image);
-        if(bands.length>18) throw Error((i+1)+'번째 페이지가 너무 길어요. 이미지를 몇 장으로 나눠 선택해 주세요.');
-        for(var j=0;j<bands.length;j++){
-          if(B!==board||window.__stale) throw Error('프로젝트가 바뀌었어요. 다시 분석해 주세요.');
-          comicStatus('AI 분석 중 · '+(i+1)+'/'+files.length+'페이지'+(bands.length>1?' · '+(j+1)+'/'+bands.length+'구간':''));
-          var band=bands[j], page=comicCrop(image,band,[0,0,1000,1000],2600);
+        while(progress.band<bands.length&&!comicPause&&result.panels.length<150){
+          if(B!==board||window.__stale) throw Error('프로젝트가 바뀌었어요.');
+          failureScope='band';
+          comicStatus('AI 분석 중 · '+(progress.page+1)+'/'+files.length+'페이지'+(bands.length>1?' · '+(progress.band+1)+'/'+bands.length+'구간':'')+' · '+result.panels.length+'컷 확보');
+          var band=bands[progress.band], page=comicCrop(image,band,[0,0,1000,1000],2600);
           var known=Array.from(result.characters.values(),function(person){return person.name+' '+person.sheet.look;}).slice(0,24);
           var response=await aiAsk(COMIC_SYS,
-            '페이지의 컷을 읽는 순서대로 반환한다. 위에서 아래로 진행하고 같은 줄은 '+(order==='rtl'?'오른쪽에서 왼쪽':'왼쪽에서 오른쪽')+'으로 읽는다. 말풍선도 같은 읽기 방향을 따른다. 이전 페이지 등장인물 '+JSON.stringify(known),5200,
+            '페이지의 컷을 읽는 순서대로 반환한다. 위에서 아래로 진행하고 같은 줄은 '+(order==='rtl'?'오른쪽에서 왼쪽':'왼쪽에서 오른쪽')+'으로 읽는다. 이전 구간 등장인물 '+JSON.stringify(known),5200,
             {images:[{mime:'image/jpeg',data:page.url.split(',')[1]}],json:true,temperature:.2});
-          if(B!==board||window.__stale) throw Error('프로젝트가 바뀌었어요. 다시 분석해 주세요.');
+          if(B!==board||window.__stale) throw Error('프로젝트가 바뀌었어요.');
           if(aiIsErr(response)) throw Error(response);
           var json=String(response).match(/\{[\s\S]*\}/);
           var data=JSON.parse(json?json[0]:response);
-          if(!Array.isArray(data?.panels)) throw Error('AI 응답에서 컷을 읽지 못했어요. 다시 분석해 주세요.');
-          for(var raw of data.panels){
-            if(!raw) continue;
-            var box=comicBox(raw.box);
-            if(!box&&data.panels.length!==1) throw Error((i+1)+'페이지의 컷 경계를 읽지 못했어요. 다시 분석해 주세요.');
-            var artwork=comicCrop(image,band,box||[0,0,1000,1000],1600);
-            var line=comicLines(raw), nar=comicText(raw.narration,1400);
-            var names=Array.isArray(raw.characters)?raw.characters.map(comicName).filter(Boolean):[];
-            String(line).split('\n').map(lnParse).forEach(function(l){if(l.who) names.push(l.who);});
-            result.panels.push({page:i+1,artwork:artwork,line:line,nar:nar,printed:!!(line||nar),scene:comicText(raw.scene,600),
-              shot:/^(els|ls|fs|ms|bs|cu|ecu)$/.test(raw.shot)?raw.shot:'ms',names:Array.from(new Set(names)).slice(0,5),include:true});
-            if(result.panels.length>150) throw Error('한 프로젝트에는 150컷까지 가져올 수 있어요. 페이지를 나눠 분석해 주세요.');
-          }
-          (Array.isArray(data.characters)?data.characters:[]).slice(0,24).forEach(function(raw){
-            var name=comicName(raw?.name);
-            if(!name) return;
-            var existing=result.characters.get(name);
-            var person=existing||{name:name,role:'',sheet:{kind:'조연'},reference:''};
-            person.role=person.role||comicText(raw.role,60);
-            [['look',200],['lookEn',240],['pers',100],['speech',120]].forEach(function(field){
-              person.sheet[field[0]]=person.sheet[field[0]]||comicText(raw[field[0]],field[1]);
-            });
-            var portrait=comicBox(raw.portrait);
-            if(!person.reference&&portrait) person.reference=comicCrop(image,band,portrait,480).url;
-            if(existing||result.characters.size<24) result.characters.set(name,person);
-          });
+          if(!Array.isArray(data?.panels)) throw Error('AI 응답에서 컷 목록을 읽지 못했어요.');
+          var segment=comicReadSegment(image,band,progress.page+1,data,page);
+          comicReadCharacters(result,image,band,data.characters);
+          var available=150-result.panels.length;
+          result.panels.push(...segment.slice(0,available));
+          progress.band++;
+          progress.blocked=null;
+          if(segment.length>available) progress.limited=true;
+          await comicSaveDraft();
         }
+        if(progress.band>=bands.length){progress.page++;progress.band=0;}
       }finally{URL.revokeObjectURL(url);}
     }
-    if(!result.panels.length) throw Error('읽을 수 있는 컷이 없어요. 이미지가 선명한지 확인해 주세요.');
-    comicResult=result;comicReview();
-    comicStatus(result.panels.length+'컷 · 캐릭터 초안 '+result.characters.size+'명. 잘린 그림과 대사를 확인한 뒤 저장하세요.');
+    progress.complete=progress.page>=files.length||result.panels.length>=150;
+    if(!progress.complete) message='일시정지했어요. 이어서 분석을 누르면 다음 구간부터 시작해요.';
+    else if(!result.panels.length) message='읽을 수 있는 컷이 없어요. 더 선명한 사진을 추가해 주세요.';
+    else if(progress.limited||progress.page<files.length) message='한 프로젝트의 150컷 한도에 도달했어요. 분석한 컷을 먼저 저장해 주세요.';
+    else message='잘린 그림과 대사를 확인한 뒤 저장하세요.';
   }catch(err){
-    comicStatus(err instanceof SyntaxError?'AI가 응답을 끝까지 작성하지 못했어요. 페이지를 나눠 다시 시도해 주세요.':err.message);
-  }finally{comicBusy=false;comicUpdate();}
+    progress.blocked=failureScope;
+    message=(progress.page+1)+'페이지'+(failureScope==='band'?' '+(progress.band+1)+'구간':'')+'에서 멈췄어요. '+
+      (err instanceof SyntaxError?'AI 응답이 잘렸어요.':err.message)+' 이어서 분석하거나 이 구간을 건너뛸 수 있어요.';
+  }finally{
+    persisted=await comicSaveDraft();
+    comicBusy=false;comicScanning=false;comicPause=false;
+    comicReview();comicUpdate();
+    comicStatus(comicSummary(message)+(persisted?'':' 이 브라우저에서 임시 저장이 안 되어 이 탭을 유지해 주세요.'));
+  }
 }
 function comicReview(){
   var cards=comicNode('cards'), cast=comicNode('cast');
@@ -18670,12 +18769,14 @@ function comicReview(){
     article.querySelector('img').src=panel.artwork.url;
     var download=article.querySelector('[data-comic-download]');
     download.href=panel.artwork.url;download.download='컷-'+String(i+1).padStart(3,'0')+'.jpg';
-    article.querySelector('[data-comic-scene]').textContent=panel.scene;
+    article.querySelector('[data-comic-scene]').textContent=[panel.scene,panel.boundary].filter(Boolean).join(' · ');
     var fields=article.querySelectorAll('textarea');
     fields[0].value=panel.line;fields[1].value=panel.nar;
     fields[0].addEventListener('input',function(){panel.line=fields[0].value;});
     fields[1].addEventListener('input',function(){panel.nar=fields[1].value;});
-    article.querySelector('input').addEventListener('change',function(e){panel.include=e.target.checked;});
+    fields.forEach(function(field){field.addEventListener('change',comicSaveDraft);});
+    var check=article.querySelector('input');check.checked=panel.include;
+    check.addEventListener('change',function(e){panel.include=e.target.checked;comicSaveDraft();});
     cards.appendChild(article);
   });
   if(!comicResult.characters.size) return;
@@ -18738,7 +18839,7 @@ async function comicApply(){
     projectId='';ids=[];
     B=next;document.getElementById('ct-story').value=B.story;totalSet(B.total,true);
     if(window.__ctModeSync) window.__ctModeSync();
-    comicReset();
+    comicReset();await comicDraftWrites;
     renderAll();enterProject(4);stLinkPaint();
     stat('새 콘티로 저장했어요 · '+cuts.length+'컷 · 대사 '+dialogue.length+'줄 · 인물 '+characters.length+'명');
   }catch(err){
@@ -18748,32 +18849,37 @@ async function comicApply(){
   }finally{comicBusy=false;comicUpdate();}
 }
 comicImport.addEventListener('change',function(e){
-  if(comicBusy) return;
+  if(comicBusy||comicRestoring) return;
   if(e.target===comicNode('files')){
     var files=Array.from(e.target.files);e.target.value='';
     if(!files.length) return;
     var added=files.slice(0,COMIC_MAX_PAGES-comicFiles.length);
     if(!added.length){comicStatus('최대 '+COMIC_MAX_PAGES+'장까지 추가할 수 있어요.');return;}
     comicFiles=comicFiles.concat(added);
+    if(comicProgress?.complete&&comicResult?.panels.length<150) comicProgress.complete=false;
     comicQueueChanged('사진 '+comicFiles.length+'장 선택됨. 목록 순서대로 분석해요.'+
-      (added.length<files.length?' 한도를 넘긴 '+(files.length-added.length)+'장은 다음에 추가해 주세요.':''));
-  }else if(e.target===comicNode('order')&&comicResult){
-    comicResult=null;comicNode('cards').replaceChildren();comicNode('cast').replaceChildren();
-    comicStatus('읽는 순서를 바꿨어요. 다시 분석해 주세요.');
+      (added.length<files.length?' 한도를 넘긴 '+(files.length-added.length)+'장은 다음에 추가해 주세요.':''),true);
+  }else if(e.target===comicNode('order')){
+    comicQueueChanged('읽는 순서를 바꿨어요. 처음부터 분석해 주세요.');
   }
   comicUpdate();
 });
 comicImport.addEventListener('click',async function(e){
   var action=e.target.dataset.comic;
+  if(comicRestoring) return;
   if(action==='pick'&&!comicBusy) comicNode('files').click();
   if(e.target.dataset.comicRemove!=null&&!comicBusy){
     var index=+e.target.dataset.comicRemove;
-    comicFiles.splice(index,1);
-    comicQueueChanged(comicFiles.length?'사진 '+comicFiles.length+'장 선택됨. 목록 순서대로 분석해요.':'사진을 추가해 주세요.');
+    var keep=!comicProgress||index>comicProgress.page||index===comicProgress.page&&!comicProgress.band;
+    comicFiles=comicFiles.filter(function(file,i){return i!==index;});
+    if(keep&&comicProgress&&index===comicProgress.page) comicProgress.blocked=null;
+    comicQueueChanged(comicFiles.length?'사진 '+comicFiles.length+'장 선택됨. 목록 순서대로 분석해요.':'사진을 추가해 주세요.',keep&&!!comicFiles.length);
     var buttons=comicNode('queue').querySelectorAll('button');
     (buttons[Math.min(index,buttons.length-1)]||comicNode('pick')).focus();
   }
-  if(action==='scan') comicScan();
+  if(action==='scan') comicScan(false);
+  if(action==='skip') comicScan(true);
+  if(action==='pause'&&comicScanning){comicPause=true;comicUpdate();comicStatus('현재 구간이 끝나면 진행 상태를 저장하고 멈춰요.');}
   if(action==='apply') comicApply();
   if(action==='copy'&&comicResult){
     var transcript=comicTranscript(comicResult.panels);
@@ -18781,6 +18887,7 @@ comicImport.addEventListener('click',async function(e){
   }
 });
 comicUpdate();
+comicRestoreDraft();
 
 /* 7단계의 격자와 결과는 컷 번호가 바뀌어도 같은 컷에 연결한다. */
 var batchPanel=document.getElementById('ct-batch-panel');
