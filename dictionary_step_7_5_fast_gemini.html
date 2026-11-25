@@ -19322,7 +19322,7 @@ comicUpdate();
 comicRestoreDraft();
 
 /* 이미지 구성기 1~3단계. 이후 단계는 일반 콘티와 같은 컷·캐릭터 데이터를 쓴다. */
-var imageComposeBusy=false;
+var imageComposeBusy=false, imageSheetReferences=null;
 function imageComposeRender(){
   var board=B?.imageComposer?B:null;
   if(CSTEP===1) imageRenderAnalysis(board);
@@ -19376,6 +19376,7 @@ function imageRenderCast(board){
   var art=window.__ppArt, cutNumber=new Map(board.cuts.map(function(c){return [c.batchId,c.n];}));
   var owners=new Map();
   board.chars.forEach(function(ch){(ch.imageFaceIds||[]).forEach(function(id){owners.set(id,ch.name);});});
+  var hasReferences=Array.from(owners.keys()).some(function(id){return art?.get(id);});
   var faces=(board.imageFaces||[]).filter(function(face){return cutNumber.has(face.cutId)&&art?.get(face.id);});
   var picker=faces.length?'<div class="filterbar"><button type="button" class="chip ct-go" data-image-cast="bulk">AI로 전체 인물 시트 만들기</button></div><p class="small">직접 묶으려면 같은 인물의 사진을 고르고 이름을 붙이세요.</p>'+
     '<div class="ct-image-gallery" aria-label="인물 이미지 갤러리">'+faces.map(function(face){
@@ -19392,7 +19393,7 @@ function imageRenderCast(board){
     '<div class="filterbar"><button type="button" class="chip" data-image-cast="suggest">AI로 이름·배역 추천</button>'+
     '<button type="button" class="chip ct-go" data-image-cast="save">캐릭터 시트에 담기</button></div>'+
     '<p class="small" role="status"></p></div>'+
-    (board.chars.length?'<h4>캐릭터 시트</h4><div class="ct-image-cards">'+board.chars.map(function(ch,i){
+    (board.chars.length?'<h4>캐릭터 시트</h4>'+(hasReferences?'<div class="filterbar"><button type="button" class="chip ct-go" data-image-send="all">전체 시트 GPT로 보내기</button></div>':'')+'<div class="ct-image-cards">'+board.chars.map(function(ch,i){
       var images=(ch.imageFaceIds||[]).map(function(id){return art?.get(id);}).filter(Boolean);
       var sheet=ch.sheet||{};
       return '<article class="ct-image-card"><strong>'+cesc(ch.name)+'</strong>'+
@@ -19400,10 +19401,75 @@ function imageRenderCast(board){
         '<p class="small">'+cesc([ch.role,sheet.look,sheet.speech].filter(Boolean).join(' · '))+'</p>'+
         '<div class="filterbar"><button type="button" class="chip" data-image-edit-character="'+i+'">시트 수정</button>'+
         (images.length?'<button type="button" class="chip" data-image-download-sheet="'+i+'">참고 시트 PNG 저장</button>':'')+
-        '<button type="button" class="chip" data-cg="'+i+'">GPT 시트</button>'+
+        (images.length?'<button type="button" class="chip" data-image-send="'+i+'">이 인물 시트 GPT로 보내기</button>':'<button type="button" class="chip" data-cg="'+i+'">GPT 시트</button>')+
         '<label class="chip sv-up">시트 그림 넣기<input type="file" accept="image/*" hidden data-shup="'+i+'"></label>'+
         (ch.sheetArt?' <span class="small">시트 그림 저장됨</span>':'')+'</div></article>';
     }).join('')+'</div>':''));
+  if(hasReferences) imagePrepareSheets(board);
+}
+function imagePrepareSheets(board){
+  var art=window.__ppArt;
+  var sheets=board.chars.map(function(ch){return {ch:ch,ids:(ch.imageFaceIds||[]).filter(function(id){return art?.get(id);})};});
+  var key=JSON.stringify(sheets.map(function(s){return [s.ch.name,s.ids];}));
+  if(imageSheetReferences?.board===board&&imageSheetReferences.key===key) return imageSheetReferences;
+  var pack={board:board,key:key,sheets:sheets,files:new Map()};imageSheetReferences=pack;
+  var cutNumbers=new Map(board.cuts.map(function(c){return [c.batchId,c.n];}));
+  var faceNumbers=new Map((board.imageFaces||[]).map(function(f){return [f.id,cutNumbers.get(f.cutId)];}));
+  var indexed=sheets.map(function(sheet,i){return {sheet:sheet,index:i};}).filter(function(item){return item.sheet.ids.length;});
+  var images=indexed.map(async function(item){
+    var sheet=item.sheet;
+    return {name:sheet.ch.name+' · 원본 인물 참고',image:await imageFaceGrid(sheet.ids.map(function(id,i){return {id:id,label:faceNumbers.has(id)?faceNumbers.get(id)+'번 컷':String(i+1)};}))};
+  });
+  indexed.forEach(function(item,i){
+    var job={};pack.files.set(String(item.index),job);
+    job.ready=images[i].then(function(ref){return batchReferenceFile([ref],item.sheet.ch.name+'-원본참고.png');}).then(function(file){job.file=file;return file;}).catch(function(){return null;});
+  });
+  if(indexed.length){
+    var all={};pack.files.set('all',all);
+    all.ready=Promise.all(images).then(function(refs){return batchReferenceFile(refs,'캐릭터-원본참고.png');}).then(function(file){all.file=file;return file;}).catch(function(){return null;});
+  }
+  return pack;
+}
+function imageSheetPrompt(board,selected){
+  var rows=imageCutRows(board);
+  var sections=selected.map(function(sheet,index){
+    var ids=new Set(sheet.ids), cutIds=new Set((board.imageFaces||[]).filter(function(f){return ids.has(f.id);}).map(function(f){return f.cutId;}));
+    var related=[];
+    board.cuts.forEach(function(c,i){if(cutIds.has(c.batchId)||(c.who||[]).includes(sheet.ch.name)) related.push(i);});
+    return '인물 '+(index+1)+' · '+sheet.ch.name+'\n'+chGptOne(sheet.ch,1,1).replace('Korean webtoon style, clean line art, flat colors, ','Match the linework and coloring of the attached reference art. ')+
+      '\n원본에서 이 인물이 확인된 컷\n'+related.map(function(i){
+        var cut=board.cuts[i], original=[cut.imageSourceLine,cut.imageSourceNarration].filter(Boolean).join('\n');
+        return rows[i]+(original&&original!==cut.line?'\n원본에서 읽은 글\n'+original:'');
+      }).join('\n\n').slice(0,3100);
+  });
+  return '첨부에는 원본 컷에서 가져와 이름별로 묶은 인물 사진이 들어 있습니다. 이름이 붙은 묶음만 해당 인물의 참고로 사용해 캐릭터 시트를 인물마다 별도 PNG 한 장씩 그려 주세요. 사진에 보이는 얼굴, 머리, 의상과 그림체를 유지하세요. 보이지 않는 부분을 그려야 한다면 시트 설명에서 추정이라고 표시하세요.\n'+
+    '각 시트 뒤에는 채팅 텍스트로 그 인물이 이야기에서 어떤 사람인지 한국어로 짧게 정리해 주세요. 역할, 관찰되는 성격, 말투, 관계를 적고 근거가 되는 컷 번호와 행동이나 대사를 붙이세요. 원본에서 확인한 사실과 추정을 구분하고 근거가 없으면 미정으로 남겨 주세요.\n'+
+    (selected.length>1?'한 번에 한 장씩 그릴 수 있다면 목록 순서대로 첫 시트와 설명을 만들고 다음을 기다려 주세요.\n':'')+
+    '\n원고 맥락\n'+rows.join('\n').slice(0,2000)+'\n\n'+sections.join('\n\n');
+}
+async function imageSendSheets(board,host,key,button){
+  var status=host.querySelector('[role=status]'), pack=imagePrepareSheets(board), job=pack.files.get(key);
+  if(!job) return;
+  if(!job.file){
+    button.disabled=true;status.textContent='GPT에 보낼 원본 사진을 준비 중이에요…';
+    var ready=await job.ready;button.disabled=false;
+    if(!ready&&imageSheetReferences===pack) imageSheetReferences=null;
+    if(button.isConnected) status.textContent=ready?'준비됐어요. GPT로 보내기를 다시 누르세요.':'원본 사진을 모으지 못했어요. GPT로 보내기를 다시 눌러 주세요.';
+    return;
+  }
+  var selected=key==='all'?pack.sheets.filter(function(sheet){return sheet.ids.length;}):[pack.sheets[+key]];
+  var prompt=imageSheetPrompt(board,selected), payload={files:[job.file],text:prompt};
+  if(navigator.share&&navigator.canShare?.(payload)){
+    try{await navigator.share(payload);status.textContent='원본 사진과 시트 요청문을 공유했어요.';return;}
+    catch(err){if(err.name==='AbortError') return;}
+  }
+  var copied=grokCopyText(prompt);dlFile(job.file);batchOpenChat();
+  var didCopy=await copied;
+  status.textContent=didCopy?'참고 PNG를 저장하고 요청문을 복사했어요. ChatGPT에 둘 다 넣어 주세요.':'참고 PNG를 저장했어요. 아래 요청문을 복사해 주세요.';
+  if(!didCopy){
+    var box=host.querySelector('[data-image-sheet-prompt]')||document.createElement('textarea');
+    box.dataset.imageSheetPrompt='';box.readOnly=true;box.value=prompt;status.after(box);
+  }
 }
 async function imageFaceGrid(faces){
   var width=130, height=126, cols=Math.min(6,faces.length), cv=document.createElement('canvas');
@@ -19510,6 +19576,7 @@ document.getElementById('ct-image-cast').addEventListener('click',function(e){
   if(!button) return;
   var action=button.dataset.imageCast;
   if(action==='bulk'){imageGroupAll(board,host,button);return;}
+  if(button.dataset.imageSend!=null){imageSendSheets(board,host,button.dataset.imageSend,button);return;}
   if(button.dataset.imageDownloadSheet!=null){
     var owner=board.chars[+button.dataset.imageDownloadSheet], art=window.__ppArt;
     var images=(owner?.imageFaceIds||[]).filter(function(id){return art?.get(id);}).map(function(id,i){return {id:id,label:String(i+1)};});
