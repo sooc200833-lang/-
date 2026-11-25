@@ -19377,7 +19377,7 @@ function imageRenderCast(board){
   var owners=new Map();
   board.chars.forEach(function(ch){(ch.imageFaceIds||[]).forEach(function(id){owners.set(id,ch.name);});});
   var faces=(board.imageFaces||[]).filter(function(face){return cutNumber.has(face.cutId)&&art?.get(face.id);});
-  var picker=faces.length?'<p class="small">같은 인물의 사진을 여러 장 골라 이름을 붙이세요. 이미 있는 이름을 선택하거나 입력하면 그 시트에 사진을 더합니다.</p>'+
+  var picker=faces.length?'<div class="filterbar"><button type="button" class="chip ct-go" data-image-cast="bulk">AI로 전체 인물 시트 만들기</button></div><p class="small">직접 묶으려면 같은 인물의 사진을 고르고 이름을 붙이세요.</p>'+
     '<div class="ct-image-gallery" aria-label="인물 이미지 갤러리">'+faces.map(function(face){
       return '<label title="'+cesc(face.look||'')+'"><input type="checkbox" value="'+cesc(face.id)+'" aria-label="'+cutNumber.get(face.cutId)+'번 컷 인물 이미지 선택">'+
         '<img loading="lazy" alt="'+cutNumber.get(face.cutId)+'번 컷 인물" src="'+cesc(art.get(face.id))+'">'+
@@ -19399,10 +19399,74 @@ function imageRenderCast(board){
         (images.length?'<div class="ct-image-gallery">'+images.map(function(src){return '<img loading="lazy" alt="'+cesc(ch.name)+' 참고 이미지" src="'+cesc(src)+'">';}).join('')+'</div>':'')+
         '<p class="small">'+cesc([ch.role,sheet.look,sheet.speech].filter(Boolean).join(' · '))+'</p>'+
         '<div class="filterbar"><button type="button" class="chip" data-image-edit-character="'+i+'">시트 수정</button>'+
+        (images.length?'<button type="button" class="chip" data-image-download-sheet="'+i+'">참고 시트 PNG 저장</button>':'')+
         '<button type="button" class="chip" data-cg="'+i+'">GPT 시트</button>'+
         '<label class="chip sv-up">시트 그림 넣기<input type="file" accept="image/*" hidden data-shup="'+i+'"></label>'+
         (ch.sheetArt?' <span class="small">시트 그림 저장됨</span>':'')+'</div></article>';
     }).join('')+'</div>':''));
+}
+async function imageFaceGrid(faces){
+  var width=130, height=126, cols=Math.min(6,faces.length), cv=document.createElement('canvas');
+  cv.width=cols*width;cv.height=Math.ceil(faces.length/cols)*height;
+  var ctx=cv.getContext('2d');ctx.fillStyle='#fff';ctx.fillRect(0,0,cv.width,cv.height);
+  for(var i=0;i<faces.length;i++){
+    var image=await loadImg(window.__ppArt?.get(faces[i].id)||'');
+    if(!image) continue;
+    var x=i%cols*width,y=Math.floor(i/cols)*height,scale=Math.min((width-8)/image.width,(height-26)/image.height);
+    ctx.drawImage(image,x+(width-image.width*scale)/2,y+4,image.width*scale,image.height*scale);
+    ctx.fillStyle='#111';ctx.font='16px sans-serif';ctx.fillText(faces[i].label,x+6,y+height-5,width-12);
+  }
+  return cv;
+}
+async function imageGroupAll(board,host,button){
+  var status=host.querySelector('[role=status]');
+  if(!aiReady()){status.textContent='상단 AI 연결에서 Gemini 키를 설정해 주세요.';return;}
+  var cuts=new Map(board.cuts.map(function(c){return [c.batchId,c];})), art=window.__ppArt;
+  var groups=board.chars.map(function(ch){return {id:ch.comicRef,name:ch.name,existing:ch,faces:[]};});
+  var owned=new Set(board.chars.flatMap(function(ch){return ch.imageFaceIds||[];}));
+  var faces=(board.imageFaces||[]).filter(function(f){return cuts.has(f.cutId)&&art?.get(f.id)&&!owned.has(f.id);});
+  if(!faces.length){status.textContent='갤러리의 모든 사진이 시트에 들어 있어요.';return;}
+  var nextGroup=groups.length+1;
+  imageComposeBusy=true;button.disabled=true;
+  try{
+    for(var start=0;start<faces.length;start+=24){
+      if(B!==board||window.__stale) return;
+      var batch=faces.slice(start,start+24), refs=groups.map(function(group,j){return {id:group.id,label:'R'+(j+1),group:group};}).filter(function(ref){return ref.id&&art?.get(ref.id);});
+      status.textContent='인물 사진 분류 중 · '+Math.min(start+24,faces.length)+'/'+faces.length+'장';
+      var grids=[await imageFaceGrid(batch.map(function(f,j){return {id:f.id,label:'P'+(j+1)};}))];
+      for(var i=0;i<refs.length;i+=48) grids.push(await imageFaceGrid(refs.slice(i,i+48)));
+      var context=batch.map(function(face,j){var cut=cuts.get(face.cutId);return 'P'+(j+1)+' · '+cut.n+'번 컷 · '+[face.look,cut.scr,cut.line].filter(Boolean).join(' / ').slice(0,190);}).join('\n');
+      var response=await aiAsk('만화의 가상 인물 사진을 같은 캐릭터끼리 묶는다. P번호는 분류할 사진이고 R번호는 이미 만든 시트의 참고 사진이다. 얼굴·머리·의상과 컷의 흐름을 참고하되 같은 인물인지 불확실한 사진은 빼 둔다. 원고의 이름이 확인되면 쓰고 아니면 임시 이름을 제안한다. JSON만 출력한다. {"groups":[{"photos":["P1"],"ref":"R1 또는 빈 문자열","name":"이름","role":"배역","look":"외형","acting":"성격과 말투"}]}',
+        '이야기 앞부분\n'+String(board.story||'').slice(0,1600)+'\n사진별 출처\n'+context,3300,{json:true,temperature:.2,images:grids.map(function(cv){return {mime:'image/jpeg',data:cv.toDataURL('image/jpeg',.88).split(',')[1]};})});
+      if(aiIsErr(response)) throw Error(response);
+      var json=String(response).match(/\{[\s\S]*\}/), result=JSON.parse(json?json[0]:response), used=new Set();
+      if(!Array.isArray(result?.groups)) throw Error('AI 분류 결과를 읽지 못했어요. 다시 시도해 주세요.');
+      result.groups.forEach(function(item){
+        var photos=(Array.isArray(item?.photos)?item.photos:[]).filter(function(key){return /^P\d+$/.test(key);}).map(function(key){return batch[+key.slice(1)-1];}).filter(function(face){if(!face||used.has(face.id)) return false;used.add(face.id);return true;});
+        if(!photos.length) return;
+        var group=refs.find(function(ref){return ref.label===item.ref;})?.group;
+        if(!group){
+          var name=comicName(item.name);
+          while(!name||groups.some(function(old){return old.name===name;})) name='인물 '+nextGroup++;
+          group={id:photos[0].id,name:name,role:comicText(item.role,60),look:comicText(item.look,200),speech:comicText(item.acting,240),faces:[]};groups.push(group);
+        }
+        group.faces.push(...photos);
+      });
+    }
+    if(B!==board||window.__stale) return;
+    var assigned=0, created=0;
+    groups.forEach(function(group){
+      if(!group.faces.length) return;
+      var ch=group.existing;
+      if(!ch){ch={name:group.name,role:group.role,note:group.look,look:{},sheet:{kind:'조연',look:group.look,speech:group.speech}};board.chars.push(ch);created++;}
+      ch.imageFaceIds=(ch.imageFaceIds||[]).concat(group.faces.map(function(f){return f.id;}));
+      if(!ch.comicRef) ch.comicRef=ch.imageFaceIds[0];
+      group.faces.forEach(function(face){var cut=cuts.get(face.cutId);cut.who=Array.from(new Set((cut.who||[]).concat(ch.name)));assigned++;});
+    });
+    if(assigned){board.imageDialogueReviewed=false;imageSaveDialogue(board);stepNav();}
+    if(CSTEP===2){imageRenderCast(board);host.querySelector('[role=status]').textContent='새 시트 '+created+'개 · 사진 '+assigned+'장 분류. 확인이 필요한 사진 '+(faces.length-assigned)+'장.';}
+  }catch(err){status.textContent=err instanceof SyntaxError?'AI 분류 결과를 읽지 못했어요. 다시 시도해 주세요.':err.message;}
+  finally{imageComposeBusy=false;button.disabled=false;}
 }
 async function imageSuggestCast(board,selected,host){
   var status=host.querySelector('[role=status]');
@@ -19445,6 +19509,13 @@ document.getElementById('ct-image-cast').addEventListener('click',function(e){
   var button=e.target.closest('button');
   if(!button) return;
   var action=button.dataset.imageCast;
+  if(action==='bulk'){imageGroupAll(board,host,button);return;}
+  if(button.dataset.imageDownloadSheet!=null){
+    var owner=board.chars[+button.dataset.imageDownloadSheet], art=window.__ppArt;
+    var images=(owner?.imageFaceIds||[]).filter(function(id){return art?.get(id);}).map(function(id,i){return {id:id,label:String(i+1)};});
+    if(images.length) imageFaceGrid(images).then(function(canvas){batchDownload(canvas.toDataURL('image/png'),owner.name+'-참고시트.png');});
+    return;
+  }
   var nameField=host.querySelector('[aria-label="캐릭터 이름"]'), status=host.querySelector('[role=status]');
   if(button.dataset.imageEditCharacter!=null){
     var edit=board.chars[+button.dataset.imageEditCharacter];
