@@ -3099,13 +3099,11 @@ button.pl-card[disabled]{cursor:default}
       <label>키프레임 장수 <select data-grok-busy data-grok="count" aria-label="키프레임 장수">
         <option value="0">자동 (6~14장)</option><option value="6">6장</option><option value="7">7장</option><option value="8">8장</option><option value="9">9장</option><option value="10">10장</option><option value="11">11장</option><option value="12">12장</option><option value="13">13장</option><option value="14">14장</option>
       </select></label>
-    </div>
-    <details><summary>영상 설정</summary>
-      <div class="filterbar">
       <label>영상 길이 <select data-grok-busy data-grok="duration" aria-label="영상 길이">
         <option value="6">6초</option><option value="7">7초</option><option value="8">8초</option><option value="9">9초</option><option value="10">10초</option><option value="11">11초</option><option value="12">12초</option><option value="13">13초</option><option value="14">14초</option><option value="15">15초</option>
       </select></label>
-      </div>
+    </div>
+    <details><summary>영상 설정</summary>
       <div class="filterbar">
         <label>분위기 <select data-grok="mood" data-grok-busy aria-label="분위기">
           <option value="auto">콘티에서 자동</option><option value="quiet">차분한 여운</option><option value="tension">긴장·불안</option><option value="warm">따뜻함</option><option value="comedy">코미디</option><option value="action">액션</option>
@@ -21040,7 +21038,14 @@ function grokPromptLimit(text,limit){
 function grokPromptSnippet(value,limit){
   return grokPromptLimit(String(value||'').replace(/\s+/g,' ').trim(),limit);
 }
-function grokVideoPrompt(plan){
+function grokVideoTiming(plan){
+  return '영상 길이: '+plan.duration+'초, 가로 16:9 웹툰 애니메이션.\n'+
+    '키프레임 '+plan.frames.length+'장 · 파일 번호 순서의 시각(초): '+plan.frames.map(function(frame){return frame.time.toFixed(2);}).join(', ');
+}
+function grokBeatRange(beat){
+  return '['+grokTimestamp(beat.start)+'–'+grokTimestamp(beat.end)+']';
+}
+function grokVideoBody(plan,budget){
   var settings=plan.settings, board=plan.board, voices=grokVoiceProfiles(board), speakers=new Set();
   var music=grokPromptSnippet(grokMusicRecommendation(board,settings),100);
   var shots=plan.beats.map(function(beat){
@@ -21056,12 +21061,12 @@ function grokVideoPrompt(plan){
       if(narrator) speakers.add(narrator);
       dialogue.push('내레이션 “'+cut.nar+'”');
     }
-    var shot=grokPromptSnippet([beat.scene,cut.scr,cut.k?compText(cut):''].filter(Boolean).join(' · '),160);
+    var shot=grokPromptSnippet([beat.scene,cut.gptVisualDirection||cut.scr,cut.k?compText(cut):''].filter(Boolean).join(' · '),160);
     var manual=board.grokCutDirection?.[cut.batchId], tone=grokAiTone(board,cut);
     var notes=grokPromptSnippet([manual?.note,cut.cnote,GROK_CUT_TONES[manual?.tone]?.label||tone?.visual].filter(Boolean).join(' · '),90);
     var speech=grokPromptSnippet(dialogue.join(' / '),175);
     var sound=grokPromptSnippet(grokSoundCue(beat,board),100);
-    return '['+grokTimestamp(beat.start)+'–'+grokTimestamp(beat.end)+'] '+cut.n+'번 컷'+
+    return grokBeatRange(beat)+' '+cut.n+'번 컷'+
       (shot?' · '+shot:'')+(notes?'\n연출: '+notes:'')+(speech?'\n음성: '+speech:'')+(sound?'\n현장음: '+sound:'');
   });
   var casting=Array.from(speakers,function(person){
@@ -21070,38 +21075,49 @@ function grokVideoPrompt(plan){
   }).filter(Boolean);
   var mood=grokPromptSnippet([GROK_MOOD[settings.mood],settings.direction].filter(Boolean).join(' · '),150);
   var header=[
-    plan.duration+'초, 가로 16:9 웹툰 애니메이션. 키프레임 '+plan.frames.length+'장을 파일명에 적힌 번호와 시각(ms)에 맞춰 움직임으로 연결.',
     plan.overlap?'첫 이미지는 앞 영상의 마지막 자세에서 이어지는 프레임.':'',
     settings.score==='off'?'배경음악 없음.':'처음부터 끝까지 보컬 없는 배경음악'+(music?' ('+music+')':'')+'. 대사 중엔 음량을 낮춤.',
     mood?'분위기·메모: '+mood:'',
     casting.length?'목소리: '+grokPromptSnippet(casting.join(' / '),180):''
   ].filter(Boolean).join('\n');
-  var shotBudget=Math.floor((GROK_PROMPT_LIMIT-header.length-2)/Math.max(1,shots.length))-2;
-  return grokPromptLimit(header+'\n\n'+shots.map(function(shot){return grokPromptLimit(shot,shotBudget);}).join('\n\n'),GROK_PROMPT_LIMIT);
+  var shotBudget=Math.floor((budget-header.length-2)/Math.max(1,shots.length))-2;
+  return grokPromptLimit(header+'\n\n'+shots.map(function(shot){return grokPromptLimit(shot,shotBudget);}).join('\n\n'),budget);
+}
+function grokVideoPrompt(plan){
+  var timing=grokVideoTiming(plan)+'\n\n';
+  return timing+grokVideoBody(plan,GROK_PROMPT_LIMIT-timing.length);
+}
+function grokRetimeVideoEdit(text,plan){
+  var beats=new Map(plan.beats.map(function(beat){return [String(beat.cut.n),beat];}));
+  return text.replace(/^\d+초, 가로 16:9 웹툰 애니메이션\. 키프레임 \d+장을 파일명에 적힌 번호와 시각\(ms\)에 맞춰 움직임으로 연결\.\n?/,'')
+    .replace(/^\[\d+(?:\.\d+)?초–\d+(?:\.\d+)?초\](?= (\d+)번 컷)/gm,function(range,number){
+      return beats.has(number)?grokBeatRange(beats.get(number)):range;
+    });
 }
 function grokVideoEditor(plan,saved,opened,status){
   var board=plan.board, key=plan.key;
   var details=document.createElement('details'), summary=document.createElement('summary');
-  var textarea=document.createElement('textarea'), count=document.createElement('small');
+  var textarea=document.createElement('textarea'), count=document.createElement('small'), timingPreview=document.createElement('p');
   details.dataset.grokVideoEditor=key;summary.textContent='영상 프롬프트 편집';
-  textarea.rows=9;textarea.maxLength=GROK_PROMPT_LIMIT;
+  var output=saved?.times?.length?grokPlan(plan.group,Object.assign({},plan.settings,{count:saved.times.length})):plan;
+  var timing=grokVideoTiming(output)+'\n\n', budget=GROK_PROMPT_LIMIT-timing.length;
+  timingPreview.className='small';timingPreview.style.whiteSpace='pre-line';timingPreview.textContent=timing.trimEnd();
+  textarea.rows=9;textarea.maxLength=budget;
   textarea.style.cssText='display:block;width:100%;box-sizing:border-box';
   textarea.setAttribute('aria-label',grokTitle(plan)+' 영상 프롬프트');
-  function automatic(){
-    var current=grokPlan(plan.group);
-    if(!current||current.board!==board||current.key!==key) return '';
-    var output=saved?grokPlan(plan.group,Object.assign({},current.settings,{duration:saved.duration,count:saved.times.length})):current;
-    return grokPromptLimit(output?grokVideoPrompt(output):saved?.prompt||'',GROK_PROMPT_LIMIT);
+  function updateCount(){
+    count.textContent=(timing.length+textarea.value.length)+' / '+GROK_PROMPT_LIMIT+'자';
   }
   function paint(){
-    textarea.value=board.grokVideoEdits?.[key]??automatic();
-    count.textContent=textarea.value.length+' / '+GROK_PROMPT_LIMIT+'자';
+    var edited=board.grokVideoEdits?.[key];
+    textarea.value=typeof edited==='string'?grokPromptLimit(grokRetimeVideoEdit(edited,output),budget):grokVideoBody(output,budget);
+    updateCount();
   }
   textarea.addEventListener('input',function(){
     if(B!==board||window.__stale) return;
-    if(textarea.value.length>GROK_PROMPT_LIMIT) textarea.value=grokPromptLimit(textarea.value,GROK_PROMPT_LIMIT);
+    if(textarea.value.length>budget) textarea.value=grokPromptLimit(textarea.value,budget);
     board.grokVideoEdits={...board.grokVideoEdits,[key]:textarea.value};
-    count.textContent=textarea.value.length+' / '+GROK_PROMPT_LIMIT+'자';
+    updateCount();
     save();
   });
   var reset=grokButton('자동 초안으로 되돌리기',function(){
@@ -21112,11 +21128,11 @@ function grokVideoEditor(plan,saved,opened,status){
   var copy=grokButton('영상 프롬프트 복사',async function(){
     if(B!==board) return;
     paint();
-    var text=grokPromptLimit(textarea.value.trim(),GROK_PROMPT_LIMIT);
+    var text=textarea.value.trim();
     if(!text){status.textContent='복사할 영상 프롬프트를 입력해 주세요.';return;}
-    status.textContent=await grokCopyText(text)?'영상 프롬프트를 복사했습니다.':'이 브라우저에서 복사할 수 없습니다. Safari나 Chrome에서 다시 시도해 주세요.';
+    status.textContent=await grokCopyText(timing+text)?'영상 프롬프트를 복사했습니다.':'이 브라우저에서 복사할 수 없습니다. Safari나 Chrome에서 다시 시도해 주세요.';
   });
-  details.append(summary,textarea,count,reset);
+  details.append(summary,timingPreview,textarea,count,reset);
   details.open=opened;
   details.addEventListener('toggle',function(){if(details.open) paint();});
   return {details:details,copy:copy};
