@@ -21119,18 +21119,44 @@ function grokVideoBody(plan,budget){
     casting.length?'목소리: '+grokPromptSnippet(casting.join(' / '),180):''
   ].filter(Boolean).join('\n');
   var shotBudget=Math.floor((budget-header.length-2)/Math.max(1,shots.length))-2;
-  return grokPromptLimit(header+'\n\n'+shots.map(function(shot){return grokPromptLimit(shot,shotBudget);}).join('\n\n'),budget);
+  return grokPromptLimit(grokRetimeVideoEdit(header+'\n\n'+shots.map(function(shot){return grokPromptLimit(shot,shotBudget);}).join('\n\n'),plan),budget);
 }
 function grokVideoPrompt(plan){
   var timing=grokVideoTiming(plan)+'\n\n';
   return timing+grokVideoBody(plan,GROK_PROMPT_LIMIT-timing.length);
 }
-function grokRetimeVideoEdit(text,plan){
+function grokRetimeVideoEdit(text,plan,previousDuration){
   var beats=new Map(plan.beats.map(function(beat){return [String(beat.cut.n),beat];}));
-  return text.replace(/^\d+초, 가로 16:9 웹툰 애니메이션\. 키프레임 \d+장을 파일명에 적힌 번호와 시각\(ms\)에 맞춰 움직임으로 연결\.\n?/,'')
-    .replace(/^\[\d+(?:\.\d+)?초–\d+(?:\.\d+)?초\](?= (\d+)번 컷)/gm,function(range,number){
-      return beats.has(number)?grokBeatRange(beats.get(number)):range;
+  var duration=plan.duration;
+  var lengthLabel=/((?:영상|재생|클립|전체|총)\s*(?:길이|시간|분량)\s*[:：=]?\s*|^총\s*)(\d+(?:\.\d+)?)(\s*초)/gm;
+  var lengthBefore=/\b(\d+(?:\.\d+)?)(\s*초(?:짜리|\s*분량의)?\s*(?:영상|클립|분량))/g;
+  text=text.replace(/^\s*(?:영상 길이: \d+초, 가로 16:9 웹툰 애니메이션\.\n키프레임 \d+장 · 파일 번호 순서의 시각\(초\): [\d., ]+|\d+초, 가로 16:9 웹툰 애니메이션\. 키프레임 \d+장을 파일명에 적힌 번호와 시각\(ms\)에 맞춰 움직임으로 연결\.)\n*/,
+    function(header){
+      previousDuration=previousDuration||Number(header.match(/(\d+)초/)?.[1]);
+      return '';
     });
+  var sections=text.split(/(“[^”\n]*”|"[^"\n]*"|‘[^’\n]*’)/g);
+  var directions=sections.filter(function(part,index){return index%2===0;}).join('\n');
+  var declared=Number(directions.matchAll(lengthLabel).next().value?.[2]||directions.matchAll(lengthBefore).next().value?.[1]);
+  var lastCut=plan.beats.at(-1)?.cut.n;
+  var savedEnd=Array.from(text.matchAll(/^\[\d+(?:\.\d+)?초\s*[–—~-]\s*(\d+(?:\.\d+)?)초\] (\d+)번 컷/gm))
+    .find(function(match){return Number(match[2])===lastCut;});
+  var from=declared>=6&&declared<=15?declared:previousDuration||Number(savedEnd?.[1]);
+  function scaleSeconds(seconds){
+    return +seconds<=from?String(Number((+seconds*duration/from).toFixed(2))):seconds;
+  }
+  return sections.map(function(part,index){
+    if(index%2) return part;
+    if(from&&from!==duration){
+      part=part.replace(/\b(?:(\d+(?:\.\d+)?)(\s*[–—~-]\s*))?(\d+(?:\.\d+)?)(\s*초)/g,function(match,start,separator,seconds,suffix){
+        return (start===undefined?'':scaleSeconds(start)+separator)+scaleSeconds(seconds)+suffix;
+      });
+    }
+    return part.replace(lengthLabel,function(match,label,seconds,suffix){return label+duration+suffix;})
+      .replace(lengthBefore,function(match,seconds,suffix){return duration+suffix;});
+  }).join('').replace(/^\[\d+(?:\.\d+)?초\s*[–—~-]\s*\d+(?:\.\d+)?초\](?= (\d+)번 컷)/gm,function(range,number){
+    return beats.has(number)?grokBeatRange(beats.get(number)):range;
+  });
 }
 function grokVideoEditor(plan,saved,opened,status){
   var board=plan.board, key=plan.key;
@@ -21148,20 +21174,55 @@ function grokVideoEditor(plan,saved,opened,status){
   }
   function paint(){
     var edited=board.grokVideoEdits?.[key];
-    textarea.value=typeof edited==='string'?grokPromptLimit(grokRetimeVideoEdit(edited,output),budget):grokVideoBody(output,budget);
+    var text=typeof edited==='string'?edited:edited?.text;
+    textarea.value=typeof text==='string'?grokPromptLimit(grokRetimeVideoEdit(text,output,edited?.duration),budget):grokVideoBody(output,budget);
     updateCount();
   }
-  textarea.addEventListener('input',function(){
-    if(B!==board||window.__stale) return;
+  function saveEdit(){
     if(textarea.value.length>budget) textarea.value=grokPromptLimit(textarea.value,budget);
-    board.grokVideoEdits={...board.grokVideoEdits,[key]:textarea.value};
+    board.grokVideoEdits={...board.grokVideoEdits,[key]:{text:textarea.value,duration:output.duration}};
     updateCount();
     save();
+  }
+  textarea.addEventListener('input',function(){
+    if(B===board&&!window.__stale) saveEdit();
+  });
+  var aiStatus=document.createElement('p');
+  aiStatus.className='small';aiStatus.setAttribute('role','status');
+  var revise=grokButton('AI로 프롬프트 다듬기',async function(){
+    if(B!==board||window.__stale||revise.disabled) return;
+    if(!aiReady()){aiStatus.textContent='상단 AI 연결을 설정한 뒤 이용해 주세요.';return;}
+    paint();
+    var original=textarea.value;
+    if(!original.trim()){aiStatus.textContent='먼저 편집 내용을 입력하거나 자동 초안으로 되돌려 주세요.';return;}
+    var draft=board.grokVideoEdits?.[key];
+    var data={durationSeconds:output.duration,cuts:output.beats.map(function(beat){
+      return {number:beat.cut.n,start:+beat.start.toFixed(2),end:+beat.end.toFixed(2)};
+    }),music:output.settings.score,body:original,maxCharacters:budget};
+    revise.disabled=true;aiStatus.textContent='선택한 영상 길이에 맞춰 프롬프트를 다듬는 중…';
+    try{
+      var response=await aiAsk(
+        'Grok용 한국어 영상 프롬프트의 본문을 다듬는다. durationSeconds와 cuts의 시작·끝 시각이 기준이다. body에 남은 이전 길이와 시각 지시를 맞추고, 이 길이에 들어가도록 동작·호흡·효과음 타이밍을 간결하게 정리한다. 원래 장면과 대사, 사용자가 지정한 연출, 음악 켜짐·꺼짐을 유지한다. 새 사건이나 대사를 추가하지 않는다. 컷 시간은 [0.00초–1.23초] 1번 컷 형식으로 쓴다. 전체 길이와 키프레임 표는 프로그램이 붙이므로 반복하지 않는다. maxCharacters자 이내 본문을 JSON 객체 {"text":"..."}로만 반환한다.',
+        JSON.stringify(data),Math.min(6000,budget*2),{json:true,temperature:0.3});
+      if(B!==board||!details.isConnected||window.__stale) return;
+      if(board.grokVideoEdits?.[key]!==draft||textarea.value!==original){
+        aiStatus.textContent='편집 내용이 바뀌어서 AI 결과를 적용하지 않았어요.';return;
+      }
+      if(aiIsErr(response)) throw Error(response);
+      var result=JSON.parse(String(response).trim().replace(/\n\n\(「[^\n]+로 대신 불렀다\)$/, '').replace(/^```(?:json)?\s*/i,'').replace(/\s*```$/,''));
+      var text=typeof result?.text==='string'?grokRetimeVideoEdit(result.text.trim(),output):'';
+      if(!text.trim()) throw Error('AI가 보낸 본문이 비어 있어요. 다시 시도해 주세요.');
+      textarea.value=text;
+      saveEdit();
+      aiStatus.textContent='AI 수정안을 적용했어요. 편집창에서 더 고칠 수 있어요.';
+    }catch(err){
+      if(B===board&&details.isConnected) aiStatus.textContent=err instanceof SyntaxError?'AI 수정안을 읽을 수 없어요. 다시 시도해 주세요.':err.message;
+    }finally{revise.disabled=false;}
   });
   var reset=grokButton('자동 초안으로 되돌리기',function(){
     if(B!==board||window.__stale) return;
     delete board.grokVideoEdits?.[key];
-    paint();save();
+    aiStatus.textContent='';paint();save();
   });
   var copy=grokButton('영상 프롬프트 복사',async function(){
     if(B!==board) return;
@@ -21170,7 +21231,8 @@ function grokVideoEditor(plan,saved,opened,status){
     if(!text){status.textContent='복사할 영상 프롬프트를 입력해 주세요.';return;}
     status.textContent=await grokCopyText(timing+text)?'영상 프롬프트를 복사했습니다.':'이 브라우저에서 복사할 수 없습니다. Safari나 Chrome에서 다시 시도해 주세요.';
   });
-  details.append(summary,timingPreview,textarea,count,reset);
+  var controls=document.createElement('div');controls.className='filterbar';controls.append(revise,reset);
+  details.append(summary,timingPreview,textarea,count,controls,aiStatus);
   details.open=opened;
   details.addEventListener('toggle',function(){if(details.open) paint();});
   return {details:details,copy:copy};
