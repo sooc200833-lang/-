@@ -3028,6 +3028,10 @@ button.pl-card[disabled]{cursor:default}
       </div>
       <label>연기·음향 메모 <input type="text" maxlength="240" data-grok="direction" data-grok-busy aria-label="연기·음향 메모" style="display:block;width:100%;box-sizing:border-box" placeholder="마지막 말은 작게, 잔 부딪는 소리만 또렷하게"></label>
     </details>
+    <details data-grok-voice-settings>
+      <summary>캐릭터 목소리</summary>
+      <div data-grok-voices></div>
+    </details>
     <div class="filterbar">
       <button class="chip ct-go" type="button" data-grok="all" data-grok-busy hidden>전체 묶음 GPT로 보내기</button>
       <small data-grok-all-ready></small>
@@ -10689,7 +10693,7 @@ function castCardBind(card){
 // 콘티 구성기와 잇는 창구
 window.__castFind=function(n){ var m=castFind(n); return m?{id:m.id, name:m.name, alias:(m.alias||[]).slice(), role:m.role||'', desc:m.desc||'', look:castFigOf(m), folder:m.folder||'기본'}:null; };
 window.__castList=function(folder){ return castAll().filter(function(m){ return !folder || (m.folder||'기본')===folder; })
-  .map(function(m){ return {id:m.id, name:m.name, alias:(m.alias||[]).slice(), role:m.role||'', desc:m.desc||'', look:castFigOf(m), folder:m.folder||'기본'}; }); };
+  .map(function(m){ return {id:m.id, name:m.name, alias:(m.alias||[]).slice(), role:m.role||'', desc:m.desc||'', speech:m.speech||'', look:castFigOf(m), folder:m.folder||'기본'}; }); };
 window.__castView=function(){ return castView(); };
 window.__castUpsert=function(o){
   var nm=String(o&&o.name||'').trim(); if(!nm) return '';
@@ -19135,6 +19139,73 @@ var GROK_VOICE={
   shy:'망설이며 작게 첫마디를 꺼내고 말끝을 부드럽게 내림',
   smile:'미소가 묻어나는 밝은 톤. 핵심 단어를 가볍게 살림'
 };
+var GROK_BASE_VOICES=[
+  '중간 음역, 맑은 음색, 또렷한 발음과 고른 속도',
+  '낮은 쪽의 음역, 부드럽고 묵직한 음색, 느긋한 속도',
+  '높은 쪽의 음역, 밝고 가벼운 음색, 리듬감 있는 속도',
+  '중간보다 낮은 음역, 건조하고 선명한 음색, 짧게 끊는 호흡',
+  '중간보다 높은 음역, 따뜻한 음색, 여유 있게 이어지는 호흡',
+  '중간 음역, 차분하고 공기가 살짝 섞인 음색, 짧은 쉼을 두는 속도'
+];
+function grokDialogue(cut){
+  var lines=String(cut.line||'').split('\n').map(lnParse).filter(function(line){return line.say;});
+  if(lines.some(function(line){return !line.who;})){
+    var candidates=new Set(ctWho(cut).concat(lines.map(function(line){return line.who;}).filter(Boolean)));
+    if(candidates.size===1){
+      var speaker=candidates.values().next().value;
+      lines.forEach(function(line){if(!line.who) line.who=speaker;});
+    }
+  }
+  return lines;
+}
+function grokVoiceProfiles(board){
+  var library=new Map(), profiles=new Map();
+  (window.__castList?.()||[]).forEach(function(person){
+    [person.name].concat(person.alias||[]).forEach(function(name){if(!library.has(name)) library.set(name,person);});
+  });
+  function profileFor(name){
+    if(!name) return null;
+    var person=library.get(name), key=person?.name||name;
+    if(!profiles.has(key)){
+      var saved=Object.prototype.hasOwnProperty.call(board.grokVoices||{},key)?board.grokVoices[key]:null;
+      var character=board.chars?.find(function(c){return c.name===key||c.name===name;});
+      var speech=String(character?.speech||person?.speech||'').trim().slice(0,140);
+      var base=key==='내레이터'?'낮고 고른 호흡, 또렷한 발음, 차분한 속도':GROK_BASE_VOICES[profiles.size%GROK_BASE_VOICES.length];
+      profiles.set(key,{name:key,base:base+(speech?' · 말투: '+speech:''),voice:saved?.voice||'',acting:saved?.acting||''});
+    }
+    return profiles.get(key);
+  }
+  (board.chars||[]).forEach(function(person){profileFor(person.name);});
+  var hasNarration=false;
+  (board.cuts||[]).forEach(function(cut){
+    grokDialogue(cut).forEach(function(line){profileFor(line.who);});
+    if(cut.nar) hasNarration=true;
+  });
+  if(hasNarration) profileFor('내레이터');
+  return {profiles:profiles,forName:profileFor};
+}
+function grokRenderVoices(board){
+  var settings=grokEditor.querySelector('[data-grok-voice-settings]');
+  var host=settings.querySelector('[data-grok-voices]');
+  var open=new Set(Array.from(host.querySelectorAll('details[open]'),function(row){return row.dataset.speaker;}));
+  host.replaceChildren();
+  var voices=grokVoiceProfiles(board).profiles;
+  settings.hidden=!voices.size;
+  voices.forEach(function(profile){
+    var row=document.createElement('details'), title=document.createElement('summary');
+    row.dataset.speaker=profile.name;row.open=open.has(profile.name);
+    title.textContent=profile.name;row.appendChild(title);
+    [['voice','기본 목소리',profile.base],['acting','감정 연기','화날수록 낮고 느리게, 놀라면 첫마디 전에 숨을 삼킴']].forEach(function(field){
+      var label=document.createElement('label'), input=document.createElement('input');
+      label.textContent=field[1];input.setAttribute('aria-label',profile.name+' '+field[1]);
+      input.type='text';input.maxLength=180;input.value=profile[field[0]];input.placeholder=field[2];
+      input.dataset.grokVoice=field[0];input.dataset.grokBusy='';
+      input.style.cssText='display:block;width:100%;box-sizing:border-box';
+      label.appendChild(input);row.appendChild(label);
+    });
+    host.appendChild(row);
+  });
+}
 function grokShotDirection(beat){
   var c=beat.cut, hint=emoOfCut(c);
   if(c.dyn||/달려|뛰어|휘두르|부딪|넘어져|내리치|던지/.test(c.scr||'')){
@@ -19148,7 +19219,10 @@ function grokVoiceDirection(c,line,settings,onlySpeaker){
   var text=line.say, who=line.who, scene=String(c.scr||'');
   var clause=who&&scene.split(/[.!?。\n,]/).find(function(part){return part.includes(who);});
   var context=clause||(onlySpeaker?scene:'');
-  var emotion=emoOfCut({scr:context,line:text});
+  var index=(c.who||[]).indexOf(who), preset=wpOf(c,who,index)?.emo;
+  var mapping={anger:'angry',rage:'angry',shout:'angry',cry:'sad',blush:'shy',laugh:'smile'};
+  var emotion=mapping[preset]||preset;
+  if(!Object.prototype.hasOwnProperty.call(GROK_VOICE,emotion)) emotion=emoOfCut({scr:context,line:text});
   if(GROK_VOICE[emotion]) return GROK_VOICE[emotion];
   if(/[?？]/.test(text)) return '의문이나 망설임을 살려 핵심 어절 뒤 짧게 쉬고 상대의 답을 기다리는 톤';
   if(/[!！]/.test(text)) return '핵심 단어를 한 번 강조하고 뒤는 자연스럽게 가라앉힘';
@@ -19171,17 +19245,18 @@ function grokSoundCue(beat){
     (effects.length?' · '+effects.join(' / '):' · 화면에서 원인이 확인되는 효과음만 사용');
 }
 
-function grokAudioCues(beat,settings){
+function grokAudioCues(beat,settings,voices){
   var cut=beat.cut;
-  var lines=String(cut.line||'').split('\n').map(lnParse).filter(function(line){return line.say;});
+  var lines=grokDialogue(cut);
   var onlySpeaker=new Set(lines.map(function(line){return line.who;})).size===1;
   var cues=lines.map(function(line){
     var thought=line.kind==='think'||/^\(.*\)$/.test(line.say);
-    return {speaker:line.who||(thought?'내면 독백':'이 컷의 화자'),
+    var profile=voices.forName(line.who);
+    return {profile:profile,speaker:profile?.name||(thought?'내면 독백':'이 컷의 화자'),
       text:thought?line.say.slice(1,-1):line.say,kind:thought?'내면 독백 · 입을 움직이지 않음':'입 모양 동기화',
-      delivery:thought?'속으로 생각하듯 가까운 작은 목소리':grokVoiceDirection(cut,line,settings,onlySpeaker)};
+      delivery:thought?'속으로 생각하듯 작게. '+grokVoiceDirection(cut,line,settings,onlySpeaker):grokVoiceDirection(cut,line,settings,onlySpeaker)};
   });
-  if(cut.nar) cues.push({speaker:'내레이터',text:cut.nar,kind:'화면 밖 음성',delivery:'장면 분위기에 맞게 낮고 고른 호흡으로, 화면 속 인물의 대사와 구분'});
+  if(cut.nar) cues.push({profile:voices.forName('내레이터'),speaker:'내레이터',text:cut.nar,kind:'화면 밖 음성',delivery:'장면 분위기에 맞게 호흡을 조절하고, 화면 속 인물의 대사와 구분'});
   var weights=cues.map(function(cue){return Math.max(1,cue.text.replace(/\s/g,'').length);});
   var total=weights.reduce(function(a,b){return a+b;},0), elapsed=0;
   var span=beat.end-beat.start, gap=Math.min(.16,span/(4*Math.max(1,cues.length)));
@@ -19190,7 +19265,7 @@ function grokAudioCues(beat,settings){
     var start=beat.start+gap*(i+.5)+speaking*elapsed/total;
     elapsed+=weights[i];
     var end=beat.start+gap*(i+.5)+speaking*elapsed/total;
-    return '['+grokTimestamp(start)+'–'+grokTimestamp(end)+'] '+cue.speaker+' · '+cue.kind+' · '+JSON.stringify(cue.text)+' · 연기: '+cue.delivery;
+    return {profile:cue.profile,text:'['+grokTimestamp(start)+'–'+grokTimestamp(end)+'] '+cue.speaker+' · '+cue.kind+' · '+JSON.stringify(cue.text)+' · 연기: '+cue.delivery};
   });
 }
 function grokVideoPrompt(plan){
@@ -19206,7 +19281,12 @@ function grokVideoPrompt(plan){
       (beat.scene?' · '+beat.scene:'')+'\n화면: '+(c.scr||'해당 키프레임의 구도와 동작을 따른다.')+
       '\n구도: '+compText(c)+'\n동작 설계: '+grokShotDirection(beat)+(c.cnote?'\n컷 연출 메모: '+c.cnote:'');
   });
-  var settings=plan.settings, audio=plan.beats.flatMap(function(beat){return grokAudioCues(beat,settings);});
+  var settings=plan.settings, voices=grokVoiceProfiles(plan.board);
+  var audio=plan.beats.flatMap(function(beat){return grokAudioCues(beat,settings,voices);});
+  var speakers=Array.from(new Set(audio.map(function(cue){return cue.profile;}).filter(Boolean)));
+  var casting=speakers.map(function(person){
+    return '• '+person.name+' · 기본 목소리: '+(person.voice||person.base)+(person.acting?' · 감정 연기 방식: '+person.acting:'');
+  });
   var mood=GROK_MOOD[settings.mood]||'콘티의 사건과 반응에 맞춰 컷 사이 감정이 이어지도록 연기';
   var music=settings.score==='off'?'배경음악 없이 환경음·효과음·목소리만 사용합니다.':
     '음악이 정서를 살리는 구간에만 보컬 없는 절제된 배경음악을 깔고, 중요한 대사와 반응 직전에는 음량을 낮추거나 잠깐 비워 주세요.';
@@ -19222,7 +19302,8 @@ function grokVideoPrompt(plan){
       '키프레임 타임라인\n'+frames.join('\n'),
     '전체 분위기: '+mood+'.'+(settings.direction?'\n연기·음향 우선 메모: '+settings.direction:''),
     '장면별 화면과 연출\n'+shots.join('\n\n'),
-    '한국어 음성 큐\n'+(audio.length?audio.join('\n'):'대사 없이 장면에 맞는 낮은 환경음으로 연출하세요.'),
+    ...(casting.length?['캐릭터별 목소리\n같은 인물은 컷과 영상 묶음이 달라져도 음색·기본 음역·발음 습관을 유지하세요. 그 인물의 감정 연기 방식에 맞춰 각 음성 큐의 감정을 표현하고, 감정에 따라 호흡·강세·말하는 속도를 조절하세요.\n'+casting.join('\n')]:[]),
+    '한국어 음성 큐\n'+(audio.length?audio.map(function(cue){return cue.text;}).join('\n'):'대사 없이 장면에 맞는 낮은 환경음으로 연출하세요.'),
     '환경음·효과음\n'+plan.beats.map(grokSoundCue).join('\n')+'\n'+transition,
     '음악·믹싱: '+music+' 목소리가 항상 또렷하게 들리도록 음악과 큰 효과음을 뒤로 물리고, 장면의 여운은 짧은 쉼으로 남겨 주세요.',
     '대사는 적힌 문장 그대로 해당 화자가 말합니다. 발화 중인 인물만 입 모양을 맞추고, 음성 큐 바깥에는 대사를 추가하지 마세요. 화면에는 자막·말풍선·번호·워터마크를 넣지 마세요.'
@@ -19304,6 +19385,8 @@ function renderGrokClip(){
   if(grokEditor.hidden){grokResetView();list.replaceChildren();return;}
   if(grokView!==B){
     grokResetView();grokView=B;grokStatus('');
+    var voiceSettings=grokEditor.querySelector('[data-grok-voice-settings]');
+    voiceSettings.open=false;voiceSettings.querySelector('[data-grok-voices]').replaceChildren();
     var imports=grokEditor.querySelector('[data-grok-import]');
     imports.hidden=true;imports.replaceChildren();
     grokEditor.querySelector('[data-grok-web]').hidden=true;
@@ -19318,6 +19401,7 @@ function renderGrokClip(){
   grokEditor.querySelector('[data-grok="duration"]').value=defaults.duration;
   grokEditor.querySelector('[data-grok="count"]').value=defaults.count;
   ['mood','score','direction'].forEach(function(key){grokEditor.querySelector('[data-grok="'+key+'"]').value=defaults[key];});
+  grokRenderVoices(B);
   grokEditor.querySelector('[data-grok="all"]').hidden=plans.length<2;
   plans.forEach(function(plan){
     var saved=grokSaved(B,plan.cuts), request=B.grokGridRequests?.[plan.key];
@@ -19585,7 +19669,14 @@ async function grokSplitFiles(entries){
 grokEditor.addEventListener('change',function(e){
   var control=e.target, action=control.dataset.grok;
   if(!B||grokBusy) return;
-  if(['duration','count','mood','score','direction'].includes(action)){
+  if(control.dataset.grokVoice){
+    if(window.__stale) return;
+    var name=control.closest('[data-speaker]').dataset.speaker, field=control.dataset.grokVoice;
+    var profiles={...B.grokVoices}, voice={...profiles[name],[field]:control.value.trim().slice(0,180)};
+    if(voice.voice||voice.acting) B.grokVoices={...profiles,[name]:voice};
+    else{delete profiles[name];B.grokVoices=profiles;}
+    save();
+  }else if(['duration','count','mood','score','direction'].includes(action)){
     var settings=grokOptions(B);settings[action]=action==='duration'||action==='count'?+control.value:control.value;
     B.grokClip=Object.assign({},B.grokClip,settings);save();renderGrokClip();
   }else if(action==='upload'){
