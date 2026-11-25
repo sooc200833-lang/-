@@ -1323,6 +1323,13 @@ body.dk-drag, body.dk-drag *{user-select:none!important; -webkit-user-select:non
 .sv-cuts li{display:grid;grid-template-columns:2.2em 1fr auto;gap:.4rem;font-size:.84rem;line-height:1.45;align-items:start}
 .sv-cuts b{color:var(--ink-3)} .sv-cuts .sv-l{display:block;color:var(--ink-3);font-size:.78rem}
 .sv-cuts button{font:inherit;font-size:.74rem;border:1px solid var(--line,#ddd);background:none;border-radius:8px;padding:.1rem .4rem;cursor:pointer}
+.sv-cut-copy{min-width:0;overflow-wrap:anywhere}
+.sv-cut-art{margin-top:.35rem}
+.sv-cut-art summary{display:block;width:fit-content;max-width:100%;cursor:zoom-in}
+.sv-cut-art summary::-webkit-details-marker{display:none}
+.sv-cut-art img{display:block;width:auto;height:auto;max-width:min(100%,144px);max-height:88px;object-fit:contain;border-radius:4px}
+.sv-cut-art[open] summary{cursor:zoom-out}
+.sv-cut-art[open] img{max-width:100%;max-height:60vh}
 .sv-act{display:flex;flex-wrap:wrap;gap:.4rem;margin-top:.4rem}
 .sv-all{border:2px solid var(--ink-3,#999);border-radius:12px;padding:.7rem .8rem;margin:.4rem 0}
 .ct-sheet{display:grid;grid-template-columns:3.6em 1fr;gap:.1rem .4rem;margin:.3rem 0;text-align:left}.ct-sheet dt{color:var(--ink-3)}.ct-sheet dd{margin:0}
@@ -15446,7 +15453,14 @@ document.addEventListener('click', function(e){ var b=e.target.closest&&e.target
   var q=gptQText(); if(!q) return;
   if(k==='show'){ var pr=b.closest('.sv-all').querySelector('.sv-pr'); pr.textContent=q; pr.hidden=!pr.hidden; return; }
   ctCopy(q); if(k==='go') setTimeout(function(){ window.open('https://chatgpt.com/?q='+encodeURIComponent(q.length>1800?'다음 메시지로 웹툰 컷 요청문을 붙여 넣을게. 첨부한 시트·배경·구성 그림을 참고해서 1번 컷부터 그려줘.':q),'_blank','noopener'); },200); });
-function placeCol(f){ var d=f.querySelector('.ct-col'), cv=f.querySelector('canvas'); if(!d||!cv) return; d.style.top=cv.offsetTop+'px'; d.style.left=cv.offsetLeft+'px'; d.style.width=cv.offsetWidth+'px'; d.style.height=cv.offsetHeight+'px'; }
+function placeCol(f){
+  var cv=f.querySelector('canvas');if(!cv) return;
+  f.querySelectorAll(':scope > .ct-col, :scope > .ct-artimg').forEach(function(layer){
+    layer.style.top=cv.offsetTop+'px';layer.style.left=cv.offsetLeft+'px';
+    layer.style.width=cv.offsetWidth+'px';layer.style.height=cv.offsetHeight+'px';
+  });
+}
+function ctImportedCutImage(c){return c.comicArt&&window.__ppArt?.get(c.comicArt);}
 function colOn(){ try{ return localStorage.getItem('ctCol')!=='0'; }catch(e){ return true; } }
 function cutFill(f,c){
   if(c.nar && c.narPos==='between' && balloonsOn()){ var nb=document.createElement('p'); nb.className='ct-narb'; nb.innerHTML=cesc(c.nar).replace(/\n/g,'<br>'); nb.title='컷 사이 나레이션 — 앞 컷과 이 컷 사이'; f.appendChild(nb); }
@@ -15471,7 +15485,13 @@ function cutFill(f,c){
     });
     if(canvas) observer.observe(canvas);
   }
-  if(c.art && window.__ppArt){ var au=window.__ppArt.get(c.art); if(au){ var ai=document.createElement('img'); ai.className='ct-artimg'+(c.comicArt===c.art?' ct-comic-art':''); ai.alt=c.n+'번 컷 그림'; var cvq=f.querySelector('canvas'); ai.onload=function(){ if(cvq){ ai.style.top=cvq.offsetTop+'px'; ai.style.left=cvq.offsetLeft+'px'; ai.style.width=cvq.offsetWidth+'px'; ai.style.height=cvq.offsetHeight+'px'; } }; ai.src=au; if(cvq) cvq.insertAdjacentElement('afterend',ai); else f.insertBefore(ai,f.firstChild); } }
+  var cutArt=c.art&&window.__ppArt?.get(c.art), imported=ctImportedCutImage(c);
+  if(cutArt||imported){
+    var ai=document.createElement('img');
+    ai.className='ct-artimg'+(!cutArt||c.comicArt===c.art?' ct-comic-art':'');ai.alt=c.n+'번 컷 그림';
+    ai.onload=function(){placeCol(f);};ai.src=cutArt||imported;
+    f.querySelector('canvas').insertAdjacentElement('afterend',ai);
+  }
   if(drawMode()==='3d' && !c.art && !f.querySelector('.ct-col:not(.ct-colx)')){ var cb=document.createElement('button'); cb.type='button'; cb.className='ct-cam3'; cb.textContent='🎥'; cb.title=c.n+'번 컷 배경·카메라 바꾸기'; cb.setAttribute('aria-label', c.n+'번 컷 배경·카메라 바꾸기');
     var cvx=f.querySelector('canvas'), place=function(){ if(cvx && cvx.isConnected) cb.style.top=(cvx.offsetTop+8)+'px'; }; requestAnimationFrame(place); setTimeout(place, 400);
     cb.addEventListener('pointerdown', function(e){ e.stopPropagation(); });
@@ -16253,7 +16273,10 @@ function renderScenes(){
   try{ renderSteps(); }catch(e){}
   box.innerHTML=top+L.map(function(x,i){ var who=''; try{ who=sceneWho(x); }catch(e){}
     var rows=''; for(var n=x.a;n<=x.b;n++){ var c=B.cuts[n-1]; if(!c) continue;
-      rows+='<li><b>'+n+'</b><span>'+cesc(shotName(c.k))+' · '+(c.scr?cesc(c.scr):'<i>화면 미정</i>')+(c.line?'<span class="sv-l">'+String(c.line).split('\n').filter(Boolean).map(function(l){ var p=lnParse(l), w=ctWho(c); return p.who?'<b>'+cesc(p.who)+'</b>: '+cesc(p.say):(p.kind==='bare'&&w.length!==1?'<em class="dq">?</em> ':(w.length===1?'<b>'+cesc(w[0])+'</b>: ':''))+cesc(p.say); }).join(' / ')+'</span>':'')+(c.nar?'<span class="sv-l sv-nar">▸ '+cesc(c.nar)+'</span>':'')+'</span><button type="button" data-ed="'+n+'" aria-label="'+n+'번 컷 고치기">✎</button></li>'; }
+      var original=ctImportedCutImage(c);
+      rows+='<li><b>'+n+'</b><div class="sv-cut-copy">'+cesc(shotName(c.k))+' · '+(c.scr?cesc(c.scr):'<i>화면 미정</i>')+(c.line?'<span class="sv-l">'+String(c.line).split('\n').filter(Boolean).map(function(l){ var p=lnParse(l), w=ctWho(c); return p.who?'<b>'+cesc(p.who)+'</b>: '+cesc(p.say):(p.kind==='bare'&&w.length!==1?'<em class="dq">?</em> ':(w.length===1?'<b>'+cesc(w[0])+'</b>: ':''))+cesc(p.say); }).join(' / ')+'</span>':'')+(c.nar?'<span class="sv-l sv-nar">▸ '+cesc(c.nar)+'</span>':'')+
+        (original?'<details class="sv-cut-art"><summary aria-label="'+n+'번 컷 원본 그림 크기 변경"><img loading="lazy" decoding="async" alt="'+n+'번 컷 원본 그림" src="'+cesc(original)+'"></summary></details>':'')+
+        '</div><button type="button" data-ed="'+n+'" aria-label="'+n+'번 컷 고치기">✎</button></li>'; }
     var bgu=(function(){ var g=B.sceneBg&&B.sceneBg[x.a]; return g&&g.art&&window.__ppArt?window.__ppArt.get(g.art):''; })();
     return '<div class="sv-sc" data-i="'+i+'"><h4>'+(i+1)+'. '+cesc(dispNm(x.name||'장면'))+' <span class="small">'+x.a+'–'+x.b+'컷</span></h4>'+
       '<p class="sv-m">'+[who,x.place].filter(Boolean).map(cesc).join(' · ')+(x.desc||x.sum?(who||x.place?' — ':'')+cesc(x.desc||x.sum):'')+'</p>'+sceneBgCtl(x,i)+(function(){ var ap=B.scenePr&&B.scenePr[x.a]; return ap?'<p class="sv-beat">🧠 '+cesc(ap.beat||'연출 읽음')+'</p>':''; })()+'<ul class="sv-cuts">'+rows+'</ul>'+
