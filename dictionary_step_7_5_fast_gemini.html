@@ -2930,6 +2930,7 @@ button.pl-card[disabled]{cursor:default}
       <button type="button" class="chip ct-go" data-comic="scan">AI로 컷·대사 분석</button>
       <button type="button" class="chip" data-comic="pause" hidden>일시정지</button>
       <button type="button" class="chip" data-comic="skip" hidden>이 구간 건너뛰고 이어서</button>
+      <button type="button" class="chip" data-comic="add-cut" hidden>빠진 컷 추가</button>
     </div>
     <p class="small" data-comic="status" role="status">사진을 한 번에 여러 장 고르거나 한 장씩 추가할 수 있어요.</p>
     <ol class="small" data-comic="queue" aria-label="분석할 페이지 순서" hidden></ol>
@@ -18551,7 +18552,7 @@ async function comicRestoreDraft(){
     comicNode('order').value=draft.order;
     comicRenderQueue();
     if(comicResult) comicReview();
-    comicStatus(comicProgress?.complete?comicSummary('저장한 분석을 복원했어요.'):comicProgress?'중단한 분석을 복원했어요. 이어서 분석을 누르세요.':'추가한 사진 '+comicFiles.length+'장을 복원했어요.');
+    comicStatus(comicProgress?.rejoin?'사진을 이어 붙인 목록을 복원했어요. 처음부터 다시 분석해 주세요.':comicProgress?.complete?comicSummary('저장한 분석을 복원했어요.'):comicProgress?'중단한 분석을 복원했어요. 이어서 분석을 누르세요.':'추가한 사진 '+comicFiles.length+'장을 복원했어요.');
   }catch(err){}finally{comicRestoring=false;comicUpdate();}
 }
 function comicSummary(message){
@@ -18565,10 +18566,42 @@ function comicRenderQueue(){
   comicFiles.forEach(function(file,index){
     var row=document.createElement('li'), remove=document.createElement('button');
     row.textContent=file.name;
+    if(file.parts||index+1<comicFiles.length){
+      var join=document.createElement('button');
+      join.type='button';join.className='chip';
+      if(file.parts){
+        join.textContent='이어 붙이기 해제';join.dataset.comicUnjoin=index;
+      }else{
+        join.textContent='다음 사진과 이어 붙이기';join.dataset.comicJoin=index;
+      }
+      row.appendChild(join);
+    }
+    if(file.parts&&index+1<comicFiles.length){
+      var extend=document.createElement('button');
+      extend.type='button';extend.className='chip';extend.textContent='다음 사진과 이어 붙이기';extend.dataset.comicJoin=index;
+      row.appendChild(extend);
+    }
     remove.type='button';remove.className='chip';remove.textContent='빼기';
     remove.dataset.comicRemove=index;remove.setAttribute('aria-label',(index+1)+'번째 사진 빼기');
     row.appendChild(remove);queue.appendChild(row);
   });
+}
+function comicChangeJoin(index,split){
+  var file=comicFiles[index], next=comicFiles[index+1];
+  if(!file||(split?!file.parts:!next)) return;
+  var parts=split?file.parts:(file.parts||[file]).concat(next.parts||[next]);
+  var merged={name:parts[0].name+' → '+parts.at(-1).name+' · '+parts.length+'장 연결',parts:parts};
+  var replacement=split?parts:[merged];
+  comicFiles=comicFiles.slice(0,index).concat(replacement,comicFiles.slice(index+(split?1:2)));
+  if(comicProgress&&(index<comicProgress.page||index===comicProgress.page&&comicProgress.band)){
+    comicProgress.complete=true;comicProgress.rejoin=true;
+  }else if(comicProgress&&index===comicProgress.page){
+    comicProgress.blocked=null;
+  }
+  comicQueueChanged((split?'이어 붙이기를 해제했어요.':'두 항목을 위아래로 이어 붙였어요.')+
+    (comicProgress?.rejoin?' 처음부터 다시 분석하면 반영돼요.':''),true);
+  var row=comicNode('queue').children[index];
+  row?.querySelector('button').focus();
 }
 function comicQueueChanged(message,keepProgress){
   if(!keepProgress){comicProgress=null;comicResult=null;comicNode('cards').replaceChildren();comicNode('cast').replaceChildren();}
@@ -18585,23 +18618,54 @@ function comicName(value){return comicText(value,12).replace(/[:：()\n]/g,'').t
 function comicUpdate(){
   var disabled=comicBusy||comicRestoring;
   comicNode('files').disabled=disabled;
-  comicNode('pick').disabled=disabled||comicFiles.length>=COMIC_MAX_PAGES;
+  comicNode('pick').disabled=disabled||comicFileCount()>=COMIC_MAX_PAGES;
   comicNode('queue').querySelectorAll('button').forEach(function(button){button.disabled=comicBusy;});
   comicNode('order').disabled=disabled;
   comicNode('scan').disabled=disabled||!comicFiles.length;
   comicNode('scan').textContent=comicProgress?.complete?'처음부터 다시 분석':comicProgress?'이어서 분석':'AI로 컷·대사 분석';
   comicNode('pause').hidden=!comicScanning;
   comicNode('pause').disabled=comicPause;
-  comicNode('skip').hidden=disabled||!comicProgress?.blocked;
-  comicNode('apply').disabled=comicBusy||!comicResult?.panels.length;
+  comicNode('skip').hidden=disabled||!comicProgress?.blocked||!!comicProgress?.rejoin;
+  comicNode('add-cut').hidden=!comicFiles.length;
+  comicNode('add-cut').disabled=disabled||!!comicProgress?.rejoin||!!(comicResult?.panels.length>=150);
+  comicImport.querySelectorAll('[data-comic-edit]').forEach(function(button){button.disabled=disabled||!!comicProgress?.rejoin;});
+  comicNode('apply').disabled=comicBusy||!comicResult?.panels.length||!!comicProgress?.rejoin;
   comicNode('copy').disabled=comicBusy||!comicResult?.panels.length;
   comicNode('review').hidden=!comicResult?.panels.length;
 }
+function comicFileCount(){return comicFiles.reduce(function(count,file){return count+(file.parts?.length||1);},0);}
 function comicBox(value){
   if(!Array.isArray(value)||value.length!==4||!value.every(function(n){return (typeof n==='number'||typeof n==='string'&&n.trim())&&Number.isFinite(+n);})) return null;
   var scale=+value[2]<=1&&+value[3]<=1?1000:1;
   var box=value.map(function(n){return Math.min(1000,Math.max(0,+n*scale));});
   return box[2]-box[0]>=2&&box[3]-box[1]>=2?box:null;
+}
+async function comicLoadPage(entry){
+  var sources=[];
+  for(var file of entry.parts||[entry]){
+    var url=URL.createObjectURL(file);
+    try{
+      var source=await loadImg(url);
+      if(!source||!source.width||!source.height) throw Error(file.name+' 이미지를 열 수 없어요. JPG나 PNG인지 확인해 주세요.');
+      sources.push(source);
+    }finally{URL.revokeObjectURL(url);}
+  }
+  var width=Math.max(...sources.map(function(source){return source.width;})), height=0;
+  var parts=sources.map(function(source){
+    var top=height, size=Math.max(1,Math.round(source.height*width/source.width));
+    height+=size;
+    return {source:source,top:top,height:size};
+  });
+  return {width:width,height:height,parts:parts,seams:parts.slice(1).map(function(part){return part.top;})};
+}
+function comicDrawPage(ctx,image,x,y,w,h,width,height){
+  for(var part of image.parts){
+    var from=Math.max(y,part.top), to=Math.min(y+h,part.top+part.height);
+    if(to<=from) continue;
+    var scaleX=part.source.width/image.width, scaleY=part.source.height/part.height;
+    ctx.drawImage(part.source,x*scaleX,(from-part.top)*scaleY,w*scaleX,(to-from)*scaleY,
+      0,(from-y)*height/h,width,(to-from)*height/h);
+  }
 }
 function comicCrop(image,band,box,limit){
   var x=Math.floor(image.width*box[1]/1000), y=Math.floor(band.top+band.height*box[0]/1000);
@@ -18610,7 +18674,7 @@ function comicCrop(image,band,box,limit){
   canvas.width=Math.max(1,Math.round(w*scale));canvas.height=Math.max(1,Math.round(h*scale));
   var ctx=canvas.getContext('2d');
   ctx.fillStyle='#fff';ctx.fillRect(0,0,canvas.width,canvas.height);
-  ctx.drawImage(image,x,y,w,h,0,0,canvas.width,canvas.height);
+  comicDrawPage(ctx,image,x,y,w,h,canvas.width,canvas.height);
   return {url:canvas.toDataURL('image/jpeg',.91),ratio:h/w};
 }
 function comicBands(image){
@@ -18618,7 +18682,7 @@ function comicBands(image){
   if(height<=width*3.5) return [{top:0,height:height}];
   var cv=document.createElement('canvas');cv.width=80;cv.height=Math.min(2400,Math.ceil(height*80/width));
   var ctx=cv.getContext('2d',{willReadFrequently:true});
-  ctx.fillStyle='#fff';ctx.fillRect(0,0,cv.width,cv.height);ctx.drawImage(image,0,0,cv.width,cv.height);
+  ctx.fillStyle='#fff';ctx.fillRect(0,0,cv.width,cv.height);comicDrawPage(ctx,image,0,0,width,height,cv.width,cv.height);
   var pixels=ctx.getImageData(0,0,cv.width,cv.height).data, run=0, gaps=[];
   for(var y=0;y<cv.height;y++){
     var ink=0;
@@ -18632,10 +18696,16 @@ function comicBands(image){
   }
   var bands=[], top=0, head=0;
   while(height-top>width*3.5){
-    var next=gaps.find(function(gap){return gap-top>=width*2.2&&gap-top<=width*4.5&&height-gap>=width*.45;});
+    var next=gaps.find(function(gap){return gap-top>=width*2.2&&gap-top<=width*4.5&&height-gap>=width*.45&&
+      image.seams.every(function(seam){return Math.abs(seam-gap)>=width*.6;});});
     if(!next&&height-top<=width*5) break;
     var overlap=next?0:Math.round(width*.4);
-    if(!next) next=Math.min(height,top+Math.round(width*3.5));
+    if(!next){
+      next=top+Math.round(width*3.5);
+      var nearby=image.seams.filter(function(seam){return Math.abs(seam-next)<width*.6;});
+      if(nearby.length) next=Math.min(height,nearby.at(-1)+Math.round(width*.6));
+      if(next===height) break;
+    }
     var start=top-head, end=Math.min(height,next+overlap);
     bands.push({top:start,height:end-start,ownTop:top,ownBottom:next});
     top=next;head=overlap;
@@ -18749,6 +18819,7 @@ function comicReadSegment(image,band,page,data,preview,result){
   if(previous?.page===page&&attachments.has(previous)&&previous.cropBox) previous.artwork=comicCrop(image,whole,previous.cropBox,1600);
   return art.map(function(panel){
     panel.artwork=panel.cropBox?comicCrop(image,whole,panel.cropBox,1600):preview;
+    if(!panel.cropBox) panel.cropBox=comicFullBox(image,band,[0,0,1000,1000]);
     return panel;
   });
 }
@@ -18773,7 +18844,7 @@ async function comicScan(skip,restart){
   if(!aiReady()){comicStatus('상단 AI 연결에서 Gemini 키를 설정해 주세요.');return;}
   var board=B, files=comicFiles, order=comicNode('order').value;
   if(!comicProgress||restart){
-    comicResult={panels:[],characters:new Map(),title:files[0].name.replace(/\.[^.]+$/,'').slice(0,40)};
+    if(!comicResult||restart) comicResult=comicNewResult();
     comicProgress={page:0,band:0,skipped:0,complete:false,blocked:null};
   }
   var progress=comicProgress, result=comicResult;
@@ -18788,37 +18859,33 @@ async function comicScan(skip,restart){
   try{
     await comicSaveDraft();
     while(progress.page<files.length&&!comicPause&&result.panels.length<150){
-      var url=URL.createObjectURL(files[progress.page]);
-      try{
-        failureScope='page';
-        var image=await loadImg(url);
-        if(!image) throw Error('이미지를 열 수 없어요. JPG나 PNG인지 확인해 주세요.');
-        var bands=comicBands(image);
-        while(progress.band<bands.length&&!comicPause&&result.panels.length<150){
-          if(B!==board||window.__stale) throw Error('프로젝트가 바뀌었어요.');
-          failureScope='band';
-          comicStatus('AI 분석 중 · '+(progress.page+1)+'/'+files.length+'페이지'+(bands.length>1?' · '+(progress.band+1)+'/'+bands.length+'구간':'')+' · '+result.panels.length+'컷 확보');
-          var band=bands[progress.band], page=comicCrop(image,band,[0,0,1000,1000],2600);
-          var known=Array.from(result.characters.values(),function(person){return person.name+' '+person.sheet.look;}).slice(0,24);
-          var response=await aiAsk(COMIC_SYS,
-            '페이지의 컷을 읽는 순서대로 반환한다. 위에서 아래로 진행하고 같은 줄은 '+(order==='rtl'?'오른쪽에서 왼쪽':'왼쪽에서 오른쪽')+'으로 읽는다. 이전 구간 등장인물 '+JSON.stringify(known),5200,
-            {images:[{mime:'image/jpeg',data:page.url.split(',')[1]}],json:true,temperature:.2});
-          if(B!==board||window.__stale) throw Error('프로젝트가 바뀌었어요.');
-          if(aiIsErr(response)) throw Error(response);
-          var json=String(response).match(/\{[\s\S]*\}/);
-          var data=JSON.parse(json?json[0]:response);
-          if(!Array.isArray(data?.panels)) throw Error('AI 응답에서 컷 목록을 읽지 못했어요.');
-          var segment=comicReadSegment(image,band,progress.page+1,data,page,result);
-          comicReadCharacters(result,image,band,data.characters);
-          var available=150-result.panels.length;
-          result.panels.push(...segment.slice(0,available));
-          progress.band++;
-          progress.blocked=null;
-          if(segment.length>available) progress.limited=true;
-          await comicSaveDraft();
-        }
-        if(progress.band>=bands.length){progress.page++;progress.band=0;}
-      }finally{URL.revokeObjectURL(url);}
+      failureScope='page';
+      var image=await comicLoadPage(files[progress.page]);
+      var bands=comicBands(image);
+      while(progress.band<bands.length&&!comicPause&&result.panels.length<150){
+        if(B!==board||window.__stale) throw Error('프로젝트가 바뀌었어요.');
+        failureScope='band';
+        comicStatus('AI 분석 중 · '+(progress.page+1)+'/'+files.length+'페이지'+(bands.length>1?' · '+(progress.band+1)+'/'+bands.length+'구간':'')+' · '+result.panels.length+'컷 확보');
+        var band=bands[progress.band], page=comicCrop(image,band,[0,0,1000,1000],2600);
+        var known=Array.from(result.characters.values(),function(person){return person.name+' '+person.sheet.look;}).slice(0,24);
+        var response=await aiAsk(COMIC_SYS,
+          '페이지의 컷을 읽는 순서대로 반환한다. 위에서 아래로 진행하고 같은 줄은 '+(order==='rtl'?'오른쪽에서 왼쪽':'왼쪽에서 오른쪽')+'으로 읽는다. '+(image.seams.length?'이어 붙인 사진이다. 연결 지점에 걸친 그림은 이어지는 한 컷으로 보고, 연결선 자체로 컷을 나누지 않는다. ':'')+'이전 구간 등장인물 '+JSON.stringify(known),5200,
+          {images:[{mime:'image/jpeg',data:page.url.split(',')[1]}],json:true,temperature:.2});
+        if(B!==board||window.__stale) throw Error('프로젝트가 바뀌었어요.');
+        if(aiIsErr(response)) throw Error(response);
+        var json=String(response).match(/\{[\s\S]*\}/);
+        var data=JSON.parse(json?json[0]:response);
+        if(!Array.isArray(data?.panels)) throw Error('AI 응답에서 컷 목록을 읽지 못했어요.');
+        var segment=comicReadSegment(image,band,progress.page+1,data,page,result);
+        comicReadCharacters(result,image,band,data.characters);
+        var available=150-result.panels.length;
+        result.panels.push(...segment.slice(0,available));
+        progress.band++;
+        progress.blocked=null;
+        if(segment.length>available) progress.limited=true;
+        await comicSaveDraft();
+      }
+      if(progress.band>=bands.length){progress.page++;progress.band=0;}
     }
     progress.complete=progress.page>=files.length||result.panels.length>=150;
     if(progress.complete&&result.panels.length&&result.pendingText?.length){
@@ -18846,7 +18913,7 @@ function comicReview(){
   cards.replaceChildren();cast.replaceChildren();
   comicResult.panels.forEach(function(panel,i){
     var article=document.createElement('article');article.className='batch-request';
-    article.innerHTML='<div class="filterbar"><label><input type="checkbox" checked> '+(i+1)+'번 컷 · '+panel.page+'페이지</label><a class="chip" data-comic-download>그림 저장</a></div>'+
+    article.innerHTML='<div class="filterbar"><label><input type="checkbox" checked> '+(i+1)+'번 컷 · '+panel.page+'페이지</label><button type="button" class="chip" data-comic-edit="'+i+'" aria-label="'+(i+1)+'번 컷 자르기 범위 수정">자르기 범위 수정</button><a class="chip" data-comic-download>그림 저장</a></div>'+
       '<img loading="lazy" alt="'+(i+1)+'번 분할 이미지"><p class="small" data-comic-scene></p>'+
       '<label>대사<textarea rows="3" aria-label="'+(i+1)+'번 컷 대사"></textarea></label>'+
       '<label>내레이션<textarea rows="2" aria-label="'+(i+1)+'번 컷 내레이션"></textarea></label>';
@@ -18875,13 +18942,145 @@ function comicReview(){
   });
   cast.appendChild(details);
 }
+function comicNewResult(){
+  var file=comicFiles[0], first=file.parts?.[0]||file;
+  return {panels:[],characters:new Map(),title:first.name.replace(/\.[^.]+$/,'').slice(0,40)};
+}
+var comicCropDialog=null;
+function comicOpenCrop(panel,trigger){
+  if(comicBusy||comicCropDialog||!comicFiles.length||comicProgress?.rejoin) return;
+  var modal=document.createElement('div');comicCropDialog=modal;modal.className='se-modal';
+  modal.innerHTML='<div class="se-box batch-image-box" role="dialog" aria-modal="true" aria-labelledby="comic-crop-title">'+
+    '<div class="se-head"><b id="comic-crop-title">'+(panel?'컷 자르기 범위 수정':'빠진 컷 추가')+'</b>'+
+    '<button type="button" class="se-x" aria-label="닫기">✕</button></div>'+
+    '<div class="filterbar"><label>원본 사진 <select aria-label="원본 사진" data-source></select></label>'+
+    '<label>원본 구간 <select aria-label="원본 구간" data-window></select></label>'+
+    (panel?'':'<label>넣을 컷 번호 <input type="number" aria-label="넣을 컷 번호" min="1" max="'+((comicResult?.panels.length||0)+1)+'" step="1" data-position></label>')+'</div>'+
+    '<p class="small">사진에서 드래그해 범위를 잡으세요. 선택한 범위는 안쪽을 끌어 옮기거나 모서리를 끌어 조절할 수 있어요.</p>'+
+    '<div class="batch-image-surface"><canvas aria-label="원본 사진의 자르기 범위"></canvas><div class="batch-image-crop" hidden></div></div>'+
+    '<div class="filterbar"><button class="chip ct-go" type="button" data-commit disabled>'+(panel?'이 범위로 변경':'선택 영역을 컷으로 추가')+'</button></div>'+
+    '<p class="small" role="status"></p></div>';
+  document.body.appendChild(modal);
+  var cv=modal.querySelector('canvas'), overlay=modal.querySelector('.batch-image-crop'), picture=modal.querySelector('[data-source]');
+  var windowPick=modal.querySelector('[data-window]'), position=modal.querySelector('[data-position]'), commit=modal.querySelector('[data-commit]');
+  var status=modal.querySelector('[role=status]'), files=comicFiles, image=null, windows=[], view=null, box=null, drag=null, loadId=0;
+  files.forEach(function(file,i){picture.add(new Option((i+1)+'페이지 · '+file.name,i));});
+  picture.value=Math.min(files.length-1,(panel?.page||1)-1);
+  function close(){
+    document.removeEventListener('keydown',escape);modal.remove();comicCropDialog=null;
+    if(trigger?.isConnected) trigger.focus({preventScroll:true});
+  }
+  function escape(e){if(e.key==='Escape') close();}
+  modal.querySelector('.se-x').addEventListener('click',close);
+  document.addEventListener('keydown',escape);
+  function paint(){
+    overlay.hidden=!box;
+    if(box){
+      overlay.style.top=box[0]*100+'%';overlay.style.left=box[1]*100+'%';
+      overlay.style.height=(box[2]-box[0])*100+'%';overlay.style.width=(box[3]-box[1])*100+'%';
+    }
+    commit.disabled=!box||box[2]-box[0]<.004||box[3]-box[1]<.004;
+  }
+  function showWindow(){
+    view=windows[+windowPick.value];drag=null;box=null;
+    if(!view) {paint();return;}
+    var scale=Math.min(1,1100/Math.max(image.width,view.height));
+    cv.width=Math.max(1,Math.round(image.width*scale));cv.height=Math.max(1,Math.round(view.height*scale));
+    var ctx=cv.getContext('2d');
+    ctx.fillStyle='#fff';ctx.fillRect(0,0,cv.width,cv.height);comicDrawPage(ctx,image,0,view.top,image.width,view.height,cv.width,cv.height);
+    var original=panel?.cropBox;
+    if(+picture.value+1===panel?.page&&original){
+      var top=(original[0]*image.height/1000-view.top)/view.height, bottom=(original[2]*image.height/1000-view.top)/view.height;
+      if(top>=0&&bottom<=1) box=[top,original[1]/1000,bottom,original[3]/1000];
+    }
+    paint();
+  }
+  async function choosePage(){
+    var request=++loadId, index=+picture.value;
+    image=null;view=null;box=null;paint();windowPick.disabled=true;status.textContent='원본 이미지를 여는 중…';
+    if(position){
+      var panels=comicResult?.panels||[], next=panels.findIndex(function(item){return item.page>index+1;});
+      position.value=next<0?panels.length+1:next+1;
+    }
+    try{
+      var loaded=await comicLoadPage(files[index]);
+      if(request!==loadId||!modal.isConnected) return;
+      image=loaded;windows=[];
+      var span=Math.min(image.height,Math.max(1,Math.round(image.width*1.9)));
+      var step=Math.max(1,Math.round(span*.72));
+      for(var top=0;top<image.height;top+=step){
+        windows.push({top:top,height:Math.min(span,image.height-top)});
+        if(top+span>=image.height) break;
+      }
+      if(windows.length>1) windows.push({top:0,height:image.height});
+      windowPick.replaceChildren();
+      windows.forEach(function(part,i){windowPick.add(new Option(i===windows.length-1&&windows.length>1?'전체 사진':'구간 '+(i+1),i));});
+      if(panel?.page===index+1&&panel.cropBox){
+        var y0=panel.cropBox[0]*image.height/1000, y1=panel.cropBox[2]*image.height/1000;
+        var best=windows.findIndex(function(part){return part.top<=y0&&part.top+part.height>=y1;});
+        if(best>=0) windowPick.value=best;
+      }
+      windowPick.disabled=windows.length<2;status.textContent='';showWindow();
+    }catch(err){if(request===loadId&&modal.isConnected) status.textContent=err.message;}
+  }
+  function point(event){
+    var r=cv.getBoundingClientRect();
+    return [Math.max(0,Math.min(1,(event.clientY-r.top)/r.height)),Math.max(0,Math.min(1,(event.clientX-r.left)/r.width))];
+  }
+  cv.addEventListener('pointerdown',function(e){
+    if(!image||!view||drag) return;
+    var p=point(e), start=box?.slice();
+    var inside=start&&p[0]>=start[0]&&p[0]<=start[2]&&p[1]>=start[1]&&p[1]<=start[3];
+    var rect=cv.getBoundingClientRect(), edge=null;
+    if(start){
+      var edges=[[0,1],[0,3],[2,1],[2,3]];
+      edge=edges.find(function(corner){return Math.abs(p[0]-start[corner[0]])*rect.height<18&&Math.abs(p[1]-start[corner[1]])*rect.width<18;});
+    }
+    drag={id:e.pointerId,start:start,point:p,move:inside,edge:edge};
+    if(!inside&&!edge) box=[p[0],p[1],p[0],p[1]];
+    cv.setPointerCapture(e.pointerId);paint();
+  });
+  cv.addEventListener('pointermove',function(e){
+    if(drag?.id!==e.pointerId) return;
+    var p=point(e), a=drag.point, old=drag.start;
+    if(drag.edge){
+      var y=old[2-drag.edge[0]], x=old[4-drag.edge[1]];
+      box=[Math.min(y,p[0]),Math.min(x,p[1]),Math.max(y,p[0]),Math.max(x,p[1])];
+    }else if(drag.move){
+      var dy=Math.max(-old[0],Math.min(1-old[2],p[0]-a[0])), dx=Math.max(-old[1],Math.min(1-old[3],p[1]-a[1]));
+      box=[old[0]+dy,old[1]+dx,old[2]+dy,old[3]+dx];
+    }else box=[Math.min(a[0],p[0]),Math.min(a[1],p[1]),Math.max(a[0],p[0]),Math.max(a[1],p[1])];
+    paint();
+  });
+  ['pointerup','pointercancel','lostpointercapture'].forEach(function(event){
+    cv.addEventListener(event,function(e){if(drag?.id===e.pointerId) drag=null;});
+  });
+  picture.addEventListener('change',choosePage);windowPick.addEventListener('change',showWindow);
+  commit.addEventListener('click',function(){
+    if(!image||!box||files!==comicFiles||comicBusy) return;
+    var normalized=box.map(function(value){return 1000*value;});
+    var cropBox=comicFullBox(image,view,normalized);
+    var patch={page:+picture.value+1,artwork:comicCrop(image,view,normalized,1600),cropBox:cropBox,box:cropBox,boundary:''};
+    var index;
+    if(panel){index=comicResult.panels.indexOf(panel);Object.assign(panel,patch);}
+    else{
+      if(!comicResult) comicResult=comicNewResult();
+      var panels=comicResult.panels;index=Math.max(0,Math.min(panels.length,Math.round(+position.value||1)-1));
+      panels.splice(index,0,{...patch,scene:'',line:'',nar:'',names:[],shot:'ms',include:true,printed:false});
+    }
+    close();comicReview();comicUpdate();comicSaveDraft();
+    comicImport.querySelector('[data-comic-edit="'+index+'"]').focus({preventScroll:true});
+    comicStatus(panel?'컷 자르기 범위를 변경했어요.':'빠진 컷을 추가했어요. 이미지 아래에 대사를 적을 수 있어요.');
+  });
+  choosePage();modal.querySelector('.se-x').focus({preventScroll:true});
+}
 function comicTranscript(panels){
   return panels.filter(function(panel){return panel.include;}).map(function(panel,i){
     return [String(i+1)+'번 컷',panel.line,panel.nar&&'내레이션: '+panel.nar].filter(Boolean).join('\n');
   }).join('\n\n');
 }
 async function comicApply(){
-  if(comicBusy||!comicResult||window.__stale||running||redoBusy||FLOW_FIXING||flowBusy||batchBusy||sheetCutBusy||grokBusy){
+  if(comicBusy||!comicResult||comicProgress?.rejoin||window.__stale||running||redoBusy||FLOW_FIXING||flowBusy||batchBusy||sheetCutBusy||grokBusy){
     comicStatus('진행 중인 작업이 끝나면 저장해 주세요.');return;
   }
   var result=comicResult, art=window.__ppArt, ids=[], projectId='';
@@ -18937,11 +19136,11 @@ comicImport.addEventListener('change',function(e){
   if(e.target===comicNode('files')){
     var files=Array.from(e.target.files);e.target.value='';
     if(!files.length) return;
-    var added=files.slice(0,COMIC_MAX_PAGES-comicFiles.length);
+    var added=files.slice(0,COMIC_MAX_PAGES-comicFileCount());
     if(!added.length){comicStatus('최대 '+COMIC_MAX_PAGES+'장까지 추가할 수 있어요.');return;}
     comicFiles=comicFiles.concat(added);
-    if(comicProgress?.complete&&comicResult?.panels.length<150) comicProgress.complete=false;
-    comicQueueChanged('사진 '+comicFiles.length+'장 선택됨. 목록 순서대로 분석해요.'+
+    if(comicProgress?.complete&&!comicProgress.rejoin&&comicResult?.panels.length<150) comicProgress.complete=false;
+    comicQueueChanged('사진 '+comicFileCount()+'장 선택됨. 목록 순서대로 분석해요.'+
       (added.length<files.length?' 한도를 넘긴 '+(files.length-added.length)+'장은 다음에 추가해 주세요.':''),true);
   }else if(e.target===comicNode('order')){
     comicQueueChanged('읽는 순서를 바꿨어요. 처음부터 분석해 주세요.');
@@ -18951,15 +19150,19 @@ comicImport.addEventListener('change',function(e){
 comicImport.addEventListener('click',async function(e){
   var action=e.target.dataset.comic;
   if(comicRestoring) return;
+  if(!comicBusy&&e.target.dataset.comicJoin!=null) comicChangeJoin(+e.target.dataset.comicJoin,false);
+  if(!comicBusy&&e.target.dataset.comicUnjoin!=null) comicChangeJoin(+e.target.dataset.comicUnjoin,true);
+  if(action==='add-cut') comicOpenCrop(null,e.target);
+  if(e.target.dataset.comicEdit!=null) comicOpenCrop(comicResult?.panels[+e.target.dataset.comicEdit],e.target);
   if(action==='pick'&&!comicBusy) comicNode('files').click();
   if(e.target.dataset.comicRemove!=null&&!comicBusy){
     var index=+e.target.dataset.comicRemove;
     var keep=!comicProgress||index>comicProgress.page||index===comicProgress.page&&!comicProgress.band;
     comicFiles=comicFiles.filter(function(file,i){return i!==index;});
     if(keep&&comicProgress&&index===comicProgress.page) comicProgress.blocked=null;
-    comicQueueChanged(comicFiles.length?'사진 '+comicFiles.length+'장 선택됨. 목록 순서대로 분석해요.':'사진을 추가해 주세요.',keep&&!!comicFiles.length);
-    var buttons=comicNode('queue').querySelectorAll('button');
-    (buttons[Math.min(index,buttons.length-1)]||comicNode('pick')).focus();
+    comicQueueChanged(comicFiles.length?'사진 '+comicFileCount()+'장 선택됨. 목록 순서대로 분석해요.':'사진을 추가해 주세요.',keep&&!!comicFiles.length);
+    var rows=comicNode('queue').children;
+    (rows[Math.min(index,rows.length-1)]?.querySelector('button')||comicNode('pick')).focus();
   }
   if(action==='scan') comicScan(false,!!comicProgress?.complete);
   if(action==='skip') comicScan(true);
