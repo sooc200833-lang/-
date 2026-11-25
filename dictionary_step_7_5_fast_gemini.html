@@ -20096,6 +20096,32 @@ function batchTitle(numbers){
   if(numbers.every(function(n,i){return n===numbers[0]+i;})) return numbers[0]+'–'+numbers[numbers.length-1]+'번 컷';
   return numbers.join(', ')+'번 컷';
 }
+function gptVisualEditor(board,cuts){
+  var details=document.createElement('details'), title=document.createElement('summary');
+  title.textContent='GPT용 장면 설명 수정';
+  details.append(title);
+  details.insertAdjacentHTML('beforeend','<p class="small">GPT에 그려 달라고 할 장면을 컷별로 적으세요. 7단계와 9단계에 함께 적용됩니다. 예를 들어 정지선 앞에 멈춘 트럭과 한 걸음 물러서 무사한 인물을 와이드숏으로 보여 주세요. 비우면 원래 설명을 사용합니다.</p>');
+  cuts.forEach(function(c){
+    var label=document.createElement('label'), field=document.createElement('textarea');
+    label.className='small';label.style.display='block';
+    label.textContent=c.n+'번 컷 · GPT용 장면';
+    field.rows=2;field.maxLength=600;field.style.cssText='display:block;width:100%;box-sizing:border-box';
+    field.value=c.gptVisualDirection||'';field.placeholder=c.scr||'화면에 보일 행동과 구도를 적어 주세요.';
+    field.addEventListener('change',function(){
+      if(B!==board||window.__stale||!board.cuts.includes(c)) return;
+      var direction=field.value.trim();
+      if(direction) c.gptVisualDirection=direction; else delete c.gptVisualDirection;
+      gptVisualFields.get(c)?.forEach(function(other){other.value=direction;});
+      save();
+    });
+    var fields=gptVisualFields.get(c)||new Set();
+    fields.forEach(function(other){if(!other.isConnected) fields.delete(other);});
+    fields.add(field);gptVisualFields.set(c,fields);
+    label.append(field);details.append(label);
+  });
+  return details;
+}
+var gptVisualFields=new WeakMap();
 function renderBatch(){
   var list=document.getElementById('ct-batch-cuts'), board=B;
   var groups=batchGroups(board?.cuts||[]), current=new Set();
@@ -20130,7 +20156,9 @@ function renderBatch(){
     });
     input.addEventListener('change',function(){batchUpload(input,cuts,oldLayout,feedback);});
     controls.append(pick,input,feedback);
-    row.append(title,controls);list.appendChild(row);
+    row.append(title,controls);
+    if(!oldLayout) row.append(gptVisualEditor(board,cuts));
+    list.appendChild(row);
   }
   groups.forEach(function(cuts){
     if(cuts.every(function(c){return c.batchId;})) current.add(batchKey(cuts.map(function(c){return c.batchId;})));
@@ -20157,11 +20185,13 @@ function batchPrompt(cuts,layout){
   var imported=cuts.some(function(c){return c.comicArt;});
   return '첨부 이미지에서 이 묶음의 제목이 붙은 '+(imported?'컷 참고':'3D 콘티')+' 격자를 찾아 컷마다 같은 구도를 유지하세요. '+
     (imported?'가져온 원본 컷은 그림에 보이는 인물 배치, 구도, 표정과 소품을 우선하세요. 원본의 글과 말풍선은 상황과 연기 참고로만 읽으세요. ':'')+
+    (cuts.some(function(c){return c.gptVisualDirection;})?'지정 장면이 있는 컷은 그 설명에 맞춰 그리세요. ':'')+
     '같은 첨부의 캐릭터·배경 시트를 참고해 얼굴, 의상, 장소를 일관되게 유지하세요.\n'+
     '정확히 '+layout.cols+'열 × '+layout.rows+'행을 위에서 아래로, 각 줄은 왼쪽에서 오른쪽으로 채우세요. '+
     '각 칸은 4:3, 전체 비율은 '+(layout.cols*4)+':'+(layout.rows*3)+'. 칸 사이와 바깥 여백, 테두리, 숫자, 글자, 말풍선 없이 한 장으로 출력하세요.\n'+
     (cuts.length<layout.cols*layout.rows?'마지막 남는 칸은 비워 두세요.\n':'')+
     cuts.map(function(c,i){
+      if(c.gptVisualDirection) return '칸 '+(i+1)+' · 원본 '+c.n+'번: 지정 장면 — '+c.gptVisualDirection+' / 인물 '+flowNames(c).join(', ');
       return '칸 '+(i+1)+' · 원본 '+c.n+'번: '+[c.comicArt?'가져온 원본 그림':'',c.scr,c.comicArt?'':compText(c),'인물 '+flowNames(c).join(', '),
         '표정 '+flowNames(c).map(function(n){return n+' '+cmp75Emotion(c,n);}).join(', '),
         c.line&&'대사 참고 '+c.line,c.nar&&'내레이션 참고 '+c.nar,stage3dPrompt(c),c.comicArt?'':'카메라 '+JSON.stringify(c.cam||{})].filter(Boolean).join(' / ');
@@ -20230,7 +20260,7 @@ function batchCopyPrompt(prompt){
 }
 function batchSignature(board){
   return JSON.stringify([board.cuts,board.chars,board.sceneBg,board.scenePr,board.sheetArts,board.scenes,board.skScenes,board.flow,batchArtRevision],
-    function(key,value){return key==='batchId'?undefined:value;});
+    function(key,value){return key==='batchId'||key==='gptVisualDirection'?undefined:value;});
 }
 var batchPrep=null,batchPrepTimer=0,batchArtRevision=0;
 function batchGroupKey(cuts){
@@ -20426,10 +20456,11 @@ batchPanel.addEventListener('click',async function(e){
       });
       var prompt=sections.length===1?sections[0]:
         '묶음별로 별도의 격자 이미지 한 장을 만들어 주세요. 여러 장을 지원하면 한 번에 생성하고, 한 장씩만 가능하면 첫 번째부터 만들고 「다음」을 기다리세요. 묶음을 합쳐 한 장으로 그리지 마세요.\n\n'+sections.join('\n\n');
-      if(groups.some(isSecond)) document.getElementById('ct-batch-text').value=prompt;
+      document.getElementById('ct-batch-text').value=prompt;
       var prep=batchPreparation(board), signature=prep.signature;
       var pack=batchPackage;
       if(!pack||pack.board!==board||pack.key!==key||pack.signature!==signature) pack=null;
+      else pack.prompt=prompt;
       var prepared=pack?null:batchPreparedFile(prep,groups,layouts,function(i,total){
         batchStatus.textContent='GPT 첨부 준비 중 · 컷 격자 '+i+'/'+total;
       });
@@ -20770,12 +20801,16 @@ function grokGridPrompt(plan){
     '행의 격자 이미지 한 장입니다. 각 칸은 가로 16:9, 전체 비율은 '+(plan.cols*16)+':'+(plan.rows*9)+
     '입니다. 위에서 아래로, 각 행의 왼쪽부터 채우세요. 칸 사이 여백·테두리·글씨·말풍선 없이 맞붙여 주세요.'+
     (n<plan.cols*plan.rows?' 마지막 '+(plan.cols*plan.rows-n)+'칸은 비워 주세요.':'')+
-    '\n첨부 이미지의 원본 컷과 시트는 인물 얼굴, 의상, 배경과 구도 참고용이며, 시간표가 있으면 순서와 시각만 참고하세요. 첫 프레임부터 마지막까지 인물과 소품의 위치와 시선을 이어 주세요. 같은 장면의 연속 프레임은 자세와 표정, 카메라 움직임이 조금씩 변해야 합니다. 장소가 달라지는 곳에서만 화면을 전환합니다.\n\n'+
+    '\n첨부 이미지의 원본 컷과 시트는 인물 얼굴, 의상, 배경과 구도 참고용이며, 시간표가 있으면 순서와 시각만 참고하세요. 지정 장면이 있는 컷은 그 설명에 맞춰 그립니다. 첫 프레임부터 마지막까지 인물과 소품의 위치와 시선을 이어 주세요. 같은 장면의 연속 프레임은 자세와 표정, 카메라 움직임이 조금씩 변해야 합니다. 장소가 달라지는 곳에서만 화면을 전환합니다.\n\n'+
     (plan.overlap?'첫 칸은 앞 묶음 마지막 컷의 연결용 프레임입니다. 첨부에 「앞 묶음 마지막 프레임」이 있으면 같은 이미지와 구도로 첫 칸을 맞추고, 이전 컷의 동작이나 대사를 다시 시작하지 마세요.\n\n':'')+
     (GROK_MOOD[plan.settings.mood]?'그림의 분위기: '+GROK_MOOD[plan.settings.mood]+'.\n\n':'')+
     '컷별 장면 톤이 적혀 있으면 표정과 반응 타이밍에 반영하세요. [컷 지정]이 있는 컷에는 그 지시를 우선 적용하세요. 개그와 진지한 부분이 이어질 때는 분위기가 바뀌는 순간을 살리세요.\n\n'+
-    plan.beats.map(function(beat){return grokBeatText(beat)+'\n동작 설계: '+grokShotDirection(beat)+grokToneText(plan.board,beat.cut,false);}).join('\n\n')+'\n\n키프레임 순서\n'+plan.frames.map(function(f){
-      return f.index+'칸 · '+grokTimestamp(f.time)+' · '+f.cut.n+'번 컷 · '+f.motion+(f.change?' · 장면 전환':'')+' · '+compText(f.cut);
+    plan.beats.map(function(beat){
+      if(beat.cut.gptVisualDirection) return '['+grokTimestamp(beat.start)+'–'+grokTimestamp(beat.end)+'] '+beat.cut.n+'번 컷 · 지정 장면 — '+beat.cut.gptVisualDirection;
+      return grokBeatText(beat)+'\n동작 설계: '+grokShotDirection(beat)+grokToneText(plan.board,beat.cut,false);
+    }).join('\n\n')+'\n\n키프레임 순서\n'+plan.frames.map(function(f){
+      var visual=f.cut.gptVisualDirection;
+      return f.index+'칸 · '+grokTimestamp(f.time)+' · '+f.cut.n+'번 컷'+(f.change?' · 장면 전환':'')+(visual?' · 위 지정 장면을 이어서 표현': ' · '+f.motion+' · '+compText(f.cut));
     }).join('\n');
 }
 var GROK_MOOD={
@@ -21252,7 +21287,7 @@ function renderGrokClip(){
     var copy=video.copy;
     actions.appendChild(copy);
     status.className='small';status.dataset.grokCardStatus='';status.setAttribute('role','status');
-    card.append(heading,uploadHint,actions,status,video.details,grokCutEditor(plan,cutEditors.get(plan.key)));
+    card.append(heading,uploadHint,actions,status,gptVisualEditor(B,plan.cuts),video.details,grokCutEditor(plan,cutEditors.get(plan.key)));
     if(saved){
       var photos=null;
       var copyAll=grokButton('사진 전체 복사',async function(){
