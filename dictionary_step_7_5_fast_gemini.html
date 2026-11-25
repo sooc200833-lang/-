@@ -1342,6 +1342,9 @@ body.dk-drag, body.dk-drag *{user-select:none!important; -webkit-user-select:non
 .sv-beat{font-size:.82rem;margin:.1rem 0 .3rem;color:var(--ink-2,#444)}
 .sv-img{display:block;width:100%;max-width:520px;margin:.4rem auto;border-radius:8px;border:1px solid var(--line,#ddd)}
 .sv-up{cursor:pointer}
+.sv-cut-actions{display:flex;flex-wrap:wrap;gap:.3rem;max-width:9rem}
+.sv-cut-actions [data-stage6-image]{min-height:36px}
+.sv-cut-actions [data-stage6-upload-message]:empty{display:none}
 .sv-pr{margin:.4rem 0 0;font-size:.74rem;white-space:pre-wrap;max-height:11em;overflow:auto;background:var(--soft,#f6f6f6);border-radius:8px;padding:.5rem}
 .ct-steps{display:flex;flex-wrap:nowrap;gap:.3rem;margin:.6rem 0;padding:.2rem 0 .4rem;overflow-x:auto;scrollbar-width:thin;-webkit-overflow-scrolling:touch}.ct-stb{flex:0 0 auto;white-space:nowrap}
 .ct-gm{display:flex;flex-wrap:wrap;align-items:center;gap:.3rem;width:100%;margin-bottom:.2rem}.ct-gm .chip{font-size:.74rem}.ct-gm .chip.on{background:var(--ink,#111);color:#fff}
@@ -3058,6 +3061,8 @@ button.pl-card[disabled]{cursor:default}
   <div id="ct-shchk"></div>
   <div id="ct-gptq"></div>
   <div class="filterbar ct-vwbar"><button class="chip on" id="ct-vw-s" type="button">장면별 보기</button><button class="chip" id="ct-vw-b" type="button">컷 그림판</button><label class="small"><input type="checkbox" id="ct-colon" checked> GPT 배경·인물로 보기</label></div>
+  <p class="small" id="ct-stage6-upload-status" role="status" hidden></p>
+  <input id="ct-stage6-image-file" type="file" accept="image/*,.heic,.heif" hidden>
   <div id="ct-sv"></div>
   <div id="ct-board"></div>
   <p class="small ct-bhelp">컷을 누르면 구도·앵글·화면·대사를 고칠 수 있다. 순서는 컷을 끌어 옮긴다(폰은 길게 눌러 끌기, 키보드는 Alt+화살표). 그림은 Rough.js(MIT)로 그린다.</p>
@@ -15568,6 +15573,10 @@ function placeCol(f){
   });
 }
 function ctImportedCutImage(c){return c.comicArt&&window.__ppArt?.get(c.comicArt);}
+function ctCutArtUploadButton(c){
+  var replace=c.art&&window.__ppArt?.get(c.art)&&c.art!==c.comicArt;
+  return '<button type="button" class="chip" data-stage6-image="cut" data-n="'+c.n+'" aria-label="'+c.n+'번 컷 사진 '+(replace?'바꾸기':'올리기')+'">사진 '+(replace?'바꾸기':'올리기')+'</button>';
+}
 function colOn(){ try{ return localStorage.getItem('ctCol')!=='0'; }catch(e){ return true; } }
 function cutFill(f,c){
   if(c.nar && c.narPos==='between' && balloonsOn()){ var nb=document.createElement('p'); nb.className='ct-narb'; nb.innerHTML=cesc(c.nar).replace(/\n/g,'<br>'); nb.title='컷 사이 나레이션 — 앞 컷과 이 컷 사이'; f.appendChild(nb); }
@@ -16472,14 +16481,15 @@ function renderScenes(){
   try{ renderSteps(); }catch(e){}
   box.innerHTML=top+L.map(function(x,i){ var who=''; try{ who=sceneWho(x); }catch(e){}
     var rows=''; for(var n=x.a;n<=x.b;n++){ var c=B.cuts[n-1]; if(!c) continue;
-      var original=ctImportedCutImage(c);
+      var applied=c.art&&c.art!==c.comicArt&&window.__ppArt?.get(c.art), image=applied||ctImportedCutImage(c);
+      var imageLabel=n+'번 컷 '+(applied?'적용한 사진':'원본 그림');
       rows+='<li><b>'+n+'</b><div class="sv-cut-copy">'+cesc(shotName(c.k))+' · '+(c.scr?cesc(c.scr):'<i>화면 미정</i>')+(c.line?'<span class="sv-l">'+String(c.line).split('\n').filter(Boolean).map(function(l){ var p=lnParse(l), w=ctWho(c); return p.who?'<b>'+cesc(p.who)+'</b>: '+cesc(p.say):(p.kind==='bare'&&w.length!==1?'<em class="dq">?</em> ':(w.length===1?'<b>'+cesc(w[0])+'</b>: ':''))+cesc(p.say); }).join(' / ')+'</span>':'')+(c.nar?'<span class="sv-l sv-nar">▸ '+cesc(c.nar)+'</span>':'')+
-        (original?'<details class="sv-cut-art"><summary aria-label="'+n+'번 컷 원본 그림 크기 변경"><img loading="lazy" decoding="async" alt="'+n+'번 컷 원본 그림" src="'+cesc(original)+'"></summary></details>':'')+
-        '</div><div><button type="button" data-ed="'+n+'" aria-label="'+n+'번 컷 고치기">✎</button> <button type="button" data-ed="'+n+'" data-ed-stage3d aria-label="'+n+'번 컷 3D 배치">3D 배치</button></div></li>'; }
+        (image?'<details class="sv-cut-art"><summary aria-label="'+imageLabel+' 크기 변경"><img loading="lazy" decoding="async" alt="'+imageLabel+'" src="'+cesc(image)+'"></summary></details>':'')+
+        '</div><div class="sv-cut-actions"><button type="button" data-ed="'+n+'" aria-label="'+n+'번 컷 고치기">✎</button><button type="button" data-ed="'+n+'" data-ed-stage3d aria-label="'+n+'번 컷 3D 배치">3D 배치</button>'+ctCutArtUploadButton(c)+'<span class="small" data-stage6-upload-message aria-live="polite"></span></div></li>'; }
     var bgu=(function(){ var g=B.sceneBg&&B.sceneBg[x.a]; return g&&g.art&&window.__ppArt?window.__ppArt.get(g.art):''; })();
     return '<div class="sv-sc" data-i="'+i+'"><h4>'+(i+1)+'. '+cesc(dispNm(x.name||'장면'))+' <span class="small">'+x.a+'–'+x.b+'컷</span></h4>'+
       '<p class="sv-m">'+[who,x.place].filter(Boolean).map(cesc).join(' · ')+(x.desc||x.sum?(who||x.place?' — ':'')+cesc(x.desc||x.sum):'')+'</p>'+sceneBgCtl(x,i)+(function(){ var ap=B.scenePr&&B.scenePr[x.a]; return ap?'<p class="sv-beat">🧠 '+cesc(ap.beat||'연출 읽음')+'</p>':''; })()+'<ul class="sv-cuts">'+rows+'</ul>'+
-      (function(){ var aid=B.sceneArt&&B.sceneArt[x.a], au=aid&&window.__ppArt&&window.__ppArt.get(aid); return au?'<img class="sv-img" alt="'+(i+1)+'번 장면 러프 콘티" src="'+au+'">':''; })()+'<div class="sv-act"><button class="chip" type="button" data-aaat="'+x.b+'">＋ 이 장면 끝에 AI로 컷 추가</button><button class="chip" type="button" data-sp="ai">🧠 콘티 읽고 연출 짜기</button></div><details class="sv-more"><summary class="small">이 장면 그림 프롬프트</summary><div class="sv-act"><button class="chip" type="button" data-sp="page">✏ 장면 러프 콘티 그리기</button><button class="chip" type="button" data-sp="copy">🖌 컷별 완성 그림</button><button class="chip" type="button" data-sp="show">프롬프트 보기</button><label class="chip sv-up">그림 올리기<input type="file" accept="image/*" hidden data-sup="'+x.a+'"></label></div></details><pre class="sv-pr" hidden></pre></div>'; }).join('');
+      (function(){ var aid=B.sceneArt&&B.sceneArt[x.a], au=aid&&window.__ppArt&&window.__ppArt.get(aid); return au?'<img class="sv-img" alt="'+(i+1)+'번 장면 러프 콘티" src="'+au+'">':''; })()+'<div class="sv-act"><button class="chip" type="button" data-aaat="'+x.b+'">＋ 이 장면 끝에 AI로 컷 추가</button><button class="chip" type="button" data-sp="ai">🧠 콘티 읽고 연출 짜기</button></div><details class="sv-more"><summary class="small">이 장면 그림 프롬프트</summary><div class="sv-act"><button class="chip" type="button" data-sp="page">✏ 장면 러프 콘티 그리기</button><button class="chip" type="button" data-sp="copy">🖌 컷별 완성 그림</button><button class="chip" type="button" data-sp="show">프롬프트 보기</button><button class="chip" type="button" data-stage6-image="scene" data-n="'+x.a+'">장면 그림 올리기</button><span class="small" data-stage6-upload-message aria-live="polite"></span></div></details><pre class="sv-pr" hidden></pre></div>'; }).join('');
 }
 document.addEventListener('click', function(e){ var t=e.target; if(!t.closest) return;
   if(t.id==='ct-vw-s'||t.id==='ct-vw-b'){ ctView(t.id==='ct-vw-s'?'s':'b'); if(CTV==='b') try{ renderBoard(); }catch(er){} return; }
@@ -16499,8 +16509,55 @@ document.addEventListener('click', function(e){ var t=e.target; if(!t.closest) r
     ctCopy(q); if(sp.dataset.sp==='page'||sp.dataset.sp==='copy') setTimeout(function(){ window.open('https://chatgpt.com/?q='+encodeURIComponent(q.slice(0,1800)),'_blank','noopener'); },200); }
 });
 
-document.addEventListener('change', function(e){ var t=e.target; if(!t.dataset || !t.dataset.sup || !B || !window.__ppArt || !t.files[0]) return;
-  window.__ppArt.fromFile(t.files[0]).then(function(id){ B.sceneArt=B.sceneArt||{}; B.sceneArt[t.dataset.sup]=id; save(); renderScenes(); stat('장면 그림을 붙였다'); }); });
+var stage6File=document.getElementById('ct-stage6-image-file');
+function stage6UploadStatus(text,trigger){
+  var status=document.getElementById('ct-stage6-upload-status');
+  status.hidden=!text;status.textContent=text;
+  var local=trigger?.closest('li,.ct-ed,.sv-sc')?.querySelector('[data-stage6-upload-message]');
+  if(local) local.textContent=text;
+}
+root.addEventListener('click',function(e){
+  var trigger=e.target.closest('[data-stage6-image]'), cut=trigger&&B?.cuts[+trigger.dataset.n-1];
+  if(!cut||window.__stale) return;
+  stage6File.upload={board:B,cut:cut,trigger:trigger,scene:trigger.dataset.stage6Image==='scene'};
+  stage6File.value='';stage6File.click();
+},true);
+stage6File.addEventListener('change',async function(){
+  var upload=stage6File.upload, file=stage6File.files[0];
+  if(!file||!upload) return;
+  var {board,cut,trigger,scene}=upload, number=cut.n, art=window.__ppArt, id;
+  var active=function(){return B===board&&!window.__stale&&board.cuts.includes(cut);};
+  if(!active()) return;
+  var previous=scene?board.sceneArt?.[number]:cut.art;
+  trigger.disabled=true;stage6UploadStatus('사진을 읽고 있어요…',trigger);
+  try{
+    if(!art?.ok()) throw Error('사진 저장소를 열 수 없어요. 브라우저에서 페이지를 다시 열어 주세요.');
+    var url=URL.createObjectURL(file), image;
+    try{image=await loadImg(url);}finally{URL.revokeObjectURL(url);}
+    if(!image?.naturalWidth) throw Error('이 사진 형식을 읽지 못했어요. JPG나 PNG로 저장해서 다시 올려 주세요.');
+    var scale=Math.min(1,1800/Math.max(image.naturalWidth,image.naturalHeight)), canvas=document.createElement('canvas');
+    canvas.width=Math.max(1,Math.round(image.naturalWidth*scale));canvas.height=Math.max(1,Math.round(image.naturalHeight*scale));
+    var ctx=canvas.getContext('2d');ctx.fillStyle='#fff';ctx.fillRect(0,0,canvas.width,canvas.height);ctx.drawImage(image,0,0,canvas.width,canvas.height);
+    var nextId='cut_'+recId();
+    try{await art.put(nextId,canvas.toDataURL('image/jpeg',.92),true);}
+    catch(err){throw Error('사진을 저장하지 못했어요. 브라우저 저장 공간을 확인한 뒤 다시 올려 주세요.');}
+    id=nextId;
+    if(!active() || (scene?(cut.n!==number||board.sceneArt?.[number]!==previous):cut.art!==previous)) throw Error('대상 컷이 바뀌었어요. 사진을 다시 올려 주세요.');
+    var next={...board,at:Date.now()};
+    if(scene) next.sceneArt={...board.sceneArt,[number]:id};
+    else{next.cuts=board.cuts.map(function(item){return item===cut?{...cut,art:id}:item;});delete next.exported;}
+    try{localStorage.setItem('contiBoard',JSON.stringify(next));}catch(err){throw Error('사진을 프로젝트에 연결하지 못했어요. 브라우저 저장 공간을 확인해 주세요.');}
+    if(scene) board.sceneArt=next.sceneArt;
+    else{cut.art=id;delete board.exported;}
+    board.at=next.at;id=null;stTouch();
+  }catch(err){
+    if(id) await art.remove(id);
+    if(B===board) stage6UploadStatus(err.message||'사진을 저장하지 못했어요. 다시 시도해 주세요.',trigger);
+    return;
+  }finally{trigger.disabled=false;}
+  if(scene) renderScenes();else refreshCut(cut.n);
+  stage6UploadStatus((scene?number+'번 컷부터 시작하는 장면':cut.n+'번 컷')+'에 사진을 저장했어요.');
+});
 
 // GPT로 등장인물 시트 한 번에: 1장 라인업 → 「다음」마다 인물별 시트(정면·옆·뒤 + 표정 6)
 function chLookEn(x){ var h=x.sheet||{}; return h.lookEn||h.look||ctLookSafe(x.name)||x.note||''; }
@@ -16824,12 +16881,12 @@ function openEdit(f,show3d){
   ed.querySelector('.ct-s').value=c.scr||''; ed.querySelector('.ct-l').value=c.line||''; ed.querySelector('.ct-ni').value=c.nar||''; ed.querySelector('.ct-np').value=(c.narPos==='bottom'||c.narPos==='between')?c.narPos:'top'; ed.querySelector('.ct-w').value=whoOf(c).map(function(x){ return x.name||'?'; }).join(', ');
   f.appendChild(ed);
   (function(){ var r=document.createElement('div'); r.className='filterbar ct-gpt';
-    r.innerHTML='<button class="chip ct-go" type="button" data-cg="gpt">🖌 GPT로 이 컷 그리기</button><button class="chip" type="button" data-cg="copy">요청문만 복사</button><button class="chip" type="button" data-cg="up">🖼 '+(c.art?'그림 바꾸기':'그림 올리기')+'</button>'+(c.art?'<button class="chip" type="button" data-cg="x">그림 빼기</button>':'');
+    r.innerHTML='<button class="chip ct-go" type="button" data-cg="gpt">🖌 GPT로 이 컷 그리기</button><button class="chip" type="button" data-cg="copy">요청문만 복사</button>'+ctCutArtUploadButton(c)+''+(c.art?'<button class="chip" type="button" data-cg="x">그림 빼기</button>':'');
+    r.insertAdjacentHTML('beforeend','<span class="small" data-stage6-upload-message aria-live="polite"></span>');
     ed.insertBefore(r, ed.querySelector('.filterbar'));
     r.addEventListener('click', function(e){ var b=e.target.closest('[data-cg]'); if(!b) return; e.stopPropagation(); var a=b.dataset.cg;
       if(a==='gpt'||a==='copy'){ var q=ctGptPrompt([c]); ctCopy(q); if(a==='gpt') setTimeout(function(){ window.open('https://chatgpt.com/?q='+encodeURIComponent(q.slice(0,6000)),'_blank','noopener'); },150); return; }
-      if(a==='x'){ delete c.art; save(); refreshCut(n); return; }
-      if(a==='up'){ var fi=document.createElement('input'); fi.type='file'; fi.accept='image/*'; fi.onchange=function(){ if(!fi.files[0]||!window.__ppArt) return; window.__ppArt.fromFile(fi.files[0]).then(function(id){ c.art=id; save(); refreshCut(n); stat(n+'번 컷에 그림을 넣었다'); }); }; fi.click(); }
+      if(a==='x'){ delete c.art; delete B.exported; save(); refreshCut(n); return; }
     }); })();
   (function(){   // 가로·세로로 긴 한 컷: 쓰임을 고르면 어울리는 구도·앵글을 맞춰 준다(저장 전에 바꿀 수 있다)
     var sz=ed.querySelector('.ct-sz'), us=ed.querySelector('.ct-use'), ul=ed.querySelector('.ct-usel'), ud=ed.querySelector('.ct-used');
