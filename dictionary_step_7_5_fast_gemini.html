@@ -19221,6 +19221,15 @@ function batchRequest(board,cuts){
     ids:ids,numbers:cuts.map(function(c){return c.n;})
   }));
 }
+function batchResultLayout(board,cuts){
+  var ids=cuts.map(function(c){return c.batchId;}), key=batchKey(ids);
+  if(ids.every(Boolean)){
+    var prior=board.batchGrids?.[key], legacy=board.batchGrid;
+    if(prior) return prior;
+    if(legacy?.ids&&batchKey(legacy.ids)===key) return legacy;
+  }
+  return Object.assign(batchLayout(cuts.length),{ids:ids,numbers:cuts.map(function(c){return c.n;})});
+}
 function batchSaveRequests(board){
   save();
   try{
@@ -19240,7 +19249,7 @@ function renderBatch(){
   list.replaceChildren();
   function addRow(cuts,oldLayout){
     var numbers=oldLayout?oldLayout.numbers:cuts.map(function(c){return c.n;});
-    var layout=oldLayout||batchLayout(cuts.length);
+    var layout=oldLayout||batchResultLayout(board,cuts);
     var row=document.createElement('article'), title=document.createElement('strong'), controls=document.createElement('div');
     row.className='batch-request';
     title.textContent=batchTitle(numbers)+' · '+numbers.length+'컷 · '+layout.cols+'×'+layout.rows+(oldLayout?' · 이전 요청':'');
@@ -19256,12 +19265,18 @@ function renderBatch(){
       status.className='small batch-prep-status';
       controls.appendChild(status);
     }
-    var label=document.createElement('label'), input=document.createElement('input');
-    label.className='chip sv-up';label.textContent='결과 격자 올리기';
-    input.type='file';input.accept='image/*';input.hidden=true;
-    input.setAttribute('aria-label',batchTitle(numbers)+' 결과 격자 올리기');
-    input.addEventListener('change',function(){batchUpload(input,cuts,oldLayout);});
-    label.appendChild(input);controls.appendChild(label);
+    var pick=document.createElement('button'), input=document.createElement('input'), feedback=document.createElement('small');
+    pick.type='button';pick.className='chip';pick.textContent='결과 격자 올리기';
+    pick.setAttribute('aria-label',batchTitle(numbers)+' 결과 격자 올리기');
+    feedback.setAttribute('role','status');
+    input.type='file';input.accept='image/*,.png,.jpg,.jpeg,.webp';input.hidden=true;
+    input.setAttribute('aria-label',batchTitle(numbers)+' 결과 격자 파일');
+    pick.addEventListener('click',function(){
+      if(batchBusy||batchImageModal){feedback.textContent='진행 중인 작업이 끝나면 다시 눌러 주세요.';return;}
+      input.click();
+    });
+    input.addEventListener('change',function(){batchUpload(input,cuts,oldLayout,feedback);});
+    controls.append(pick,input,feedback);
     row.append(title,controls);list.appendChild(row);
   }
   groups.forEach(function(cuts){
@@ -19541,6 +19556,12 @@ batchPanel.addEventListener('click',async function(e){
       if(!groups.length || groups.flat().some(function(c){return !board.cuts.includes(c);})) throw Error('콘티 컷이 변경되었습니다.');
       var layouts=groups.map(function(cuts){return batchRequest(board,cuts);});
       batchSaveRequests(board);
+      batchPanel.querySelectorAll('[data-batch="send"]').forEach(function(send){
+        var layoutIndex=groups.findIndex(function(cuts){return batchGroupKey(cuts)===batchGroupKey(send.cuts);});
+        if(layoutIndex<0) return;
+        var sent=layouts[layoutIndex];
+        send.closest('.batch-request').querySelector('strong').textContent=batchTitle(sent.numbers)+' · '+sent.ids.length+'컷 · '+sent.cols+'×'+sent.rows;
+      });
       var key=layouts.map(function(layout){return batchKey(layout.ids);}).join('/');
       var sections=groups.map(function(cuts,i){
         return '묶음 '+(i+1)+' · '+batchTitle(cuts.map(function(c){return c.n;}))+'\n'+batchPrompt(cuts,layouts[i]);
@@ -19585,6 +19606,7 @@ batchPanel.addEventListener('click',async function(e){
       await batchBrowserSend(batchPackage,batchCopyPrompt(batchPackage.prompt),false);
     }else if(action==='apply' && batchPreview?.board===board){
       var result=batchPreview, targets=batchTargets(board,result.layout);
+      batchStatus.textContent='분할한 그림을 원본 컷에 저장 중입니다…';
       await saveBatchArt(board,targets,result.parts);
       batchClearPreview();renderBatchImages();
       batchStatus.textContent=targets.length+'컷에 그림을 적용했습니다. 8단계에서도 사용할 수 있습니다.';
@@ -19593,6 +19615,9 @@ batchPanel.addEventListener('click',async function(e){
   finally{batchBusy=false;e.target.disabled=false;}
 });
 function batchTargets(board,layout){
+  if(!Number.isInteger(layout.cols)||!Number.isInteger(layout.rows)||layout.cols<1||layout.rows<1||layout.ids.length>layout.cols*layout.rows){
+    throw Error('저장된 격자 모양을 읽을 수 없습니다. 이 묶음의 격자를 GPT로 다시 보내 주세요.');
+  }
   return layout.ids.map(function(id){
     var matches=board.cuts.filter(function(c){return c.batchId===id;});
     if(matches.length!==1) throw Error('삭제되거나 중복된 원본 컷이 있습니다. 격자를 다시 만들어 주세요.');
@@ -19608,28 +19633,51 @@ function gridCellCanvas(im,layout,i){
   cv.getContext('2d').drawImage(im,x0,y0,sw,sh,0,0,cv.width,cv.height);
   return cv;
 }
-async function batchUpload(input,cuts,previous){
+function batchDataURL(blob){
+  return new Promise(function(resolve,reject){
+    var reader=new FileReader();
+    reader.onload=function(){resolve(reader.result);};
+    reader.onerror=function(){reject(Error('이미지 파일을 읽지 못했습니다. 다시 선택해 주세요.'));};
+    reader.readAsDataURL(blob);
+  });
+}
+async function batchUpload(input,cuts,previous,feedback){
   var file=input.files[0]; input.value='';
-  if(!file||!B||batchBusy||batchImageModal) return;
+  if(!file||!B) return;
+  if(batchBusy||batchImageModal){feedback.textContent='진행 중인 작업이 끝나면 파일을 다시 선택해 주세요.';return;}
   var board=B;
   batchBusy=true;
-  var url=URL.createObjectURL(file);
+  var url;
   try{
+    feedback.textContent='결과 격자를 여는 중…';batchStatus.textContent=feedback.textContent;
+    if(window.__stale) throw Error('콘티를 새로고침한 뒤 다시 시도해 주세요.');
     if(cuts?.some(function(c){return !board.cuts.includes(c);})) throw Error('콘티 컷이 변경되었습니다.');
-    var layout=previous||batchRequest(board,cuts);
-    if(!previous) batchSaveRequests(board);
+    batchEnsureCutIds(board);
+    var layout=previous||batchResultLayout(board,cuts), targets=batchTargets(board,layout);
+    url=URL.createObjectURL(file);
     var im=await loadImg(url);
-    if(!im) throw Error('이미지를 열지 못했습니다.');
-    if(B!==board) throw Error('프로젝트가 변경되었습니다.');
-    var targets=batchTargets(board,layout), w=im.width/layout.cols, h=im.height/layout.rows;
-    var parts=targets.map(function(c,i){return gridCellCanvas(im,layout,i).toDataURL('image/png');});
+    if(!im) im=await loadImg(await batchDataURL(file));
+    if(!im) throw Error('이미지를 열지 못했습니다. GPT에서 저장한 PNG나 JPG를 선택해 주세요.');
+    var w=im.width/layout.cols, h=im.height/layout.rows, parts=[];
+    for(var i=0;i<targets.length;i++){
+      if(B!==board||window.__stale) throw Error('프로젝트가 변경되었습니다.');
+      feedback.textContent='컷 분할 중 · '+(i+1)+'/'+targets.length;
+      var canvas=gridCellCanvas(im,layout,i);
+      var blob=await new Promise(function(resolve){canvas.toBlob(resolve,'image/png');});
+      canvas.width=0;canvas.height=0;
+      if(!blob) throw Error('컷 이미지를 만들지 못했습니다. 이미지 크기를 줄인 뒤 다시 올려 주세요.');
+      parts.push(await batchDataURL(blob));
+    }
+    if(B!==board||window.__stale) throw Error('프로젝트가 변경되었습니다.');
+    batchTargets(board,layout);
     batchPreview={board:board,layout:layout,parts:parts};
     renderBatchImages();
     document.getElementById('ct-batch-apply').hidden=false;
-    batchStatus.textContent=batchTitle(layout.numbers)+' · '+(Math.abs(w/h-4/3)>.04?'요청한 비율과 다릅니다. ':'')+'분할 위치를 확인한 뒤 적용하세요.';
-    batchStatus.scrollIntoView({block:'nearest'});
-  }catch(err){batchStatus.textContent=err.message;}
-  finally{batchBusy=false;URL.revokeObjectURL(url);}
+    feedback.textContent=targets.length+'컷 분할 완료';
+    batchStatus.textContent=batchTitle(layout.numbers)+' · '+(Math.abs(w/h-4/3)>.04?'요청한 비율과 다릅니다. ':'')+'미리보기를 확인하고 「분할한 그림을 원본 컷에 적용」을 누르세요.';
+    if(CSTEP===7) batchStatus.scrollIntoView({block:'start'});
+  }catch(err){feedback.textContent=err.message;batchStatus.textContent=err.message;}
+  finally{batchBusy=false;if(url) URL.revokeObjectURL(url);}
 }
 
 /* 9단계: 겹치는 콘티 묶음과 저장된 애니메이션 키프레임. */
@@ -20632,16 +20680,28 @@ async function saveBatchArt(board,targets,images){
   var art=window.__ppArt;
   if(!art?.ok()) throw Error('이미지 저장소를 열 수 없습니다.');
   var old=targets.map(function(c){return {cut:c,id:c.batchId,art:c.art};});
-  var ids=await Promise.all(images.map(async function(image){
-    var id='batch_'+recId(); await art.put(id,image,true); return id;
-  }));
-  if(B!==board || window.__stale || old.some(function(item){
-    return batchTileTarget(board,item.id)!==item.cut || item.cut.art!==item.art;
-  })) throw Error('원본 컷이 변경되었습니다. 현재 그림을 다시 열어 주세요.');
+  var ids=[], updates=new Map(), next;
+  try{
+    for(var image of images){
+      var id='batch_'+recId();await art.put(id,image,true);ids.push(id);
+    }
+    if(B!==board || window.__stale || old.some(function(item){
+      return batchTileTarget(board,item.id)!==item.cut || item.cut.art!==item.art;
+    })) throw Error('원본 컷이 변경되었습니다. 현재 그림을 다시 열어 주세요.');
+    targets.forEach(function(c,i){updates.set(c,{art:ids[i],batchArt:ids[i],key:1});});
+    next={...board,at:Date.now(),cuts:board.cuts.map(function(c){return updates.has(c)?{...c,...updates.get(c)}:c;})};
+    delete next.exported;
+    try{localStorage.setItem('contiBoard',JSON.stringify(next));}
+    catch(err){throw Error('컷에 그림을 연결하지 못했습니다. 브라우저 저장 공간을 확인한 뒤 다시 적용해 주세요.');}
+  }catch(err){
+    await Promise.all(ids.map(function(id){return art.remove(id);}));
+    throw err;
+  }
   snapUndo('GPT 작화 적용 되돌리기','그림을 적용하기 전으로 복원했습니다.');
-  targets.forEach(function(c,i){c.art=ids[i];c.batchArt=ids[i];c.key=1;});
+  updates.forEach(function(fields,cut){Object.assign(cut,fields);});
+  board.at=next.at;
   delete board.exported;
-  save(); renderAll(); renderKey();
+  stTouch();renderAll();renderKey();
 }
 var batchImageModal=null;
 function openBatchImage(id,source,result,trigger){
