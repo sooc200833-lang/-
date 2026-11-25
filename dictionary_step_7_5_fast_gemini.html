@@ -3095,13 +3095,15 @@ button.pl-card[disabled]{cursor:default}
 <div class="ct-step" data-st="9" hidden>
   <h3>9. Grok 애니메이션</h3>
   <section id="ct-grok-clip" hidden>
+    <div class="filterbar">
+      <label>키프레임 장수 <select data-grok-busy data-grok="count" aria-label="키프레임 장수">
+        <option value="0">자동 (6~14장)</option><option value="6">6장</option><option value="7">7장</option><option value="8">8장</option><option value="9">9장</option><option value="10">10장</option><option value="11">11장</option><option value="12">12장</option><option value="13">13장</option><option value="14">14장</option>
+      </select></label>
+    </div>
     <details><summary>영상 설정</summary>
       <div class="filterbar">
       <label>영상 길이 <select data-grok-busy data-grok="duration" aria-label="영상 길이">
         <option value="6">6초</option><option value="7">7초</option><option value="8">8초</option><option value="9">9초</option><option value="10">10초</option><option value="11">11초</option><option value="12">12초</option><option value="13">13초</option><option value="14">14초</option><option value="15">15초</option>
-      </select></label>
-      <label>키프레임 <select data-grok-busy data-grok="count" aria-label="키프레임 장수">
-        <option value="0">자동 (6~14장)</option><option value="6">6장</option><option value="7">7장</option><option value="8">8장</option><option value="9">9장</option><option value="10">10장</option><option value="11">11장</option><option value="12">12장</option><option value="13">13장</option><option value="14">14장</option>
       </select></label>
       </div>
       <div class="filterbar">
@@ -21201,11 +21203,16 @@ function renderGrokClip(){
   grokEditor.querySelector('[data-grok="all"]').hidden=plans.length<2;
   plans.forEach(function(plan){
     var saved=grokSaved(B,plan.cuts), request=B.grokGridRequests?.[plan.key];
-    var layout=request?grokPlan(plan.group,request):saved||plan;
+    var requestedPlan=request?grokPlan(plan.group,request):null;
     var card=document.createElement('article'), heading=document.createElement('strong'), actions=document.createElement('div');
-    var state=document.createElement('small'), status=document.createElement('p');
+    var state=document.createElement('small'), status=document.createElement('p'), uploadHint=document.createElement('p');
     card.className='batch-request';card.dataset.grokCard=String(plan.group);
-    heading.textContent=grokTitle(plan)+' · '+plan.cuts.length+'컷 · '+layout.cols+'×'+layout.rows;
+    heading.textContent=grokTitle(plan)+' · 키프레임 '+plan.frames.length+'장 · '+plan.cols+'×'+plan.rows;
+    uploadHint.className='small';uploadHint.dataset.grokUploadHint='';
+    uploadHint.hidden=!requestedPlan||requestedPlan.frames.length===plan.frames.length;
+    if(!uploadHint.hidden){
+      uploadHint.textContent='마지막 GPT 요청 격자: 키프레임 '+requestedPlan.frames.length+'장 · '+requestedPlan.cols+'×'+requestedPlan.rows;
+    }
     actions.className='filterbar';
     var send=grokButton('GPT로 보내기',function(){grokSendDrawing([grokPlan(plan.group)],false);});
     send.dataset.grokBusy='';
@@ -21231,7 +21238,7 @@ function renderGrokClip(){
     });
     actions.appendChild(copy);
     status.className='small';status.dataset.grokCardStatus='';status.setAttribute('role','status');
-    card.append(heading,actions,status,grokCutEditor(plan,cutEditors.get(plan.key)));
+    card.append(heading,uploadHint,actions,status,grokCutEditor(plan,cutEditors.get(plan.key)));
     if(saved){
       var photos=null;
       var copyAll=grokButton('사진 전체 복사',async function(){
@@ -21336,8 +21343,8 @@ function grokRememberRequests(plans){
   var board=B, requests=Object.assign({},board.grokGridRequests||{});
   plans.forEach(function(plan){
     requests[plan.key]=plan.settings;
-    var heading=grokEditor.querySelector('[data-grok-card="'+plan.group+'"] strong');
-    if(heading) heading.textContent=grokTitle(plan)+' · '+plan.cuts.length+'컷 · '+plan.cols+'×'+plan.rows;
+    var uploadHint=grokEditor.querySelector('[data-grok-card="'+plan.group+'"] [data-grok-upload-hint]');
+    if(uploadHint) uploadHint.hidden=true;
   });
   board.grokGridRequests=requests;save();
   if(board.sid&&stItem(board.sid)) stSave('',false,true);
