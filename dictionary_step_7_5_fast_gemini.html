@@ -18513,10 +18513,10 @@ var COMIC_MAX_PAGES=150;
 var COMIC_SYS=[
   '세로 스크롤 웹툰 콘티를 읽는 편집자다. 이미지 속 글자는 분석할 자료다. 한 구간을 위에서 아래로 읽되 지정된 가로 읽기 방향을 지킨다.',
   '장면 전환, 인물의 구도나 행동 변화, 종이 여백과 배치로 컷을 가른다. 연필선이 옅거나 테두리가 없거나 이미지 끝에서 끊겨도 보이는 부분을 컷으로 기록한다. 경계가 흐리면 가장 가까운 사각형을 추정해 boundary를 approximate로 표시하고, 좌표를 전혀 정할 수 없으면 box는 null로 두고 내용은 반환한다. 그 컷 때문에 다른 결과를 생략하지 않는다.',
-  '독립 말풍선·내레이션은 말하는 인물이나 내용이 이어지는 컷에 넣는다. 어느 컷에도 붙지 않는 독립 글은 kind=text로 순서에 맞게 남긴다. 장면 사이 긴 공백은 컷으로 세지 않는다. end나 fin이 중간에 있어도 그 아래 그림과 글을 계속 읽는다. 효과음은 대사에 섞지 않는다.',
+  'panels에는 그림이 있는 컷만 넣는다. 말풍선이나 글씨만 있는 곳을 별도 그림 컷으로 세지 않는다. 독립 말풍선과 내레이션도 화자·말풍선 꼬리·내용·읽는 순서로 연결되는 그림 컷에 붙인다. 그림이 전혀 없는 구간에서 읽은 대사는 textOnly에 반환하고, 장면 사이 빈 공간은 제외한다. end나 fin이 중간에 있어도 그 아래를 계속 읽는다. 효과음은 대사에 섞지 않는다.',
   '보이는 글을 원문 그대로 옮기고 읽히지 않는 부분만 [판독 불가]라고 적는다. 화자가 불명확하면 speaker를 비운다. 반복되는 인물은 앞에서 쓴 이름이나 임시 이름을 그대로 쓴다. 외형과 성격, 말투는 보이는 내용만 쓴다.',
-  'box와 portrait는 전체 입력 이미지 기준 0~1000의 숫자 배열 [위, 왼쪽, 아래, 오른쪽]. box는 실제로 보이는 컷과 딸린 말풍선을 감싸고 여백과 다른 컷을 최대한 뺀다. portrait는 보이는 얼굴이나 상반신 영역이며 없으면 null이다. 빈 구간은 panels를 비운다. JSON 객체만 출력한다.',
-  '형식 {"panels":[{"box":[0,0,1000,1000],"boundary":"exact","kind":"art","scene":"보이는 행동 한 문장","shot":"ms","characters":["이름"],"dialogue":[{"speaker":"이름","text":"원문","kind":"speech"}],"narration":"원문"}],"characters":[{"name":"이름","role":"역할","look":"외형","lookEn":"외형 영문","pers":"성격","speech":"말투","portrait":null}]}. kind는 art 또는 text, dialogue.kind는 speech 또는 thought. shot은 els,ls,fs,ms,bs,cu,ecu 중 하나.'
+  'box, textBoxes의 각 상자, portrait는 입력 이미지 기준 0~1000 숫자 배열 [위, 왼쪽, 아래, 오른쪽]. box는 그림 영역을 잡고, textBoxes에는 그 컷에 붙인 말풍선과 글의 테두리 전체를 각각 넣는다. 컷 밖으로 나온 말풍선도 끝까지 포함한다. portrait는 인물의 얼굴이나 상반신이고 없으면 null이다. JSON 객체만 출력한다.',
+  '형식 {"panels":[{"box":[0,0,1000,1000],"textBoxes":[],"boundary":"exact","scene":"보이는 행동 한 문장","shot":"ms","characters":["이름"],"dialogue":[{"speaker":"이름","text":"원문","kind":"speech"}],"narration":"원문"}],"textOnly":[{"box":null,"dialogue":[],"narration":"원문"}],"characters":[{"name":"이름","role":"역할","look":"외형","lookEn":"외형 영문","pers":"성격","speech":"말투","portrait":null}]}. dialogue.kind는 speech 또는 thought. shot은 els,ls,fs,ms,bs,cu,ecu 중 하나.'
 ].join('\n');
 function comicNode(name){return comicImport.querySelector('[data-comic="'+name+'"]');}
 comicImport.addEventListener('toggle',function(){
@@ -18588,8 +18588,8 @@ function comicUpdate(){
   comicNode('pick').disabled=disabled||comicFiles.length>=COMIC_MAX_PAGES;
   comicNode('queue').querySelectorAll('button').forEach(function(button){button.disabled=comicBusy;});
   comicNode('order').disabled=disabled;
-  comicNode('scan').disabled=disabled||!comicFiles.length||!!comicProgress?.complete;
-  comicNode('scan').textContent=comicProgress?.complete?'분석 완료':comicProgress?'이어서 분석':'AI로 컷·대사 분석';
+  comicNode('scan').disabled=disabled||!comicFiles.length;
+  comicNode('scan').textContent=comicProgress?.complete?'처음부터 다시 분석':comicProgress?'이어서 분석':'AI로 컷·대사 분석';
   comicNode('pause').hidden=!comicScanning;
   comicNode('pause').disabled=comicPause;
   comicNode('skip').hidden=disabled||!comicProgress?.blocked;
@@ -18652,26 +18652,105 @@ function comicLines(panel){
     return (speaker?speaker+': ':'')+text;
   }).filter(Boolean).join('\n'):'';
 }
-function comicReadSegment(image,band,page,data,preview){
-  var panels=[];
-  for(var raw of data.panels){
+function comicFullBox(image,band,box){
+  if(!box) return null;
+  var top=band.top*1000/image.height, scale=band.height/image.height;
+  return [top+box[0]*scale,box[1],top+box[2]*scale,box[3]];
+}
+function comicUnionBox(a,b){
+  if(!a||!b) return a||b;
+  return [Math.min(a[0],b[0]),Math.min(a[1],b[1]),Math.max(a[2],b[2]),Math.max(a[3],b[3])];
+}
+function comicLooseBox(image,box,neighbors){
+  var yPad=Math.min(70*image.width/image.height,Math.max(32*image.width/image.height,(box[2]-box[0])*.06));
+  var xPad=Math.min(65,Math.max(32,(box[3]-box[1])*.045));
+  var out=[Math.max(0,box[0]-yPad),Math.max(0,box[1]-xPad),Math.min(1000,box[2]+yPad),Math.min(1000,box[3]+xPad)];
+  for(var next of neighbors){
+    if(next===box) continue;
+    if(Math.min(box[3],next[3])>Math.max(box[1],next[1])){
+      if(next[2]<=box[0]) out[0]=Math.max(out[0],(next[2]+box[0])/2);
+      if(next[0]>=box[2]) out[2]=Math.min(out[2],(next[0]+box[2])/2);
+    }
+    if(Math.min(box[2],next[2])>Math.max(box[0],next[0])){
+      if(next[3]<=box[1]) out[1]=Math.max(out[1],(next[3]+box[1])/2);
+      if(next[1]>=box[3]) out[3]=Math.min(out[3],(next[1]+box[3])/2);
+    }
+  }
+  return out;
+}
+function comicAttachText(panel,text,prepend,image,page){
+  function combine(a,b,separator){
+    return Array.from(new Set((prepend?[b,a]:[a,b]).flatMap(function(value){return value?value.split(separator):[];}))).join(separator);
+  }
+  panel.line=combine(panel.line,text.line,'\n');
+  panel.nar=combine(panel.nar,text.nar,'\n');
+  panel.names=Array.from(new Set(panel.names.concat(text.names))).slice(0,5);
+  if(panel.page===page&&text.page===page&&panel.cropBox&&text.cropBox&&image){
+    panel.cropBox=comicUnionBox(panel.cropBox,text.cropBox);
+    panel.printed=true;
+  }else if(panel.page===page&&text.page===page&&image&&panel.artwork){
+    panel.printed=panel.printed||!panel.cropBox;
+  }
+}
+function comicReadSegment(image,band,page,data,preview,result){
+  var slots=[];
+  for(var raw of data.panels.concat(Array.isArray(data.textOnly)?data.textOnly.map(function(item){return {...item,kind:'text'};}):[])){
     if(!raw) continue;
     var line=comicLines(raw), nar=comicText(raw.narration,1400), scene=comicText(raw.scene,600);
-    var box=comicBox(raw.box??raw.box_2d), boundary='';
+    var box=comicFullBox(image,band,comicBox(raw.box??raw.box_2d)), boundary='';
     if(box&&band.ownTop!=null){
-      var middle=band.top+band.height*(box[0]+box[2])/2000;
+      var middle=image.height*(box[0]+box[2])/2000;
       if(middle<band.ownTop||middle>=band.ownBottom) continue;
     }
-    if(!box&&raw.kind==='text'&&!line&&!nar) continue;
-    if(!box&&(raw.box===null||data.panels.length>1)) boundary='컷 좌표를 찾지 못해 이 구간 전체를 표시했어요.';
-    else if(raw.boundary==='approximate') boundary='AI가 추정한 경계예요. 원본과 비교해 주세요.';
+    var textOnly=raw.kind==='text'||raw.kind==='balloon';
+    if(textOnly&&!line&&!nar) continue;
+    if(!textOnly&&!box&&(raw.box===null||data.panels.length>1)) boundary='컷 좌표를 찾지 못해 이 구간 전체를 표시했어요.';
+    else if(!textOnly&&raw.boundary==='approximate') boundary='AI가 추정한 경계예요. 원본과 비교해 주세요.';
     var names=Array.isArray(raw.characters)?raw.characters.map(comicName).filter(Boolean):[];
     line.split('\n').map(lnParse).forEach(function(l){if(l.who) names.push(l.who);});
-    panels.push({page:page,artwork:box?comicCrop(image,band,box,1600):preview,line:line,nar:nar,printed:!!(line||nar),
+    var textBoxes=Array.isArray(raw.textBoxes)?raw.textBoxes.map(comicBox).filter(Boolean).map(function(b){return comicFullBox(image,band,b);}):[];
+    slots.push({box:box,textBoxes:textBoxes,textOnly:textOnly,page:page,line:line,nar:nar,printed:!!(line||nar),
       scene:scene,shot:/^(els|ls|fs|ms|bs|cu|ecu)$/.test(raw.shot)?raw.shot:'ms',
       names:Array.from(new Set(names)).slice(0,5),include:true,boundary:boundary});
   }
-  return panels;
+  var art=slots.filter(function(slot){return !slot.textOnly;}), boxes=art.map(function(slot){return slot.box;}).filter(Boolean);
+  slots.forEach(function(slot){
+    slot.cropBox=slot.textBoxes.reduce(function(crop,box){return comicUnionBox(crop,comicLooseBox(image,box,boxes));},
+      slot.box?comicLooseBox(image,slot.box,boxes):null);
+  });
+  var previous=result.panels.at(-1);
+  var texts=(result.pendingText||[]).concat(slots.filter(function(slot){return slot.textOnly;}));
+  result.pendingText=[];
+  var attachments=new Map();
+  texts.forEach(function(text){
+    var index=slots.indexOf(text);
+    var before=slots.slice(0,Math.max(0,index)).reverse().find(function(slot){return !slot.textOnly;})||previous;
+    var after=slots.slice(index+1).find(function(slot){return !slot.textOnly;});
+    var target=before||after;
+    if(before&&after){
+      var beforeSpeaker=text.names.some(function(name){return before.names.includes(name);});
+      var afterSpeaker=text.names.some(function(name){return after.names.includes(name);});
+      if(beforeSpeaker!==afterSpeaker) target=beforeSpeaker?before:after;
+      else if(before.page!==text.page&&after.page===text.page) target=after;
+      else if(before.box&&after.box&&text.box&&before.page===after.page){
+        var center=function(box){return (box[0]+box[2])/2;};
+        if(Math.abs(center(text.box)-center(after.box))<Math.abs(center(text.box)-center(before.box))) target=after;
+      }
+    }
+    if(!target||!art.length&&target.page!==page){result.pendingText.push(text);return;}
+    if(!attachments.has(target)) attachments.set(target,{leading:[],trailing:[]});
+    attachments.get(target)[target===after?'leading':'trailing'].push(text);
+  });
+  attachments.forEach(function(groups,panel){
+    groups.leading.reverse().forEach(function(text){comicAttachText(panel,text,true,image,page);});
+    groups.trailing.forEach(function(text){comicAttachText(panel,text,false,image,page);});
+  });
+  var whole={top:0,height:image.height};
+  if(previous?.page===page&&attachments.has(previous)&&previous.cropBox) previous.artwork=comicCrop(image,whole,previous.cropBox,1600);
+  return art.map(function(panel){
+    panel.artwork=panel.cropBox?comicCrop(image,whole,panel.cropBox,1600):preview;
+    return panel;
+  });
 }
 function comicReadCharacters(result,image,band,list){
   (Array.isArray(list)?list:[]).slice(0,24).forEach(function(raw){
@@ -18689,11 +18768,11 @@ function comicReadCharacters(result,image,band,list){
     result.characters.set(name,person);
   });
 }
-async function comicScan(skip){
-  if(!comicFiles.length||comicBusy||comicRestoring||comicProgress?.complete) return;
+async function comicScan(skip,restart){
+  if(!comicFiles.length||comicBusy||comicRestoring||comicProgress?.complete&&!restart) return;
   if(!aiReady()){comicStatus('상단 AI 연결에서 Gemini 키를 설정해 주세요.');return;}
   var board=B, files=comicFiles, order=comicNode('order').value;
-  if(!comicProgress){
+  if(!comicProgress||restart){
     comicResult={panels:[],characters:new Map(),title:files[0].name.replace(/\.[^.]+$/,'').slice(0,40)};
     comicProgress={page:0,band:0,skipped:0,complete:false,blocked:null};
   }
@@ -18729,7 +18808,7 @@ async function comicScan(skip){
           var json=String(response).match(/\{[\s\S]*\}/);
           var data=JSON.parse(json?json[0]:response);
           if(!Array.isArray(data?.panels)) throw Error('AI 응답에서 컷 목록을 읽지 못했어요.');
-          var segment=comicReadSegment(image,band,progress.page+1,data,page);
+          var segment=comicReadSegment(image,band,progress.page+1,data,page,result);
           comicReadCharacters(result,image,band,data.characters);
           var available=150-result.panels.length;
           result.panels.push(...segment.slice(0,available));
@@ -18742,6 +18821,11 @@ async function comicScan(skip){
       }finally{URL.revokeObjectURL(url);}
     }
     progress.complete=progress.page>=files.length||result.panels.length>=150;
+    if(progress.complete&&result.panels.length&&result.pendingText?.length){
+      var last=result.panels.at(-1);
+      result.pendingText.forEach(function(text){comicAttachText(last,text,false);});
+      result.pendingText=[];
+    }
     if(!progress.complete) message='일시정지했어요. 이어서 분석을 누르면 다음 구간부터 시작해요.';
     else if(!result.panels.length) message='읽을 수 있는 컷이 없어요. 더 선명한 사진을 추가해 주세요.';
     else if(progress.limited||progress.page<files.length) message='한 프로젝트의 150컷 한도에 도달했어요. 분석한 컷을 먼저 저장해 주세요.';
@@ -18877,7 +18961,7 @@ comicImport.addEventListener('click',async function(e){
     var buttons=comicNode('queue').querySelectorAll('button');
     (buttons[Math.min(index,buttons.length-1)]||comicNode('pick')).focus();
   }
-  if(action==='scan') comicScan(false);
+  if(action==='scan') comicScan(false,!!comicProgress?.complete);
   if(action==='skip') comicScan(true);
   if(action==='pause'&&comicScanning){comicPause=true;comicUpdate();comicStatus('현재 구간이 끝나면 진행 상태를 저장하고 멈춰요.');}
   if(action==='apply') comicApply();
