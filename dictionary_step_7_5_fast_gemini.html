@@ -13629,7 +13629,7 @@ function snapBands(){   // 구간 경계를 가장 가까운 장면 시작으로
   B.band.forEach(function(b,i){ var nx=B.band[i+1]; b.b=nx?nx.a-1:B.cuts.length; }); B.band=B.band.filter(function(b){ return b.b>=b.a; });
 }
 function evenFix(maxD){
-  if(!B || !B.cuts || boardMode()!=='manga') return 0; maxD=maxD==null?5:maxD;
+  if(!B || !B.cuts || boardMode()!=='manga'||ctKeepImportedPlan(B)) return 0; maxD=maxD==null?5:maxD;
   if(!bandsFromScenes(B.scenes) && !bandsFromScenes(B.skScenes)) snapBands();
   var target=B.target||B.total, net=B.cuts.length-target, changed=0;
   var objs=function(list){ return (list||[]).map(function(x){ return {o:x, f:B.cuts[x.a-1], l:B.cuts[Math.min(x.b,B.cuts.length)-1]}; }); };
@@ -14909,7 +14909,7 @@ function renderPlan(){
   var box=document.getElementById('ct-plan'); if(!box) return;
   if(!B || !B.cuts || !B.cuts.length){ box.innerHTML=''; return; }
   var h='';   // 도입·전개·전환·절정·마지막 훅 구간 막대는 사용자 요청으로 보이지 않는다(2026-10-18). 구간은 안에서만 쓴다
-  if(B.scenes && B.scenes.length && B.scenesTot && B.scenesTot.n && Math.abs(B.scenesTot.n-B.total)>=Math.max(4,B.total*.15)) h+='<p class="small ct-totsug">AI 추천 분량 <b>'+B.scenesTot.n+'컷</b>'+(B.scenesTot.why?' — '+cesc(B.scenesTot.why):'')+' <button class="chip" type="button" id="ct-totgo" data-n="'+B.scenesTot.n+'">이 분량으로 다시 나누기</button></p>';
+  if(!ctKeepImportedPlan(B) && B.scenes && B.scenes.length && B.scenesTot && B.scenesTot.n && Math.abs(B.scenesTot.n-B.total)>=Math.max(4,B.total*.15)) h+='<p class="small ct-totsug">AI 추천 분량 <b>'+B.scenesTot.n+'컷</b>'+(B.scenesTot.why?' — '+cesc(B.scenesTot.why):'')+' <button class="chip" type="button" id="ct-totgo" data-n="'+B.scenesTot.n+'">이 분량으로 다시 나누기</button></p>';
   if(B.scenes && B.scenes.length) h+='<h4 class="ct-reft">장면 배정표 <span class="small">(AI 검토)</span></h4>'+(B.scenesNote?'<p class="small">검토: '+cesc(B.scenesNote)+'</p>':'')+'<ul class="ct-scenes">'+B.scenes.map(function(x){ return '<li><b>'+x.a+'–'+x.b+'</b><span>'+cesc(x.sum)+(x.show?' <span class="small">· '+cesc(x.show)+'</span>':'')+'</span></li>'; }).join('')+'</ul>';
   h+='<ul class="ct-cl">';
   B.cl.forEach(function(c){ h+='<li><span class="ct-rng">'+c.a+'–'+c.b+'번 컷</span><b>'+cesc(c.name)+'</b> <span class="small">'+cesc(c.cost)+' · '+cesc(String(c.tools||'').replace(/\|/g,', '))+'</span><span class="small ct-pt">'+cesc(c.point)+'</span></li>'; });
@@ -16881,6 +16881,13 @@ function scaleScenes(list, oldT, newT){
   return out.filter(function(x){ return x.a<=newT; }).map(function(x){ x.b=Math.min(x.b,newT); return x; });
 }
 // 배정표 장면마다 종류를 정하고(작가·AI가 정한 것이 먼저) 글이 없는 컷의 구도를 그 종류로 다시 깐다
+function ctKeepImportedPlan(board){
+  return !!(board?.cuts?.length&&(board.comicImport||board.cuts.some(function(c){return c.comicArt;})));
+}
+function ctPrepareWritingBoard(){
+  if(ctKeepImportedPlan(B)){totalSet(B.target||B.total||B.cuts.length,true);return;}
+  if(!B||B.v!==2||!B.cuts?.length||(B.target||B.total)!==(+tsel.value||B.target||B.total)||B.cl?.length) fresh();
+}
 function layScenes(){
   if(!B || !B.scenes || !B.scenes.length) return 0;
   bandsFromScenes(B.scenes);
@@ -16889,7 +16896,7 @@ function layScenes(){
     if(!x.type || !SK_TYPES[x.type]) x.type=guessType(x, i, sc.length);
     var a=Math.max(1,x.a), b=Math.min(B.cuts.length, x.b); if(b<a) return;
     var bd=bandOf(a), cs=skScene(x.type, b-a+1, R, skBandKey(bd&&bd.name));
-    cs.forEach(function(nw,j){ var c=B.cuts[a-1+j]; if(!c || c.scr || c.line) return;
+    cs.forEach(function(nw,j){ var c=B.cuts[a-1+j]; if(!c || c.scr || c.line || c.comicArt) return;
       var n0=c.n, keep={}; ['who','wp','nar','narPos'].forEach(function(k){ if(c[k]!=null) keep[k]=c[k]; });
       Object.keys(c).forEach(function(k){ delete c[k]; }); Object.assign(c, nw, keep); c.n=n0; c.scr=''; c.line=''; n++; });
   });
@@ -16907,12 +16914,12 @@ function planScenes(btn, then){
   if(running || planBusy) return;
   var story0=document.getElementById('ct-story').value.trim();
   if(!story0 && !refText().length){ stat('대강 이야기를 적거나 글 보관함에서 참고 글을 고른다.'); return; }
-  if(btn && boardHasWork() && !btn.dataset.arm){ btn.dataset.arm='1'; var t0=btn.textContent; btn.textContent='다시 누르면 글을 비우고 장면대로 다시 깐다';
+  if(btn && boardHasWork() && !btn.dataset.arm){ btn.dataset.arm='1'; var t0=btn.textContent; btn.textContent=ctKeepImportedPlan(B)?'다시 누르면 원본 컷대로 장면을 나눈다':'다시 누르면 글을 비우고 장면대로 다시 깐다';
     setTimeout(function(){ if(btn.dataset.arm){ delete btn.dataset.arm; btn.textContent=t0; } }, 5000); return; }
   if(btn && btn.dataset.arm){ delete btn.dataset.arm; btn.textContent='이야기로 장면 나누기'; }
   if(boardHasWork() || (B && B.scenes && B.scenes.length)) snapUndo('장면 나누기 전으로 되돌리기', '장면을 나누기 전 판으로 되돌렸다.');
-  if(!B || B.v!==2 || !B.cuts || !B.cuts.length || (B.target||B.total)!==(+tsel.value||B.target||B.total) || (B.cl&&B.cl.length)) fresh();
-  B.story=document.getElementById('ct-story').value; B.cuts.forEach(function(c){ c.scr=''; c.line=''; delete c.nar; delete c.narPos; });
+  ctPrepareWritingBoard();
+  B.story=document.getElementById('ct-story').value; B.cuts.forEach(function(c){ if(c.comicArt) return; c.scr=''; c.line=''; delete c.nar; delete c.narPos; });
   planBusy=true; running=true; setBusy(true); stat('이야기를 읽고 장면을 나누는 중…');
   aiAsk(RSYS, reviewPrompt(), 1800, {temperature:0.5, model:strongModel()}).then(function(t){
     planBusy=false; running=false; setBusy(false);
@@ -16920,7 +16927,7 @@ function planScenes(btn, then){
     var r=parseScenes(aiClean?aiClean(t):t); tileScenes(r.scenes);
     if(!r.scenes.length){ stat('답을 장면 배정표로 읽지 못했다. 다시 눌러 본다.'); return; }
     B.scenes=r.scenes; B.scenesNote=r.note; B.scenesTot=r.total; B.scenesKey=srcKey(); B.flow=null; layScenes(); syncCast(); save(); renderAll();
-    stat('장면 '+r.scenes.length+'개로 나누고 장면마다 구도를 깔았다. 장면 「설명」으로 고친 뒤 「AI로 콘티 쓰기」를 누른다.'+(r.total&&Math.abs(r.total.n-B.total)>=Math.max(4,B.total*.15)?' AI 추천 분량은 '+r.total.n+'컷이다.':''));
+    stat('장면 '+r.scenes.length+'개로 나누고 장면마다 구도를 깔았다. 장면 「설명」으로 고친 뒤 「AI로 콘티 쓰기」를 누른다.'+(!ctKeepImportedPlan(B)&&r.total&&Math.abs(r.total.n-B.total)>=Math.max(4,B.total*.15)?' AI 추천 분량은 '+r.total.n+'컷이다.':''));
     if(then) then();
   }, function(e){ planBusy=false; running=false; setBusy(false); stat('장면을 나누지 못했다. '+String(e&&e.message||e).slice(0,80)); });
 }
@@ -17368,7 +17375,7 @@ function chunks(){
 }
 var RSYS='당신은 한국 웹툰 콘티 감독이다. 원고들을 함께 검토해 컷 배정표를 만든다. 정해진 형식의 줄만 쓴다. 서론·마크다운 기호를 쓰지 않는다.';
 function reviewPrompt(){
-  var cs=chars(); return srcAll()+(cs.length?'\n\n[등장인물]\n'+cs.map(chLine).join('\n'):'')+'\n\n[전체 분량] '+B.total+'컷 (5컷 안팎은 달라도 된다)\n[구간] 도입 → 전개 → 전환 → 절정 → 마지막 훅 순서. 구간마다 몇 컷인지는 정해져 있지 않다 — 이야기에 맞게 장면 단위로 나눈다.\n\n'+
+  var cs=chars(); return srcAll()+(cs.length?'\n\n[등장인물]\n'+cs.map(chLine).join('\n'):'')+'\n\n[전체 분량] '+B.total+'컷'+(ctKeepImportedPlan(B)?' (가져온 원본 컷 순서와 번호 유지)':' (5컷 안팎은 달라도 된다)')+'\n[구간] 도입 → 전개 → 전환 → 절정 → 마지막 훅 순서. 구간마다 몇 컷인지는 정해져 있지 않다 — 이야기에 맞게 장면 단위로 나눈다.\n\n'+
     '위 글들을 함께 검토해 '+B.total+'컷 콘티의 장면 배정표를 만든다.\n'+
     '- 사건 순서와 결말은 줄거리를, 장면의 행동·대사·분위기는 웹소설을, 컷 나눔과 구도는 컷별 콘티를 주로 참고한다.\n'+
     '- 글끼리 내용이 다르면 대강 이야기를 가장 우선하고, 그다음 컷별 콘티 → 웹소설 → 줄거리 순으로 따른다.\n'+
@@ -17412,12 +17419,14 @@ function cutPrompt(ch){
     return x.a+'–'+x.b+' '+x.sum+(x.place?' · 어디·언제: '+x.place:'')+(x.who?' · 누가: '+x.who:'')+(x.show?' · 꼭 보여 줄 것: '+x.show:'')+(x.role?' · 하는 일: '+x.role:'')+(T?' · '+T.name+' — '+T.desc:'')+layLine(x); }).join('\n'));
   L.push('[전체 분량] '+B.total+'컷. 이번에는 '+ch.a+'~'+ch.b+'번 컷('+ch.name+' 구간)만 쓴다.');
   L.push('[구간] '+B.band.map(function(b){ return b.name+' '+b.a+'–'+b.b; }).join(' · '));
-  var used={}, rows=[];
+  var used={}, rows=[], originals=[];
   for(var n=ch.a;n<=ch.b;n++){
     var c=B.cuts[n-1]; if(!c) continue;
     rows.push(n+' · 추천 '+compText(c)+(c.silent?' · 무음':'')+(c.hook?' · 넘김 훅':'')+(PG_TURN[n]?' · 쪽 넘김 자리':'')+(c.hint?' · 컷 역할: '+c.hint:''));
+    if(c.comicArt) originals.push(cutRow(c));
   }
   L.push('[컷 배정표]\n'+rows.join('\n'));
+  if(originals.length) L.push('[가져온 그림이 연결된 컷]\n번호와 그림 속 사건·구도를 유지하고 설명을 다듬는다. 원본 대사와 나레이션을 존중한다.\n'+originals.join('\n'));
   try{ var dB=dlgBlock(); if(dB) L.push(dB); }catch(e){}
   try{ if(B.props&&B.props.length) L.push('[엑스트라·동물·사물]\n'+B.props.map(function(x){ return x.kind+' '+x.name+': '+x.look; }).join('\n')); }catch(e){}
   if(chars().length) L.push('[등장인물]\n'+chars().map(chLine).join('\n')+(chars().some(function(x){ return x.sheet; })?'\n→ 대사는 각 인물의 말투로, 행동과 반응은 성격·원하는 것·약점에 맞게 쓴다. 화면 묘사에는 생김새(옷·소품·특징)를 살린다.':'')+'\n→ 대사 줄마다 반드시 「이름: 대사」로 말한 사람을 붙인다(속마음은 「이름: (속마음)」). 말하는 사람은 그 컷 화면에 나오게 쓰고, 화면 밖 목소리면 화면 칸에 그렇게 적는다.');
@@ -17501,6 +17510,10 @@ function applyLines(t, ch){
     var r=lineParse(line); if(!r) return;
     var n=r.n; if(n<ch.a || n>ch.b) return;
     var c=B.cuts[n-1]; if(!c) return;
+    if(c.comicArt){
+      if(r.scr) c.scr=r.scr;
+      got++;return;
+    }
     var p=parseComp(r.comp); c.k=p.k; c.ang=p.ang; c.focus=p.focus?1:0; c.flash=p.flash?1:0; if(p.size) c.size=p.size; else delete c.size; if(p.use) c.use=p.use; else delete c.use; if(p.gap!=null) c.gap=p.gap; else delete c.gap; layKeep(c);
     c.who=r.who; c.scr=r.scr; if(r.wp) c.wp=r.wp; else delete c.wp;
     if(srcOnly()) SPLIT_N+=srcSplit(c, r.line, r.nar);   // 원고에 없는 대사·나레이션은 추천으로
@@ -17574,7 +17587,7 @@ function polishAll(done){
   function apply(){
     var back=[], aft=[];
     got.slice(0,cap).forEach(function(x){
-      var c=B.cuts[x.n-1]; if(!c) return;
+      var c=B.cuts[x.n-1]; if(!c||c.comicArt) return;
       var old={n:c.n, k:c.k, ang:c.ang, focus:c.focus, flash:c.flash, who:(c.who||[]).slice(), scr:c.scr, line:c.line, nar:c.nar||'', narPos:c.narPos||''};
       var pc=parseComp(x.comp), nw={k:pc.k, ang:pc.ang, focus:pc.focus?1:0, flash:pc.flash?1:0, who:x.who, scr:x.scr, line:x.line}; if(x.wp) c.wp=x.wp;
       var narSame=!x.nar || ((x.nar.nar||'')===old.nar && (!x.nar.nar || x.nar.pos===(old.narPos||'top')));
@@ -17612,7 +17625,8 @@ function writeAll(fromN){
   if(!aiReady()){ stat('AI 연결에서 키를 넣어야 쓸 수 있다.'); return; }
   var story0=document.getElementById('ct-story').value.trim();
   if(!story0 && !refText().length){ stat('대강 이야기를 적거나 글 보관함에서 참고 글을 고른다.'); return; }
-  if(!fromN && (!B || B.v!==2 || !B.cuts || !B.cuts.length || (B.target||B.total)!==(+tsel.value||B.target||B.total) || (B.cl&&B.cl.length))) fresh();
+  if(!fromN && boardHasWork()) snapUndo('AI로 다시 쓰기 전으로 되돌리기', 'AI로 다시 쓰기 전 판으로 되돌렸다.');
+  if(!fromN) ctPrepareWritingBoard();
   B.story=document.getElementById('ct-story').value; var na=syncCast(); if(na) renderChars(); save();
   var nRef=refText().length, needRev=nRef>0 || story0.length>0;   // 이야기가 있으면 늘 장면부터 나눈다
   // 검토 대상이 아닌데 옛 배정표가 재료와 안 맞으면 버린다
@@ -17623,8 +17637,7 @@ function writeAll(fromN){
     all.forEach(function(ch,k){ if(k) ch.prev={a:all[k-1].a, b:all[k-1].b}; });
     list=all.filter(function(ch){ return ch.b>=(fromN||1); });
   }
-  if(!fromN && boardHasWork()) snapUndo('AI로 다시 쓰기 전으로 되돌리기', 'AI로 다시 쓰기 전 판으로 되돌렸다.');
-  if(!fromN) B.cuts.forEach(function(c){ c.scr=''; c.line=''; delete c.nar; delete c.narPos; delete c.sg; });
+  if(!fromN) B.cuts.forEach(function(c){ if(c.comicArt) return; c.scr=''; c.line=''; delete c.nar; delete c.narPos; delete c.sg; });
   SPLIT_N=0;
   renderBoard();
   running=true; setBusy(true);
@@ -18378,11 +18391,14 @@ document.getElementById('ct-skel').addEventListener('click', function(){
   if(boardHasWork() || (B && ((B.scenes&&B.scenes.length) || (B.skScenes||[]).some(function(x){ return x.ed; })))) snapUndo('뼈대 깔기 전으로 되돌리기', '뼈대를 깔기 전 판으로 되돌렸다.');
   var nc=fresh(); if(B.target && B.total!==B.target) setTimeout(function(){ var st=document.getElementById('ct-stat'); if(st && !/목표/.test(st.textContent)) st.textContent+=' (목표 '+B.target+'컷 — 만화 한 줄 두 컷에 맞춰 '+(B.total>B.target?'+':'')+(B.total-B.target)+')'; },0); if(B.sid){ delete B.sid; save(); if(typeof stLinkPaint==='function') stLinkPaint(); } stat('뼈대를 깔았다. '+B.total+'컷 · 장면 '+((B.skScenes||[]).length)+'개. 누를 때마다 장면 나눔과 구도가 달라진다.'+(nc?' 이야기에 나오는 등장인물 '+nc+'명도 가져왔다.':''));
 });
-tsel.addEventListener('change', function(){ if(B && ((B.scenes||[]).length || (B.skScenes||[]).some(function(x){ return x.ed; })) && !B.cuts.some(function(c){ return c.scr; })){ snapUndo('분량 바꾸기 전으로 되돌리기','분량을 바꾸기 전 판으로 되돌렸다.'); fresh(); stat('분량을 '+B.total+'컷으로 바꿨다. 적어 둔 장면 설명은 새 분량에 맞춰 옮겼다.'); return; }
+tsel.addEventListener('change', function(){ if(ctKeepImportedPlan(B)){totalSet(B.target||B.total,true);stat('가져온 컷의 수와 순서를 유지합니다. 컷을 추가하려면 6단계에서 넣어 주세요.');return;}
+  if(B && ((B.scenes||[]).length || (B.skScenes||[]).some(function(x){ return x.ed; })) && !B.cuts.some(function(c){ return c.scr; })){ snapUndo('분량 바꾸기 전으로 되돌리기','분량을 바꾸기 전 판으로 되돌렸다.'); fresh(); stat('분량을 '+B.total+'컷으로 바꿨다. 적어 둔 장면 설명은 새 분량에 맞춰 옮겼다.'); return; }
   if(B && B.cuts && B.cuts.some(function(c){ return c.scr; })) stat('분량을 바꿨다. 「뼈대만 깔기」나 「AI로 콘티 쓰기」를 누르면 새 분량으로 다시 깐다.'); else if(B){ fresh(); } });
 document.getElementById('ct-write').addEventListener('click', function(){
   var b=this;
-  if(boardHasWork() && !b.dataset.arm){ b.dataset.arm='1'; var t0=b.textContent; b.textContent='다시 누르면 처음부터 다시 쓴다'; stat('지금 쓴 컷은 「되돌리기」로 남긴다. 고친 컷만 다시 쓰려면 컷을 눌러 「이 구간 다시 쓰기」.');
+  if(boardHasWork() && !b.dataset.arm){ b.dataset.arm='1'; var t0=b.textContent, imported=ctKeepImportedPlan(B);
+    b.textContent=imported?'다시 누르면 원본 컷을 바탕으로 쓴다':'다시 누르면 처음부터 다시 쓴다';
+    stat(imported?'가져온 그림과 대사는 그대로 두고, 해당 컷의 장면 설명을 다시 씁니다.':'지금 쓴 컷은 「되돌리기」로 남긴다. 고친 컷만 다시 쓰려면 컷을 눌러 「이 구간 다시 쓰기」.');
     setTimeout(function(){ if(b.dataset.arm){ delete b.dataset.arm; b.textContent=t0; } }, 5000); return; }
   if(b.dataset.arm){ delete b.dataset.arm; b.textContent='AI로 콘티 쓰기'; }
   writeAll(0);
@@ -21144,7 +21160,7 @@ window.__contiShow=function(fromMenu){
       B.cl=[]; B.drawn=''; B.v=2; (B.cuts||[]).forEach(function(c){ delete c.cl; });
       B.total=(B.cuts&&B.cuts.length)||B.total||70; B.band=bandFor(B.total); save();
     }
-    if(B){ document.getElementById('ct-story').value=B.story||''; tsel.value=String(B.total); }
+    if(B){ document.getElementById('ct-story').value=B.story||''; if(ctKeepImportedPlan(B)) totalSet(B.target||B.total,true); else tsel.value=String(B.total); }
     if(window.__ctModeSync) window.__ctModeSync();
     else { tsel.value=String(window.__cutTotal?window.__cutTotal():70); if(!tsel.value) tsel.value='70'; }
     var src=srcGet(), note=document.getElementById('ct-srcinfo');
