@@ -6453,10 +6453,8 @@ function ormPickRec(list){
   var fam=[
     [/^gemini-[\d.]+-flash(-\d+)?$/, 'Flash — 빠르고 한국어 무난, 무료 한도 넉넉한 편'],
     [/^gemini-[\d.]+-flash-lite(-\d+)?$/, 'Flash-Lite — 가장 가볍고 무료 한도가 가장 넉넉함'],
-    [/^gemini-[\d.]+-pro(-\d+)?$/, 'Pro — 문장 품질 우선, 무료 한도 적음'],
-    [/^gemini-[\d.]+-hydrogen(-\d+)?$/, 'Hydrogen — 4세대, 글·콘티 품질과 속도 균형 (유료 키 권장)'],
-    [/^gemini-[\d.]+-carbon(-\d+)?$/, 'Carbon — 4세대 최상위, 긴 콘티 검토에 좋음 (유료 키)']
-  ];
+    [/^gemini-[\d.]+-pro(-\d+)?$/, 'Pro — 문장 품질 우선, 무료 한도 적음']
+  ];   // 4세대(hydrogen·carbon·neon)는 요금 때문에 추천에 넣지 않는다(사용자 결정 2026-11-28). 전체 목록에서 직접 고를 수는 있다
   var rec=[];
   fam.forEach(function(f){
     var c=list.filter(function(m){ return f[0].test(m.id); });
@@ -6464,8 +6462,6 @@ function ormPickRec(list){
     c.sort(function(a,b){ return (gmVer(b.id)-gmVer(a.id)) || (/preview/.test(a.id)?1:0)-(/preview/.test(b.id)?1:0); });
     if(c[0]) rec.push({m:c[0], why:f[1]});
   });
-  // 3세대 이상이 있으면 지원이 끝나 가는 2.x는 추천에서 뺀다(전체 목록에는 남음)
-  if(rec.some(function(r){ return gmVer(r.m.id)>=3; })) rec=rec.filter(function(r){ return gmVer(r.m.id)>=3; });
   return rec;
 }
 function ormFill(filter){
@@ -6655,8 +6651,8 @@ function gmThink(id, opts, maxTok){
   if(/^gemini-2\.5-.*flash/.test(id)) return {thinkingBudget:0};
   if(/^gemini-2\.5-pro/.test(id)) return {thinkingBudget:128};
   if(gmVer(id)<3) return null;
+  if(/lite/.test(id) && !opts.think) return null;   // Lite는 기본값(minimal)이 가장 싸다
   var lv=opts.think || ((opts.json||opts.schema||(maxTok||900)<=700)?'low':'medium');
-  if(/lite/.test(id) && lv==='medium') lv='low';
   return {thinkingLevel:lv};
 }
 function gmRaw(t){ try{ localStorage.setItem('aiLastRaw', new Date().toLocaleString()+' · '+String(t).slice(0,1500)); }catch(e){} var el=document.getElementById('ai-lastraw'); if(el) el.textContent=String(t).slice(0,1500); }
@@ -17939,7 +17935,7 @@ function applyLines(t, ch){
 var running=false;
 function strongModel(){
   // 검토용 강한 모델: 추천 목록의 Pro 중 오늘 막히지 않은 것. 없으면 undefined → 고른 모델(AIMODEL)
-  var r=((typeof ORM!=='undefined'&&ORM.rec)||[]).filter(function(x){ return x && x.m && /pro|carbon/.test(x.m.id) && !qIsOut(x.m.id); })[0];
+  var r=((typeof ORM!=='undefined'&&ORM.rec)||[]).filter(function(x){ return x && x.m && /pro/.test(x.m.id) && !qIsOut(x.m.id); })[0];
   return r?r.m.id:undefined;
 }
 // 다 쓴 콘티를 한 번 조용히 다듬는다(점수·평가·보고 없음. 「콘티 점검」은 사용자 요청으로 삭제됨)
@@ -25160,14 +25156,14 @@ function render(){
       :'<p class="small">아직 비어 있다. 「그림 올리기」나 「콘티 구성기에서 가져오기」로 넣는다.</p>');
   if(E) paintEd();
 }
-// ---- 기본 에셋 팩 (assets/pack/index.json — 공개 라이선스 사진·클립아트를 미리 선화로 만들어 둔 것)
+// ---- 기본 에셋 팩 (assets/pack/index.json — 블렌더로 만든 3D 배경을 선화·색 PNG로 찍어 둔 것, 만든 곳 assets/3d/)
 var PK=null, PKLOAD=0, PKOPEN=false, PKN=60;
 function packLoad(){ if(PK||PKLOAD) return; PKLOAD=1; fetch('assets/pack/index.json').then(function(r){ if(!r.ok) throw 0; return r.json(); }).then(function(j){ PK=j; render(); }).catch(function(){ PK=[]; PKLOAD=0; render(); }); }
 function pkList(){ return (PK||[]).filter(function(x){ return (FIL==='전체'||x.kind===FIL) && (CAT==='전체'||x.cat===CAT) && (!Q || (x.name+' '+(x.tags||'')).toLowerCase().indexOf(Q.toLowerCase())>-1); }); }
 function catBar(){ var cs={}; (PK||[]).concat(LIB.items).forEach(function(x){ if(FIL!=='전체'&&x.kind!==FIL) return; var c=x.cat||'기타'; cs[c]=(cs[c]||0)+1; }); var ks=Object.keys(cs); if(ks.length<2) return '';
   return '<div class="filterbar as-cats"><span class="small">분류</span>'+['전체'].concat(ks).map(function(k){ return '<button class="chip" type="button" data-cat="'+esc(k)+'" aria-pressed="'+(CAT===k)+'">'+esc(k)+(k==='전체'?'':' '+cs[k])+'</button>'; }).join('')+'</div>'; }
 function packHTML(){ packLoad(); var L=pkList(), shown=L.slice(0,PKN), n=PK?PK.length:0;
-  return '<details class="as-pack" id="as-pack"'+(PKOPEN?' open':'')+'><summary><b>📦 기본 에셋 팩</b> <span class="small">'+(PK?(n?n+'장 — 공개(CC0·퍼블릭 도메인) 사진·클립아트를 선화로 만들어 둔 것':'아직 팩이 없다'):'불러오는 중…')+'</span></summary>'+
+  return '<details class="as-pack" id="as-pack"'+(PKOPEN?' open':'')+'><summary><b>📦 기본 에셋 팩</b> <span class="small">'+(PK?(n?n+'장 — 블렌더로 만든 3D 배경을 선화로 찍어 둔 것':'아직 팩이 없다'):'불러오는 중…')+'</span></summary>'+
     (n?'<p class="small">위의 종류·검색이 여기에도 적용된다. 「내 에셋에 담기」를 누르면 선따기·배경 지우기를 더 할 수 있다.</p><div class="as-grid">'+shown.map(function(x){ return '<div class="as-card" data-pk="'+esc(x.id)+'"><div class="as-th"><img loading="lazy" alt="'+esc(x.name)+'" src="assets/pack/'+esc(x.line)+'"></div><b class="small">'+esc(x.name)+'</b><span class="small as-bd">'+esc(x.kind)+' · '+esc(x.cat||'')+' · '+esc(x.license)+'</span>'+
       '<div class="as-act"><button type="button" class="chip" data-p="take">내 에셋에 담기</button><details><summary class="small">⬇ 내려받기</summary><button type="button" class="chip" data-p="dl-line">선화 PNG</button><button type="button" class="chip" data-p="dl-orig">원본</button></details></div><details><summary class="small">출처</summary><p class="small">'+esc(x.credit)+' · <a href="'+esc(x.page)+'" target="_blank" rel="noopener">원문</a></p></details></div>'; }).join('')+'</div>'+(L.length>shown.length?'<div class="filterbar"><button type="button" class="chip" data-p="more">더 보기 ('+(L.length-shown.length)+')</button></div>':'')+'<div class="filterbar"><button type="button" class="chip ct-go" data-p="all">📥 지금 목록 전부 내 에셋에 담기 ('+L.filter(function(x){ return !packHave()[x.id]; }).length+'장)</button><button type="button" class="chip" data-p="zip">⬇ 지금 목록 ZIP ('+L.length+'장)</button></div>':'')+'</details>'; }
 function packFile(x,k){ return fetch('assets/pack/'+x[k]).then(function(r){ return r.blob(); }); }

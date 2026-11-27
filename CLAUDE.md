@@ -20,7 +20,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - 데이터는 코드 안 큰 배열(`ROWS` 클리셰, `MOTIFDATA` 소재, `CHARS` 캐릭터, `ENDINGS` 엔딩 등)이고, 사용자가 추가한 것은 시작할 때 `localStorage.userAdds`에서 합쳐진다
 - 기능 묶음은 `[[MOD:이름]]` / `[[CSS:이름]]` 주석으로 구분된다. 이 표지로 검색해서 해당 부분만 고친다. 일부 모듈은 파일 끝의 별도 `<script>`에 있고, 메인 `<script>` 안의 함수(`aiAsk`, `aiReady` 등)는 그 스크립트 안에서만 보이므로 모듈 위치가 중요하다(NOTES.md 해당 항목 참고)
 - 저장: 글·설정은 localStorage(+구글 드라이브 동기화 `gdSync`/`gdMerge`), 그림은 IndexedDB(기기별, 동기화 안 됨)
-- AI: 구글 제미나이 API를 브라우저에서 직접 호출(`aiCall`/`aiAsk`, 키는 사용자가 넣는 localStorage `gmKey`). 모델 이름을 코드에 박지 않는다(`ormLoad`가 목록에서 고른다). 그림·영상은 ChatGPT/Grok용 요청문을 만들어 복사하거나 새 탭으로 여는 방식이다
+- AI: 구글 제미나이 API를 브라우저에서 직접 호출(`aiCall`/`aiAsk`, 키는 사용자가 넣는 localStorage `gmKey`). 모델 이름을 코드에 박지 않는다(`ormLoad`가 목록에서 고른다). **요금 때문에 최신(4세대 등 비싼) 모델을 추천·기본값·자동 대체·검토용으로 고르게 만들지 않는다** — 사용자 결정, NOTES.md 「요금 원칙」. 그림·영상은 ChatGPT/Grok용 요청문을 만들어 복사하거나 새 탭으로 여는 방식이다
 
 ## 명령
 jsdom이 이 PC에만 설치되어 있다(`node_modules`, `package*.json`은 `.git/info/exclude`로 git에서 제외 — 저장소에 올리지 않는다). 테스트 스크립트는 저장소에 없다. 필요할 때 임시로 만든다.

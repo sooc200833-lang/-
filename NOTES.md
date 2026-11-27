@@ -415,3 +415,15 @@ arcForm, deviceId, folderMemo, gdBase, gdLast, gdLinked, ideaText, mangaDataVer,
 - 무거운 계열 `GM_HEAVY=/pro|carbon|neon|hydrogen|argon/`은 한도·붐빔 때 대신 부르기(aiAlt·ormFallback)에서 뺀다. 검토용 strongModel은 Pro 또는 Carbon
 - 글·대사 작법 `KO_CRAFT`(번역투·상투구 피하기, 감정은 행동·감각으로) · `KO_DLG`(인물마다 말투 구분, 속뜻, 설명 대사 금지, 존댓말·반말 일관)를 WSYS(웹소설)·CSYS/CSYS_M(콘티)·SGSYS(대사·나레이션 추천)에 붙였다. novelRule에 「장면마다 원하는 것·막는 것, 장면 끝의 변화」
 - 시험: 가짜 제미나이(jsdom)로 요청 본문 확인 11항목 통과(temperature 없음, JSON 모드, thinkingLevel, 2.5 예전대로, 생각 거부 재시도, limit 0 → 가벼운 모델 대신)
+
+## 기본 에셋 팩 → 블렌더 3D 배경으로 교체 (2026-11-28)
+- 사용자 요청으로 예전 팩(위키미디어 사진 배경 119장·Openclipart 사물 109장, `assets/pack/bg`·`obj`)을 모두 지웠다. 깃 기록에만 남아 있다. 다시 넣지 않는다.
+- 새 팩: 블렌더로 만든 교실 5장(정면·45도·창가 쪽·교탁에서 본 뒤쪽·위에서 본 배치). 선화 `bg/3d-classroom-<각도>_l.png`(8비트 회색, Freestyle 선) + 원본 `_o.jpg`(같은 각도 색 버전). license `직접 제작`, page는 GLB 경로. 사전 코드(`[[MOD:assets]]` packHTML)는 안내 문구만 바꿨다.
+- 원본: `assets/3d/classroom/` — `build_classroom.py`(모델 만들고 .blend·GLB 저장), `render_classroom.py`(5각도 × 선화/색 렌더), `pack_classroom.py`(팩 파일·index.json 생성). 실행: `blender -b --factory-startup -P build_classroom.py -- <출력폴더>` 순서로.
+- `classroom.glb`(약 470KB, 삼각형 6.6천, 재질 11개, 한 메시로 합침): 3D 콘티 `d3Set('class')`와 같은 배치(칠판 벽 three z=-3.6, 창가 x=+4.2, 원점 둘레 비움). 뒷벽·사물함·복도 벽·천장은 렌더 전용(`RenderOnly` 컬렉션)이라 GLB에 없다 — 궤도 카메라를 가리지 않게. 아직 3D 콘티에 연결하지 않았다.
+
+## 요금 원칙 (2026-11-28, 사용자 결정) — 최신(4세대) 모델은 자동으로 쓰지 않는다
+- 사용자는 **요금 때문에 일부러 최신 모델을 쓰지 않는다.** 4세대(gemini-4-hydrogen·carbon·neon 등)는 추천 목록에 넣지 않고(전체 목록에서 직접 고를 수만 있음), 어떤 자동 선택(기본값·검토용 strongModel·한도 때 대신 부르기 aiAlt·ormFallback)에도 쓰지 않는다
+- 위 「제미나이 호출 점검·개선」 항목 중 ①의 「Hydrogen·Carbon 추천 추가」「2.x 추천에서 빼기」와 strongModel의 Carbon은 **되돌렸다**. strongModel은 다시 Pro만
+- Lite 모델은 생각 설정을 보내지 않는다(기본 minimal이 가장 쌈). 생각 토큰도 출력 요금이다
+- 남겨 둔 것(요금이 줄거나 같음): 3.x 이후 temperature 안 보냄, JSON·짧은 일 thinkingLevel low, 「JSON만」 자동 JSON 모드, 무거운 계열(GM_HEAVY) 자동 대체 금지
