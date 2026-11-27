@@ -6453,7 +6453,9 @@ function ormPickRec(list){
   var fam=[
     [/^gemini-[\d.]+-flash(-\d+)?$/, 'Flash — 빠르고 한국어 무난, 무료 한도 넉넉한 편'],
     [/^gemini-[\d.]+-flash-lite(-\d+)?$/, 'Flash-Lite — 가장 가볍고 무료 한도가 가장 넉넉함'],
-    [/^gemini-[\d.]+-pro(-\d+)?$/, 'Pro — 문장 품질 우선, 무료 한도 적음']
+    [/^gemini-[\d.]+-pro(-\d+)?$/, 'Pro — 문장 품질 우선, 무료 한도 적음'],
+    [/^gemini-[\d.]+-hydrogen(-\d+)?$/, 'Hydrogen — 4세대, 글·콘티 품질과 속도 균형 (유료 키 권장)'],
+    [/^gemini-[\d.]+-carbon(-\d+)?$/, 'Carbon — 4세대 최상위, 긴 콘티 검토에 좋음 (유료 키)']
   ];
   var rec=[];
   fam.forEach(function(f){
@@ -6462,6 +6464,8 @@ function ormPickRec(list){
     c.sort(function(a,b){ return (gmVer(b.id)-gmVer(a.id)) || (/preview/.test(a.id)?1:0)-(/preview/.test(b.id)?1:0); });
     if(c[0]) rec.push({m:c[0], why:f[1]});
   });
+  // 3세대 이상이 있으면 지원이 끝나 가는 2.x는 추천에서 뺀다(전체 목록에는 남음)
+  if(rec.some(function(r){ return gmVer(r.m.id)>=3; })) rec=rec.filter(function(r){ return gmVer(r.m.id)>=3; });
   return rec;
 }
 function ormFill(filter){
@@ -6476,9 +6480,10 @@ function ormFill(filter){
   if(AIMODEL && [].some.call(sel.options,function(o){ return o.value===AIMODEL; })) sel.value=AIMODEL;
 }
 function ormHas(id){ return !!(ORM.list && ORM.list.some(function(m){ return m.id===id; })); }
+var GM_HEAVY=/pro|carbon|neon|hydrogen|argon/, GM_DEFAULT='gemini-3.5-flash-lite';   // 무거운(유료 위주) 계열 · 목록을 못 받았을 때 기본 모델
 function ormFallback(except){
-  var r=ORM.rec.filter(function(x){ return x.m.id!==except && !/pro/.test(x.m.id) && !(typeof qIsOut==='function' && qIsOut(x.m.id)); })[0];
-  return r?r.m.id:(ORM.rec[0]?ORM.rec[0].m.id:'gemini-2.5-flash');
+  var r=ORM.rec.filter(function(x){ return x.m.id!==except && !GM_HEAVY.test(x.m.id) && !(typeof qIsOut==='function' && qIsOut(x.m.id)); })[0];
+  return r?r.m.id:(ORM.rec[0]?ORM.rec[0].m.id:GM_DEFAULT);
 }
 function ormLoad(force){
   if(ORM.loading) return Promise.resolve();
@@ -6515,7 +6520,7 @@ function ormAfter(){
   var info=document.getElementById('ai-minfo'), note='';
   if(!ORM.list) return;
   if(!AIMODEL || !ormHas(AIMODEL)){
-    var old=AIMODEL, nu=ORM.rec[0]?ORM.rec[0].m.id:'gemini-2.5-flash';
+    var old=AIMODEL, nu=ORM.rec[0]?ORM.rec[0].m.id:GM_DEFAULT;
     AIMODEL=nu; aiSave();
     if(old) note='전에 고른 모델 「'+old+'」은 지금 쓸 수 없어서 「'+nu+'」로 바꿨다. ';
   }
@@ -6559,7 +6564,7 @@ function qMark(id){
 function aiLastErr(t){ try{ localStorage.setItem('aiLastErr',new Date().toLocaleString()+' · '+t); }catch(e){} var el=document.getElementById('ai-lasterr'); if(el) el.textContent='최근 문제: '+new Date().toLocaleTimeString()+' · '+t; }
 function aiAlt(except, kind){
   // 붐빔·한도일 때 이번 호출만 대신 부를 모델. 가벼운 Flash 계열부터
-  var ids=((ORM&&ORM.rec)||[]).map(function(r){ return r.m.id; }).filter(function(id){ return id!==except && !qIsOut(id) && !/pro/.test(id); });
+  var ids=((ORM&&ORM.rec)||[]).map(function(r){ return r.m.id; }).filter(function(id){ return id!==except && !qIsOut(id) && !GM_HEAVY.test(id); });
   if(kind==='quota'||kind==='day'){ var lite=ids.filter(function(id){ return /lite/.test(id); }); if(lite.length) return lite[0]; }
   return ids[0]||'';
 }
@@ -6641,16 +6646,24 @@ function aiCreditUI(){ var el=document.getElementById('ai-credit'); if(el) el.te
 function aiFreeList(except){ return []; }
 // ----- 제미나이 호출 (구글 Gemini API 직접) -----
 var GM_BASE='https://generativelanguage.googleapis.com/v1beta/';
-function gmThink(id){
-  // 2.5 Flash·Flash-Lite는 생각을 끈다(0). 2.5 Pro는 최소 128. 3.x 이후는 모델 기본값을 둔다(끌 수 없고 허용 값이 모델마다 다름)
-  id=String(id||'');
+function gmThink(id, opts, maxTok){
+  // 2.5 Flash·Flash-Lite는 생각을 끈다(0). 2.5 Pro는 최소 128.
+  // 3.x 이후(2026-11-28): thinkingLevel을 일에 맞춘다 — 기본값이 high인 모델(Gemini 4 등)은 그대로 두면 느리고 한도를 많이 쓴다.
+  //   JSON·짧은 답 → low, 긴 글(콘티·웹소설) → medium, Lite 모델은 medium 대신 low. opts.think로 직접 정할 수 있다.
+  //   모델이 그 값을 받지 않으면 400 → aiCall이 생각 설정을 빼고 다시 부른다(NO_THINK).
+  id=String(id||''); opts=opts||{};
   if(/^gemini-2\.5-.*flash/.test(id)) return {thinkingBudget:0};
   if(/^gemini-2\.5-pro/.test(id)) return {thinkingBudget:128};
-  return null;
+  if(gmVer(id)<3) return null;
+  var lv=opts.think || ((opts.json||opts.schema||(maxTok||900)<=700)?'low':'medium');
+  if(/lite/.test(id) && lv==='medium') lv='low';
+  return {thinkingLevel:lv};
 }
 function gmRaw(t){ try{ localStorage.setItem('aiLastRaw', new Date().toLocaleString()+' · '+String(t).slice(0,1500)); }catch(e){} var el=document.getElementById('ai-lastraw'); if(el) el.textContent=String(t).slice(0,1500); }
 function aiCall(system, user, onText, maxTok, _retry, opts){
   opts=opts||{};
+  // 「JSON만」 달라는 요청은 JSON 모드로 받는다(앞뒤 군말·코드 울타리로 해석에 실패하던 것 방지). opts.json:false로 끌 수 있다
+  if(opts.json==null && !opts.schema && /JSON만/.test(String(system)+'\n'+String(user))) opts.json=true;
   if(!aiReady()){ onText('AI 연결 페이지에서 키를 먼저 넣어 주세요.'); return; }
   var model=opts.model||AIMODEL||ormFallback('');
   if(!opts._n) onText('생각하는 중…');
@@ -6666,9 +6679,13 @@ function aiCall(system, user, onText, maxTok, _retry, opts){
   else contents.push({role:'user', parts:[{text:user}]});
   // 이미지: opts.images=[{mime, data(base64, 접두어 없이)}] → 마지막 user 차례에 글 다음으로 붙인다 (REST 문서 형식 inline_data·mime_type)
   (opts.images||[]).forEach(function(im){ if(im && im.data) contents[contents.length-1].parts.push({inline_data:{mime_type:String(im.mime||'image/jpeg'), data:String(im.data)}}); });
-  var gc={maxOutputTokens:(opts._cap||((maxTok||900)+2500)), temperature:(typeof opts.temperature==='number'?opts.temperature:0.9)};
-  if(opts.json) gc.responseMimeType='application/json';
-  var th=opts._noThink?null:gmThink(model); if(th) gc.thinkingConfig=th;
+  // 3.x 이후 모델은 temperature를 무시하거나(4세대·3.6+) 기본값(1.0)에서 벗어나면 반복·품질 저하가 난다 → 보내지 않는다
+  var th=opts._noThink?null:gmThink(model, opts, maxTok);
+  var gc={maxOutputTokens:(opts._cap||((maxTok||900)+(th&&th.thinkingLevel?(th.thinkingLevel==='low'?3000:6000):2500)))};
+  if(!(gmVer(model)>=3)) gc.temperature=(typeof opts.temperature==='number'?opts.temperature:0.9);
+  if(opts.json||opts.schema) gc.responseMimeType='application/json';
+  if(opts.schema && !opts._noSchema) gc.responseJsonSchema=opts.schema;
+  if(th) gc.thinkingConfig=th;
   var body={systemInstruction:{parts:[{text:system}]}, contents:contents, generationConfig:gc,
     safetySettings:['HARM_CATEGORY_HARASSMENT','HARM_CATEGORY_HATE_SPEECH','HARM_CATEGORY_SEXUALLY_EXPLICIT','HARM_CATEGORY_DANGEROUS_CONTENT'].map(function(c){ return {category:c, threshold:'BLOCK_ONLY_HIGH'}; })};
   if(opts.web) body.tools=[{google_search:{}}];
@@ -6681,6 +6698,7 @@ function aiCall(system, user, onText, maxTok, _retry, opts){
        if(r.status===400 && /API key not valid|API_KEY_INVALID/i.test(m+tx)) throw new Error('키가 올바르지 않습니다. AI 연결에서 구글 AI 스튜디오 키(AIza로 시작)를 다시 넣는다.');
        if(r.status===400 && th && /thinking/i.test(m)){ var et=new Error('NO_THINK'); throw et; }
        if(r.status===400 && opts.web && /google_search|tool|grounding/i.test(m)){ var ew=new Error('NO_WEB'); throw ew; }
+       if(r.status===400 && opts.schema && !opts._noSchema && /schema/i.test(m)){ var es=new Error('NO_SCHEMA'); throw es; }
        if(r.status===403) throw new Error('권한이 없다 (403). 키가 막혔거나 이 프로젝트에서 Generative Language API가 꺼져 있다. AI 스튜디오에서 새 키를 만든다.');
        if(r.status===429){
          if(/limit:\s*0\b/.test(tx)){ qMarkZero(model); var ez=new Error('ZERO'); throw ez; }
@@ -6710,6 +6728,7 @@ function aiCall(system, user, onText, maxTok, _retry, opts){
    .catch(function(e){
      var m=e.message||String(e);
      if(m==='NO_THINK'){ opts._noThink=true; aiCall(system,user,onText,maxTok,_retry,opts); return; }
+     if(m==='NO_SCHEMA'){ opts._noSchema=true; aiCall(system,user,onText,maxTok,_retry,opts); return; }
      if(m==='NO_WEB'){ opts.web=false; aiCall(system,user,function(t){ onText((t==='생각하는 중…'||aiIsErr(t))?t:t+'\n\n(이 모델은 웹 검색을 못 해서 빼고 불렀다)'); },maxTok,_retry,opts); return; }
      if(m==='ZERO'||m==='RETRY'){
        var n=opts._n||0, cur=model;
@@ -7799,7 +7818,8 @@ function aiSlots(){
 })();
 
 // ----- AI: 비틀기 · 연관짓기 · 글쓰기 -----
-var WSYS='당신은 한국 웹소설·웹툰 작가다. 서론·설명·요약 없이 결과물만 쓴다. 마크다운 기호(#, *, -)를 쓰지 않는다.';
+var KO_CRAFT=' [문장] 한국어 원어민 작가의 입말로 쓴다. 번역투(「그녀는」 남발, 「그의 ~」, 「~하는 것이었다」, 「~에 의해」)와 상투구(「심장이 쿵」 「시간이 멈춘 듯」)를 피하고, 감정에 이름을 붙이지 말고 구체적인 행동·감각 하나로 보여 준다.', KO_DLG=' [대사] 인물마다 말투(어미·호칭·문장 길이·말버릇)를 달리해 이름을 가려도 누가 말했는지 알게 한다. 하고 싶은 말을 곧이곧대로 하지 않고 돌려 말하거나 행동으로 대신하는 순간(속뜻)을 둔다. 서로 이미 아는 사실을 독자에게 설명해 주는 대사는 쓰지 않는다. 존댓말·반말은 관계에 맞게 끝까지 일관되게 쓴다.';   // 2026-11-28 글·대사 작법
+var WSYS='당신은 한국 웹소설·웹툰 작가다. 서론·설명·요약 없이 결과물만 쓴다. 마크다운 기호(#, *, -)를 쓰지 않는다.'+KO_CRAFT+KO_DLG;
 function twistAsk(nm, box){
   var r=null; for(var i=0;i<ROWS.length;i++){ if(ROWS[i][0]===nm){ r=ROWS[i]; break; } }
   if(!r){ box.innerHTML='<p class="small">색인에 없는 항목이라 비틀 수 없다.</p>'; return; }
@@ -7832,7 +7852,7 @@ function cutsRule(cut, tag){
 }
 function novelRule(cut){
   var len= cut<=20?'600~900자':(cut<=40?'1200~1600자':'2000~2600자');
-  return {text:'웹소설 문체로 한 화 본문을 쓴다. 분량은 '+len+'. 3인칭 시점, 짧은 문단, 대사는 큰따옴표. 감정은 설명하지 않고 행동과 대사로 보여 준다. 첫 문장은 상황 한가운데에서 시작한다. 마지막 문단은 다음 화가 궁금하게 끊는다. 소제목·요약·작가 후기 없이 본문만 쓴다.',
+  return {text:'웹소설 문체로 한 화 본문을 쓴다. 분량은 '+len+'. 3인칭 시점, 짧은 문단, 대사는 큰따옴표. 감정은 설명하지 않고 행동과 대사로 보여 준다. 장면마다 인물이 원하는 것과 그것을 막는 것이 보이게 하고, 장면 끝에서는 상황이나 관계가 조금이라도 바뀌게 한다. 첫 문장은 상황 한가운데에서 시작한다. 마지막 문단은 다음 화가 궁금하게 끊는다. 소제목·요약·작가 후기 없이 본문만 쓴다.',
     maxTok: cut<=20?1800:(cut<=40?2800:4200)};
 }
 // 글쓰기 훅: WS_CTX 함수(text)→프롬프트에 붙일 글, WS_TOOLS {label, fn(ctx)} 결과 머리 버튼, WS_DONE fn(stage, box, opt) 글이 하나 완성될 때
@@ -17662,8 +17682,8 @@ var DRAG={from:0, noClick:0, down:null};
 })();
 
 /* ---------- AI 콘티 쓰기 ---------- */
-var CSYS='당신은 한국 웹툰 콘티 작가다. 세로 스크롤 한 화면에 컷 한두 개가 보인다는 것을 알고, 컷 크기와 순서로 시간과 감정을 조절한다. 정해진 형식의 줄만 쓴다. 서론·설명·요약·마크다운 기호를 쓰지 않는다.';
-var CSYS_M='당신은 한국 만화 콘티 작가다. 펼친 두 쪽을 한 단위로 보고, 컷 크기와 순서, 쪽 넘김 자리로 시간과 감정을 조절한다. 정해진 형식의 줄만 쓴다. 서론·설명·요약·마크다운 기호를 쓰지 않는다.';
+var CSYS='당신은 한국 웹툰 콘티 작가다. 세로 스크롤 한 화면에 컷 한두 개가 보인다는 것을 알고, 컷 크기와 순서로 시간과 감정을 조절한다. 정해진 형식의 줄만 쓴다. 서론·설명·요약·마크다운 기호를 쓰지 않는다.'+KO_DLG;
+var CSYS_M='당신은 한국 만화 콘티 작가다. 펼친 두 쪽을 한 단위로 보고, 컷 크기와 순서, 쪽 넘김 자리로 시간과 감정을 조절한다. 정해진 형식의 줄만 쓴다. 서론·설명·요약·마크다운 기호를 쓰지 않는다.'+KO_DLG;
 function csys(){ return boardMode()==='webtoon'?CSYS:CSYS_M; }
 /* 콘티 규칙 — 형식·범위 규칙 + 「만화 연출 문법」(#grammar)·「페이지 배분」(#pagemap)을 컷 단위로 줄인 연출 규칙 + 형식 예시 */
 var CEX=[
@@ -17919,7 +17939,7 @@ function applyLines(t, ch){
 var running=false;
 function strongModel(){
   // 검토용 강한 모델: 추천 목록의 Pro 중 오늘 막히지 않은 것. 없으면 undefined → 고른 모델(AIMODEL)
-  var r=((typeof ORM!=='undefined'&&ORM.rec)||[]).filter(function(x){ return x && x.m && /pro/.test(x.m.id) && !qIsOut(x.m.id); })[0];
+  var r=((typeof ORM!=='undefined'&&ORM.rec)||[]).filter(function(x){ return x && x.m && /pro|carbon/.test(x.m.id) && !qIsOut(x.m.id); })[0];
   return r?r.m.id:undefined;
 }
 // 다 쓴 콘티를 한 번 조용히 다듬는다(점수·평가·보고 없음. 「콘티 점검」은 사용자 요청으로 삭제됨)
@@ -18579,7 +18599,7 @@ window.__ctFlow={rules:flowRules, all:flowAll, check:flowCheck, parse:function(t
    「AI로 콘티 쓰기」는 대사를 원고(대강 이야기·웹소설·컷별 콘티)에 적힌 말 그대로만 넣는다(ctSrcOnly, 기본 켬).
    원고에 없는 대사·AI가 쓴 나레이션은 컷의 추천(c.sg {line, nar, pos})으로 옮겨 두고, 「대사·나레이션 추천」에서
    컷마다 추천을 받아 고친 뒤 「한 번에 말풍선 올리기」로 넣는다. 추천은 컷에 붙어 있어 옮겨도·새로고침해도 남는다. */
-var SGSYS='당신은 한국 웹툰 각색 작가다. 이미 짠 콘티의 컷마다 말풍선 대사와 나레이션 자막을 추천한다. 작가가 고르고 고친 뒤 올린다. 정해진 형식의 줄만 쓴다. 서론·설명·마크다운 기호를 쓰지 않는다.';
+var SGSYS='당신은 한국 웹툰 각색 작가다. 이미 짠 콘티의 컷마다 말풍선 대사와 나레이션 자막을 추천한다. 작가가 고르고 고친 뒤 올린다. 정해진 형식의 줄만 쓴다. 서론·설명·마크다운 기호를 쓰지 않는다.'+KO_CRAFT+KO_DLG;
 var NP={busy:'', msg:'', open:false, over:false, all:false};
 function srcOnly(){ try{ return localStorage.getItem('ctSrcOnly')!=='0'; }catch(e){ return true; } }
 function npNorm(s){ return String(s==null?'':s).replace(/[\s.,!?…~·'"“”‘’「」『』()（）\-—:：]/g,''); }

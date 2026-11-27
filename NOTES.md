@@ -405,3 +405,13 @@ arcForm, deviceId, folderMemo, gdBase, gdLast, gdLinked, ideaText, mangaDataVer,
 - 캐릭터 모티브 색인: 뽑기 결과 아래(`CHAR_OUT`) 「🎨 AI 그림」 — 뽑힌 외모·성격·결핍으로 캐릭터 시트(전신 정면·3/4·얼굴) 요청문. 색인 「▸」 펼침 줄(`CHAR_DETAIL`) — 그 모티브를 보여 주는 한 컷 요청문. 기존 작품 예시는 "베끼지 말 것"으로만 넣는다
 - 「덧붙일 설명」(localStorage `iaNote`)이 요청문에 들어간다. 「받은 그림 넣기」는 1280px로 줄여 IndexedDB(`__ppArt`, id `ia_<hash>`)에, 키→id는 localStorage `iaImgs`(`combo|외모들/성격들/결핍들`, `motif|이름`). 기기별, 드라이브 동기화 안 됨
 - 시험: jsdom 16항목(전환·주소·요청문·글자 바꾸기·textarea 보존·색인 상자) 통과. 실제 폰 공유 창에서 Gemini 앱으로 보내기는 아직 확인 안 함
+
+## 제미나이 호출 점검·개선 (2026-11-28) — `aiCall`·`gmThink`·`ormPickRec`
+- 점검: 37개 페이지를 데스크톱·폰 폭(375px)에서 열어 스크립트 오류·가로 넘침 없음, 중복 id 없음, 에셋 팩 456장 빠짐 없음. `#imageconti`는 콘티의 가상 주소라 정상
+- 고친 문제 ① 모델 추천이 이름에 flash/flash-lite/pro가 있는 것만 골라 4세대(gemini-4-hydrogen·carbon…)가 추천에 안 나왔다 → Hydrogen·Carbon 추천 추가. 3세대 이상이 있으면 2.x는 추천에서 뺀다(전체 목록엔 남음). 기본값 `GM_DEFAULT='gemini-3.5-flash-lite'`(옛 'gemini-2.5-flash')
+- ② 모든 요청에 temperature를 보냈다 → 3.x 이후 모델에는 보내지 않는다(4세대·3.6+는 무시하고 경고, 3.x는 기본값 1.0에서 벗어나면 반복·품질 저하). 2.x는 예전대로
+- ③ 생각 설정이 2.5 전용이라 4세대가 기본값(high)으로 돌아 느리고 한도를 많이 썼다 → `gmThink(id, opts, maxTok)`: 3.x 이후 `thinkingConfig.thinkingLevel` — JSON·짧은 답(≤700) low, 긴 글 medium, Lite는 low. `opts.think`로 직접. 거부(400 thinking)면 빼고 다시. 생각 토큰도 출력 한도에 들어가므로 maxOutputTokens 여유를 low +3000 / medium +6000으로
+- ④ 「JSON만」 달라는 요청 30곳 가까이가 JSON 모드 없이 글로 받아 정규식으로 잘라 읽었다 → aiCall이 system/user에 「JSON만」이 있으면 `responseMimeType: application/json` 자동(opts.json:false로 끔). `opts.schema` 주면 `responseJsonSchema`, 거부(400 schema)면 빼고 다시
+- 무거운 계열 `GM_HEAVY=/pro|carbon|neon|hydrogen|argon/`은 한도·붐빔 때 대신 부르기(aiAlt·ormFallback)에서 뺀다. 검토용 strongModel은 Pro 또는 Carbon
+- 글·대사 작법 `KO_CRAFT`(번역투·상투구 피하기, 감정은 행동·감각으로) · `KO_DLG`(인물마다 말투 구분, 속뜻, 설명 대사 금지, 존댓말·반말 일관)를 WSYS(웹소설)·CSYS/CSYS_M(콘티)·SGSYS(대사·나레이션 추천)에 붙였다. novelRule에 「장면마다 원하는 것·막는 것, 장면 끝의 변화」
+- 시험: 가짜 제미나이(jsdom)로 요청 본문 확인 11항목 통과(temperature 없음, JSON 모드, thinkingLevel, 2.5 예전대로, 생각 거부 재시도, limit 0 → 가벼운 모델 대신)
