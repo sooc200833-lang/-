@@ -1785,6 +1785,7 @@ button.pl-card[disabled]{cursor:default}
 
 <div class="topbar"><label for="pagesel">페이지</label><select id="pagesel"></select><label for="topfolder" class="tf">담는 곳</label><select id="topfolder"></select><label class="trainbtn"><input type="checkbox" id="tr-on"> 트레이닝</label>
 <button class="synclink airef" id="ai-refresh" type="button" title="AI 새로고침 — 키·모델 다시 읽기, 막힘 표시 풀기, 연결 확인">🔄<i id="ai-ref-st">AI</i></button>
+<button class="synclink" id="img-ai" type="button" data-imgai="tog" title="그림 요청을 보낼 AI — 눌러서 ChatGPT / Gemini 바꾸기">🖌<i>GPT</i></button>
 <button class="synclink aitier t-unk" id="ai-tier" type="button" aria-haspopup="dialog" aria-controls="ai-tierpop" hidden><i>요금제 ?</i></button><div id="ai-tierpop" class="aitierpop" role="dialog" aria-label="키 요금제" hidden></div>
 <a class="synclink" id="sync-dot" href="#favs" title="드라이브 동기화">☁<i id="sync-st">꺼짐</i></a>
 <a class="favlink" href="#favs" title="즐겨찾기"><span>★</span><i id="topfavn">0</i></a></div>
@@ -11162,6 +11163,124 @@ function cstOutHTML(cur){
     '<ul>'+sat.map(function(n){ var s=cstOf(n), p=cstSplit(s[1]); return '<li><span class="dot d-'+s[0]+'"></span><b>'+cstEsc(n)+'</b> '+cstEsc(p[1]||p[0])+'</li>'; }).join('')+'</ul></div>';
 }
 CHAR_OUT.push({html:function(cur){ return cstOutHTML(cur); }});
+// [[MOD:imgai]] 그림 AI 고르기(ChatGPT / Gemini) + 캐릭터 모티브 색인 AI 그림 (2026-11-28)
+// - localStorage imgAI: 'gpt'(기본) | 'gm'. 그림 요청을 여는 곳은 모두 imgAIOpen(미리 채울 글)을 거친다.
+//   Gemini는 주소로 글을 미리 채울 수 없어 앱(gemini.google.com/app)만 연다. 요청문은 부르는 쪽에서 이미 복사한다.
+//   사진이 있는 요청(sendGpt0)은 예전처럼 폰 공유 창 → 거기서 Gemini 앱을 고르면 사진+요청문이 함께 간다.
+// - Gemini를 고르면 단추·상태 글의 「GPT」「ChatGPT」를 「Gemini」로 바꿔 보인다(relabel, 원래 글은 WeakMap에 두고 되돌림).
+// - 캐릭터 모티브 색인: 뽑기 결과 아래(CHAR_OUT)와 색인 「▸」 펼침 줄(CHAR_DETAIL)에 그림 요청 + 받은 그림 넣기.
+//   그림은 IndexedDB(__ppArt, id 'ia_…'), 어떤 조합에 어떤 그림인지는 localStorage iaImgs {키:id}.
+(function(){
+  var NM={gpt:'ChatGPT', gm:'Gemini'};
+  function imgAI(){ try{ return localStorage.getItem('imgAI')==='gm'?'gm':'gpt'; }catch(e){ return 'gpt'; } }
+  function imgAIName(){ return NM[imgAI()]; }
+  function imgAIOpen(pre){
+    var u=imgAI()==='gm'?'https://gemini.google.com/app':'https://chatgpt.com/'+(pre?'?q='+encodeURIComponent(String(pre)):'');
+    window.open(u,'_blank','noopener'); }
+  function imgAIChips(){ var v=imgAI();
+    return ' <span class="ct-gm small" data-imgai="box">그림 AI <button type="button" class="chip'+(v==='gpt'?' on':'')+'" data-imgai="gpt">ChatGPT</button><button type="button" class="chip'+(v==='gm'?' on':'')+'" data-imgai="gm">Gemini</button></span>'; }
+  window.imgAI=imgAI; window.imgAIName=imgAIName; window.imgAIOpen=imgAIOpen; window.imgAIChips=imgAIChips;
+
+  // ----- 글자 바꿔 보이기 -----
+  var ORIG=new WeakMap(), SEL='button,summary,label,option,legend,[id*="stat"],.ct-gm', SKIP='[data-imgai],.noimgrel,textarea,pre,code,[contenteditable]';
+  function relText(n){ var p=n.parentElement; if(!p || !p.closest(SEL) || p.closest(SKIP)) return;
+    var has=ORIG.has(n), src=has?ORIG.get(n):n.data;
+    if(imgAI()==='gm'){ if(!/GPT/.test(src)) return; if(!has) ORIG.set(n,src); var v=src.replace(/ChatGPT|GPT/g,'Gemini'); if(n.data!==v) n.data=v; }
+    else if(has){ if(n.data!==src) n.data=src; ORIG.delete(n); } }
+  function relTree(el){ if(!el) return; if(el.nodeType===3){ relText(el); return; } if(el.nodeType!==1) return;
+    if(imgAI()==='gm' && (el.textContent||'').indexOf('GPT')<0) return;
+    var w=document.createTreeWalker(el, NodeFilter.SHOW_TEXT, null), t; while((t=w.nextNode())) relText(t); }
+  try{ new MutationObserver(function(ms){ if(imgAI()!=='gm') return; ms.forEach(function(m){ for(var i=0;i<m.addedNodes.length;i++) relTree(m.addedNodes[i]); }); })
+    .observe(document.body,{childList:true, subtree:true}); }catch(e){}
+
+  function paint(){ var v=imgAI();
+    var nb=document.getElementById('img-ai'); if(nb){ var i=nb.querySelector('i'); if(i) i.textContent=v==='gm'?'Gemini':'GPT'; nb.classList.toggle('on', v==='gm'); }
+    document.querySelectorAll('[data-imgai="gpt"],[data-imgai="gm"]').forEach(function(b){ b.classList.toggle('on', b.dataset.imgai===v); });
+    document.querySelectorAll('[data-ia-name]').forEach(function(s){ s.textContent=imgAIName(); }); }
+  function setImgAI(v){ try{ localStorage.setItem('imgAI', v); }catch(e){} relTree(document.body); paint();
+    try{ document.dispatchEvent(new CustomEvent('imgai-change',{detail:v})); }catch(e){}
+    var s=document.getElementById('ct-stat'); if(s) s.textContent='이제 그림 요청은 '+imgAIName()+'(으)로 보낸다'+(v==='gm'?' — 사진이 있으면 공유 창에서 Gemini 앱을 고른다':''); }
+  window.setImgAI=setImgAI;
+  document.addEventListener('click', function(e){ var b=e.target.closest && e.target.closest('[data-imgai]'); if(!b) return; var k=b.dataset.imgai;
+    if(k==='tog'){ setImgAI(imgAI()==='gm'?'gpt':'gm'); var s=imgAIName(); b.title='그림 AI: '+s+' — 눌러서 바꾸기'; return; }
+    if(k==='gpt'||k==='gm'){ e.preventDefault(); setImgAI(k); } });
+  paint(); if(imgAI()==='gm') relTree(document.body);
+  try{ document.querySelectorAll('#conti .ct-gmh').forEach(function(h){ if(!h.querySelector('[data-imgai]') && h.innerHTML) h.insertAdjacentHTML('beforeend', imgAIChips()); }); }catch(e){}
+
+  // ----- 캐릭터 모티브 색인 -----
+  if(typeof CHAR_OUT==='undefined' || typeof CHAR_DETAIL==='undefined') return;
+  function esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+  function hash(t){ var h=5381; t=String(t); for(var i=0;i<t.length;i++) h=((h<<5)+h+t.charCodeAt(i))|0; return (h>>>0).toString(36); }
+  function iaMap(){ try{ return JSON.parse(localStorage.getItem('iaImgs')||'{}')||{}; }catch(e){ return {}; } }
+  function iaSet(k,id){ var m=iaMap(); if(id) m[k]=id; else delete m[k]; try{ localStorage.setItem('iaImgs', JSON.stringify(m)); }catch(e){} }
+  function iaUrl(k){ var id=iaMap()[k], A=window.__ppArt; return id&&A&&A.get?A.get(id)||'':''; }
+  function note(){ try{ return localStorage.getItem('iaNote')||''; }catch(e){ return ''; } }
+  function copy(t){ function fb(){ var ta=document.createElement('textarea'); ta.value=t; ta.setAttribute('readonly',''); ta.style.cssText='position:fixed;left:-9999px;top:0'; document.body.appendChild(ta); ta.select(); try{ document.execCommand('copy'); }catch(e){} ta.remove(); }
+    try{ if(navigator.clipboard && navigator.clipboard.writeText){ navigator.clipboard.writeText(t).catch(fb); return; } }catch(e){} fb(); }
+  function shrink(file){ return new Promise(function(res,rej){ var fr=new FileReader(); fr.onerror=rej; fr.onload=function(){ var im=new Image(); im.onerror=rej; im.onload=function(){
+    var k=Math.min(1,1280/Math.max(im.width,im.height)), cv=document.createElement('canvas'); cv.width=Math.round(im.width*k); cv.height=Math.round(im.height*k);
+    cv.getContext('2d').drawImage(im,0,0,cv.width,cv.height); res(cv.toDataURL(file.type==='image/png'?'image/png':'image/jpeg',.9)); }; im.src=fr.result; }; fr.readAsDataURL(file); }); }
+
+  var STYLE='Original character for a Korean webtoon. Clean line art, soft flat colors, plain white background. Do not draw any text, labels or speech bubbles. Do not copy any existing anime/manga character — design a new one.';
+  function line(x){ return '- '+x[2]+' ('+x[1]+') — '+x[3]; }
+  function comboPrompt(cur){ var g={외모:'Appearance (must be clearly visible in the design)', 성격:'Personality (show through expression, posture and gesture)', 결핍:'Inner lack / wound (hint through small habits, eyes and body language — not literally)'}, out=[];
+    ['외모','성격','결핍'].forEach(function(k){ var L=(cur[k]||[]).filter(Boolean); if(L.length) out.push('['+k+' · '+g[k]+']\n'+L.map(line).join('\n')); });
+    var nt=note().trim();
+    return 'Draw ONE character design sheet image: full body front view, 3/4 view, and a face close-up with this character\'s typical expression, side by side.\n'+STYLE+'\n'+
+      (nt?'Extra notes from the author: '+nt+'\n':'')+'\nBuild the character from these motifs (written in Korean):\n'+out.join('\n\n'); }
+  function motifPrompt(r){ var how={외모:'Make this appearance motif the clear focal point of the design.', 성격:'Show this personality motif through a typical action, expression and posture in a small everyday scene.', 결핍:'Hint at this inner lack through a quiet, telling moment (expression, habit, what they look at) — do not show it literally.'}[r[0]]||'';
+    var nt=note().trim();
+    return 'Draw ONE single webtoon panel image of an original character that demonstrates the character motif below.\n'+STYLE+'\n'+how+'\n'+(nt?'Extra notes from the author: '+nt+'\n':'')+
+      '\nMotif (Korean): '+r[2]+'\nCategory: '+r[0]+' · '+r[1]+'\nMeaning: '+r[3]+(r[4]?'\n(Known examples of this idea, for understanding only — do not copy them: '+r[4]+')':''); }
+
+  function boxHTML(key, sub){ var u=iaUrl(key);
+    return '<div class="ia-box noimgrel" data-iak="'+esc(key)+'"><h4>🎨 AI 그림 <span class="small">'+sub+'</span></h4>'+
+      '<div class="ia-btns"><button type="button" class="chip" data-ia="go">🖌 <span data-ia-name>'+imgAIName()+'</span>로 그리기</button><button type="button" class="chip" data-ia="copy">요청문만 복사</button>'+
+      '<label class="chip ia-up">📥 받은 그림 넣기<input type="file" accept="image/*" hidden></label>'+(u?'<button type="button" class="chip" data-ia="del">그림 빼기</button>':'')+
+      '<span class="ia-ai" data-imgai="box"> · 보낼 곳 <button type="button" class="chip" data-imgai="gpt">ChatGPT</button><button type="button" class="chip" data-imgai="gm">Gemini</button></span></div>'+
+      '<label class="ia-note small">덧붙일 설명 <input type="text" class="ia-nt" value="'+esc(note())+'" placeholder="예: 20대 여성, 학원 판타지, 검은 교복"></label>'+
+      '<div class="ia-st small" role="status"></div>'+(u?'<img class="ia-img" alt="받은 그림" src="'+u+'">':'')+'</div>'; }
+  function bindBox(el, getKey, getPrompt, rerender){
+    var box=el.querySelector('.ia-box'); if(!box) return; paint();
+    function st(t){ var s=box.querySelector('.ia-st'); if(s) s.textContent=t; }
+    box.addEventListener('click', function(e){ var b=e.target.closest('[data-ia]'); if(!b) return; var a=b.dataset.ia;
+      if(a==='go'||a==='copy'){ var q=getPrompt(); copy(q);
+        if(a==='go'){ imgAIOpen(imgAI()==='gm'?'':q.slice(0,1800)); st('요청문을 복사했다 — '+imgAIName()+(imgAI()==='gm'?'에 붙여 넣어 보낸다.':'가 열리면 보낸다.')+' 받은 그림은 저장해서 「받은 그림 넣기」'); }
+        else st('요청문을 복사했다'); return; }
+      if(a==='del'){ var k=getKey(), id=iaMap()[k]; iaSet(k,null); try{ if(id&&window.__ppArt) __ppArt.remove(id); }catch(er){} rerender(); } });
+    var nt=box.querySelector('.ia-nt'); if(nt) nt.addEventListener('change', function(){ try{ localStorage.setItem('iaNote', nt.value); }catch(er){} });
+    var fi=box.querySelector('input[type=file]'); if(fi) fi.addEventListener('change', function(){ var f=fi.files&&fi.files[0]; if(!f) return; st('그림을 넣는 중…');
+      shrink(f).then(function(u){ var A=window.__ppArt; if(!A||!A.put){ st('그림 저장소를 아직 못 열었다. 잠시 뒤 다시 넣는다'); return; }
+        var k=getKey(), id='ia_'+hash(k); return Promise.resolve(A.put(id,u)).then(function(){ iaSet(k,id); rerender(); }); })
+      .catch(function(){ st('그림을 넣지 못했다'); }); }); }
+
+  // 뽑기 결과 아래
+  function comboKey(cur){ return 'combo|'+['외모','성격','결핍'].map(function(k){ return (cur[k]||[]).filter(Boolean).map(function(x){ return x[2]; }).sort().join(','); }).join('/'); }
+  var IA_OUT={ html:function(cur){ return (cur&&(cur.외모||[]).length)?boxHTML(comboKey(cur),'뽑힌 모티브로 캐릭터 시트를 그려 달라고 보낸다 (이 조합의 그림은 이 기기에 남는다)'):''; },
+    bind:function(el,cur){ bindBox(el, function(){ return comboKey(cur); }, function(){ return comboPrompt(cur); }, function(){ var b=el.querySelector('.ia-box'); if(b){ b.outerHTML=IA_OUT.html(cur); IA_OUT.bind(el,cur); } }); } };
+  CHAR_OUT.push(IA_OUT);
+  (function(){ var out=document.getElementById('ch-out'), S=window.__charState&&window.__charState(); if(!out||!S||!out.firstChild) return;
+    var i=CHAR_OUT.indexOf(IA_OUT); if(out.querySelector('.chout[data-i="'+i+'"]')) return; var h=IA_OUT.html(S.cur); if(!h) return;
+    var d=document.createElement('div'); d.className='chout'; d.setAttribute('data-i', i); d.innerHTML=h; out.appendChild(d); IA_OUT.bind(d,S.cur); })();
+
+  // 색인 「▸」 펼침 줄
+  var IA_DET={ html:function(r){ return boxHTML('motif|'+r[2],'이 모티브를 보여 주는 한 컷을 그려 달라고 보낸다'); },
+    bind:function(el,r){ bindBox(el, function(){ return 'motif|'+r[2]; }, function(){ return motifPrompt(r); }, function(){ var b=el.querySelector('.ia-box'); if(b){ b.outerHTML=IA_DET.html(r); IA_DET.bind(el,r); } }); } };
+  CHAR_DETAIL.push(IA_DET);
+
+  // 그림 저장소를 늦게 읽으면 열린 상자를 다시 그린다
+  document.addEventListener('pp-art-ready', function(){ document.querySelectorAll('.ia-box').forEach(function(b){ var k=b.dataset.iak; if(!iaUrl(k) || b.querySelector('.ia-img')) return;
+    b.insertAdjacentHTML('beforeend','<img class="ia-img" alt="받은 그림" src="'+iaUrl(k)+'">'); }); });
+
+  // [[CSS:imgai]]
+  var css=document.createElement('style'); css.textContent='#img-ai.on{outline:2px solid #4285f4}'+
+    '.ia-box{margin:.8em 0;padding:.6em .8em;border:1px dashed var(--line,#bbb);border-radius:8px}.ia-box h4{margin:0 0 .4em}'+
+    '.ia-btns{display:flex;flex-wrap:wrap;gap:.35em;align-items:center}.ia-up{cursor:pointer}.ia-ai .chip.on,.ct-gm [data-imgai].on{font-weight:700}'+
+    '.ia-note{display:flex;gap:.4em;align-items:center;margin-top:.45em}.ia-note input{flex:1;min-width:0}'+
+    '.ia-img{display:block;max-width:100%;max-height:70vh;margin-top:.5em;border-radius:6px}';
+  document.head.appendChild(css);
+})();
+
 (function(){
   // 모듈이 붙기 전에 이미 그려진 첫 뽑기에도 붙인다
   var out=document.getElementById('ch-out'), st=window.__charState&&window.__charState();
@@ -15389,9 +15508,9 @@ function cap5(list){ if(list.length<=5) return Promise.resolve(list); var head=l
 function sendGpt(text, list, note){ ctCopy(text); return cap5(list).then(function(list){ sendGpt0(text, list, note); }); }
 function sendGpt0(text, list, note){
   Promise.all(list.map(function(x){ return dataFile(x.u, x.name); })).then(function(files){
-    if(navigator.canShare && files.length && navigator.canShare({files:files})){ return navigator.share({files:files, text:text}).then(function(){ stat('공유했다 — ChatGPT에서 그림과 요청문을 확인하고 보낸다'); }, function(){ stat('공유를 취소했다. 요청문은 복사돼 있다'); }); }
-    return refSheet(list).then(function(u){ if(list.length){ var a=document.createElement('a'); a.download='gpt-참고그림.png'; a.href=u; document.body.appendChild(a); a.click(); a.remove(); }
-      stat((list.length?'참고 그림 '+list.length+'장을 한 장으로 저장했다 — ChatGPT에 첨부하고 ':'')+'요청문을 붙여 넣는다 (복사됨)'); window.open('https://chatgpt.com/'+(text.length<1800?'?q='+encodeURIComponent(text):''),'_blank','noopener'); });
+    if(navigator.canShare && files.length && navigator.canShare({files:files})){ return navigator.share({files:files, text:text}).then(function(){ stat('공유했다 — 공유 창에서 '+imgAIName()+' 앱을 골라 그림과 요청문을 확인하고 보낸다 (요청문이 안 붙었으면 붙여 넣는다. 복사돼 있다)'); }, function(){ stat('공유를 취소했다. 요청문은 복사돼 있다'); }); }
+    return refSheet(list).then(function(u){ if(list.length){ var a=document.createElement('a'); a.download=(imgAI()==='gm'?'gemini':'gpt')+'-참고그림.png'; a.href=u; document.body.appendChild(a); a.click(); a.remove(); }
+      stat((list.length?'참고 그림 '+list.length+'장을 한 장으로 저장했다 — ChatGPT에 첨부하고 ':'')+'요청문을 붙여 넣는다 (복사됨)'); imgAIOpen(text.length<1800?text:''); });
   }).catch(function(){ stat('그림을 준비하지 못했다. 요청문은 복사돼 있다'); }); }
 // ===== 8단계: 완성 콘티(대사 있는 판·없는 판) + 애니메이션 15초 클립 프롬프트 =====
 function cutRatio(c){ var z=''; try{ z=cutSize(c); }catch(e){} return z==='wide'?.5:z==='tall'?16/9:z==='half'?4/3:.75; }
@@ -15568,7 +15687,7 @@ document.addEventListener('click', function(e){ var b=e.target.closest&&e.target
   if(k==='send'){ var Q=gptQ(), q0=gptQText(); if(!q0) return; stat('그림을 모으는 중…'); Promise.all(Q.map(function(c){ return compPng(c,800); })).then(function(cs){ var L=refImgs(Q); cs.forEach(function(cv,i){ L.push({name:'PANEL '+(i+1)+' 구성 (cut '+Q[i].n+')', u:cv.toDataURL('image/png')}); }); sendGpt(q0.replace('Attached reference images:','Attached reference images (character sheets, background panoramas, and one layout image per panel):'), L); }); return; }
   var q=gptQText(); if(!q) return;
   if(k==='show'){ var pr=b.closest('.sv-all').querySelector('.sv-pr'); pr.textContent=q; pr.hidden=!pr.hidden; return; }
-  ctCopy(q); if(k==='go') setTimeout(function(){ window.open('https://chatgpt.com/?q='+encodeURIComponent(q.length>1800?'다음 메시지로 웹툰 컷 요청문을 붙여 넣을게. 첨부한 시트·배경·구성 그림을 참고해서 1번 컷부터 그려줘.':q),'_blank','noopener'); },200); });
+  ctCopy(q); if(k==='go') setTimeout(function(){ imgAIOpen(q.length>1800?'다음 메시지로 웹툰 컷 요청문을 붙여 넣을게. 첨부한 시트·배경·구성 그림을 참고해서 1번 컷부터 그려줘.':q); },200); });
 function placeCol(f){
   var cv=f.querySelector('canvas');if(!cv) return;
   f.querySelectorAll(':scope > .ct-col, :scope > .ct-artimg').forEach(function(layer){
@@ -15942,7 +16061,7 @@ function stepDone(n){ var st=(document.getElementById('ct-story')||{}).value||''
   if(n===9) return !!(B&&Object.keys(B.grokSavedClips||{}).length);
   return false; }
 function stepNav(){ var nv=document.getElementById('ct-steps'); if(!nv) return; var gm=gptMode(); setTimeout(function(){ var on=nv.querySelector('.ct-stb.on'); if(on) nv.scrollLeft=Math.max(0,on.offsetLeft-nv.clientWidth/2+on.offsetWidth/2); },0); try{ var w=document.getElementById('ct-stwarn'); if(!w){ w=document.createElement('div'); w.id='ct-stwarn'; nv.after(w); } w.innerHTML=storeWarn(); }catch(e){}
-  document.querySelectorAll('#conti .ct-gmh').forEach(function(h){ h.innerHTML='<span class="ct-gm small">시트 여러 장을 GPT에 <button type="button" class="chip'+(gm==='all'?' on':'')+'" data-gm="all">한 번에 모두</button><button type="button" class="chip'+(gm==='step'?' on':'')+'" data-gm="step">한 장씩 (「다음」)</button></span>'; });
+  document.querySelectorAll('#conti .ct-gmh').forEach(function(h){ h.innerHTML='<span class="ct-gm small">시트 여러 장을 GPT에 <button type="button" class="chip'+(gm==='all'?' on':'')+'" data-gm="all">한 번에 모두</button><button type="button" class="chip'+(gm==='step'?' on':'')+'" data-gm="step">한 장씩 (「다음」)</button></span>'+(window.imgAIChips?window.imgAIChips():''); });
   nv.innerHTML=ctVisibleSteps().map(function(s){ return '<button type="button" class="ct-stb'+(s[0]===CSTEP?' on':'')+(stepDone(s[0])?' done':'')+'" data-step="'+s[0]+'"'+(s[0]===CSTEP?' aria-current="step"':'')+'><i>'+(stepDone(s[0])&&s[0]!==CSTEP?'✓':s[0])+'</i>'+s[1]+'</button>'; }).join(''); }
 function goStep(n, noScroll){ if(ctImageMode&&+n===2.5) n=3; if(+n!==CSTEP) try{ stat(''); }catch(e){} if(CSTEP===9&&+n!==9) grokClearPhotos(); CSTEP=Math.max(1,Math.min(9,+n||1)); if(B && B.projectStep!==CSTEP && !root.classList.contains('ct-choosing')){B.projectStep=CSTEP;save();} try{ localStorage.setItem('ctStep',CSTEP); }catch(e){}
   document.querySelectorAll('#conti .ct-step').forEach(function(d){ d.hidden=+d.dataset.st!==CSTEP; });
@@ -15986,7 +16105,7 @@ function shBatch(all){ var P=B.props||[], G=B.sheetArts||{}, out=[];
 var SFSYS='너는 웹툰 콘티 검수자다. 콘티에 나오는 엑스트라(이름 없는 무리·단역)·동물·중요한 사물 중 목록에 없는 것을 찾는다. JSON만 답한다.';
 document.addEventListener('click', function(e){ var t=e.target; if(!B) return;
   if(t.id==='ct-shgo'||t.id==='ct-shall'){ var q=shBatch(t.id==='ct-shall'); if(!q) return stat('빠진 시트가 없다');
-    ctCopy(q); setTimeout(function(){ window.open('https://chatgpt.com/?q='+encodeURIComponent(q.length>1800?'다음 메시지로 시트 요청문을 붙여 넣을게. 받으면 첫 그림부터 그려줘.':q),'_blank','noopener'); },200); return; }
+    ctCopy(q); setTimeout(function(){ imgAIOpen(q.length>1800?'다음 메시지로 시트 요청문을 붙여 넣을게. 받으면 첫 그림부터 그려줘.':q); },200); return; }
   if(t.id==='ct-shfind'||(t.dataset&&t.dataset.pfind)){ if(!aiReady()) return stat('AI 연결에서 키를 넣어야 쓸 수 있다.'); t.disabled=true; stat('AI가 콘티에서 빠진 엑스트라·동물·사물을 찾는 중…');
     aiAsk(SFSYS, '[이미 있는 목록]\n'+(((B.props||[]).map(function(x){ return x.kind+': '+x.name; }).join('\n'))||'없음')+'\n[주요 인물 — 여기 넣지 않는다]\n'+chars().map(function(x){ return x.name; }).join(', ')+
       '\n\n[콘티]\n'+B.cuts.filter(function(c){ return c.scr; }).slice(0,120).map(function(c){ return c.n+'. '+cutText(c); }).join('\n').slice(0,7000)+
@@ -16390,10 +16509,10 @@ document.addEventListener('change', function(e){ var t=e.target, card=t.closest&
   if(t.dataset && t.dataset.bgup && window.__ppArt && t.files[0]){ var a=+t.dataset.bgup; window.__ppArt.fromFile(t.files[0]).then(function(id){ B.sceneBg=B.sceneBg||{}; B.sceneBg[a]=Object.assign(B.sceneBg[a]||{}, {art:id}, (function(){ var L=sceneList(); for(var i=0;i<L.length;i++) if(L[i].a===a) return {nm:dispNm(L[i].name||'')}; return {}; })()); delete B.sceneBg[a].use; delete B.sceneBg[a].none; save(); renderBg(); try{ renderScenes(); }catch(er){} try{ renderShChk(); renderBoard(); }catch(er){} stat('배경 그림을 붙였다 — 이 장면 컷을 그릴 때 ChatGPT에 같이 첨부한다'); }); return; }
   if(card) bgSave(card); });
 document.addEventListener('click', function(e){ var t=e.target;
-  var b=t.closest&&t.closest('#ct-s5 [data-bg]'); if(b){ var x=bgSave(b.closest('.sv-sc')); if(!x) return; var q=bgPrompt(x,0,1); ctCopy(q); setTimeout(function(){ window.open('https://chatgpt.com/?q='+encodeURIComponent(q.slice(0,1800)),'_blank','noopener'); },200); return; }
+  var b=t.closest&&t.closest('#ct-s5 [data-bg]'); if(b){ var x=bgSave(b.closest('.sv-sc')); if(!x) return; var q=bgPrompt(x,0,1); ctCopy(q); setTimeout(function(){ imgAIOpen(q.slice(0,1800)); },200); return; }
   if(t.id==='ct-bggpt' && B && B.cuts && B.cuts.length){ var L=sceneList(); if(!L.length) L=[{a:1,b:B.cuts.length,name:'전체'}];
     var q2=(L.length>1?'I will give you '+L.length+' backgrounds. '+gptHead()+' \n\n':'')+L.map(function(x,i){ return bgPrompt(x,i,L.length); }).join('\n\n');
-    ctCopy(q2); setTimeout(function(){ window.open('https://chatgpt.com/?q='+encodeURIComponent(q2.length>1800?'다음 메시지로 배경 요청문을 붙여 넣을게. 받으면 첫 배경부터 그려줘.':q2),'_blank','noopener'); },200); return; }
+    ctCopy(q2); setTimeout(function(){ imgAIOpen(q2.length>1800?'다음 메시지로 배경 요청문을 붙여 넣을게. 받으면 첫 배경부터 그려줘.':q2); },200); return; }
   if(t.id==='ct-bgai'){ if(!B||!B.cuts||!B.cuts.length) return stat('콘티를 먼저 만든다'); if(!aiReady()) return stat('AI 연결에서 키를 넣어야 쓸 수 있다.');
     var L3=sceneList(); if(!L3.length) L3=[{a:1,b:B.cuts.length,name:'전체'}]; t.disabled=true; stat('AI가 장면 배경을 짜는 중…');
     aiAsk(BGSYS, '[이야기]\n'+String(document.getElementById('ct-story').value).slice(0,3000)+'\n\n[장면]\n'+L3.map(function(x,i){ var cs=[]; for(var n=x.a;n<=x.b&&cs.length<6;n++){ var c=B.cuts[n-1]; if(c&&c.scr) cs.push(c.scr); }
@@ -16434,11 +16553,11 @@ function keyAll(list, part){ var K=list||keyCuts(); if(!K.length) return ''; var
     (nm.length?'Character reference:\n'+nm.map(function(n){ return '- '+n+': '+(ctLookSafe(n)||''); }).join('\n')+'\n':'')+(sheetRefs(nm).length?'Character sheet images are attached ('+sheetRefs(nm).length+'). Copy each character EXACTLY from the attached sheets.\n':'')+'\n'+K.map(function(c,i){ return ctKeyPrompt(c,i+1,K.length); }).join('\n\n'); }
 document.addEventListener('click', function(e){ var t=e.target; if(!t.closest || !B) return;
   var kc=t.closest('[data-kc]'); if(kc){ var c=B.cuts[+kc.dataset.kc-1]; c.key=autoKey(c)?0:1; save(); renderKey(); return; }
-  var k1=t.closest('[data-k1]'); if(k1){ var q=ctKeyPrompt(B.cuts[+k1.dataset.k1-1],1,1); ctCopy(q); setTimeout(function(){ window.open('https://chatgpt.com/?q='+encodeURIComponent(q.slice(0,1800)),'_blank','noopener'); },200); return; }
+  var k1=t.closest('[data-k1]'); if(k1){ var q=ctKeyPrompt(B.cuts[+k1.dataset.k1-1],1,1); ctCopy(q); setTimeout(function(){ imgAIOpen(q.slice(0,1800)); },200); return; }
   var ka=t.closest('[data-ka]'); if(ka){ var qa=keyAll(); if(!qa) return stat('주요 컷이 없다');
     if(ka.dataset.ka==='send'){ sendGpt(qa, refImgs(keyCuts())); return; }
     if(ka.dataset.ka==='show'){ var pr=ka.closest('.sv-all').querySelector('.sv-pr'); pr.textContent=qa; pr.hidden=!pr.hidden; return; }
-    ctCopy(qa); if(ka.dataset.ka==='go') setTimeout(function(){ window.open('https://chatgpt.com/?q='+encodeURIComponent(qa.length>1800?'다음 메시지로 웹툰 주요 컷 요청문을 붙여 넣을게. 받으면 1번 컷부터 그려줘.':qa),'_blank','noopener'); },200); return; }
+    ctCopy(qa); if(ka.dataset.ka==='go') setTimeout(function(){ imgAIOpen(qa.length>1800?'다음 메시지로 웹툰 주요 컷 요청문을 붙여 넣을게. 받으면 1번 컷부터 그려줘.':qa); },200); return; }
 });
 document.addEventListener('change', function(e){ var t=e.target; if(!t.dataset || !t.dataset.kup || !B || !window.__ppArt || !t.files[0]) return; var c=B.cuts[+t.dataset.kup-1];
   window.__ppArt.fromFile(t.files[0]).then(function(id){ c.art=id; c.key=1; save(); renderKey(); stepNav(); stat(c.n+'번 컷 그림을 붙였다'); }); });
@@ -16504,13 +16623,13 @@ document.addEventListener('click', function(e){ var t=e.target; if(!t.closest) r
       ctAiScene(k).then(function(r){ if(r) ok++; k++; nx(); }); })(); return; }
   var sa=t.closest('[data-sa]'); if(sa && B){ var qa=ctAllPages(); if(!qa) return stat('화면이 적힌 컷이 없다');
     if(sa.dataset.sa==='show'){ var pa=sa.closest('.sv-all').querySelector('.sv-pr'); pa.textContent=qa; pa.hidden=!pa.hidden; return; }
-    ctCopy(qa); if(sa.dataset.sa==='go') setTimeout(function(){ window.open('https://chatgpt.com/?q='+encodeURIComponent(qa.length>1800?'다음 메시지로 콘티 프롬프트를 붙여 넣을게. 받으면 1장면부터 그려줘.':qa),'_blank','noopener'); },200); return; }
+    ctCopy(qa); if(sa.dataset.sa==='go') setTimeout(function(){ imgAIOpen(qa.length>1800?'다음 메시지로 콘티 프롬프트를 붙여 넣을게. 받으면 1장면부터 그려줘.':qa); },200); return; }
   var sp=t.closest('[data-sp]'); if(sp && sp.closest('#ct-sv') && B){ var card=sp.closest('.sv-sc'), x=sceneList()[+card.dataset.i], q=x?ctScenePrompt(x):'';
     if(!q) return stat('이 장면은 화면이 아직 없어서 프롬프트를 못 만든다');
     if(sp.dataset.sp==='ai'){ sp.disabled=true; stat('콘티 읽는 중…'); ctAiScene(+card.dataset.i).then(function(r){ sp.disabled=false; if(r){ renderScenes(); stat('연출을 짰다 — 「장면 러프 콘티 그리기」에 반영된다'); } }); return; }
     var L2=sceneList(); if(sp.dataset.sp!=='copy') q=ctPagePrompt(x, +card.dataset.i, 1);
     if(sp.dataset.sp==='show'){ var pr=card.querySelector('.sv-pr'); pr.textContent=q+'\n\n====== 컷별 완성 그림 ======\n\n'+ctScenePrompt(x); pr.hidden=!pr.hidden; return; }
-    ctCopy(q); if(sp.dataset.sp==='page'||sp.dataset.sp==='copy') setTimeout(function(){ window.open('https://chatgpt.com/?q='+encodeURIComponent(q.slice(0,1800)),'_blank','noopener'); },200); }
+    ctCopy(q); if(sp.dataset.sp==='page'||sp.dataset.sp==='copy') setTimeout(function(){ imgAIOpen(q.slice(0,1800)); },200); }
 });
 
 var stage6File=document.getElementById('ct-stage6-image-file');
@@ -16593,7 +16712,7 @@ document.addEventListener('click', function(e){ var t=e.target; if(!t.closest) r
   var all=t.closest('#ct-chgpt'), one=t.closest('[data-cg]'); if(!all && !one) return;
   var q=all?chGptAll():chGptOne(chars()[+one.dataset.cg],1,1); if(!q) return stat('인물이 없다. 「AI로 캐릭터 시트 짜기」를 먼저 누른다.');
   ctCopy(q); stat('등장인물 시트 요청문을 복사했다 — ChatGPT에 붙여 넣고, 그린 뒤 「다음」이라고 답하면 다음 인물을 그린다.');
-  setTimeout(function(){ window.open('https://chatgpt.com/?q='+encodeURIComponent(q.length>1800?'다음 메시지로 등장인물 시트 요청문을 붙여 넣을게. 받으면 첫 그림부터 그려줘.':q),'_blank','noopener'); },200);
+  setTimeout(function(){ imgAIOpen(q.length>1800?'다음 메시지로 등장인물 시트 요청문을 붙여 넣을게. 받으면 첫 그림부터 그려줘.':q); },200);
 });
 setTimeout(function(){ try{ goStep(CSTEP,true); }catch(e){} },0);
 document.addEventListener('change', function(e){ if(e.target.id==='ct-colon'){ try{ localStorage.setItem('ctCol', e.target.checked?'1':'0'); }catch(er){} try{ renderBoard(); }catch(er){} } });
@@ -16634,7 +16753,7 @@ function serAsm(ch, poses){
     'Korean webtoon style, clean line art, flat colors.';
 }
 function serSend(text, ims){ ctCopy(text); var A=window.__ppArt; var list=(ims||[]).filter(function(x){ return x && x.u; });
-  if(list.length) return sendGpt(text, list); stat('요청문을 복사했다 — ChatGPT에 붙여 넣는다'); window.open('https://chatgpt.com/'+(text.length<1800?'?q='+encodeURIComponent(text):''),'_blank','noopener'); }
+  if(list.length) return sendGpt(text, list); stat('요청문을 복사했다 — ChatGPT에 붙여 넣는다'); imgAIOpen(text.length<1800?text:''); }
 
 /* ---------- 연재 시트 자동 조립기 (2026-11-22) ----------
    머리 시트(5열×6행: 좌우 돌림 × 위아래, 마지막 줄 뒤통수)와 몸통 시트(5열×3행: 돌림 × 시점 높이)를 칸으로 나누고,
@@ -16857,7 +16976,7 @@ document.addEventListener('click', function(e){ var b=e.target.closest && e.targ
     if(k==='out' && ims.filter(Boolean).length<2){ stat('1·2번 그림을 먼저 넣으면 같이 첨부한다. 지금은 요청문만 복사한다.'); ims=[]; }
     serSend(q, ims); } });
 document.addEventListener('click', function(e){ var t=e.target;
-  if(t.id==='ct-gptall'){ if(!B||!B.cuts||!B.cuts.length) return stat('콘티 컷이 없다'); var q=ctGptPrompt(B.cuts.filter(function(c){ return c.scr; }).slice(0,30)); ctCopy(q); setTimeout(function(){ window.open('https://chatgpt.com/?q='+encodeURIComponent(q.slice(0,6000)),'_blank','noopener'); },150); }
+  if(t.id==='ct-gptall'){ if(!B||!B.cuts||!B.cuts.length) return stat('콘티 컷이 없다'); var q=ctGptPrompt(B.cuts.filter(function(c){ return c.scr; }).slice(0,30)); ctCopy(q); setTimeout(function(){ imgAIOpen(q.slice(0,6000)); },150); }
   if(t.id==='ct-faces'){ if(window.__ppFix) window.__ppFix.openFaces((B&&B.chars&&B.chars[0]&&B.chars[0].name)||''); } });
 function openEdit(f,show3d){
   var n=+f.dataset.n, c=B.cuts[n-1]; if(!c || f.querySelector('.ct-ed')) return;
@@ -16889,7 +17008,7 @@ function openEdit(f,show3d){
     r.insertAdjacentHTML('beforeend','<span class="small" data-stage6-upload-message aria-live="polite"></span>');
     ed.insertBefore(r, ed.querySelector('.filterbar'));
     r.addEventListener('click', function(e){ var b=e.target.closest('[data-cg]'); if(!b) return; e.stopPropagation(); var a=b.dataset.cg;
-      if(a==='gpt'||a==='copy'){ var q=ctGptPrompt([c]); ctCopy(q); if(a==='gpt') setTimeout(function(){ window.open('https://chatgpt.com/?q='+encodeURIComponent(q.slice(0,6000)),'_blank','noopener'); },150); return; }
+      if(a==='gpt'||a==='copy'){ var q=ctGptPrompt([c]); ctCopy(q); if(a==='gpt') setTimeout(function(){ imgAIOpen(q.slice(0,6000)); },150); return; }
       if(a==='x'){ delete c.art; delete B.exported; save(); refreshCut(n); return; }
     }); })();
   (function(){   // 가로·세로로 긴 한 컷: 쓰임을 고르면 어울리는 구도·앵글을 맞춰 준다(저장 전에 바꿀 수 있다)
@@ -20284,7 +20403,7 @@ async function batchReferenceGrid(cuts,layout,width){
   return grid;
 }
 function batchOpenChat(){
-  window.open('https://chatgpt.com/','_blank','noopener');
+  imgAIOpen('');
 }
 function batchCopyPrompt(prompt){
   var box=document.getElementById('ct-batch-prompt');
@@ -24786,7 +24905,7 @@ document.addEventListener('click', function(e){ var b=e.target.closest && e.targ
   if(a==='k'||a==='ang'){ C[a]=b.dataset.v; return paintComp(); }
   if(a==='h'){ C.h=+b.dataset.v; return paintComp(); }
   if(a==='apply'){ compApply(); close(); toast(C.n+'컷 구도를 적용했다'); return rerender(); }
-  if(a==='gpt'){ compApply(); var t=PL().log[C.n-1], q=cutPrompt(t); copy(q,'요청문 복사 — ChatGPT에서 그린 그림을 「그림 올리기」'); setTimeout(function(){ window.open('https://chatgpt.com/?q='+encodeURIComponent(q.slice(0,6000)),'_blank','noopener'); },150); rerender(); return; }
+  if(a==='gpt'){ compApply(); var t=PL().log[C.n-1], q=cutPrompt(t); copy(q,'요청문 복사 — ChatGPT에서 그린 그림을 「그림 올리기」'); setTimeout(function(){ imgAIOpen(q.slice(0,6000)); },150); rerender(); return; }
   if(a==='clear'){ cutSave(C.n,{pan:null, star:false}); close(); return rerender(); }
 });
 document.addEventListener('change', function(e){ var t=e.target; if(!C || !t.closest || !t.closest('#pp-sheet')) return;
@@ -24803,7 +24922,7 @@ root.addEventListener('click', function(e){ var b=e.target.closest('[data-ppt]')
   if(a==='msd') return copy(manuscript(true),'연출 포함 원고를 복사했다');
   if(a==='bs+'||a==='bs-'){ var cs=cutSet(n); cutSave(n,{bs:Math.max(.6,Math.min(1.8,(cs.bs||1)+(a==='bs+'?.15:-.15)))}); return deco(); }
   if(a==='prompt') return copy(cutPrompt(p.log[n-1]),'컷 그림 요청문을 복사했다 — GPT 이미지로');
-  if(a==='gpt'||a==='gptall'){ var q=a==='gpt'?cutPrompt(p.log[n-1]):allPrompt(); copy(q,'요청문 복사 — ChatGPT가 열리면 보내고, 그림을 저장해 「그림 올리기」'); setTimeout(function(){ window.open('https://chatgpt.com/?q='+encodeURIComponent(q.slice(0,6000)),'_blank','noopener'); },150); return; }
+  if(a==='gpt'||a==='gptall'){ var q=a==='gpt'?cutPrompt(p.log[n-1]):allPrompt(); copy(q,'요청문 복사 — ChatGPT가 열리면 보내고, 그림을 저장해 「그림 올리기」'); setTimeout(function(){ imgAIOpen(q.slice(0,6000)); },150); return; }
   if(a==='art'){ var f=document.createElement('input'); f.type='file'; f.accept='image/*'; f.onchange=function(){ if(!f.files[0]) return; loadCanvas(f.files[0]).then(function(c){ var k=Math.min(1,1100/c.width), o=document.createElement('canvas'); o.width=Math.round(c.width*k); o.height=Math.round(c.height*k); o.getContext('2d').drawImage(c,0,0,o.width,o.height);
       var id=gameKey()+'_'+n, u=o.toDataURL('image/jpeg',.86), r=o.height/o.width, opts=[0.5,0.75,1,1.33,1.78], best=opts.reduce(function(x,y){ return Math.abs(y-r)<Math.abs(x-r)?y:x; });
       ART[id]=u; put('art',{id:id,u:u}).then(function(){ cutSave(n,{h:best}); deco(); toast('컷 그림을 넣었다 · 비율도 맞췄다'); }); }); }; f.click(); return; }
@@ -24929,7 +25048,7 @@ root.addEventListener('click', function(e){ var b=e.target.closest('[data-cs]');
     window.__lookAsk({name:D.name, role:D.role, hint:[D.look,D.persona].filter(Boolean).join(' · ')}).then(function(j){ BUSY=false; if(!D.name) D.name=String(j.name||'').slice(0,12); D.look=String(j.look||''); if(!D.persona) D.persona=String(j.persona||''); syncProf(); MSG='생김새를 짰다. 마음에 안 들면 다시 누른다.'; save(); render(); },
       function(er){ BUSY=false; MSG=String(er&&er.message||er); render(); }); return; }
   if(a==='tocast'){ if(!need()) return; syncProf(); var r=window.__castUpsert?window.__castUpsert({name:D.name, role:D.role, desc:[D.look,D.persona].filter(Boolean).join(' · '), fig:typeof castFigGuess==='function'?castFigGuess(D.look):null}):''; MSG=r?'등장인물에 저장했다.':'저장하지 못했다'; return render(); }
-  if(a==='copy'||a==='gpt'){ if(!need()) return; var q=promptOf(k); copy(q, a==='gpt'?'요청문 복사 — ChatGPT에서 그린 뒤 그림을 저장해 「그림 올리기」':'요청문을 복사했다'); if(a==='gpt') setTimeout(function(){ window.open('https://chatgpt.com/?q='+encodeURIComponent(q.slice(0,6000)),'_blank','noopener'); },150); return; }
+  if(a==='copy'||a==='gpt'){ if(!need()) return; var q=promptOf(k); copy(q, a==='gpt'?'요청문 복사 — ChatGPT에서 그린 뒤 그림을 저장해 「그림 올리기」':'요청문을 복사했다'); if(a==='gpt') setTimeout(function(){ imgAIOpen(q.slice(0,6000)); },150); return; }
   if(a==='copyall'){ if(!need()) return; var ks=TYPES.filter(function(t){ return D.on[t[0]]; }); return copy(ks.map(function(t){ return '##### '+t[1]+' #####\n'+promptOf(t[0]); }).join('\n\n'), ks.length+'개 요청문을 복사했다 — 하나씩 보내면 된다'); }
   if(a==='up'){ if(!need()) return; if(k==='face'){ syncProf(); if(window.__ppFix){ window.__ppFix.openFaces(D.name); setTimeout(function(){ var f=document.querySelector('#pp-file'); if(f) f.click(); },80); } return; }
     var fi=document.createElement('input'); fi.type='file'; fi.accept='image/*'; fi.onchange=function(){ if(!fi.files[0]||!window.__ppArt) return; window.__ppArt.fromFile(fi.files[0]).then(function(id){ var x=idx(); x[D.name]=x[D.name]||{}; x[D.name][k]=id; LS('csIndex',x); MSG='그림을 모아 두었다.'; render(); }); }; fi.click(); return; }

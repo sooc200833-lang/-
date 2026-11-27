@@ -397,3 +397,11 @@ arcForm, deviceId, folderMemo, gdBase, gdLast, gdLinked, ideaText, mangaDataVer,
 - 2026-11-23 연재 시트 → 일반 시트 대체 규칙 정리: 연재 시트 없는 인물은 예전대로 일반 시트(전신·표정 얼굴). 연재 시트가 있어도 클로즈업에서 딱 맞는 각도 칸이 없고 일반 표정 얼굴이 있으면 일반 얼굴, 서 있는 컷에서 방향이 다른 전신밖에 없고(weak) 일반 전신이 있으면 일반 전신
 - 2026-11-23 4단계 이어서 쓰기·저장 안내: #ct-resume을 실패 때만이 아니라 늘 계산(resumeAt: 쓴 컷 사이·뒤의 첫 빈 컷, 새로고침 뒤에도) '▶ 이어서 쓰기 (N번 컷부터)'로 표시. #ct-s4save(s4Bar): 몇 컷 썼는지, 자동 저장 위치(이 브라우저 contiBoard), 콘티 저장소 연결 여부, '콘티 저장소에 저장'(이름 묻기)/'새 이름으로 따로 저장'/'저장소 열기'/'백업 파일 받기'(bkDump, 그림 제외). stLinkPaint·setBusy(false)·renderS4에서 갱신
 - 2026-11-23 콘티 저장소 항상 자동 저장: save()가 sid 없어도 stTouch를 부르고, 쓴 컷이 있는 판(boardHasWork)은 2초 뒤 저장소에 자동으로 넣음(이야기 첫머리 이름, auto=1). 저장소에서 지운 콘티는 B.stOff=1로 다시 넣지 않음(직접 저장하면 해제). 4단계 '✎ 이름 바꾸기'
+
+## 그림 AI 고르기(ChatGPT / Gemini) · 캐릭터 모티브 색인 AI 그림 (2026-11-28) — `[[MOD:imgai]]` (메인 스크립트 안, `CHAR_OUT.push(cstOutHTML…)` 바로 뒤)
+- 위쪽 바 🖌 단추(`#img-ai`, `data-imgai="tog"`)와 콘티 단계 줄의 「그림 AI ChatGPT / Gemini」 칩(`imgAIChips`, stepNav의 `.ct-gmh`)으로 고른다. localStorage `imgAI`('gpt' 기본 / 'gm')
+- ChatGPT를 열던 17곳은 모두 `imgAIOpen(미리 채울 글)`로 바꿨다. Gemini는 주소로 글을 미리 채울 수 없어 `gemini.google.com/app`만 연다(요청문은 부르는 쪽이 이미 복사). 사진이 있는 요청(`sendGpt0`)은 폰 공유 창 → Gemini 앱을 고르면 사진+요청문이 같이 간다. 공유가 안 되는 PC에선 참고 그림 한 장 저장(gemini-참고그림.png) + 요청문 복사
+- Gemini를 고르면 단추·상태 글(`button, summary, label, option, legend, [id*=stat], .ct-gm`)의 「GPT」「ChatGPT」를 「Gemini」로 바꿔 보인다(MutationObserver, 원래 글은 WeakMap → ChatGPT로 돌리면 되돌림). textarea·pre·`[data-imgai]`·`.noimgrel`은 건드리지 않는다. 요청문 본문은 바꾸지 않는다
+- 캐릭터 모티브 색인: 뽑기 결과 아래(`CHAR_OUT`) 「🎨 AI 그림」 — 뽑힌 외모·성격·결핍으로 캐릭터 시트(전신 정면·3/4·얼굴) 요청문. 색인 「▸」 펼침 줄(`CHAR_DETAIL`) — 그 모티브를 보여 주는 한 컷 요청문. 기존 작품 예시는 "베끼지 말 것"으로만 넣는다
+- 「덧붙일 설명」(localStorage `iaNote`)이 요청문에 들어간다. 「받은 그림 넣기」는 1280px로 줄여 IndexedDB(`__ppArt`, id `ia_<hash>`)에, 키→id는 localStorage `iaImgs`(`combo|외모들/성격들/결핍들`, `motif|이름`). 기기별, 드라이브 동기화 안 됨
+- 시험: jsdom 16항목(전환·주소·요청문·글자 바꾸기·textarea 보존·색인 상자) 통과. 실제 폰 공유 창에서 Gemini 앱으로 보내기는 아직 확인 안 함
