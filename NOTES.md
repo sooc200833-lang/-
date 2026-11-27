@@ -427,3 +427,9 @@ arcForm, deviceId, folderMemo, gdBase, gdLast, gdLinked, ideaText, mangaDataVer,
 - 위 「제미나이 호출 점검·개선」 항목 중 ①의 「Hydrogen·Carbon 추천 추가」「2.x 추천에서 빼기」와 strongModel의 Carbon은 **되돌렸다**. strongModel은 다시 Pro만
 - Lite 모델은 생각 설정을 보내지 않는다(기본 minimal이 가장 쌈). 생각 토큰도 출력 요금이다
 - 남겨 둔 것(요금이 줄거나 같음): 3.x 이후 temperature 안 보냄, JSON·짧은 일 thinkingLevel low, 「JSON만」 자동 JSON 모드, 무거운 계열(GM_HEAVY) 자동 대체 금지
+
+## 원근·왜곡 지시 (2026-11-28) — `[[MOD:persp]]` `perspBlock(c)` (compDesc 바로 앞)
+- 문제: 샷·앵글·렌즈를 낱말(「low angle」「wide lens」)로만 줘서 GPT·Gemini 그림이 평면적이었다
+- 그림 요청문(콘티 「GPT로 하기」·주요 컷 `ctKeyPrompt`, 전체 콘티·컷 편집기 `ctGptPrompt`, 클리셰 플레이 `cutPrompt`)에 「PERSPECTIVE & DEPTH」 블록을 넣는다: 렌즈 mm(광각 24 / 표준 35-50 / 망원 85-135), 카메라 높이·기울기와 3점 투시(앙각은 위로, 부감은 아래로 모이는 소실점), 눈높이 지평선 + 2점 투시, 더치 회전 각도, OTS 앞어깨·POV 손, 깊이 3층(앞 물체가 프레임 가장자리를 가림·중간 인물·멀어지는 배경), 움직이는 팔·주먹·발 단축법, 클로즈업도 3/4 각도 + 얕은 심도, 「무대처럼 일렬로 세우지 말 것」
+- 렌즈: 작가가 구도(🎛)를 직접 잡은 컷만 배경 확대값(bg.z)으로, 아니면 샷 종류로. 앙각·부감은 보통에서도 광각
+- 세기 localStorage `perspFx`: 0 끔 · 1 약 · 2 보통(기본) · 3 강(초광각 16-20mm 왜곡, 더치 25-30도, 앙각/부감 과장). 콘티 단계 줄 「원근·왜곡」 칩(`data-persp`)

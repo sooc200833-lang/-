@@ -11194,7 +11194,8 @@ CHAR_OUT.push({html:function(cur){ return cstOutHTML(cur); }});
     var u=imgAI()==='gm'?'https://gemini.google.com/app':'https://chatgpt.com/'+(pre?'?q='+encodeURIComponent(String(pre)):'');
     window.open(u,'_blank','noopener'); }
   function imgAIChips(){ var v=imgAI();
-    return ' <span class="ct-gm small" data-imgai="box">그림 AI <button type="button" class="chip'+(v==='gpt'?' on':'')+'" data-imgai="gpt">ChatGPT</button><button type="button" class="chip'+(v==='gm'?' on':'')+'" data-imgai="gm">Gemini</button></span>'; }
+    return ' <span class="ct-gm small" data-imgai="box">그림 AI <button type="button" class="chip'+(v==='gpt'?' on':'')+'" data-imgai="gpt">ChatGPT</button><button type="button" class="chip'+(v==='gm'?' on':'')+'" data-imgai="gm">Gemini</button></span>'+
+      (function(){ var p=2; try{ var s=localStorage.getItem('perspFx'); if(s!=null) p=+s; }catch(e){} return ' <span class="ct-gm small" data-imgai="box" title="그림 요청문에 카메라 높이·렌즈·소실점·단축법을 얼마나 세게 적을지">원근·왜곡 '+[['0','끔'],['1','약'],['2','보통'],['3','강']].map(function(q){ return '<button type="button" class="chip'+(String(p)===q[0]?' on':'')+'" data-persp="'+q[0]+'">'+q[1]+'</button>'; }).join('')+'</span>'; })(); }
   window.imgAI=imgAI; window.imgAIName=imgAIName; window.imgAIOpen=imgAIOpen; window.imgAIChips=imgAIChips;
 
   // ----- 글자 바꿔 보이기 -----
@@ -11220,6 +11221,10 @@ CHAR_OUT.push({html:function(cur){ return cstOutHTML(cur); }});
   document.addEventListener('click', function(e){ var b=e.target.closest && e.target.closest('[data-imgai]'); if(!b) return; var k=b.dataset.imgai;
     if(k==='tog'){ setImgAI(imgAI()==='gm'?'gpt':'gm'); var s=imgAIName(); b.title='그림 AI: '+s+' — 눌러서 바꾸기'; return; }
     if(k==='gpt'||k==='gm'){ e.preventDefault(); setImgAI(k); } });
+  document.addEventListener('click', function(e){ var b=e.target.closest && e.target.closest('[data-persp]'); if(!b) return; var v=b.dataset.persp;
+    try{ localStorage.setItem('perspFx', v); }catch(er){}
+    document.querySelectorAll('[data-persp]').forEach(function(x){ x.classList.toggle('on', x.dataset.persp===v); });
+    var s=document.getElementById('ct-stat'); if(s) s.textContent='그림 요청문의 원근·왜곡: '+({'0':'끔','1':'약 — 자연스러운 원근','2':'보통 — 소실점·깊이 3층·단축법','3':'강 — 초광각 왜곡·과장된 앙각/부감'})[v]; });
   paint(); if(imgAI()==='gm') relTree(document.body);
   try{ document.querySelectorAll('#conti .ct-gmh').forEach(function(h){ if(!h.querySelector('[data-imgai]') && h.innerHTML) h.insertAdjacentHTML('beforeend', imgAIChips()); }); }catch(e){}
 
@@ -15461,6 +15466,34 @@ function viewOf(p){ if(p.src.indexOf('e:')===0){ var ep=p.src.slice(2).split('.'
   var f=p.src.indexOf('f:')===0, e=p.src.slice(2), F=window.__ppFix||{};
   return f?{en:'facing the viewer, expression: '+(EMOEN[e]||e), ko:'얼굴 '+((F.EMN||{})[e]||e)}:{en:({b0:'front view',b1:'3/4 view',b2:'side profile',b3:'back to the viewer'})[p.src]+(p.flip?' (mirrored)':''), ko:({b0:'정면',b1:'3/4',b2:'옆모습',b3:'뒷모습'})[p.src]+(p.flip?'(뒤집음)':'')}; }
 function posKo(x){ return x<25?'맨 왼쪽':x<42?'왼쪽':x<58?'가운데':x<75?'오른쪽':'맨 오른쪽'; }
+// [[MOD:persp]] 원근·왜곡 지시 (2026-11-28) — 설정(샷·앵글·렌즈)을 낱말로만 주면 그림 AI가 평면적으로 그린다.
+// 카메라 높이·기울기·렌즈(mm)·소실점·단축법·깊이 3층을 문장으로 설명한다. 세기 localStorage perspFx: 0 끔 · 1 약 · 2 보통(기본) · 3 강
+function perspLv(){ try{ var v=localStorage.getItem('perspFx'); return v==null?2:+v; }catch(e){ return 2; } }
+function perspBlock(c){
+  var lv=perspLv(); if(!lv || !c) return '';
+  var k=c.k||'ms', a=c.ang||'', z=0; try{ if(c.comp&&c.comp.bg) z=compOf(c).bg.z; }catch(e){}   // 작가가 구도를 직접 잡은 컷만 배경 확대값으로 렌즈를 정한다
+  var lens=z?(z<=110?'w':z<=170?'n':'t'):(({els:'w',ls:'w',bird:'w',crowd:'w',fs:'w',stand:'w',empty:'w',pov:'w',frame:'w'})[k]||'n');
+  if((lv===3 || (lv===2 && (a==='low'||a==='high'))) && lens==='n' && !/^(cu|ecu|insert)$/.test(k)) lens='w';   // 앙각·부감은 광각이라야 왜곡이 산다
+  if(lv===1 && lens==='w') lens='n';
+  var L=['PERSPECTIVE & DEPTH (important — the panel must NOT look flat or stage-like):'];
+  L.push('- '+({w:(lv===3?'Ultra-wide 16-20mm lens':'Wide-angle 24mm lens')+': strong perspective — lines of the room or street converge quickly to vanishing points, near things look much bigger than far things'+(lv===3?', with visible wide-angle distortion near the frame edges like a dramatic manga spread':''),
+    n:'35-50mm lens from a clear 3D camera position: real perspective with a visible vanishing point, not a flat painted backdrop',
+    t:'85-135mm telephoto: background compressed and softly blurred; show depth with overlap, focus falloff and a blurred foreground element'})[lens]+'.');
+  if(k==='bird') L.push('- Camera directly overhead looking straight down (top-down view): bodies strongly foreshortened, we see the tops of heads and shoulders, floor lines converge.');
+  else if(a==='low') L.push("- Camera placed LOW near the ground and tilted UP (worm's-eye view). Three-point perspective: vertical lines converge UPWARD to a vanishing point far above the frame. Feet and legs are nearer the camera and drawn larger, the head smaller and higher, we see under the chin, sky or ceiling behind."+(lv===3?' Push it: a towering, looming figure.':''));
+  else if(a==='high') L.push('- Camera placed HIGH and tilted DOWN. Three-point perspective: vertical lines converge DOWNWARD. Head and shoulders are nearest and larger, the body tapers to small feet, the floor or ground fills the background, the horizon is high or above the frame.'+(lv===3?' Push it: the character looks small and exposed.':''));
+  else L.push("- Camera at eye level: the horizon line sits at the characters' eye height, and the setting is drawn in two-point perspective so floor, walls and objects recede into depth.");
+  if(a==='dutch') L.push('- Roll the camera '+(lv===3?'25-30':'15-20')+' degrees (tilted horizon) and keep every perspective line consistent with that tilt.');
+  if(k==='ots') L.push("- Foreground: the near character's shoulder and back of the head, large, cut off by the frame edge and slightly out of focus; the other character sharp in the midground.");
+  if(k==='pov') L.push("- First-person view: the viewer's own hands or knees may enter from the bottom edge, large and foreshortened.");
+  if(!/^(ecu|insert|empty)$/.test(k)) L.push('- Three depth planes: a foreground element (object, railing, shoulder, leaves) overlapping a frame edge, the subject in the midground, and a receding background. Use overlap, size difference, thinner lines and lighter values in the distance.');
+  var poses=Object.keys(c.wp||{}).map(function(n){ return (c.wp[n]||{}).pose||''; }).join(' ');
+  if(lv>1 && (c.focus || /달리|뛰|주먹|차기|던지|뻗|가리키|내밀|휘두|잡으|손을/.test(poses+' '+(c.scr||'')))) L.push('- Foreshortening: whatever limb or object moves toward the camera (hand, fist, foot, weapon) is drawn dramatically larger and overlaps the body behind it.');
+  if(/^(cu|ecu)$/.test(k)) L.push('- Even in a close-up keep a slight 3/4 camera angle and a shallow depth of field (background blurred) so the face has volume.');
+  L.push('- Avoid: flat side-on staging, everything at the same distance, characters lined up as if on a stage, a straight-on orthographic look.');
+  return L.join('\n')+'\n';
+}
+window.__perspBlock=perspBlock;
 function compDesc(c){ var cp=compOf(c), z=''; try{ z=cutSize(c); }catch(e){} var ar=z==='wide'?'2:1 wide':z==='tall'?'9:16 tall':z==='half'?'3:4':'4:3';
   var sh=SHOTEN[c.k]||'medium shot', shk=(SHOTS.filter(function(q){ return q[0]===c.k; })[0]||[])[2]||'미디엄숏', an=ANGEN[c.ang||'']||ANGEN[''], ank=(ANGS.filter(function(q){ return q[0]===(c.ang||''); })[0]||[])[2]||'앵글 보통';
   var bg=cp.bg, hasBg=!!bgUrlOf(c), lens=bg.z<=110?'wide lens, lots of environment':bg.z<=170?'normal lens':'telephoto feel, background compressed';
@@ -15928,7 +15961,7 @@ function stage3dPrompt(c){
 function ctGptPrompt(cuts){
   var one=function(c){ var who=(c.who&&c.who.length?c.who:(function(){ try{ return whoOf(c).map(function(w){ return w.name; }); }catch(e){ return []; } })()).filter(Boolean).slice(0,3), sh=SHOTS.filter(function(s){ return s[0]===c.k; })[0], an=ANGS.filter(function(a){ return a[0]===(c.ang||''); })[0];
     var wp=c.wp||{}, z0=(function(){ try{ return cutSize(c); }catch(e){ return c.sz; } })(), ratio=z0==='wide'?'2:1 wide':z0==='tall'?'9:16 tall':z0==='half'?'3:4':'4:3';
-    return 'Aspect ratio '+ratio+'.\nShot: '+(sh?sh[1]+' ('+sh[2]+')':'medium shot')+(an&&an[0]?', angle '+an[2]:'')+(c.focus?', speed/focus lines':'')+(c.flash?', flashback border look':'')+'.\n'+
+    return 'Aspect ratio '+ratio+'.\nShot: '+(sh?sh[1]+' ('+sh[2]+')':'medium shot')+(an&&an[0]?', angle '+an[2]:'')+(c.focus?', speed/focus lines':'')+(c.flash?', flashback border look':'')+'.\n'+perspBlock(c)+
       'What we see: '+(c.scr||'')+'\n'+(c.stage3d?.length?stage3dPrompt(c)+'\n':'')+(c.line?'Mood from dialogue (do NOT draw text): '+String(c.line).replace(/\n/g,' / ')+'\n':'')+
       (who.length?'Characters (left to right, keep designs consistent):\n'+who.map(function(nm){ var w=wp[nm]||{}; return '- '+nm+': '+(ctLook(nm)||'')+(w.pose?'; pose '+w.pose:'')+(w.face?'; facing '+w.face:''); }).join('\n'):'No characters.'); };
   var head='Korean webtoon style, clean line art, cel shading, full color. NO speech bubbles, NO text, NO sound-effect letters, NO panel borders. Leave some empty space for speech bubbles.\n\n';
@@ -16549,7 +16582,7 @@ function ctKeyPrompt(c, k, n){ var x=sceneOfCut(c.n)||{a:1,b:B.cuts.length,name:
   var sh=SHOTS.filter(function(q){ return q[0]===c.k; })[0], an=ANGS.filter(function(q){ return q[0]===(c.ang||''); })[0], z=''; try{ z=cutSize(c); }catch(e){}
   var w=ctWho(c), fc=(pp&&pp.faces)||{};
   return (n>1?'=== PANEL '+k+' of '+n+' (cut '+c.n+') ===\n':'')+'Draw ONE finished webtoon panel. Korean webtoon style, clean line art, cel shading, full color. NO speech bubbles, NO text, NO panel border. Leave empty space for speech bubbles.\n'+
-    'Aspect ratio '+(z==='wide'?'2:1':z==='tall'?'9:16':z==='half'?'3:4':'4:3')+'. Shot: '+(sh?sh[1]:'medium shot')+(an&&an[0]?', '+an[2]:'')+(c.focus?', focus lines':'')+(c.flash?', flashback tint':'')+'.\n'+
+    'Aspect ratio '+(z==='wide'?'2:1':z==='tall'?'9:16':z==='half'?'3:4':'4:3')+'. Shot: '+(sh?sh[1]:'medium shot')+(an&&an[0]?', '+an[2]:'')+(c.focus?', focus lines':'')+(c.flash?', flashback tint':'')+'.\n'+perspBlock(c)+
     (n===1&&sheetRefs(w).length?'Character sheet images are attached — copy the characters exactly.\n':'')+'Scene: '+dispNm(x.name||'')+'\n'+cutBgLine(c, x)+'What we see: '+((pp&&pp.see)||c.scr||'')+'\n'+(pp&&pp.staging?'Staging: '+pp.staging+'\n':'')+
     (w.length?'Characters:\n'+w.map(function(nm){ return '- '+nm+': '+(ctLookSafe(nm)||'')+(fc[nm]?'; expression: '+fc[nm]:''); }).join('\n')+'\n':'')+
     (c.line?'Mood from dialogue (do NOT draw text): '+String(c.line).replace(/\n/g,' / ')+'\n':'')+(pp&&pp.emph?'Emphasis: '+pp.emph+'\n':''); }
@@ -24713,7 +24746,7 @@ function cutPrompt(t){
    'NO speech bubbles, NO text, NO sound-effect letters, NO panel border. Leave some empty space near the top for speech bubbles.\n'+
    'Aspect ratio '+(RATIO[String(cs.h||1)]||'1:1 square')+'.\n\n'+
    'Setting: '+p.world[0]+' ('+p.genre+').\n'+
-   'Shot: '+(SHOT[pn.k]||'medium shot')+(ANG[pn.ang]?', '+ANG[pn.ang]:'')+'.\n'+
+   'Shot: '+(SHOT[pn.k]||'medium shot')+(ANG[pn.ang]?', '+ANG[pn.ang]:'')+'.\n'+(window.__perspBlock?window.__perspBlock({k:pn.k,ang:pn.ang,scr:(pn.scr||'')}):'')+
    'What we see: '+(pn.scr||'')+'\n'+(cs.star?'This is a KEY SCENE: make it dramatic and detailed, strong composition, expressive lighting.\n':'')+(pn.pose?'Pose/staging: '+pn.pose+'\n':'')+
    'Scene (for mood, do not draw text): '+t.narr+(t.lines.length?' / '+t.lines.map(function(l){ return l.who+': '+l.text; }).join(' / '):'')+'\n'+
    (who.length?'Characters (keep designs exactly consistent):\n'+who.map(function(n,i){ return '- '+(who.length>1?(i?'right':'left')+': ':'')+lookText(n)+'. Expression: '+(EMEN[emo[n]]||'fitting the scene'); }).join('\n'):'No characters.');
