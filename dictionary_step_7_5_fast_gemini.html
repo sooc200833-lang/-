@@ -14048,6 +14048,7 @@ function renderChars(){
       cv.dataset.who=JSON.stringify([{name:ch.name, look:ch.look||{}}]); cv.setAttribute('role','img'); cv.setAttribute('aria-label', ch.name+' 생김새');
       if(ro) ro.observe(cv); else setTimeout(function(){ queue(cv); },0); f.appendChild(cv); }
     f.insertAdjacentHTML('beforeend','<div class="ct-tags">'+lookTags(ch.look)+'</div>'+(ch.sheet?'<dl class="ct-sheet small">'+[['성격','pers'],['말투','speech'],['원함','want'],['약점','fear'],['관계','rel'],['생김새','look']].map(function(r){ return ch.sheet[r[1]]?'<dt>'+r[0]+'</dt><dd>'+cesc(ch.sheet[r[1]])+'</dd>':''; }).join('')+'</dl>':(ch.note?'<span class="small">'+cesc(ch.note)+'</span>':''))+
+      ((function(){ try{ return sheetEmoOpts(ch.name).length; }catch(e){ return 0; } })()?'<details class="ct-chff"><summary class="small">🙂 3D 얼굴 맞추기</summary><div class="ct-chffx" data-nm="'+cesc(ch.name)+'"></div></details>':'')+
       '<div class="filterbar ct-chb">'+(su?'<button class="chip" type="button" data-shedit="'+i+'">✂ 시트 따기</button>':'')+'<label class="chip sv-up">'+(ch.sheetArt?'시트 바꾸기':'📥 시트 그림 넣기')+'<input type="file" accept="image/*" hidden data-shup="'+i+'"></label><button class="chip" type="button" data-cg="'+i+'">🖌 GPT 시트</button><button class="chip" type="button" data-ce="'+i+'">✎ 고치기</button></div>'+
       '<details class="ct-chmore"><summary class="small">더 보기</summary><div class="filterbar">'+(window.__castUpsert?'<button class="chip" type="button" data-cs="'+i+'">'+(window.__castFind&&window.__castFind(ch.name)?'등장인물 페이지에 반영':'등장인물 페이지에 넣기')+'</button>':'')+'<button class="chip" type="button" data-cd="'+i+'">지우기</button></div></details>');
     box.appendChild(f);
@@ -14075,7 +14076,7 @@ function editChar(i){
     if(old!==nn){ var esc=old.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'), re=new RegExp('^'+esc+'(\\s*[:：])','gm');
       B.cuts.forEach(function(c){ if(c.who) c.who=c.who.map(function(w){ return w===old?nn:w; }); if(c.line) c.line=c.line.replace(re, nn+'$1'); if(c.wp&&c.wp[old]){ c.wp[nn]=c.wp[old]; delete c.wp[old]; } if(c.comp&&c.comp.ppl) c.comp.ppl.forEach(function(p){ if(p.nm===old) p.nm=nn; }); });
       (B.dlg||[]).forEach(function(d){ if(d.who===old) d.who=nn; }); if(B.jaNames&&B.jaNames[old]){ B.jaNames[nn]=B.jaNames[old]; delete B.jaNames[old]; }
-      try{ var F=window.__ppFix; if(F&&F.spr&&F.spr[old]&&F.setFaces){ F.setFaces(nn, F.spr[old]); } }catch(e){} }
+      try{ var F=window.__ppFix; if(F&&F.spr&&F.spr[old]&&F.setFaces){ F.setFaces(nn, F.spr[old], F.isHead?F.isHead(old):true); } }catch(e){} }
     if(window.__castFind && window.__castFind(nn) && window.__castUpsert) window.__castUpsert({name:nn, fig:ch.look});   // 등장인물 페이지에 있는 인물이면 생김새를 같이 고친다
     save(); renderChars(); renderBoard();
   });
@@ -16768,7 +16769,7 @@ function stepDone(n){ var st=(document.getElementById('ct-story')||{}).value||''
   }
   if(n===1) return !!(B&&B.expanded) || st.length>400;
   if(n===2) return !!(B&&B.chars&&B.chars.some(function(x){ return x.sheet; }));
-  if(n===2.5) return !!(B&&B.chars&&B.chars.some(function(x){ return x.serial&&(x.serial.emo||x.serial.figs); }));
+  if(n===2.5) return !!(B&&B.chars&&B.chars.some(function(x){ return x.serial&&(x.serial.head||x.serial.body||x.serial.emo||x.serial.figs); }));
   if(n===3) return !!(B&&B.dlg&&B.dlg.length&&B.dlg.every(function(d){ return d.ok; }));
   if(n===4) return !!(B&&B.cuts&&B.cuts.some(function(c){ return c.scr; }));
   if(n===5) return !!(B&&B.sceneBg&&Object.keys(B.sceneBg).length);
@@ -17407,7 +17408,7 @@ function chGptOne(x, k, n){
   var h=x.sheet||{};
   return '⚠ OUTPUT: a PNG with a FULLY TRANSPARENT background (alpha channel) — no background color, no floor, no shadow. This is a cut-out sheet.\n'+(n>1?'[Character '+k+' of '+n+'] ':'')+'Draw ONE image: a character reference sheet for '+x.name+'.\n'+
     'Appearance: '+chLookEn(x)+'\n'+(h.pers?'Personality (show it in posture and expressions): '+h.pers+'\n':'')+(x.role?'Role: '+x.role+'\n':'')+
-    'LAYOUT (exactly 2 rows): TOP ROW = 4 full-body figures (front, 3/4, side, back), same height. BOTTOM ROW = 6 UPPER-BODY (waist-up) expression figures — the whole head, BOTH shoulders and both arms fully inside the image, nothing cut off at the sides — in this order: neutral, smile, angry, sad, surprised, '+(h.fear?'scared':'embarrassed')+'. Every figure and head is separated by wide clear empty gaps — nothing touches or overlaps, no ground shadows.\n'+
+    'LAYOUT (exactly 2 rows): TOP ROW = 4 full-body figures (front, 3/4, side, back), same height. BOTTOM ROW = 6 FACE CLOSE-UPS (head only: from the top of the hair down to the chin — NO neck, NO shoulders, NO body), facing the viewer, the face filling each cell, all heads the same size and level — in this order: neutral, smile, angry, sad, surprised, '+(h.fear?'scared':'embarrassed')+'. Every figure and head is separated by wide clear empty gaps — nothing touches or overlaps, no ground shadows.\n'+
     'Korean webtoon style, clean line art, flat colors, TRANSPARENT background (PNG with alpha channel; if transparency is impossible, use flat pure white #FFFFFF with no texture, no shadow, no gradient), NO text, NO names, NO labels. Keep outfit and colors identical in every view.';
 }
 function chGptAll(list){
@@ -17451,10 +17452,10 @@ function serHead(ch){
     'Appearance: '+chLookEn(ch)+'\n'+(ch.sheetArt?'A character sheet of this character is attached — copy the face and hair exactly.\n':'')+'Korean webtoon style, clean line art, flat colors.';
 }
 function serEmo(ch){
-  return serOut()+'EXPRESSION SHEET for '+ch.name+'. Draw ONE image: a grid of the SAME head, 5 columns x '+SER_EMO.length+' rows, equal spacing, each cell the whole head with hair, neck and shoulders down to the collarbone, head level (no tilt).\n'+
+  return serOut()+'EXPRESSION SHEET for '+ch.name+'. Draw ONE image: a grid of the SAME head, 5 columns x '+SER_EMO.length+' rows, equal spacing, each cell a CLOSE-UP of the head only — from the top of the hair down to the chin, NO neck, NO shoulders, NO body — the face filling the cell, head level (no tilt).\n'+
     'COLUMNS (left to right) = turn: left profile (90°), 3/4 left, front, 3/4 right, right profile.\n'+
     'ROWS (top to bottom) = expression: '+SER_EMO.map(function(q,i){ return (i+1)+') '+q[2]; }).join('; ')+'. Each row keeps ONE expression across all 5 angles.\n'+
-    'IDENTICAL hair, face proportions, head size and neck in every cell; only the expression and the turn change.\n'+
+    'IDENTICAL hair, face proportions and head size in every cell; only the expression and the turn change.\n'+
     'Appearance: '+chLookEn(ch)+'\n'+'A head turnaround sheet of this character is attached — copy the face and hair exactly.\nKorean webtoon style, clean line art, flat colors.';
 }
 function serBody(ch){
@@ -17645,17 +17646,16 @@ function renderSerial(){
     '<div class="filterbar"><button class="chip ct-go" type="button" data-ser="gpt-'+k+'">🖌 GPT로 그리기</button><button class="chip" type="button" data-ser="cp-'+k+'">요청문 복사</button><button class="chip" type="button" data-ser="sh-'+k+'">보기</button>'+
     '<label class="chip sv-up">'+(u(k)?'그림 바꾸기':'📥 그린 그림 넣기')+'<input type="file" accept="image/*" hidden data-serup="'+k+'"></label>'+(u(k)?'<button class="chip" type="button" data-ser="rm-'+k+'">빼기</button>':'')+'</div>'+(SER_SHOW===ch.name+k?'<textarea class="pk-pr" rows="8" readonly>'+cesc(k==='head'?serHead(ch):k==='body'?serBody(ch):k==='esh'?serEmo(ch):serAsm(ch,SER_POSES))+'</textarea>':'')+'</div>'; };
   var nH=S.head?1:0, nF=S.body?1:0, nE=Object.keys(S.emo||{}).length;
-  box.innerHTML='<p class="small">인물마다 시트 3장: <b>①머리 각도</b>(위아래·좌우 30칸) <b>②표정</b>(수평 5각도 × 표정 6) <b>③몸통</b>(5×3). 표정 시트는 넣으면 바로 칸을 따서 등록되고, 머리·몸통은 등록 즉시 콘티에서 실시간으로 조합한다. 컷 구성이 자동으로 쓴다: 클로즈업은 컷의 표정·얼굴 방향에 맞는 표정 칸(부감·앙각 무표정이면 머리 각도 칸), 서 있는 컷은 머리·몸통 원본을 자동 조합.</p>'+
+  box.innerHTML='<p class="small">인물마다 시트 2장: <b>①머리 각도</b>(위아래·좌우 30칸) <b>②몸통</b>(5×3). 등록하면 콘티에서 컷의 카메라·인물 방향에 맞춰 실시간으로 조합한다. 표정 얼굴은 2단계 캐릭터 시트 아래 줄 얼굴 6개를 쓰고, 3D 인형 얼굴은 컷 편집 창 인물 줄 「🙂 얼굴 맞추기」에서 맞춘다.</p>'+
     '<div class="filterbar"><label class="ce-chk small"><input type="checkbox" id="se-use"'+(B.serUse===false?'':' checked')+'> 콘티 컷 구성에 자동으로 쓰기</label>'+(nH||nF||nE?'<span class="small">등록됨: '+cesc(ch.name)+' 머리 시트 '+nH+'장 · 표정 '+nE+'칸 · 몸통 시트 '+nF+'장</span><button class="chip" type="button" data-ser="recomp">이 인물 컷 구성 다시 맞추기</button>':'<span class="small">'+cesc(ch.name)+'은 아직 등록 안 됨</span>')+'</div>'+
     '<label class="small">인물 <select id="se-who">'+cs.map(function(x,k){ return '<option value="'+k+'"'+(k===i?' selected':'')+'>'+cesc(x.name)+'</option>'; }).join('')+'</select></label>'+
     row('head',1,'머리 다각도 시트','5×6 — 좌우 돌림 × 위아래, 마지막 줄은 뒤통수','')+
-    row('esh',2,'표정 시트','5×'+SER_EMO.length+' — 수평 5각도 × 표정('+SER_EMO.map(function(q){ return q[1]; }).join('·')+'). 넣으면 칸을 자동으로 따서 클로즈업에 쓴다',
-      (S.emo?'<div class="ser-emo">'+SER_EMO.map(function(q){ return '<span class="small">'+q[1]+'</span>'+[0,1,2,3,4].map(function(c){ var uu=serEmoOk(S,q[0]+'.'+c); var on=SER_EFIX===q[0]+'.'+c; return '<button type="button" class="ser-ec'+(on?' on':'')+'" data-ser="efix" data-k="'+q[0]+'.'+c+'" aria-label="'+q[1]+' '+SER_CN[c]+' 칸 고치기">'+(uu?'<img alt="" src="'+uu+'">':'<i>없음</i>')+'</button>'; }).join(''); }).join('')+'</div>'+serEfixHTML(S)+'<div class="filterbar"><span class="small">따낸 표정 '+Object.keys(S.emo).length+'칸</span><label class="small">배경 지우기 <input type="range" id="se-etol" min="0" max="60" value="'+(S.etol!=null?S.etol:18)+'"></label><label class="ce-chk small"><input type="checkbox" id="se-eeven"'+(S.eeven?' checked':'')+'> 균등 나누기</label><button class="chip" type="button" data-ser="eslice">다시 따기</button></div><p class="small">잘못 따진 칸은 눌러서 범위를 고친다. 옆 칸에서 넘어온 조각은 자동으로 지운다.</p>'+serFitHTML(S):''))+
-    row('body',3,'몸통 다각도 시트','5×3 — 돌림 × 시점 높이, 머리 없이 목 아래부터','')+
-    '<div class="se-st"><b>4. 콘티에서 실시간 자동 조합</b><p class="small">머리·몸통 원본 시트를 등록하면 컷의 카메라·인물 방향에 맞춰 자동으로 조합합니다. 맞지 않는 방향은 제외하며 전신 시트 저장은 필요 없습니다.</p></div>';
-  if(S.emo) serFitPreview(ch);
+    (S.esh||S.emo?'<div class="se-st small">예전에 넣은 연재 표정 시트(칸 '+nE+'개)는 그대로 쓴다. <button class="chip" type="button" data-ser="rm-esh">빼기</button></div>':'')+
+    row('body',2,'몸통 다각도 시트','5×3 — 돌림 × 시점 높이, 머리 없이 목 아래부터','')+
+    '<div class="se-st"><b>3. 콘티에서 실시간 자동 조합</b><p class="small">머리·몸통 원본 시트를 등록하면 컷의 카메라·인물 방향에 맞춰 자동으로 조합합니다. 맞지 않는 방향은 제외하며 전신 시트 저장은 필요 없습니다.</p></div>';
 }
 // 🙂 얼굴 맞추기(편집 창 인물 줄, 2026-11-28 — 사용자: 슬라이더가 어디 있는지 모르겠다): 미리보기 정면·3/4 + 크기·좌우·위아래·기울기 + 자동 맞춤. 값은 인물마다(ch.serial.ff), 바로 저장
+window.__faceFitUI=function(el, nm){ return faceFitUI(el, nm); };   // 캐릭터 카드(다른 묶음)에서 부른다
 function faceFitUI(el, nm){ var ch=chOf(nm); if(!ch) return; ch.serial=ch.serial||{}; var S=ch.serial, opts=sheetEmoOpts(nm), emo=(opts[0]||['n'])[0], tq=0;
   var R=function(l,k,mn,mx,def){ var v=(S.ff||{})[k]!=null?S.ff[k]:def; return '<label class="small" style="display:grid;grid-template-columns:4.5em 1fr 3em;align-items:center;gap:.4em;margin:.1em 0"><span>'+l+'</span><input style="width:100%;margin:0" type="range" data-fk="'+k+'" min="'+mn+'" max="'+mx+'" value="'+v+'"><output>'+v+'</output></label>'; };
   el.innerHTML='<div class="ff-v" style="display:flex;gap:.4em;min-height:60px;margin:.3em 0"><span class="small">미리보기 준비 중…</span></div>'+
@@ -17675,10 +17675,11 @@ function faceFitUI(el, nm){ var ch=chOf(nm); if(!ch) return; ch.serial=ch.serial
   prev(); }
 // 표정 시트가 있는 인물의 표정 칸 = 시트 요청문의 표정 그대로(2026-11-28): 연재 표정 시트(SER_EMO 이름) + 🎭 표정 시트(그 모듈 이름)
 var SHEET_EMO_KO={n:'보통',smile:'미소',grin:'활짝',shy:'수줍',panic:'당황',shock:'충격',angry:'화남',sad:'슬픔',cry:'울음',smirk:'비웃음',think:'생각',menace:'위압'}, SHEET_EMO_ORD=['n','smile','grin','shy','panic','shock','angry','sad','cry','smirk','think','menace'];
-function sheetEmoOpts(nm){ var o={}, S=null; try{ S=serOf(nm); }catch(e){} var F=window.__ppFix, m=F&&F.spr&&F.spr[nm];
-  if(m) Object.keys(m).forEach(function(k){ if(SHEET_EMO_KO[k]) o[k]=SHEET_EMO_KO[k]; });
+var CHSHEET_EMO_KO={n:'무표정',smile:'미소',angry:'화남',sad:'슬픔',shock:'놀람',shy:'당황',panic:'겁먹음'};   // 캐릭터 시트 요청문(chGptOne) 아래 줄 순서·이름
+function sheetEmoOpts(nm){ var o={}, S=null; try{ S=serOf(nm); }catch(e){} var F=window.__ppFix, m=F&&F.spr&&F.spr[nm], chs=!!(F&&F.isHead&&F.isHead(nm));
+  if(m) Object.keys(m).forEach(function(k){ var L=chs?CHSHEET_EMO_KO:SHEET_EMO_KO; if(L[k]) o[k]=L[k]; });
   if(S&&S.emo) SER_EMO.forEach(function(q){ if(S.emo[q[0]+'.2']) o[q[0]]=q[1]; });
-  var ord=(S&&S.emo)?SER_EMO.map(function(q){ return q[0]; }).concat(SHEET_EMO_ORD):SHEET_EMO_ORD, seen={};   // 연재 시트가 있으면 그 요청문 순서
+  var ord=(S&&S.emo)||chs?SER_EMO.map(function(q){ return q[0]; }).concat(['panic'], SHEET_EMO_ORD):SHEET_EMO_ORD, seen={};   // 연재 시트가 있으면 그 요청문 순서
   return ord.filter(function(k){ if(!o[k]||seen[k]) return false; seen[k]=1; return true; }).map(function(k){ return [k, o[k]]; }); }
 // 3D 얼굴 맞추기(2026-11-28): 마네킹 머리 앞면에 씌우는 정면 표정 칸의 크기·자리·기울기를 인물마다 직접 조절(ch.serial.ff). 미리보기 정면·3/4·옆
 var SER_FFE='n', SER_FFT=0, SER_FFQ=0;
@@ -19689,6 +19690,7 @@ window.__ctSHOTS=SHOTS; window.__ctANGS=ANGS; window.__ctShotName=shotName; wind
 window.__d3Sprite=d3Sprite; window.__d3Sets=D3_SETS; window.__d3EmoKo=D3_EMO_KO; window.__d3PropKo=D3_PROP_KO; window.__setDraw=setDraw; window.__drawMode=drawMode; window.__ctCutData=function(cv,c){ return cutData(cv,c); }; window.__ctWhoOf=function(c){ return whoOf(c); }; window.__ctApplyBest=applyBest;
 document.getElementById('ct-sheet').addEventListener('click', makeSheets);
 document.getElementById('ct-addch').addEventListener('click', function(){ ensureB(); B.chars.push({name:'인물 '+(B.chars.length+1), role:'', look:{}, note:''}); save(); renderChars(); editChar(B.chars.length-1); });
+document.getElementById('ct-chars').addEventListener('toggle', function(e){ var d=e.target; if(!d.classList || !d.classList.contains('ct-chff')) return; var x=d.querySelector('.ct-chffx'); if(d.open){ if(window.__faceFitUI) window.__faceFitUI(x, x.dataset.nm); } else x.innerHTML=''; }, true);   // 🙂 캐릭터 카드에서 3D 얼굴 맞추기
 document.getElementById('ct-chars').addEventListener('click', function(e){
   var t=e.target.closest('button'); if(!t||!B) return;
   if(t.dataset.ce!=null) editChar(+t.dataset.ce);
@@ -25573,6 +25575,9 @@ function del(st,id){ return new Promise(function(res){ if(!DB) return res(); try
 function gameKey(){ var p=PL(); return p?String(p.at||p.hero.name+'|'+p.genre):''; }
 function cutSet(n){ var a=LG('ppCut',{}), k=gameKey(); return ((a[k]||{})[n])||{}; }
 function cutSave(n,o){ var a=LG('ppCut',{}), k=gameKey(); a[k]=a[k]||{}; a[k][n]=Object.assign({}, a[k][n]||{}, o); var ks=Object.keys(a); if(ks.length>12) delete a[ks[0]]; LS('ppCut',a); }
+// 얼굴만 그린 표정(캐릭터 시트에서 딴 것, 2026-11-28부터 시트 요청문이 얼굴만): 놀이 장면에서 서 있는 그림처럼 바닥에 크게 붙이면 머리만 떠 보여서, 작게·위로 올려 둔다. localStorage sprHead={이름:1}
+var SPRH=(function(){ try{ return JSON.parse(localStorage.getItem('sprHead')||'{}')||{}; }catch(e){ return {}; } })();
+function sprHeadSet(name, on){ if(on) SPRH[name]=1; else delete SPRH[name]; try{ localStorage.setItem('sprHead', JSON.stringify(SPRH)); }catch(e){} }
 function sprOf(name, emo){ var s=SPR[name]; if(!s) return ''; var k=emo||'n', g=0; while(!s[k] && g++<4) k=FALL[k]||'n'; return s[k]||s.n||s[Object.keys(s)[0]]; }
 
 /* ---------- 알림·복사 ---------- */
@@ -25720,7 +25725,7 @@ function onSheet(e){ var b=e.target.closest('[data-pp]'); if(!b) return; var a=b
     b.disabled=true; b.textContent='짜는 중…'; window.__lookAsk({name:U.name, hint:hint2, genre:p&&p.genre, seed:p&&p.world&&p.world[0]}).then(function(j){ var all2=LG('ppProf',{}); all2[U.name]=Object.assign(all2[U.name]||{},{look:String(j.look)}); LS('ppProf',all2); toast('생김새를 짰다'); paintFaces(); }, function(er){ toast(String(er&&er.message||er)); paintFaces(); }); return; }
   if(a==='cpSheet') return copy(sheetPrompt(U.name,U.lay),'표정 시트 요청문을 복사했다 — GPT 이미지로');
   if(a==='saveSpr'){ var m={}; U.cells.forEach(function(u,i){ if(u && !U.drop[i] && U.as[i]) m[U.as[i]]=u; }); if(!Object.keys(m).length) return toast('넣을 칸이 없다');
-    SPR[U.name]=m; put('spr',{id:U.name,m:m}).then(function(){ toast('「'+U.name+'」 표정 '+Object.keys(m).length+'개 저장 — 장면에 바로 나온다'); U.src=null; U.cells=null; paintFaces(); rerender(); }); return; }
+    SPR[U.name]=m; sprHeadSet(U.name, false); put('spr',{id:U.name,m:m}).then(function(){ toast('「'+U.name+'」 표정 '+Object.keys(m).length+'개 저장 — 장면에 바로 나온다'); U.src=null; U.cells=null; paintFaces(); rerender(); }); return; }
   if(a==='rm'){ delete SPR[U.name]; del('spr',U.name).then(function(){ paintFaces(); rerender(); }); return; }
 }
 function rerender(){ var p=PL(); if(p && window.PAGE_ON && window.PAGE_ON.play) try{ window.PAGE_ON.play(); }catch(e){} }
@@ -25753,7 +25758,9 @@ function deco(){
     if(ART[aid]){ var im=document.createElement('div'); im.className='pp-art'; im.style.backgroundImage='url('+ART[aid]+')'; fr.appendChild(im); }
     else { var PN=panOf(t), who=(PN.who||[]).slice(0,2), emo=PN.emo||{};
       who.forEach(function(nm,i){ var key=SPR[nm]?nm:((isMob(nm)&&SPR[MOB])?MOB:''); if(!key) return; var u=sprOf(key,emo[nm]); if(!u) return;
-        var s=document.createElement('img'); s.className='pp-spr'; s.alt=nm; s.src=u; s.style.left=(who.length>1?(i?66:34):50)+'%'; s.style.height=(/cu|ecu/.test(PN.k)?96:/ls|els|fs|crowd|bird/.test(PN.k)?55:80)+'%'; fr.appendChild(s); }); }
+        var s=document.createElement('img'); s.className='pp-spr'; s.alt=nm; s.src=u; s.style.left=(who.length>1?(i?66:34):50)+'%'; s.style.height=(/cu|ecu/.test(PN.k)?96:/ls|els|fs|crowd|bird/.test(PN.k)?55:80)+'%';
+        if(SPRH[key]){ s.style.height=(/cu|ecu/.test(PN.k)?62:/ls|els|fs|crowd|bird/.test(PN.k)?22:40)+'%'; s.style.bottom=(/cu|ecu/.test(PN.k)?12:/ls|els|fs|crowd|bird/.test(PN.k)?42:34)+'%'; }   // 얼굴만 있는 그림
+        fr.appendChild(s); }); }
     // 말풍선
     var bs=cs.bs||1, pos=cs.pos||{};
     t.lines.forEach(function(l,i){ var b=document.createElement('div'); b.className='pp-bb'+(l.who===p.hero.name?' me':''); b.dataset.i=i; b.dataset.n=n;
@@ -25888,7 +25895,7 @@ function importCharSheet(name, src, opt){ opt=opt||{};
     var EX=['n','smile','angry','sad','shock', opt.fear?'panic':'shy'], m=Object.assign({}, SPR[name]||{});
     if(face) face.cells.slice(0,EX.length).forEach(function(cc,i){ m[EX[i]]=cc.u; });
     var bodies=body?body.cells.slice(0,4).map(function(cc){ return cc.u; }):[];
-    if(face && face.cells.length){ SPR[name]=m; }
+    if(face && face.cells.length){ SPR[name]=m; sprHeadSet(name, true); }
     return put('spr',{id:name,m:SPR[name]||m}).then(function(){ try{ rerender(); }catch(e){} return {faces:face?m:{}, faceN:face?Math.min(face.cells.length,6):0, bodies:bodies, rows:rows.length}; }); }); }
 
 // 시트 따기 편집기용: 자동 칸 좌표 · 칸으로 자르기 · 표정 저장
@@ -25901,8 +25908,8 @@ function sheetBoxes(src){ return urlCanvas(src).then(function(c){ var rows=slice
   return {c:c, boxes:sheetPick(rows)}; }); }
 function cropSheet(c, box, nobg){ var src=nobg?c:removeBg(c,34), w=src.width, x0=Math.max(0,Math.round(box.x)), y0=Math.max(0,Math.round(box.y)), x1=Math.min(w-1,Math.round(box.x+box.w)), y1=Math.min(src.height-1,Math.round(box.y+box.h));
   var d=src.getContext('2d',{willReadFrequently:true}).getImageData(0,0,w,src.height).data, r=cropBox(src,d,w,x0,x1,y0,y1); return r?r.u:''; }
-function setFaces(name, m){ SPR[name]=Object.assign({}, m); return put('spr',{id:name,m:SPR[name]}).then(function(){ try{ rerender(); }catch(e){} }); }
-window.__ppFix={sheetBoxes:sheetBoxes, cropSheet:cropSheet, setFaces:setFaces, importCharSheet:importCharSheet, EMN:EMN, allPrompt:allPrompt, manuscript:manuscript, cutPrompt:cutPrompt, sheetPrompt:sheetPrompt, slice:slice, removeBg:removeBg, openFaces:openFaces, spr:SPR};
+function setFaces(name, m, head){ SPR[name]=Object.assign({}, m); sprHeadSet(name, head!==false); return put('spr',{id:name,m:SPR[name]}).then(function(){ try{ rerender(); }catch(e){} }); }
+window.__ppFix={isHead:function(n){ return !!SPRH[n]; }, sheetBoxes:sheetBoxes, cropSheet:cropSheet, setFaces:setFaces, importCharSheet:importCharSheet, EMN:EMN, allPrompt:allPrompt, manuscript:manuscript, cutPrompt:cutPrompt, sheetPrompt:sheetPrompt, slice:slice, removeBg:removeBg, openFaces:openFaces, spr:SPR};
 idb().then(function(){ return all('spr'); }).then(function(L){ L.forEach(function(r){ SPR[r.id]=r.m; }); return all('art'); }).then(function(L){ L.forEach(function(r){ ART[r.id]=r.u; }); rerender(); deco(); try{ document.dispatchEvent(new Event('pp-art-ready')); }catch(e){} });
 deco();
 })();
