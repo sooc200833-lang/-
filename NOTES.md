@@ -513,3 +513,11 @@ arcForm, deviceId, folderMemo, gdBase, gdLast, gdLinked, ideaText, mangaDataVer,
 - (같은 날 다시) 사용자: 블렌더로 제대로 만들어 붙여, 얼굴과 턱이 부드럽게 이어지게, 광대 없이 → **`assets/3d/head/mannequin.glb`** (`build_mannequin_head.py`, 직접 만든 것이라 출처 표기 필요 없음). 높이별 단면표(가로 반폭·앞·뒤, 캣멀롬 보간, 얼굴 앞쪽은 조금 각진 초타원 n 2.4)로 한 번에 만든 두상 + 오목한 귀 → 복셀 다시 짜기(.0016) + 살짝 부드럽게 → 8,000삼각형, uv는 정면 투영(시트 얼굴용).
   - 사전: `D3_HEAD_URL`=`mannequin.glb`. `d3HeadParse`가 표정 키·그림이 없으면 `plain:true` → `d3HeadPut`이 피부+크기 1.035 외곽선만 붙인다. `HDf`(=얼굴까지 든 머리 모델)일 때만 도형 눈·입을 안 그리므로 마네킹 머리에는 표정이 그대로 그려진다. 파일을 받기 전·실패하면 `G.egg`+`G.jaw`+공 귀로 그린다.
   - 블렌더 미리보기: 스크래치의 review_head.py(워크벤치 정면·35°·90°).
+
+## 3D 머리에 시트 얼굴 씌우기 + 직접 맞추기 (2026-11-28)
+- 콘티 3D 컷(`draw3d`의 `add`)이 인물 이름으로 얼굴 그림을 찾는다: `d3FaceTex(이름, 3D 표정)` → `d3FaceUrl`: 연재 표정 시트 `ch.serial.emo`의 **정면 열(2)** 칸(표정은 `D3_FACE_EMO`로 SER_EMO 6종에 맞춤, 없으면 `n.2`) → 없으면 「🎭 표정 시트」(`faceUrl`). 3D 머리가 스스로 돌아서 늘 정면 칸을 쓴다.
+- `d3Fig`: 마네킹 머리(`HDm.plain`)이고 얼굴 그림이 있으면 `FT` → 도형 눈·눈썹·입·앞머리 공을 안 그리고, `d3HeadPut`이 머리 앞을 보는 면만 떼어 낸 `d3FrontGeo`(법선 z>.12, z>.01)에 그림을 씌운다(MeshBasic, 투명, polygonOffset). 그림은 머리 uv(정면 투영 .24×.28) 안에 비율을 지켜 가운데 맞춤, glTF uv라 `flipY=false`.
+- 직접 맞추기: 2.5단계 연재 시트 → 표정 시트 아래 「3D 얼굴 맞추기」: 크기 %(40~250)·좌우·위아래(±40, 머리 uv의 %)·기울기(±30°), 미리보기 표정 고르기, 원래대로. 인물마다 `ch.serial.ff={s,x,y,r}`(기본값이면 지움). 미리보기는 `d3Sprite({head, force, faceUrl, faceFit, yaw 0/35/90})` — `force`는 그림 방식이 3D가 아니어도 그린다. 머리 파일·얼굴 그림이 다 읽힌 뒤에 그린다(먼저 그리면 그린 눈·입으로 캐시된다).
+- 텍스처: 그림은 `D3FI[url]`에 한 번 읽고, 맞추기 값마다 `D3FT[url|s,x,y,r]` 텍스처(80개 넘으면 비움). 변환은 three `setUvTransform`(center .5) 기준으로 offset을 풀어 계산.
+- 같이 고침: 몸 외곽선(`d3OutlineSkin`) 셰이더가 이 three 버전의 기본 재질에 없는 `objectNormal`을 써서 컴파일이 안 되던 것 → 스키닝 법선을 직접 계산(`customProgramCacheKey 'd3outS1'`).
+- 시험: 가짜 5×6 표정 시트를 2.5단계에 넣어 30칸 따기 → 미리보기에 얼굴이 씌워짐, 크기 135·위아래 -8·기울기 10·화남으로 바뀜, `__d3FaceUrl(이름, 표정)`이 표정마다 다른 칸. 실제 콘티 3D 컷 화면에서는 아직 안 봄.
