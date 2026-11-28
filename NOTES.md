@@ -472,3 +472,12 @@ arcForm, deviceId, folderMemo, gdBase, gdLast, gdLinked, ideaText, mangaDataVer,
 - 변환기 `assets/3d/mocap/mocap_convert.js`(node): BVH 파싱·FK → 매 프레임 엉덩이 방향으로 정면(+z) 돌리기 → 골반·가슴·머리 틀로 rt·sp·hd 오일러(XYZ) → 팔(la/ra [x, 옆, 팔꿈치≤0, 비틀기])·다리(ll/rl [x, 옆, 무릎≥0])는 우리 인형 회전식으로 위팔·아래팔 방향을 맞추는 수치 풀이 → 0.1초마다, 맞춤 오차 큰 프레임 버림 → 기본 자세에서 먼 순간부터 서로 다른 것 최대 4개. dy는 다리 뼈 길이 비율(넓적다리+정강이 .87)로. 앉는 동작에서 허벅지가 앞·몸이 섰으면 prop seat.
 - 이름 「모캡·<동작> n」. 3D 그림 전용: 선 그림(POSE_J)·FIG_SEL·POSE_INFO(AI에 보내는 자세 목록)에는 안 넣는다(요금·목록 길이). 고르는 곳: 편집 창 인물 줄 자세 칸(3D일 때 optgroup 「모션 캡처 · 동작」, `d3PoseMcOpts`), 연출 문법 「직접 돌려 보기」 자세 칸(`window.__d3PoseMcOpts`, PV.pose → who[0].pose·look.pose).
 - 시험(로컬): 24자세 그림, 「직접 돌려 보기」 복싱 1.
+
+## 사람 머리(MPFB) · 컷 간격 전체 · 말풍선 모양 더 (2026-11-28)
+- 3D 머리: `assets/3d/head/head.glb`(만든 곳 `build_mpfb_head.py`, 출처 `CREDITS.md`) — MPFB 2.0.18 사람(CC0 에셋) 머리만 잘라 턱~정수리 .27·앞뒤 ±.122로 맞춤, 눈(EyeWhite/EyeIris)·눈썹·속눈썹(webp 그림)·입 속. ARKit 표정을 좌우 합친 키 12개(eyeBlink eyeSquint eyeWide browDown browInnerUp browOuterUp mouthSmile mouthFrown jawOpen noseSneer mouthUpperUp mouthStretch). 눈썹·속눈썹 키는 가까운 얼굴 점 3개 움직임을 옮김.
+  - 사전: `d3Head`·`d3HeadParse`(sparse 접근자·webp 텍스처 지원)·`d3HeadPut`, 표정 `D3_EMO_KEYS`. 머리가 있으면 예전 공 머리·도형 얼굴 대신. 머리카락 덮개는 `G.capF`(뒤로 젖혀 이마선 위로)·`G.bobF`(얼굴 앞 창) + 외곽선 없음.
+  - 먼저 만든 만화풍 동그란 머리는 사용자가 「너무 별로」라 버렸다. 사용자는 일본 애니식 머리도 원함(VRoid 또는 블렌더 직접 — 미정).
+- 컷 간격 전체: `fxGap` = `fxGap0`(컷마다·자동 간격) × `B.gk`%(최종 편집 「컷 간격(전체)」 0~300, 기본 100). 완성 콘티·파트 나누기에도 같이.
+- 말풍선 꼬리 뿌리 반폭을 절반으로(사용자: 두껍다).
+- 말풍선 모양 더(참고 그림): 외침 = 가시 끝 뾰족·가시 사이 안쪽으로 휜 곡선·길이 제각각, 생각 = 혹이 제각각인 구름 + 가장자리에서 작아지는 동그라미 꼬리, 새 「구름 말풍선」(cloud, 구름+보통 꼬리), 새 「집중 외침」(flash, 흰 타원+바깥으로 가늘어지는 방사선, 꼬리 없음). 곡선 테두리도 촘촘한 점으로 만들어 꼬리·이음·고르기가 그대로 쓴다.
+- (2026-11-28 추가) 머리 모델은 사용자가 고르는 중이라 `D3_HEAD_URL=''`로 꺼 두고 말풍선·간격만 사이트에 올렸다. 만든 머리 파일(`assets/3d/head/` 애니풍, `assets/3d/head/mpfb/` 사람)은 이 노트북에만 있고 저장소에 안 올렸다. 다음 후보: VRoid 공식 CC0 샘플 모델에서 머리·머리카락·표정을 떼어 쓰기.
