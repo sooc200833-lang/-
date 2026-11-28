@@ -488,3 +488,12 @@ arcForm, deviceId, folderMemo, gdBase, gdLast, gdLinked, ideaText, mangaDataVer,
 - 글쓰기는 `WS_CTX` 훅(`wsCtx`), 콘티는 그 구간의 장면 배정표(요약·꼭 보여 줄 것·하는 일)·컷 역할을 두 번 + 원고 앞 6,000자로 찾는다
 - 끄기: AI 연결 페이지 체크 상자 `#dictref-on`(localStorage `dictRef`='0'). 마지막 참고 목록 `window.__dictLast`. 시험용 `window.__dictFind`·`__dictCtx`
 - 시험: 예시 이야기 4개(회귀 복수·우산 재회·학원 미스터리·시한부 고백)에서 관련 항목이 위로 오는지, 가짜 제미나이로 글쓰기 요청 본문에 묶음이 들어가는지 확인
+
+## 캐릭터 보관함 · 주인공 목표·재미 설계 (2026-11-28) — `[[MOD:castkit]]` `[[MOD:ctfun]]` (콘티, 「등장인물 페이지에서 가져오기」 연결 자리)
+- 보관함 = 등장인물 페이지(작품 폴더, 드라이브 동기화). 기록에 `kit`={sheet, sheetArt, bodies, serial, slice, art, at}를 더했다 — 콘티 캐릭터 시트(성격·말투·원하는 것·두려움·관계·생김새)와 그림 id. 그림은 이 기기 IndexedDB id라 다른 기기에선 시트(글)만 온다
+- `__castUpsert(o)`가 `o.kit`·`o.folder`를 받는다(kit은 늘 최신으로 덮음). `__castList`가 kit·lack·looktxt를 돌려준다. `__castFolders`
+- 콘티 2단계: 「📁 보관함에서 골라 넣기」(`#ct-castpick` → `#ct-castpk` 폴더 고르기·그림 미리보기·시트✓/그림✓/연재 시트✓ 표시, 여러 명 골라 넣기), 「📁 이 콘티 인물 모두 보관함에 저장」(`#ct-castall`, 두 번 눌러야, 지금 보고 있는 등장인물 폴더로). 카드의 「등장인물에 넣기」도 kit을 같이 넣는다. 가져올 때 `kitApply`가 빈 칸만 채움(kit.art는 sheetArt가 없을 때 시트 그림으로). 예전 `fromCast`는 `castAddList`를 쓰도록 바꿈. 이미지 구성기에서도 같은 단추
+- 캐릭터 모티브 색인 「등장인물에 넣기」(`#chb-save`)가 그 조합의 「🎨 AI 그림」(`window.__iaComboArt`)을 kit.art로 같이 저장
+- 재미 설계 `B.fun`={logline, goal, need, obstacle, stakes, fun:[id]}. 1단계 `#ct-fun`(칸 5개 + 재미 요소 12개 `FUN_LIST` [id, 이름, 쓰는 법] + 「✦ AI로 목표·재미 추천」 → 목표 후보 3개·재미 2~4개, JSON). `funBlock()`이 [재미 설계]로 이야기 구체화(EXSYS)·장면 배정표(reviewPrompt)·컷 쓰기(cutPrompt)에 들어간다: 목표는 앞 10% 안에 독자가 알게, 장면마다 목표에 가까워지거나 멀어지게, 재미 요소마다 쌓기·터뜨리기 자리. 단계 줄 아래 `funLine` 한 줄(고치기 → 1단계)
+- 판을 다시 까는 `fresh()`·`pull()`이 chars만 남기던 것에 `fun`도 남긴다
+- 시험(jsdom·가짜 제미나이): 보관함 저장·고르기·시트/그림 id 복원·모두 저장·색인 AI 그림·재미 추천·요청문에 [재미 설계]와 [사전 참고] 15항목 통과
