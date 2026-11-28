@@ -14854,31 +14854,40 @@ var D3_EMO_KEYS_A={'':{}, smile:{eyeSquint:1, mouthSmile:1}, laugh:{eyeSquint:1,
 var D3_FACE_EMO={smile:'smile', laugh:'smile', anger:'angry', rage:'angry', shout:'angry', sad:'sad', cry:'sad', shock:'shock', blush:'shy', panic:'shy'}, D3FT={};
 function d3FaceUrl(nm, emo){ if(!nm) return ''; var k=(emo in D3_SHEETK)?emo:(D3_FACE_EMO[emo]||'n'), S=null, u=''; try{ S=serOf(nm); }catch(e){} if(S) u=serEmoOk(S, serEmoKey(k)+'.2')||serEmoOk(S, 'n.2')||'';
   if(!u){ try{ u=faceUrl(nm, k); }catch(e){} } return u||''; }
-function d3FaceTex(nm, emo){ var S=null; try{ S=serOf(nm); }catch(e){} return d3FaceTexU(d3FaceUrl(nm, emo), S&&S.ff, S&&S.ffoff); }
+function d3FaceTex(nm, emo){ var S=null; try{ var ch=chOf(nm); S=ch&&ch.serial; }catch(e){} return d3FaceTexU(d3FaceUrl(nm, emo), S&&S.ff, S&&S.ffoff); }
 // ff = 맞추기 {s 크기%, x 좌우%, y 위아래%(+ 위), r 기울기°} — 시트의 「3D 얼굴 맞추기」에서 인물마다 직접 조절(ch.serial.ff)
 var D3FI={}, D3FT_N=0, D3FA={};   // D3FA[그림] = 이목구비로 구한 맞춤값 {s,x,y,ok,eyes,mouth} (이 탭에서만, 그림이 읽힐 때 한 번)
 // 이목구비 찾기(2026-11-28, 사용자: 「시트 이목구비 판단해서 딱 맞춰줄 순 없엉?」): 가운데 아래쪽 밝은 색 = 피부, 피부가 아닌 덩어리 중 테두리·배경에 닿지 않는 것 = 눈·눈썹·입.
 // 높이가 비슷하고 좌우로 떨어진 큰 한 쌍 = 눈(가늘고 위에 있으면 눈썹으로 보고 덜 고름), 눈 아래 가운데 = 입. 두 눈 가운데·간격을 3D 머리 눈 자리(x ±.045, y .012)에 맞춘다
-function d3FaceFeat(im){ var W0=im.naturalWidth, H0=im.naturalHeight; if(!W0||!H0) return null; var sc=Math.min(1, 220/Math.max(W0,H0)), W=Math.max(8,Math.round(W0*sc)), H=Math.max(8,Math.round(H0*sc));
+// 표정 칸은 보통 상반신까지 있다(사용자, 2026-11-28): 먼저 얼굴을 찾는다 — 밝고 따뜻한 색(피부 후보) 덩어리 중 그림 위쪽에서 가장 큰 것 = 얼굴(목이 붙으면 폭의 1.35배 높이까지만).
+// 그 안에서 피부가 아닌 덩어리 중 얼굴 상자 밖·배경에 닿지 않는 것 = 이목구비 → 눈 한 쌍·입. 눈을 못 찾으면 얼굴 상자로 맞춘다
+function d3FaceFeat(im){ var W0=im.naturalWidth, H0=im.naturalHeight; if(!W0||!H0) return null; var sc=Math.min(1, 260/Math.max(W0,H0)), W=Math.max(8,Math.round(W0*sc)), H=Math.max(8,Math.round(H0*sc));
   var cv=document.createElement('canvas'); cv.width=W; cv.height=H; var g=cv.getContext('2d'); g.drawImage(im,0,0,W,H); var d; try{ d=g.getImageData(0,0,W,H).data; }catch(e){ return null; }
   var n=W*H, A=new Uint8Array(n), Lm=new Float32Array(n), anyT=false, i, x, y; for(i=0;i<n;i++){ Lm[i]=.299*d[i*4]+.587*d[i*4+1]+.114*d[i*4+2]; A[i]=d[i*4+3]>128?1:0; if(!A[i]) anyT=true; }
   if(!anyT) for(i=0;i<n;i++) if(Lm[i]>246) A[i]=0;   // 배경을 안 지운 그림: 거의 흰색은 배경
-  var R=[],G2=[],B2=[]; for(y=Math.round(H*.42);y<H*.78;y++) for(x=Math.round(W*.28);x<W*.72;x++){ i=y*W+x; if(A[i]&&Lm[i]>105){ R.push(d[i*4]); G2.push(d[i*4+1]); B2.push(d[i*4+2]); } }
-  if(R.length<25) return null; var med=function(a){ a.sort(function(p,q){ return p-q; }); return a[a.length>>1]; }, sr=med(R), sg=med(G2), sb=med(B2);
-  var S=new Uint8Array(n), fx0=W, fx1=0, fy0=H, fy1=0; for(i=0;i<n;i++) if(A[i]){ var dr=d[i*4]-sr, dg=d[i*4+1]-sg, db=d[i*4+2]-sb; if(dr*dr+dg*dg+db*db<3600){ S[i]=1; x=i%W; y=(i-x)/W; if(x<fx0)fx0=x; if(x>fx1)fx1=x; if(y<fy0)fy0=y; if(y>fy1)fy1=y; } }
-  var fw=fx1-fx0+1, fh=fy1-fy0+1; if(fw<W*.2||fh<H*.2) return null;
-  var lab=new Int32Array(n).fill(-1), C=[], st=[]; for(i=0;i<n;i++){ if(!A[i]||S[i]||lab[i]>=0) continue; var c={n:0,sx:0,sy:0,x0:W,x1:0,y0:H,y1:0,out:false}, id=C.length; C.push(c); st.push(i); lab[i]=id;
-    while(st.length){ var p=st.pop(), px=p%W, py=(p-px)/W; c.n++; c.sx+=px; c.sy+=py; if(px<c.x0)c.x0=px; if(px>c.x1)c.x1=px; if(py<c.y0)c.y0=py; if(py>c.y1)c.y1=py;
-      for(var k=0;k<4;k++){ var qx=px+(k===0?1:k===1?-1:0), qy=py+(k===2?1:k===3?-1:0); if(qx<0||qy<0||qx>=W||qy>=H){ c.out=true; continue; } var q=qy*W+qx; if(!A[q]){ c.out=true; continue; } if(S[q]||lab[q]>=0) continue; lab[q]=id; st.push(q); } } }
-  var In=C.filter(function(c){ return !c.out && c.n>=n*.0005; }).map(function(c){ return {n:c.n, cx:c.sx/c.n, cy:c.sy/c.n, w:c.x1-c.x0+1, h:c.y1-c.y0+1}; });
+  var comps=function(M, inBox){ var lab=new Int32Array(n).fill(-1), C=[], st=[]; for(var i=0;i<n;i++){ if(!M[i]||lab[i]>=0) continue; var c={n:0,sx:0,sy:0,x0:W,x1:0,y0:H,y1:0,out:false,px:[]}, id=C.length; C.push(c); st.push(i); lab[i]=id;
+      while(st.length){ var p=st.pop(), px=p%W, py=(p-px)/W; c.n++; c.sx+=px; c.sy+=py; c.px.push(p); if(px<c.x0)c.x0=px; if(px>c.x1)c.x1=px; if(py<c.y0)c.y0=py; if(py>c.y1)c.y1=py;
+        for(var k=0;k<4;k++){ var qx=px+(k===0?1:k===1?-1:0), qy=py+(k===2?1:k===3?-1:0); if(qx<0||qy<0||qx>=W||qy>=H||(inBox&&!inBox(qx,qy))){ c.out=true; continue; } var q=qy*W+qx; if(!A[q]){ c.out=true; continue; } if(!M[q]||lab[q]>=0) continue; lab[q]=id; st.push(q); } } } return C; };
+  var K=new Uint8Array(n); for(i=0;i<n;i++) if(A[i]){ var r=d[i*4], gg=d[i*4+1], bb=d[i*4+2]; if(r>130 && r>=gg-6 && gg>=bb-14 && r-bb>8 && Lm[i]>118) K[i]=1; }
+  var face=null; comps(K).forEach(function(c){ if(c.n<n*.008 || c.sy/c.n>H*.72) return; var sco=c.n*(1.2-c.sy/c.n/H); if(!face || sco>face.sco){ c.sco=sco; face=c; } });
+  var sr, sg, sb, fx0, fx1, fy0, fy1, med=function(a){ a.sort(function(p,q){ return p-q; }); return a[a.length>>1]; }, R=[], G2=[], B2=[];
+  if(face){ face.px.forEach(function(p){ R.push(d[p*4]); G2.push(d[p*4+1]); B2.push(d[p*4+2]); }); fx0=face.x0; fx1=face.x1; fy0=face.y0; fy1=Math.min(face.y1, fy0+Math.round((fx1-fx0+1)*1.35)); }
+  else { for(y=Math.round(H*.2);y<H*.6;y++) for(x=Math.round(W*.28);x<W*.72;x++){ i=y*W+x; if(A[i]&&Lm[i]>105){ R.push(d[i*4]); G2.push(d[i*4+1]); B2.push(d[i*4+2]); } } if(R.length<25) return null; fx0=0; fx1=W-1; fy0=0; fy1=H-1; }
+  sr=med(R); sg=med(G2); sb=med(B2); var fw=fx1-fx0+1, fh=fy1-fy0+1, skin=[sr,sg,sb], box=[fx0/W, fy0/H, (fx1+1)/W, (fy1+1)/H];
+  var inB=function(x,y){ return x>=fx0&&x<=fx1&&y>=fy0&&y<=fy1; }, S=new Uint8Array(n); for(i=0;i<n;i++) if(A[i]){ var dr=d[i*4]-sr, dg=d[i*4+1]-sg, db=d[i*4+2]-sb; if(dr*dr+dg*dg+db*db>=3600){ x=i%W; y=(i-x)/W; if(inB(x,y)) S[i]=1; } }   // S = 얼굴 상자 안의 피부 아닌 것
+  var In=comps(S, inB).filter(function(c){ return !c.out && c.n>=fw*fh*.0012; }).map(function(c){ return {n:c.n, cx:c.sx/c.n, cy:c.sy/c.n, w:c.x1-c.x0+1, h:c.y1-c.y0+1}; });
   var best=null, bs=0, fcx=(fx0+fx1)/2; for(var a=0;a<In.length;a++) for(var b=a+1;b<In.length;b++){ var P=In[a], Q=In[b], dy=Math.abs(P.cy-Q.cy), dx=Math.abs(P.cx-Q.cx);
-    if(dy>fh*.09 || dx<fw*.16 || dx>fw*.75 || Math.max(P.n,Q.n)/Math.min(P.n,Q.n)>3.2) continue; var mid=(P.cx+Q.cx)/2; if(Math.abs(mid-fcx)>fw*.18) continue; var yy=((P.cy+Q.cy)/2-fy0)/fh; if(yy<.2||yy>.75) continue;
+    if(dy>fh*.09 || dx<fw*.16 || dx>fw*.75 || Math.max(P.n,Q.n)/Math.min(P.n,Q.n)>3.2) continue; var mid=(P.cx+Q.cx)/2; if(Math.abs(mid-fcx)>fw*.18) continue; var yy=((P.cy+Q.cy)/2-fy0)/fh; if(yy<.12||yy>.75) continue;
     var thin=(P.h/P.w<.32?.45:1)*(Q.h/Q.w<.32?.45:1), sco=(P.n+Q.n)*thin*(1-dy/(fh*.09)*.5)*(.6+yy); if(sco>bs){ bs=sco; best=P.cx<Q.cx?[P,Q]:[Q,P]; } }
-  var skin=[sr,sg,sb]; if(!best) return {eyes:null, skin:skin}; var ey=(best[0].cy+best[1].cy)/2, mo=null, mn=0; In.forEach(function(c){ if(c===best[0]||c===best[1]) return; if(c.cy>ey+fh*.1 && Math.abs(c.cx-(best[0].cx+best[1].cx)/2)<fw*.2 && c.n>mn){ mn=c.n; mo=c; } });
-  return {eyes:[[best[0].cx/W, best[0].cy/H],[best[1].cx/W, best[1].cy/H]], mouth:mo?[mo.cx/W, mo.cy/H]:null, skin:skin}; }
-function d3FaceFit(im, F){ if(!F || !F.eyes) return null; var a=im.naturalWidth/Math.max(1,im.naturalHeight), ha=.24/.28, su=1, sv=1; if(a>ha) sv=ha/a; else su=a/ha;
-  var de=F.eyes[1][0]-F.eyes[0][0]; if(de<.08) return null; var k=(2*.045/.24)/(de*su), SU=su*k, SV=sv*k, emu=(F.eyes[0][0]+F.eyes[1][0])/2, emv=(F.eyes[0][1]+F.eyes[1][1])/2;
-  var cx=.5-(emu-.5)*SU, cy=(.5-(.012-.003)/.28)-(emv-.5)*SV; return {s:clamp(Math.round(k*100),30,320), x:Math.round((cx-.5)*1000)/10, y:Math.round((.5-cy)*1000)/10, ok:1, mouth:!!F.mouth}; }
+  if(!best) return {eyes:null, skin:skin, face:face?box:null};
+  var ey=(best[0].cy+best[1].cy)/2, mo=null, mn=0; In.forEach(function(c){ if(c===best[0]||c===best[1]) return; if(c.cy>ey+fh*.1 && Math.abs(c.cx-(best[0].cx+best[1].cx)/2)<fw*.2 && c.n>mn){ mn=c.n; mo=c; } });
+  return {eyes:[[best[0].cx/W, best[0].cy/H],[best[1].cx/W, best[1].cy/H]], mouth:mo?[mo.cx/W, mo.cy/H]:null, skin:skin, face:face?box:null}; }
+function d3FaceFit(im, F){ if(!F || !(F.eyes||F.face)) return null; var a=im.naturalWidth/Math.max(1,im.naturalHeight), ha=.24/.28, su=1, sv=1; if(a>ha) sv=ha/a; else su=a/ha;
+  var k, mu, mv, ty, ok=1;
+  if(F.eyes){ var de=F.eyes[1][0]-F.eyes[0][0]; if(de<.05) return null; k=(2*.045/.24)/(de*su); mu=(F.eyes[0][0]+F.eyes[1][0])/2; mv=(F.eyes[0][1]+F.eyes[1][1])/2; ty=.012; }
+  else { var fb=F.face, fwn=fb[2]-fb[0]; if(fwn<.05) return null; k=(.19/.24)/(fwn*su); mu=(fb[0]+fb[2])/2; mv=(fb[1]+fb[3])/2; ty=-.035; ok=2; }   // 눈을 못 찾으면: 얼굴 상자 폭을 3D 얼굴 폭에, 가운데를 얼굴 가운데에
+  var SU=su*k, SV=sv*k, cx=.5-(mu-.5)*SU, cy=(.5-(ty-.003)/.28)-(mv-.5)*SV;
+  return {s:clamp(Math.round(k*100),30,900), x:Math.round((cx-.5)*1000)/10, y:Math.round((.5-cy)*1000)/10, ok:ok, mouth:!!F.mouth}; }
 function d3FaceTexU(u, ff, noAuto){ if(!u || !window.THREE) return null; var I=D3FI[u];
   if(!I){ I=D3FI[u]={st:1}; var im=new Image(); im.onload=function(){ I.im=im; I.st=2; try{ var FF=d3FaceFeat(im); D3FA[u]=Object.assign(d3FaceFit(im, FF)||{ok:0}, {skin:FF&&FF.skin}); }catch(e){ D3FA[u]={ok:0}; } SPR={}; SPR_N=0; d3RedrawAll(); }; im.onerror=function(){ I.st=-1; }; im.src=u; return null; }
   if(I.st!==2) return null; ff=ff||{}; var AF=(!noAuto && D3FA[u] && D3FA[u].ok)?D3FA[u]:null;   // 자동 맞춤 + 손으로 고친 값(크기는 곱, 자리·기울기는 더함)
@@ -17646,6 +17655,24 @@ function renderSerial(){
     '<div class="se-st"><b>4. 콘티에서 실시간 자동 조합</b><p class="small">머리·몸통 원본 시트를 등록하면 컷의 카메라·인물 방향에 맞춰 자동으로 조합합니다. 맞지 않는 방향은 제외하며 전신 시트 저장은 필요 없습니다.</p></div>';
   if(S.emo) serFitPreview(ch);
 }
+// 🙂 얼굴 맞추기(편집 창 인물 줄, 2026-11-28 — 사용자: 슬라이더가 어디 있는지 모르겠다): 미리보기 정면·3/4 + 크기·좌우·위아래·기울기 + 자동 맞춤. 값은 인물마다(ch.serial.ff), 바로 저장
+function faceFitUI(el, nm){ var ch=chOf(nm); if(!ch) return; ch.serial=ch.serial||{}; var S=ch.serial, opts=sheetEmoOpts(nm), emo=(opts[0]||['n'])[0], tq=0;
+  var R=function(l,k,mn,mx,def){ var v=(S.ff||{})[k]!=null?S.ff[k]:def; return '<label class="small" style="display:grid;grid-template-columns:4.5em 1fr 3em;align-items:center;gap:.4em;margin:.1em 0"><span>'+l+'</span><input style="width:100%;margin:0" type="range" data-fk="'+k+'" min="'+mn+'" max="'+mx+'" value="'+v+'"><output>'+v+'</output></label>'; };
+  el.innerHTML='<div class="ff-v" style="display:flex;gap:.4em;min-height:60px;margin:.3em 0"><span class="small">미리보기 준비 중…</span></div>'+
+    '<label class="small">미리보기 표정 <select data-fe="1">'+opts.map(function(o){ return '<option value="'+o[0]+'">'+o[1]+'</option>'; }).join('')+'</select></label>'+
+    R('크기 %','s',40,250,100)+R('좌우','x',-40,40,0)+R('위아래','y',-40,40,0)+R('기울기°','r',-30,30,0)+
+    '<div class="filterbar"><label class="small" style="display:inline-flex;align-items:center;gap:.35em"><input style="width:auto;margin:0" type="checkbox" data-fa="1"'+(S.ffoff?'':' checked')+'> 👁 이목구비 자동 맞춤</label><button class="chip" type="button" data-fr="1">원래대로</button></div><p class="small ff-st"></p>';
+  function prev(tries){ var u=d3FaceUrl(nm, emo), box=el.querySelector('.ff-v'), st=el.querySelector('.ff-st'); if(!box) return; if(!u){ box.innerHTML='<span class="small">얼굴 칸이 없다</span>'; return; }
+    if(!D3.st) d3Load(); var ready=d3Ready() && !!d3Head('m') && !!d3FaceTexU(u, S.ff||{}, !!S.ffoff), fa=D3FA[u];
+    if(st) st.textContent=S.ffoff?'자동 맞춤 끔 — 슬라이더 값만 쓴다':!fa?'':fa.ok===2?'눈은 못 찾아 얼굴 자리로 맞췄다 — 슬라이더로 손본다':fa.ok?'눈'+(fa.mouth?'·입':'')+' 자리를 찾아 맞췄다 — 슬라이더는 그 위에 더하는 손보기':'얼굴을 못 찾았다 — 슬라이더로 맞춘다';
+    var ims=!ready?[null]:[0,35].map(function(y){ return d3Sprite({head:1, force:1, faceUrl:u, faceFit:S.ff||{}, faceNoAuto:!!S.ffoff, yaw:y, look:Object.assign({}, ch.look||{}, {hair:(ch.look&&ch.look.hair)||''})}, 160); });
+    if(ims.some(function(x){ return !x; })){ tries=(tries||0)+1; if(tries<25){ clearTimeout(el.__t); el.__t=setTimeout(function(){ prev(tries); }, 400); } return; }
+    box.innerHTML=''; ims.forEach(function(x){ x.style.cssText='width:130px;height:130px;background:#eee;border-radius:6px'; box.appendChild(x); }); }
+  function done(){ clearTimeout(el.__s); el.__s=setTimeout(function(){ save(); SPR={}; SPR_N=0; d3RedrawAll(); var lv=el.closest('.ct-ed'); lv=lv&&lv.querySelector('.ct-camv'); if(lv && !lv.hidden && lv.__draw) lv.__draw(); }, 400); }
+  el.addEventListener('input', function(e){ var t=e.target; if(t.dataset.fk==null) return; var k=t.dataset.fk, v=+t.value, ff=S.ff=S.ff||{}; if(v===(k==='s'?100:0)) delete ff[k]; else ff[k]=v; t.parentNode.querySelector('output').textContent=v; cancelAnimationFrame(tq); tq=requestAnimationFrame(function(){ prev(); }); done(); });
+  el.addEventListener('change', function(e){ var t=e.target; if(t.dataset.fe){ emo=t.value; prev(); } if(t.dataset.fa){ if(t.checked) delete S.ffoff; else S.ffoff=1; prev(); done(); } });
+  el.addEventListener('click', function(e){ if(!e.target.closest('[data-fr]')) return; delete S.ff; done(); faceFitUI(el, nm); });
+  prev(); }
 // 표정 시트가 있는 인물의 표정 칸 = 시트 요청문의 표정 그대로(2026-11-28): 연재 표정 시트(SER_EMO 이름) + 🎭 표정 시트(그 모듈 이름)
 var SHEET_EMO_KO={n:'보통',smile:'미소',grin:'활짝',shy:'수줍',panic:'당황',shock:'충격',angry:'화남',sad:'슬픔',cry:'울음',smirk:'비웃음',think:'생각',menace:'위압'}, SHEET_EMO_ORD=['n','smile','grin','shy','panic','shock','angry','sad','cry','smirk','think','menace'];
 function sheetEmoOpts(nm){ var o={}, S=null; try{ S=serOf(nm); }catch(e){} var F=window.__ppFix, m=F&&F.spr&&F.spr[nm];
@@ -17665,7 +17692,7 @@ function serFitHTML(S){ var ff=S.ff||{}, R=function(l,k,mn,mx,def){ var v=ff[k]!
 function serFitPreview(ch, tries){ var box=document.getElementById('se-fitv'); if(!box) return; var S=ch.serial||{}, u=serEmoOk(S, SER_FFE+'.2')||serEmoOk(S, 'n.2'); if(!u){ box.innerHTML='<span class="small">정면(가운데 열) 표정 칸이 없다</span>'; return; }
   if(!D3.st) d3Load(); var ready=d3Ready() && !!d3Head('m') && !!d3FaceTexU(u, S.ff||{}, !!S.ffoff);   // 얼굴 그림이 다 읽히기 전에 그리면 그린 눈·입으로 굳는다
   var ims=!ready?[null]:[0,35,90].map(function(y){ return d3Sprite({head:1, force:1, faceUrl:u, faceFit:S.ff||{}, faceNoAuto:!!S.ffoff, yaw:y, emo:'', look:{hair:'민머리'}}, 150); });
-  var st=document.getElementById('se-ffst'), fa=D3FA[u]; if(st) st.textContent=S.ffoff?'(자동 맞춤 끔)':!fa?'':fa.ok?'— 눈'+(fa.mouth?'·입':'')+' 자리를 찾아 맞췄다':'— 눈을 못 찾아 가운데 맞춤(슬라이더로 맞춘다)';
+  var st=document.getElementById('se-ffst'), fa=D3FA[u]; if(st) st.textContent=S.ffoff?'(자동 맞춤 끔)':!fa?'':fa.ok===2?'— 눈은 못 찾아 얼굴 자리로 맞췄다(슬라이더로 손본다)':fa.ok?'— 눈'+(fa.mouth?'·입':'')+' 자리를 찾아 맞췄다':'— 얼굴을 못 찾아 그림 전체를 씌웠다(슬라이더로 맞춘다)';
   if(ims.some(function(x){ return !x; })){ tries=(tries||0)+1; if(tries<25) { clearTimeout(SER_FFT); SER_FFT=setTimeout(function(){ serFitPreview(ch, tries); }, 400); } return; }
   box.innerHTML=''; ims.forEach(function(x, i){ x.style.cssText='width:120px;height:120px;background:#eee;border-radius:6px'; x.title=['정면','3/4','옆'][i]; box.appendChild(x); }); }
 document.addEventListener('input', function(e){ var t=e.target; if(!t.dataset || t.dataset.ff==null || !t.closest('#ct-serialbox')) return; var ch=chars()[SER_OPEN_I]; if(!ch||!ch.serial) return;
@@ -17783,7 +17810,7 @@ function openEdit(f,show3d){
         '<select class="ct-wpf" aria-label="방향">'+WP_FACE.map(function(o){ return '<option value="'+o[0]+'"'+((w.face||'')===o[0]?' selected':'')+'>'+o[1]+'</option>'; }).join('')+'</select>'+
         (drawMode()==='3d'?'<select class="ct-wpe" aria-label="표정"><option value="">표정 자동</option>'+(sheetEmoOpts(nm).length?sheetEmoOpts(nm):D3_EMO_KO.slice(1)).map(function(o){ return '<option value="'+o[0]+'"'+((w.emo||'')===o[0]?' selected':'')+'>'+o[1]+'</option>'; }).join('')+'</select>'+
           '<select class="ct-wpo" aria-label="소품"><option value="">소품 자동</option>'+D3_PROP_KO.slice(1).map(function(o){ return '<option value="'+o[0]+'"'+((w.prop||'')===o[0]?' selected':'')+'>'+o[1]+'</option>'; }).join('')+'</select>'+
-          '<button class="chip ct-wpd'+(w.pa&&Object.keys(w.pa).length?' on':'')+'" type="button" aria-expanded="false">🦴 몸동작</button><div class="ct-pd" hidden></div>':'')+'</div>'; }).join(''); }
+          '<button class="chip ct-wpd'+(w.pa&&Object.keys(w.pa).length?' on':'')+'" type="button" aria-expanded="false">🦴 몸동작</button>'+(nm&&sheetEmoOpts(nm).length?'<button class="chip ct-wff" type="button" aria-expanded="false">🙂 얼굴 맞추기</button><div class="ct-ffx" hidden></div>':'')+'<div class="ct-pd" hidden></div>':'')+'</div>'; }).join(''); }
   wpRows();
   // 몸동작 세부(2026-11-28): 부위를 고르고 슬라이더 3개. 값은 고른 자세에 더하는 각도(wp[이름].pa), 미리보기(🎥)에 바로 보인다
   var pdPart='la';
@@ -17793,6 +17820,7 @@ function openEdit(f,show3d){
       '<div class="filterbar"><button class="chip" type="button" data-pdr="part">이 부위 처음대로</button><button class="chip" type="button" data-pdr="all">전부 처음대로</button></div>'; }
   function pdShow(){ var lv=ed.querySelector('.ct-camv'), b=ed.querySelector('.ct-camb'); if(lv && lv.hidden && b) b.click(); else if(lv && lv.__draw) lv.__draw(); }
   wpBox.addEventListener('click', function(e){ var r=e.target.closest('.ct-wr'); if(!r) return; var k=r.getAttribute('data-k'), pd=r.querySelector('.ct-pd'), w=wpCur[k]||(wpCur[k]={});
+    var wf=e.target.closest('.ct-wff'); if(wf){ var fx=r.querySelector('.ct-ffx'), op=fx.hidden; fx.hidden=!op; wf.setAttribute('aria-expanded', String(op)); if(op) faceFitUI(fx, k); else fx.innerHTML=''; return; }
     if(e.target.closest('.ct-wpd')){ var open=pd.hidden; [].slice.call(wpBox.querySelectorAll('.ct-pd')).forEach(function(x){ x.hidden=true; x.innerHTML=''; }); if(open){ pd.innerHTML=pdHTML(k); pd.hidden=false; pdShow(); } e.target.closest('.ct-wpd').setAttribute('aria-expanded', String(open)); return; }
     var pp=e.target.closest('[data-pdp]'); if(pp){ pdPart=pp.dataset.pdp; pd.innerHTML=pdHTML(k); return; }
     var rr=e.target.closest('[data-pdr]'); if(rr){ if(w.pa){ if(rr.dataset.pdr==='all') delete w.pa; else { delete w.pa[pdPart]; if(!Object.keys(w.pa).length) delete w.pa; } } pd.innerHTML=pdHTML(k); r.querySelector('.ct-wpd').classList.toggle('on', !!w.pa); pdShow(); } });
