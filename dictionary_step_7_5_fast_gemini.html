@@ -11435,10 +11435,14 @@ var PR_SRC=[
 function prEsc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 function prSeed(t){ t=String(t||''); var h=0; for(var i=0;i<t.length;i++) h=(h*31+t.charCodeAt(i))%9973; return 300+h; }
 function prComp(e){ var s=(PR_SHOT[e.k]||PR_SHOT.ms)[0]; if(e.ang) s+='+'+PR_ANG[e.ang]; if(e.focus) s+='+집중선'; if(e.flash) s+='+회상'; return s; }
-function prLook(p,f){ var l={}; if(p) l.pose=p; if(f) l.face=f; return l; }
+function prLook(p,f,p3){ var l={}; if(p) l.pose=p; if(p3) l.pose3=p3; if(f) l.face=f; return l; }
+// 3D 그림에서만 쓰는 자세(pose3)·자리(pos3): 이름과 그림이 맞게(2026-11-28)
+var PR_3D={gendo:{p:'겐도 포즈'}, jojo:{p:'죠죠 서기'}, 'hero-landing':{p:'히어로 착지'}, 'back-to-back':{pos:[.43,.57]}, 'skyward-scream':{p:'하늘에 절규'},
+  'hug-knees':{p:'무릎 안고 고개 묻기'}, kabedon:{p:'벽쿵', p2:'기대기', pos:[.4,.62]}, 'burnt-white':{p:'하얗게 불탄 코너'}, 'stand-death':{p:'주먹 들고 선 최후'},
+  'iai-pass':{p:'베고 선 자세', p2:'베고 선 자세', pos:[.22,.78]}, 'lie-down':{p:'대자로 눕기'}, 'face-down-orz':{p:'무릎 꿇고 땅 짚기'}};
 function prWho(e){
-  var w=[{name:'', look:prLook(e.pose,e.face)}];
-  if(/^(two|stand|ots)$/.test(e.k) || e.pose2 || e.face2) w.push({name:'', look:prLook(e.pose2||'', e.face2||'')});
+  var M=PR_3D[e.id]||{}, w=[{name:'', look:prLook(e.pose,e.face,M.p)}];
+  if(/^(two|stand|ots)$/.test(e.k) || e.pose2 || e.face2) w.push({name:'', look:prLook(e.pose2||'', e.face2||'', M.p2)});
   return w;
 }
 function prCv(e){
@@ -11447,6 +11451,7 @@ function prCv(e){
   if(e.ang==='high' && /^(ms|bs|cu)$/.test(e.k)) a+=' data-hs="1.25"';
   if(e.ang==='low' && /^(ms|bs|cu)$/.test(e.k)) a+=' data-hs=".82"';
   if(e.focus) a+=' data-focus="1"'; if(e.flash) a+=' data-flash="1"'; if(e.sil) a+=' data-sil="1"';
+  if(PR_3D[e.id] && PR_3D[e.id].pos) a+=' data-pos3="'+prEsc(JSON.stringify(PR_3D[e.id].pos))+'"';
   a+=' data-who="'+prEsc(JSON.stringify(prWho(e)))+'"';
   return '<canvas class="pr-cv"'+a+' role="img" aria-label="'+prEsc(e.name+' — '+(PR_SHOT[e.k]||PR_SHOT.ms)[1]+(e.ang?' '+PR_ANG[e.ang]:'')+' 그림')+'"></canvas>';
 }
@@ -13976,9 +13981,51 @@ function whoOf(c){
     hit.sort(function(a,b){ return a[0]-b[0]; }); names=hit.slice(0,2).map(function(x){ return x[1]; }); }
   return names.map(function(n,i){ var ch=charOf(n), lk=(ch&&ch.look)||{}, w=wpOf(c,n,i), o={name:n};
     if(w && (w.pose || w.face)){ lk=Object.assign({}, lk); if(w.pose) lk.pose=w.pose; if(w.face) lk.face=w.face; }
-    o.look=lk; if(w){ if(w.pose) o.pose=w.pose; if(w.face) o.face=w.face; if(w.emo) o.emo=w.emo; if(w.prop) o.prop=w.prop; if(w.x!=null && isFinite(+w.x)) o.x=+w.x; }
+    o.look=lk; if(w){ if(w.pose) o.pose=w.pose; if(w.face) o.face=w.face; if(w.emo) o.emo=w.emo; if(w.prop) o.prop=w.prop; if(w.pa) o.pa=w.pa; if(w.x!=null && isFinite(+w.x)) o.x=+w.x; }
     return o; });
 }
+// 장면 무대(2026-11-28): 장면마다 그 장면에 나오는 인물 모두의 자리. B.stg[장면 첫 컷 번호]={pos:{이름:{x,z,yaw}}, off(모두 세우기 끔), noOts(대화 어깨 너머 끔)}
+// 3D 컷은 장면 인물을 모두 세우고, 카메라는 그 컷의 인물(인물 칸)을 잡는다. 대화 컷은 듣는 사람 어깨 너머로 말하는 사람을 잡는다
+function stgScene(n){ try{ return n?sceneOfCut(n):null; }catch(e){ return null; } }
+function stgNames(x){ var seen={}, L=[]; for(var n=x.a;n<=x.b;n++){ var c=B.cuts[n-1]; if(!c) continue; var w=[]; try{ w=whoOf(c); }catch(e){} w.forEach(function(q){ var nm=q.name; if(nm && nm!=='?' && !seen[nm]){ seen[nm]=1; L.push(nm); } }); } return L.slice(0,6); }
+function stgAuto(names){ var n=names.length, o={}; names.forEach(function(nm,i){ var off=i-(n-1)/2, x=n===1?0:off*(n===2?1.1:.95), z=n>2?-.25*Math.abs(off):0, yaw=n===1?0:n===2?(x<0?50:-50):clamp(Math.round(-x*40),-65,65); o[nm]={x:Math.round(x*100)/100, z:Math.round(z*100)/100, yaw:yaw}; }); return o; }
+function stgGet(x){ var S=(B.stg||{})[x.a]||{}, names=stgNames(x), au=stgAuto(names), pos={}; names.forEach(function(nm){ var p=S.pos&&S.pos[nm]; pos[nm]=p?{x:+p.x||0, z:+p.z||0, yaw:+p.yaw||0}:au[nm]; }); return {names:names, pos:pos, off:!!S.off, noOts:!!S.noOts}; }
+function stgSpeaker(c, names){ var sp=''; String(c.line||'').split('\n').some(function(L){ var m=L.match(/^\s*([^:：]{1,10})\s*[:：]/); if(m && names.indexOf(m[1].trim())>=0){ sp=m[1].trim(); return true; } return false; }); return sp; }
+function stgData(c, wl){ var x=stgScene(c.n); if(!x || /^(insert|pov|empty)$/.test(c.k||'')) return null; var G=stgGet(x); if(G.off || !G.names.length) return null;
+  var all=G.names.map(function(nm){ var w=null; wl.forEach(function(q){ if(q.name===nm) w=q; }); if(!w){ var ch=charOf(nm), ww=wpOf(c,nm,-1); w={name:nm, look:(ch&&ch.look)||{}}; if(ww) ['pose','emo','prop','pa'].forEach(function(q){ if(ww[q]) w[q]=ww[q]; }); }
+    var p=G.pos[nm]; return Object.assign({}, w, {sx:p.x, sz:p.z, syaw:p.yaw}); });
+  var foc=wl.map(function(q){ return q.name; }).filter(function(nm){ return G.names.indexOf(nm)>=0; }), ots=null, spk=stgSpeaker(c, G.names)||foc[0];
+  var want=c.ots3===1 || (c.k==='ots' && c.ots3!==0) || (c.ots3!==0 && !G.noOts && !!c.line && /^(ms|bs|two)$/.test(c.k||'ms'));
+  if(want && spk && G.names.length>1){ var lis=foc.filter(function(nm){ return nm!==spk; })[0]; if(!lis){ var P0=G.pos[spk], bd=1e9; G.names.forEach(function(nm){ if(nm===spk) return; var p=G.pos[nm], d=Math.hypot(p.x-P0.x, p.z-P0.z); if(d<bd){ bd=d; lis=nm; } }); } if(lis) ots=[spk, lis]; }
+  return {all:all, foc:foc, ots:ots}; }
+// 장면 인물 배치도(🎥 3D 카메라·배치 안): 위에서 본 그림, 끌어서 자리, ⟲⟳로 방향. 바로 장면 전체에 저장
+function stgUI(el, n, done){ var x=stgScene(n); if(!el) return; if(!x){ el.hidden=true; return; } var G=stgGet(x);
+  if(!G.names.length){ el.innerHTML='<legend>장면 인물 배치</legend><p class="small">이 장면 컷의 인물 칸에 아무도 없다.</p>'; return; }
+  var sel=G.names[0], W=300, H=190, SC=W/5.6, cv, drag=null;
+  function S(){ return (B.stg&&B.stg[x.a])||{}; }
+  function put(patch){ B.stg=B.stg||{}; B.stg[x.a]=Object.assign({}, S(), patch); save(); G=stgGet(x); paint(); done(); clearTimeout(el.__rt); el.__rt=setTimeout(function(){ try{ d3RedrawAll(); }catch(e){} }, 500); }
+  function setPos(nm, p){ var pos=Object.assign({}, G.pos, S().pos||{}); pos[nm]=p; put({pos:pos}); }
+  el.innerHTML='<legend>장면 인물 배치 <span class="small">— 이 장면 모든 컷 공통. 위에서 본 그림(아래가 카메라 쪽). 인물을 끌어 옮긴다</span></legend>'+
+    '<div><label class="small" style="display:inline-flex;align-items:center;gap:.35em;margin-right:1em"><input style="width:auto;margin:0" type="checkbox" data-stg="on"'+(G.off?'':' checked')+'> 장면 인물 모두 세우기</label><label class="small" style="display:inline-flex;align-items:center;gap:.35em;margin-right:1em"><input style="width:auto;margin:0" type="checkbox" data-stg="ots"'+(G.noOts?'':' checked')+'> 대화 컷은 어깨 너머로</label></div>'+
+    '<canvas class="ct-stgcv" width="'+W*2+'" height="'+H*2+'" style="width:'+W+'px;max-width:100%;height:auto;touch-action:none;background:var(--paper-2,#eee);border-radius:6px;display:block;margin:.3em 0;cursor:grab" role="img" aria-label="장면 인물 배치도"></canvas>'+
+    '<div class="filterbar"><span class="small ct-stgsel"></span><button class="chip" type="button" data-stg="l">⟲ 돌기</button><button class="chip" type="button" data-stg="r">⟳ 돌기</button><button class="chip" type="button" data-stg="face">가운데 보기</button><button class="chip" type="button" data-stg="auto">자동 배치로</button></div>';
+  cv=el.querySelector('canvas');
+  function toPx(p){ return [W/2+p.x*SC, H*.42+p.z*SC]; }
+  function paint(){ var g=cv.getContext('2d'); g.setTransform(2,0,0,2,0,0); g.clearRect(0,0,W,H); g.fillStyle='rgba(0,0,0,.07)'; g.fillRect(0,H-15,W,15); g.fillStyle='#777'; g.font='11px sans-serif'; g.textAlign='center'; g.fillText('▼ 카메라 쪽', W/2, H-4);
+    G.names.forEach(function(nm){ var p=G.pos[nm], q=toPx(p), a=(p.yaw||0)*D3_DEG, on=nm===sel; g.strokeStyle=on?'#c33':'#333'; g.lineWidth=on?2.5:1.5;
+      g.beginPath(); g.moveTo(q[0],q[1]); g.lineTo(q[0]+Math.sin(a)*22, q[1]+Math.cos(a)*22); g.stroke(); g.fillStyle=on?'#fde3e3':'#fff'; g.beginPath(); g.arc(q[0],q[1],11,0,7); g.fill(); g.stroke();
+      g.fillStyle='#222'; g.fillText(nm.slice(0,5), q[0], q[1]-16); });
+    el.querySelector('.ct-stgsel').textContent='고른 인물: '+sel; }
+  function at(e){ var r=cv.getBoundingClientRect(); return [(e.clientX-r.left)*W/r.width, (e.clientY-r.top)*H/r.height]; }
+  cv.addEventListener('pointerdown', function(e){ var m=at(e), best=null, bd=22; G.names.forEach(function(nm){ var q=toPx(G.pos[nm]), d=Math.hypot(q[0]-m[0], q[1]-m[1]); if(d<bd){ bd=d; best=nm; } }); if(!best) return; sel=best; drag=best; paint(); try{ cv.setPointerCapture(e.pointerId); }catch(er){} e.preventDefault(); });
+  cv.addEventListener('pointermove', function(e){ if(!drag) return; var m=at(e), p=G.pos[drag]; p.x=clamp(Math.round((m[0]-W/2)/SC*20)/20, -2.7, 2.7); p.z=clamp(Math.round((m[1]-H*.42)/SC*20)/20, -2.2, 1.6); paint(); });
+  var up=function(){ if(!drag) return; var nm=drag; drag=null; setPos(nm, G.pos[nm]); }; cv.addEventListener('pointerup', up); cv.addEventListener('pointercancel', up);
+  el.addEventListener('change', function(e){ var k=e.target.dataset.stg; if(k==='on') put({off:!e.target.checked}); if(k==='ots') put({noOts:!e.target.checked}); });
+  el.addEventListener('click', function(e){ var b=e.target.closest('button[data-stg]'); if(!b) return; var k=b.dataset.stg, p=Object.assign({}, G.pos[sel]);
+    if(k==='auto'){ put({pos:{}}); return; }
+    if(k==='l'||k==='r'){ p.yaw=((p.yaw||0)+(k==='l'?30:-30)+540)%360-180; setPos(sel, p); return; }
+    if(k==='face'){ var cx=0, cz=0, m=0; G.names.forEach(function(nm){ if(nm===sel) return; cx+=G.pos[nm].x; cz+=G.pos[nm].z; m++; }); if(!m){ cx=0; cz=3; m=1; } cx/=m; cz/=m; p.yaw=Math.round(Math.atan2(cx-p.x, cz-p.z)/D3_DEG); setPos(sel, p); } });
+  paint(); }
 // 컷마다 인물 자세·방향·자리 c.wp={이름:{pose,face,x}} (이름 없는 인물은 '#순번')
 function wpOf(c,n,i){ var W=c&&c.wp; if(!W || typeof W!=='object') return null; return (n && W[n]) || W['#'+i] || null; }
 function lookTags(lk){ return figTags(lk).map(function(x){ return '<span'+(x[1]?' class="un"':'')+'>'+cesc(x[0])+'</span>'; }).join(''); }
@@ -14553,6 +14600,23 @@ var POSE3={
 // 서로 가장 다른 순간을 골라 이 인형의 관절 각도로 바꾼 3D 자세 129개. 변환기 assets/3d/mocap/mocap_convert.js(BVH → 정면으로 돌린 뒤 몸통·고개 오일러, 팔·다리는 방향 맞춤). 3D 그림 전용(선 그림·AI 자세 목록에는 안 넣는다)
 var POSE_MC={"모캡·걷기 1":{"sp":[-2,-10,6],"hd":[1,0,-6],"la":[12,-2,-55,-1],"ra":[20,2,-11,-39],"ll":[11,-3,44],"rl":[-25,-10,38],"dy":0.03},"모캡·걷기 2":{"sp":[-2,2,4],"hd":[-8,0,-6],"la":[26,-11,-17,-37],"ra":[-17,8,-48,16],"ll":[-32,8,23],"rl":[15,-8,10],"dy":0.05},"모캡·걷기 3":{"sp":[0,-2,1],"hd":[-9,0,-8],"la":[5,-2,-39,-7],"ra":[-4,5,-30,7],"ll":[-12,-16,30],"rl":[-19,3,73],"dy":0.07},"모캡·걷기 4":{"sp":[-3,-1,5],"hd":[-7,0,-3],"la":[16,-3,-18,-24],"ra":[2,5,-29,5],"ll":[-28,0,68],"rl":[-10,-15,31],"dy":0.03},"모캡·달리기 1":{"sp":[-4,3,8],"hd":[-24,0,-1],"la":[42,14,-85,13],"ra":[-13,16,-99,23],"ll":[-47,26,113],"rl":[-25,-23,46],"rt":[15,-1,-5],"dy":-0.05},"모캡·달리기 2":{"sp":[-9,-14,0],"hd":[-12,0,-1],"la":[10,15,-117,21],"ra":[57,12,-77,4],"ll":[12,-13,25],"rl":[-44,-8,62],"dy":0.06},"모캡·달리기 3":{"sp":[-8,6,5],"hd":[-8,0,0],"la":[49,3,-96,1],"ra":[17,16,-106,26],"ll":[-26,2,31],"rl":[8,-6,52],"dy":0.08},"모캡·달리기 4":{"sp":[-6,-2,-7],"hd":[-15,0,2],"la":[20,10,-101,7],"ra":[29,12,-84,18],"ll":[-23,-28,47],"rl":[-18,11,91],"rt":[4,0,6]},"모캡·점프 1":{"sp":[-1,-7,2],"hd":[-48,0,-4],"la":[43,0,-31,-19],"ra":[31,4,-15,-26],"ll":[-119,-13,98],"rl":[-121,-1,101],"rt":[64,3,2],"dy":-0.28},"모캡·점프 2":{"sp":[-10,-4,4],"hd":[-28,0,-3],"la":[-16,39,-70,30],"ra":[-28,9,-59,22],"ll":[-79,-8,78],"rl":[-79,-7,78],"rt":[40,-1,-1],"dy":-0.15},"모캡·점프 3":{"sp":[-15,-3,2],"hd":[1,0,-4],"la":[50,27,-72,-7],"ra":[55,18,-77,6],"ll":[-19,3,22],"rl":[-19,-3,19],"rt":[12,0,-2],"dy":0.24},"모캡·점프 4":{"sp":[-17,-5,1],"hd":[-26,0,-1],"la":[21,5,-37,-15],"ra":[24,8,-40,-3],"ll":[-53,-2,32],"rl":[-54,-2,33],"rt":[38,-1,-1],"dy":0.03},"모캡·주먹질 1":{"sp":[3,5,-6],"hd":[-25,0,-4],"la":[-2,5,-106,9],"ra":[-84,47,-22,31],"ll":[-102,-27,72],"rl":[-95,67,105],"rt":[52,5,4],"dy":-0.17},"모캡·주먹질 2":{"sp":[4,-5,5],"hd":[-16,0,-15],"la":[2,-2,-109,8],"ra":[20,21,-109,11],"ll":[-49,-7,50],"rl":[-45,20,58],"rt":[20,3,8],"dy":-0.08},"모캡·주먹질 3":{"sp":[4,16,-22],"hd":[-24,0,7],"la":[10,2,-115,0],"ra":[-92,20,-40,42],"ll":[-33,22,42],"rl":[0,-37,15],"rt":[9,-1,-9]},"모캡·주먹질 4":{"sp":[2,13,-10],"hd":[-27,0,1],"la":[2,1,-107,8],"ra":[-61,11,-69,34],"ll":[-82,-1,53],"rl":[-56,-18,46],"rt":[45,-2,-2],"dy":-0.07},"모캡·줍기 1":{"sp":[6,19,14],"hd":[-30,0,-19],"la":[-7,-8,-66,14],"ra":[-79,34,-22,47],"ll":[-140,-20,119],"rl":[-140,73,116],"rt":[68,7,3],"dy":-0.44},"모캡·줍기 2":{"sp":[-3,4,6],"hd":[-12,0,-7],"la":[2,1,-55,2],"ra":[-45,35,-88,31],"ll":[-73,-7,65],"rl":[-80,13,61],"rt":[38,0,-1],"dy":-0.11},"모캡·줍기 3":{"sp":[-6,9,-9],"hd":[-24,0,-2],"la":[5,9,-41,-10],"ra":[-89,30,-50,50],"ll":[-23,18,34],"rl":[-21,-12,25],"rt":[10,-1,-7]},"모캡·줍기 4":{"sp":[-9,3,14],"hd":[0,0,-7],"la":[3,-3,-70,6],"ra":[-26,52,-50,46],"ll":[-127,-23,83],"rl":[-139,29,85],"rt":[77,11,2],"dy":-0.24},"모캡·검술 1":{"sp":[-10,16,20],"hd":[-7,0,-14],"la":[-31,32,-1,75],"ra":[-58,-40,-39,41],"ll":[-84,-38,52],"rl":[-70,39,76],"rt":[42,10,11],"dy":-0.12},"모캡·검술 2":{"sp":[-5,-14,-24],"hd":[-16,0,-2],"la":[-32,-8,-42,-1],"ra":[-30,-2,-41,55],"ll":[-67,65,48],"rl":[-53,-34,29],"rt":[34,-9,-13],"dy":-0.03},"모캡·검술 3":{"sp":[11,-6,5],"hd":[-22,0,6],"la":[-113,-18,-76,47],"ra":[-84,-9,-68,24],"ll":[-2,3,32],"rl":[14,12,28],"rt":[-14,-1,6]},"모캡·검술 4":{"sp":[-5,23,10],"hd":[1,0,-3],"la":[-70,-1,-10,-31],"ra":[-60,-40,-52,32],"ll":[-31,-14,30],"rl":[-4,-15,31],"dy":-0.04},"모캡·공 차기 1":{"sp":[9,4,16],"hd":[27,0,23],"la":[-66,78,-49,-35],"ra":[-23,26,-67,-32],"ll":[-43,17,68],"rl":[2,56,78],"rt":[-3,1,-10],"dy":-0.12},"모캡·공 차기 2":{"sp":[-1,-46,5],"hd":[30,0,-5],"la":[-52,-27,-45,45],"ra":[23,7,-27,-63],"ll":[-10,-41,43],"rl":[-67,-45,44],"dy":-0.06},"모캡·공 차기 3":{"sp":[7,-19,4],"hd":[6,0,14],"la":[-45,12,-28,-29],"ra":[-21,36,-61,-31],"ll":[-2,-15,44],"rl":[-34,-16,38],"dy":-0.05},"모캡·공 차기 4":{"sp":[0,7,21],"hd":[20,0,25],"la":[-67,87,-31,-28],"ra":[-36,35,-82,-1],"ll":[-56,45,34],"rl":[14,-2,21],"rt":[12,-4,-18]},"모캡·의자에 앉기 1":{"sp":[6,4,-4],"hd":[-6,0,9],"la":[55,82,-85,43],"ra":[51,72,-91,38],"ll":[-67,27,73],"rl":[-68,34,77],"rt":[10,0,1],"dy":-0.16,"prop":"seat"},"모캡·의자에 앉기 2":{"sp":[10,2,-7],"hd":[31,0,-10],"la":[13,13,-37,27],"ra":[12,12,-37,37],"ll":[-73,9,47],"rl":[-71,22,47],"rt":[37,1,1],"dy":-0.06},"모캡·의자에 앉기 3":{"sp":[7,0,-2],"hd":[-4,0,1],"la":[41,21,-70,26],"ra":[34,15,-68,31],"ll":[-82,58,125],"rl":[-84,71,131],"dy":-0.16,"prop":"seat"},"모캡·의자에 앉기 4":{"sp":[4,15,-13],"hd":[42,0,-11],"la":[-10,24,-46,-16],"ra":[7,7,-43,-5],"ll":[-27,19,24],"rl":[-28,17,29],"rt":[15,-1,-4]},"모캡·턱 괴고 앉기 1":{"sp":[-2,-10,-11],"hd":[-18,0,2],"la":[-67,18,-133,50],"ra":[26,25,-59,44],"ll":[-140,95,137],"rl":[-122,31,92],"rt":[23,0,1],"dy":-0.46,"prop":"seat"},"모캡·턱 괴고 앉기 2":{"sp":[1,2,-4],"hd":[19,0,3],"la":[-4,19,-37,38],"ra":[-8,25,-47,10],"ll":[-120,24,53],"rl":[-111,21,55],"rt":[77,-3,-1],"dy":-0.09},"모캡·턱 괴고 앉기 3":{"sp":[3,14,-1],"hd":[-13,0,1],"la":[54,51,-53,56],"ra":[55,34,-63,47],"ll":[-113,24,100],"rl":[-112,40,115],"rt":[15,0,-1],"dy":-0.48,"prop":"seat"},"모캡·턱 괴고 앉기 4":{"sp":[0,0,-4],"hd":[8,0,8],"la":[-12,25,-83,-12],"ra":[-13,23,-79,-8],"ll":[-98,56,110],"rl":[-104,39,112],"rt":[11,0,1],"dy":-0.48,"prop":"seat"},"모캡·손 뻗어 잡기 1":{"sp":[-15,9,-17],"hd":[-30,0,2],"la":[-136,6,-24,56],"ra":[-71,82,-37,57],"ll":[-9,-23,18],"rl":[-14,34,32],"rt":[4,1,12],"dy":0.16},"모캡·손 뻗어 잡기 2":{"sp":[-9,-6,5],"hd":[-39,0,3],"la":[-28,38,-76,22],"ra":[-119,37,-41,42],"ll":[-43,13,73],"rl":[-33,3,41],"rt":[19,-1,-4],"dy":-0.04},"모캡·손 뻗어 잡기 3":{"sp":[-11,21,-1],"hd":[1,0,-1],"la":[11,31,-83,-25],"ra":[-34,73,-113,-10],"ll":[-26,-11,44],"rl":[-8,5,29],"rt":[9,0,1]},"모캡·손 뻗어 잡기 4":{"sp":[-4,15,-16],"hd":[-26,0,-1],"la":[48,40,-101,34],"ra":[-102,48,-19,40],"ll":[2,33,22],"rl":[8,11,12],"dy":0.12},"모캡·앞으로 뛰기 1":{"sp":[-21,1,-4],"hd":[-9,0,2],"la":[-13,7,-55,14],"ra":[-10,9,-47,0],"ll":[-64,-16,83],"rl":[-67,12,90],"rt":[34,4,6],"dy":-0.19},"모캡·앞으로 뛰기 2":{"sp":[-16,2,0],"hd":[15,0,5],"la":[-31,30,-79,8],"ra":[-26,31,-69,14],"ll":[14,4,27],"rl":[12,16,29],"dy":0.1},"모캡·앞으로 뛰기 3":{"sp":[1,2,-7],"hd":[4,0,3],"la":[9,4,-12,-40],"ra":[1,9,-14,-22],"ll":[-42,-4,72],"rl":[-45,11,76],"rt":[-2,0,8],"dy":-0.17},"모캡·앞으로 뛰기 4":{"sp":[-14,0,-6],"hd":[-8,0,4],"la":[20,13,-16,-34],"ra":[21,9,-22,-12],"ll":[-63,-10,44],"rl":[-64,17,44],"rt":[43,3,3],"dy":-0.04},"모캡·웃음 1":{"sp":[8,2,-6],"hd":[-7,0,10],"la":[-55,4,-130,46],"ra":[-93,25,-15,28],"ll":[-60,17,77],"rl":[-82,23,80],"rt":[14,-1,-6],"dy":-0.14},"모캡·웃음 2":{"sp":[-4,5,-10],"hd":[-17,0,-17],"la":[-96,72,-45,23],"ra":[-110,69,-73,21],"ll":[13,6,29],"rl":[2,17,59],"rt":[-15,0,-1],"dy":0.03},"모캡·웃음 3":{"sp":[10,-5,-5],"hd":[26,0,3],"la":[-67,24,-27,41],"ra":[-49,2,-142,46],"ll":[-13,-7,47],"rl":[-42,20,36],"rt":[-2,0,9],"dy":-0.06},"모캡·웃음 4":{"sp":[-15,-51,15],"hd":[32,0,-31],"la":[-7,-5,-129,8],"ra":[-20,18,-61,71],"ll":[-1,33,48],"rl":[-4,7,30],"rt":[-11,0,-1]},"모캡·복싱 1":{"sp":[23,19,6],"hd":[13,0,17],"la":[-75,30,-135,4],"ra":[-105,-2,-93,21],"ll":[-71,17,84],"rl":[-61,88,60],"rt":[31,7,12],"dy":-0.18},"모캡·복싱 2":{"sp":[-8,11,-5],"hd":[17,0,4],"la":[-17,9,-139,23],"ra":[-24,11,-142,11],"ll":[5,67,70],"rl":[16,3,74],"rt":[-29,4,-8],"dy":-0.13},"모캡·복싱 3":{"sp":[19,21,-27],"hd":[9,0,18],"la":[-25,14,-120,43],"ra":[-71,50,-44,35],"ll":[-65,20,48],"rl":[3,-29,36],"rt":[19,-3,-8],"dy":-0.03},"모캡·복싱 4":{"sp":[0,0,-8],"hd":[1,0,-11],"la":[-35,61,-106,-40],"ra":[23,25,-77,6],"ll":[-26,58,49],"rl":[-12,70,41],"dy":-0.08},"모캡·손짓·가리키기 1":{"sp":[1,0,-5],"hd":[33,0,8],"la":[-86,65,-82,58],"ra":[-119,45,-110,57],"ll":[10,23,31],"rl":[2,4,27],"rt":[-11,0,1]},"모캡·손짓·가리키기 2":{"sp":[-4,-16,-14],"hd":[4,0,7],"la":[-99,-21,-41,50],"ra":[-81,47,-30,0],"ll":[-26,42,60],"rl":[-31,46,37],"dy":-0.11},"모캡·손짓·가리키기 3":{"sp":[10,11,-5],"hd":[1,0,18],"la":[-15,45,-94,-25],"ra":[-38,3,-73,59],"ll":[-37,17,33],"rl":[-22,40,29],"rt":[16,1,3]},"모캡·손짓·가리키기 4":{"sp":[-3,5,-5],"hd":[36,0,9],"la":[-63,82,-16,-31],"ra":[-107,96,-16,-22],"ll":[-1,0,25],"rl":[-5,30,50]},"모캡·얼굴 감싸고 앉기 1":{"sp":[11,2,-4],"hd":[26,0,-20],"la":[-24,8,-75,23],"ra":[-23,9,-77,19],"ll":[-93,29,62],"rl":[-95,17,66],"rt":[25,0,0],"dy":0.04},"모캡·얼굴 감싸고 앉기 2":{"sp":[-6,6,-6],"hd":[12,0,-6],"la":[-37,4,-50,42],"ra":[-11,2,-46,23],"ll":[-72,25,61],"rl":[-73,20,65],"dy":0.03},"모캡·엎어지기 1":{"sp":[-4,-22,-17],"hd":[-21,0,13],"la":[-34,28,-11,1],"ra":[-26,35,-53,35],"ll":[-135,12,98],"rl":[-133,12,130],"rt":[110,45,-15],"dy":0.63},"모캡·엎어지기 2":{"sp":[-7,-17,9],"hd":[-25,0,-19],"la":[-66,86,-117,-1],"ra":[-62,80,-123,14],"ll":[12,45,55],"rl":[21,49,51],"rt":[80,11,2],"dy":-0.92},"모캡·엎어지기 3":{"sp":[-3,8,-2],"hd":[-30,0,-4],"la":[50,29,-7,-61],"ra":[37,-37,0,80],"ll":[-109,0,84],"rl":[-100,24,86],"rt":[51,4,3],"dy":-0.14},"모캡·엎어지기 4":{"sp":[-4,-1,-4],"hd":[-29,0,4],"la":[-104,2,-38,50],"ra":[-107,12,-51,22],"ll":[-62,13,71],"rl":[-58,19,66],"rt":[22,1,1],"dy":-0.13},"모캡·악수 1":{"sp":[-13,19,7],"hd":[2,0,0],"la":[29,8,-69,11],"ra":[-4,39,-115,-9],"ll":[-28,11,23],"rl":[-12,40,0],"rt":[19,0,1]},"모캡·악수 2":{"sp":[-14,5,0],"hd":[17,0,2],"la":[24,4,-46,5],"ra":[44,-5,-41,-22],"ll":[-2,12,20],"rl":[-1,40,0]},"모캡·악수 3":{"sp":[-16,11,1],"hd":[15,0,5],"la":[29,8,-47,4],"ra":[13,28,-69,22],"ll":[-10,10,21],"rl":[-5,40,0]},"모캡·악수 4":{"sp":[-13,18,3],"hd":[1,0,2],"la":[29,9,-59,8],"ra":[-31,17,-44,1],"ll":[-22,9,22],"rl":[-10,40,0],"rt":[15,0,1]},"모캡·무거운 상자 1":{"sp":[-28,4,0],"hd":[23,0,-2],"la":[-25,-2,-65,19],"ra":[-4,23,-82,2],"ll":[-65,15,45],"rl":[-51,10,34],"rt":[41,-1,-2]},"모캡·무거운 상자 2":{"sp":[-40,-9,-19],"hd":[39,0,-15],"la":[16,-14,-62,28],"ra":[57,-4,-85,-21],"ll":[-1,16,34],"rl":[14,9,11]},"모캡·무거운 상자 3":{"sp":[-27,-28,5],"hd":[26,0,-10],"la":[-9,-17,-55,29],"ra":[33,9,-78,-22],"ll":[-28,-11,33],"rl":[-37,33,30],"rt":[23,2,5]},"모캡·무거운 상자 4":{"sp":[-23,4,-1],"hd":[14,0,4],"la":[7,14,-73,11],"ra":[17,21,-75,8],"ll":[-23,13,28],"rl":[-6,11,0],"rt":[15,0,-1]},"모캡·칠판에 쓰기 1":{"sp":[-15,10,1],"hd":[-1,0,6],"la":[26,10,-51,6],"ra":[-49,44,-91,14],"ll":[-14,24,24],"rl":[-7,40,0],"rt":[9,-1,-5]},"모캡·칠판에 쓰기 2":{"sp":[-16,4,3],"hd":[17,0,4],"la":[23,2,-36,-2],"ra":[33,0,-47,-16],"ll":[-3,22,23],"rl":[-1,40,0]},"모캡·칠판에 쓰기 3":{"sp":[8,-7,3],"hd":[-17,0,10],"la":[11,3,-47,0],"ra":[-67,14,-88,12],"ll":[-1,15,22],"rl":[-2,40,0]},"모캡·칠판에 쓰기 4":{"sp":[-12,-1,2],"hd":[9,0,7],"la":[24,4,-46,3],"ra":[20,26,-109,7],"ll":[-2,19,22],"rl":[-1,40,0]},"모캡·전화 받기 1":{"sp":[-13,6,16],"hd":[11,0,-11],"la":[25,5,-57,12],"ra":[-30,36,-142,15],"ll":[-21,10,23],"rl":[-11,40,0],"rt":[15,0,0]},"모캡·전화 받기 2":{"sp":[-12,6,0],"hd":[28,0,10],"la":[24,1,-43,-4],"ra":[33,7,-77,6],"ll":[-7,18,22],"rl":[-2,40,0]},"모캡·전화 받기 3":{"sp":[-12,17,8],"hd":[16,0,11],"la":[22,6,-57,8],"ra":[-44,45,-36,2],"ll":[-34,16,24],"rl":[-17,40,0],"rt":[24,-1,-1]},"모캡·전화 받기 4":{"sp":[-10,12,6],"hd":[29,0,4],"la":[24,4,-53,5],"ra":[-3,16,-140,2],"ll":[-10,17,24],"rl":[-3,40,0]},"모캡·커피 마시기 1":{"sp":[-1,3,2],"hd":[-14,0,1],"la":[12,5,-51,-1],"ra":[-31,60,-142,13],"ll":[-22,20,25],"rl":[-14,40,0],"rt":[16,-1,-3]},"모캡·커피 마시기 2":{"sp":[-10,2,3],"hd":[24,0,2],"la":[27,0,-43,-7],"ra":[27,8,-86,12],"ll":[-2,21,22],"rl":[3,40,0]},"모캡·커피 마시기 3":{"sp":[-8,4,4],"hd":[27,0,2],"la":[23,4,-49,-1],"ra":[-3,42,-116,13],"ll":[-11,19,24],"rl":[-7,40,0],"rt":[6,0,-3]},"모캡·크게 기뻐함 1":{"sp":[-15,4,-1],"hd":[-3,0,6],"la":[75,39,-103,18],"ra":[1,67,-108,-24],"ll":[-61,42,49],"rl":[-48,-14,40],"rt":[34,-5,-8],"dy":-0.04},"모캡·크게 기뻐함 2":{"sp":[-10,17,-3],"hd":[-4,0,-2],"la":[71,50,-101,20],"ra":[-79,-22,-101,56],"ll":[15,29,26],"rl":[29,-3,0],"rt":[-14,2,-8]},"모캡·크게 기뻐함 3":{"sp":[-17,8,9],"hd":[10,0,13],"la":[-73,85,-57,-3],"ra":[-64,90,-60,-28],"ll":[-2,33,31],"rl":[26,-13,0],"rt":[-8,1,-6]},"모캡·크게 기뻐함 4":{"sp":[-3,7,-3],"hd":[-16,0,-15],"la":[-10,7,-42,-15],"ra":[-19,1,-41,-16],"ll":[-47,37,58],"rl":[-35,-8,50],"rt":[20,-2,-6],"dy":-0.08},"모캡·크게 웃음 1":{"sp":[14,8,-6],"hd":[33,0,18],"la":[-32,18,-136,74],"ra":[-23,7,-61,26],"ll":[-82,25,46],"rl":[-67,-1,38],"rt":[52,-5,-4],"dy":-0.04},"모캡·크게 웃음 2":{"sp":[-25,6,0],"hd":[-29,0,-13],"la":[-56,-15,-142,48],"ra":[-47,29,-100,5],"ll":[-6,27,40],"rl":[9,-3,25],"rt":[-6,1,-5],"dy":-0.04},"모캡·크게 웃음 3":{"sp":[16,-7,9],"hd":[-25,0,27],"la":[-54,14,-67,5],"ra":[-57,17,-60,59],"ll":[-27,16,43],"rl":[-21,11,33],"rt":[12,0,-2],"dy":-0.04},"모캡·크게 웃음 4":{"sp":[-11,-2,0],"hd":[16,0,0],"la":[20,5,-57,13],"ra":[-40,24,-119,-34],"ll":[-2,17,34],"rl":[8,10,15]},"모캡·슬퍼함 1":{"sp":[12,11,-14],"hd":[50,0,16],"la":[52,39,-111,14],"ra":[-28,68,-125,33],"ll":[-24,27,30],"rl":[-18,40,0],"rt":[15,-3,-10]},"모캡·슬퍼함 2":{"sp":[-4,5,14],"hd":[14,0,42],"la":[57,32,-89,29],"ra":[27,0,-45,-33],"ll":[-6,19,28],"rl":[-10,40,0],"rt":[4,0,-6]},"모캡·슬퍼함 3":{"sp":[3,4,10],"hd":[50,0,23],"la":[14,0,-44,3],"ra":[-3,29,-144,12],"ll":[-5,27,21],"rl":[-4,40,0]},"모캡·슬퍼함 4":{"sp":[7,1,24],"hd":[4,0,40],"la":[7,-3,-50,12],"ra":[5,8,-40,-24],"ll":[-11,25,22],"rl":[-13,40,0],"rt":[10,-1,-4]},"모캡·울음 1":{"sp":[4,1,14],"hd":[41,0,12],"la":[-48,-27,-136,71],"ra":[12,24,-145,74],"ll":[-59,2,29],"rl":[-58,22,20],"rt":[50,2,2]},"모캡·울음 2":{"sp":[-4,3,4],"hd":[20,0,6],"la":[17,14,-122,45],"ra":[26,15,-127,33],"ll":[-5,18,23],"rl":[7,6,0]},"모캡·울음 3":{"sp":[-5,-9,16],"hd":[17,0,13],"la":[-55,-30,-138,59],"ra":[-29,-4,-147,65],"ll":[-15,14,30],"rl":[-3,10,3],"rt":[11,-1,-3]},"모캡·울음 4":{"sp":[4,5,0],"hd":[27,0,9],"la":[-36,-8,-137,67],"ra":[-12,12,-142,62],"ll":[-44,16,28],"rl":[-30,9,0],"rt":[33,-1,-2]},"모캡·겁먹음 1":{"sp":[-15,9,2],"hd":[8,0,8],"la":[5,-9,-122,55],"ra":[12,2,-134,58],"ll":[-43,26,33],"rl":[-28,-10,24],"rt":[25,-2,-5]},"모캡·겁먹음 2":{"sp":[13,-11,3],"hd":[-23,0,2],"la":[33,-6,-97,-9],"ra":[-13,5,-101,49],"ll":[-11,16,27],"rl":[-14,5,14],"rt":[11,-1,-4]},"모캡·겁먹음 3":{"sp":[-13,2,5],"hd":[11,0,2],"la":[33,12,-68,30],"ra":[41,-3,-51,-12],"ll":[-9,17,27],"rl":[3,7,0]},"모캡·겁먹음 4":{"sp":[-6,10,7],"hd":[-4,0,5],"la":[13,3,-103,22],"ra":[23,0,-103,-2],"ll":[-33,33,34],"rl":[-6,-16,5],"rt":[15,-2,-8]},"모캡·화냄 1":{"sp":[4,6,1],"hd":[43,0,11],"la":[-74,60,-132,-4],"ra":[-78,83,-127,-19],"ll":[-52,30,39],"rl":[-40,-2,22],"rt":[32,-3,-5]},"모캡·화냄 2":{"sp":[-7,24,3],"hd":[-21,0,17],"la":[21,38,-81,31],"ra":[-114,-23,-89,68],"ll":[-18,27,29],"rl":[13,-13,0],"rt":[4,0,-6]},"모캡·화냄 3":{"sp":[-12,1,3],"hd":[-1,0,14],"la":[66,-14,-40,-24],"ra":[73,-24,-50,-28],"ll":[-28,23,35],"rl":[-19,3,19],"rt":[18,-1,-4]},"모캡·화냄 4":{"sp":[1,7,2],"hd":[29,0,16],"la":[-9,12,-81,-11],"ra":[5,9,-82,-27],"ll":[-64,25,50],"rl":[-54,4,40],"rt":[37,-3,-3],"dy":-0.04},"모캡·노트북 타자 1":{"sp":[-11,13,9],"hd":[41,0,-5],"la":[43,76,-110,4],"ra":[43,58,-104,69],"ll":[0,19,0],"rl":[-10,40,0],"rt":[6,-1,-5]},"모캡·노트북 타자 2":{"sp":[-11,2,4],"hd":[40,0,2],"la":[-25,32,-74,26],"ra":[-21,37,-70,26],"ll":[1,15,0],"rl":[-7,40,0],"rt":[6,0,-4]},"모캡·노트북 타자 3":{"sp":[-11,3,4],"hd":[18,0,4],"la":[19,-1,-43,6],"ra":[31,-4,-40,-37],"ll":[10,18,0],"rl":[-2,40,0]},"모캡·노트북 타자 4":{"sp":[-12,26,1],"hd":[26,0,12],"la":[29,22,-60,18],"ra":[-2,-2,-61,71],"ll":[-6,21,0],"rl":[-13,40,0],"rt":[12,-1,-7]},"모캡·활 쏘기 1":{"sp":[-20,-26,9],"hd":[13,0,-5],"la":[-70,69,-39,-42],"ra":[-48,102,-133,-12],"ll":[17,4,0],"rl":[-3,-6,0],"rt":[2,0,-7]},"모캡·활 쏘기 2":{"sp":[-14,3,-5],"hd":[20,0,20],"la":[-67,0,-41,13],"ra":[-64,1,-55,41],"ll":[-11,21,0],"rl":[-25,-11,0],"rt":[20,-3,-8]},"모캡·활 쏘기 3":{"sp":[-18,-8,3],"hd":[38,0,6],"la":[-11,3,-60,12],"ra":[-73,52,-122,6],"ll":[18,18,0],"rl":[11,-5,0],"rt":[-5,1,-7]},"모캡·활 쏘기 4":{"sp":[-14,-8,4],"hd":[20,0,-5],"la":[-37,12,-41,-16],"ra":[29,28,-112,-15],"ll":[12,16,0],"rl":[4,-1,0]},"모캡·파리 쫓기 1":{"sp":[-27,35,13],"hd":[8,0,13],"la":[17,18,-77,44],"ra":[-89,-40,-101,85],"ll":[-3,20,0],"rl":[13,-20,0],"rt":[4,0,-5]},"모캡·파리 쫓기 2":{"sp":[-26,-9,2],"hd":[4,0,4],"la":[28,30,-98,-22],"ra":[-66,78,-126,-3],"ll":[-19,27,0],"rl":[-16,-12,0],"rt":[26,-3,-7]},"모캡·파리 쫓기 3":{"sp":[-14,18,2],"hd":[5,0,11],"la":[23,12,-66,10],"ra":[14,48,-100,44],"ll":[7,22,0],"rl":[12,-9,0]},"모캡·파리 쫓기 4":{"sp":[-15,22,9],"hd":[6,0,11],"la":[-6,12,-62,41],"ra":[-49,0,-102,9],"ll":[-4,27,0],"rl":[9,-20,0],"rt":[6,-1,-8]},"모캡·아기 안기 1":{"sp":[-9,-12,-19],"hd":[20,0,28],"la":[-31,-12,-105,54],"ra":[56,19,-138,6],"ll":[-34,29,0],"rl":[-37,-13,0],"rt":[36,-5,-7]},"모캡·아기 안기 2":{"sp":[4,14,-2],"hd":[29,0,42],"la":[24,77,-114,61],"ra":[30,49,-112,56],"ll":[-13,12,0],"rl":[-11,3,0],"rt":[19,-2,-5]},"모캡·아기 안기 3":{"sp":[-24,4,4],"hd":[24,0,4],"la":[-20,4,-97,28],"ra":[-9,20,-105,20],"ll":[-5,16,0],"rl":[-4,-1,0],"rt":[12,-1,-5]},"모캡·아기 안기 4":{"sp":[-12,5,3],"hd":[14,0,6],"la":[29,4,-75,9],"ra":[30,1,-70,-4],"ll":[9,18,0],"rl":[10,-3,0]},"모캡·힘자랑 1":{"sp":[-22,3,-2],"hd":[17,0,5],"la":[58,58,-76,90],"ra":[31,39,-70,64],"ll":[-33,12,0],"rl":[-39,11,0],"rt":[37,-3,-4]},"모캡·힘자랑 2":{"sp":[-10,-11,-17],"hd":[33,0,20],"la":[-38,-18,-81,64],"ra":[-42,56,-56,-1],"ll":[0,-17,0],"rl":[-16,30,0],"rt":[10,0,2],"dy":-0.04},"모캡·힘자랑 3":{"sp":[-30,5,20],"hd":[43,0,-6],"la":[-52,34,-25,-2],"ra":[-28,9,-68,68],"ll":[-33,26,0],"rl":[-14,-23,0],"rt":[25,-3,-7],"dy":-0.03},"모캡·힘자랑 4":{"sp":[-23,21,28],"hd":[17,0,20],"la":[47,12,-88,19],"ra":[15,22,-102,30],"ll":[-42,27,0],"rl":[-25,-21,0],"rt":[34,-6,-8],"dy":-0.03},"모캡·총 쏘기 1":{"sp":[-11,-24,-3],"hd":[34,0,15],"la":[-61,18,-53,-28],"ra":[22,92,-140,34],"ll":[14,3,0],"rl":[-2,13,0]},"모캡·총 쏘기 2":{"sp":[-13,7,1],"hd":[26,0,11],"la":[-5,10,-115,10],"ra":[33,21,-110,24],"ll":[8,16,0],"rl":[5,9,0]},"모캡·총 쏘기 3":{"sp":[-17,8,0],"hd":[21,0,8],"la":[39,2,-76,0],"ra":[38,-3,-50,-19],"ll":[5,17,0],"rl":[5,8,0]},"모캡·총 쏘기 4":{"sp":[-9,-17,-1],"hd":[34,0,12],"la":[-18,2,-113,-4],"ra":[20,80,-129,38],"ll":[15,5,0],"rl":[0,12,0]}};
 Object.keys(POSE_MC).forEach(function(k){ POSE3[k]=POSE_MC[k]; });
+// 만화 자세·구도 카드용 3D 자세(2026-11-28): 카드 이름과 3D 그림이 어긋나던 것(가까운 기본 자세로 대신하던 것)을 이름대로. 선 그림에는 안 쓴다(look.pose3)
+var POSE_FAMOUS={
+  '겐도 포즈':{sp:[8,0,0], hd:[6,0,0], la:[-58,-6,-142,72], ra:[-58,-6,-142,72]},
+  '죠죠 서기':{rt:[0,-18,0], sp:[-6,34,-12], hd:[8,-34,18], la:[-118,24,-142,40], ra:[12,38,-96], ll:[-14,-12,24], rl:[6,10,4]},
+  '히어로 착지':{sp:[56,0,0], hd:[-44,0,0], ra:[-8,4,-4], la:[52,30,-16], ll:[-100,12,118], rl:[12,6,126], dy:-.56},
+  '하늘에 절규':{sp:[-16,0,0], hd:[-46,0,0], la:[-140,38,-16], ra:[-140,38,-16], ll:[0,6,96], rl:[0,6,96], dy:-.44, mouth:1},
+  '무릎 안고 고개 묻기':{sp:[34,0,0], hd:[42,0,0], la:[-62,8,-72,40], ra:[-62,8,-72,40], ll:[-122,8,142], rl:[-122,8,142], dy:-.74},
+  '벽쿵':{sp:[10,0,0], hd:[8,0,0], la:[-118,8,-28], ra:[4,10,-16]},
+  '하얗게 불탄 코너':{sp:[32,0,0], hd:[52,0,0], la:[12,14,-8], ra:[12,14,-8], ll:[-90,18,90], rl:[-90,18,90], dy:-.44, prop:'seat'},
+  '주먹 들고 선 최후':{hd:[-16,0,0], ra:[-176,6,-6], la:[4,10,-12]},
+  '베고 선 자세':{sp:[6,0,0], hd:[4,0,0], la:[14,26,-10], ra:[4,8,-14], prop:'sword'},
+  '대자로 눕기':{rt:[-90,0,0], hd:[-6,0,0], la:[0,80,-8], ra:[0,80,-8], ll:[0,18,4], rl:[0,18,4], dy:-.83},
+  '무릎 꿇고 땅 짚기':{sp:[68,0,0], hd:[24,0,0], la:[-78,10,-6], ra:[-78,10,-6], ll:[0,6,92], rl:[0,6,92], dy:-.44}
+};
+Object.keys(POSE_FAMOUS).forEach(function(k){ POSE3[k]=POSE_FAMOUS[k]; });
+POSE3['주머니에 손']={la:[12,20,-46], ra:[12,20,-46]};   // 손이 허리춤에 가게(예전엔 기본 자세와 거의 같았다)
+POSE3['쓰러짐']={rt:[0,0,90], la:[8,12,-26], ra:[10,16,-30], ll:[-10,6,20], rl:[6,4,10], dy:-.8};   // 옆으로 누우면 팔이 위로 솟던 것
 // 고르기 칸용: 동작마다 optgroup(「모캡·걷기 1~4」 → 「모션 캡처 · 걷기」)
 function d3PoseMcOpts(cur){ var g={}; Object.keys(POSE_MC).forEach(function(k){ var m=k.replace(/^모캡·/,'').replace(/ \d+$/,''); (g[m]=g[m]||[]).push(k); });
   return Object.keys(g).map(function(m){ return '<optgroup label="모션 캡처 · '+m+'">'+g[m].map(function(k){ return '<option value="'+k+'"'+(cur===k?' selected':'')+'>'+k.replace(/^모캡·/,'')+'</option>'; }).join('')+'</optgroup>'; }).join(''); }
@@ -14586,12 +14650,24 @@ function d3Mesh(geo, mat, sx, sy, sz, par, px, py, pz, noOut){
   if(!noOut){ var t=.011, o=new T.Mesh(geo, D3.M.out); o.scale.set((sx+2*t)/sx, (sy+2*t)/sy, (sz+2*t)/sz); m.add(o); }
   return m;
 }
+// 세부 동작(2026-11-28): pa={hd,sp:[x,y,z], la/ra:[앞뒤,옆,팔꿈치,비틀기], ll/rl:[앞뒤,옆,무릎]} — 자세 각도에 더한다
+// 몸동작 세부 슬라이더: [이름, 관절 칸, 최소, 최대, 부호(슬라이더 값 × 부호 = 더할 각도)]
+var D3_PD={rt:['몸 전체',[['뒤로 ◀ 기울기 ▶ 앞으로',0,-90,90,1],['돌기',1,-180,180,1],['옆으로 눕기',2,-90,90,1]]],
+  hd:['머리',[['들기 ◀ ▶ 숙이기',0,-60,60,1],['고개 돌리기',1,-90,90,1],['갸웃',2,-45,45,1]]],
+  sp:['몸통',[['젖히기 ◀ ▶ 숙이기',0,-45,80,1],['비틀기',1,-70,70,1],['옆으로 굽히기',2,-45,45,1]]],
+  la:['왼팔',[['내리기 ◀ ▶ 앞으로 들기',0,-60,180,-1],['붙이기 ◀ ▶ 벌리기',1,-30,120,1],['펴기 ◀ ▶ 팔꿈치 굽히기',2,-20,150,-1]]],
+  ra:['오른팔',[['내리기 ◀ ▶ 앞으로 들기',0,-60,180,-1],['붙이기 ◀ ▶ 벌리기',1,-30,120,1],['펴기 ◀ ▶ 팔꿈치 굽히기',2,-20,150,-1]]],
+  ll:['왼다리',[['뒤로 ◀ ▶ 앞으로 들기',0,-60,120,-1],['붙이기 ◀ ▶ 벌리기',1,-20,70,1],['펴기 ◀ ▶ 무릎 굽히기',2,-10,150,1]]],
+  rl:['오른다리',[['뒤로 ◀ ▶ 앞으로 들기',0,-60,120,-1],['붙이기 ◀ ▶ 벌리기',1,-20,70,1],['펴기 ◀ ▶ 무릎 굽히기',2,-10,150,1]]]}, D3_PD_ORDER=['hd','sp','la','ra','ll','rl','rt'];
+function d3PoseAdd(P, pa){ var o=Object.assign({}, P); Object.keys(pa||{}).forEach(function(k){ var d=pa[k]; if(!Array.isArray(d)) return;
+  var b=(P[k]||(k==='la'||k==='ra'?POSE3[''][k]:null)||[0,0,0,0]).slice(); for(var j=0;j<d.length;j++) b[j]=(b[j]||0)+(+d[j]||0); o[k]=b; }); return o; }
 function d3Group(par, x, y, z){ var g=new window.THREE.Group(); g.position.set(x||0,y||0,z||0); par.add(g); return g; }
 function d3Rot(g, a, mir){ if(!a) return; g.rotation.set((a[0]||0)*D3_DEG, (a[1]||0)*D3_DEG*(mir?-1:1), (a[2]||0)*D3_DEG*(mir?-1:1)); }
 // 인형 하나: look(머리·체격·안경·모자·옷), pose 이름 → {root, head(세계 좌표 얻을 그룹), hr(머리 반지름)}
 function d3Fig(look, pose, ex){
   var T=window.THREE, G=D3.G, M=D3.M, lk=look||{}, P=POSE3[pose]||POSE3[''], root=new T.Group();
   ex=ex||{}; var prop=ex.prop||lk.prop||''; if(prop && D3_ARM[prop] && D3_IDLE[pose||'']) P=Object.assign({}, P, D3_ARM[prop]);
+  if(ex.pa) P=d3PoseAdd(P, ex.pa);   // 콘티에서 손본 세부 동작(관절마다 더하는 각도)
   var bs={작음:.86, 큼:1.1}[lk.build]||1, bw={마름:.84, 두꺼움:1.22, 큼:1.08}[lk.build]||1;
   root.scale.set(bs*bw, bs, bs*bw);
   var hips=d3Group(root, 0, .95+(P.dy||0), 0), rot=P.rt; if(rot) hips.rotation.set(rot[0]*D3_DEG, rot[1]*D3_DEG, rot[2]*D3_DEG);
@@ -14633,8 +14709,11 @@ function d3Fig(look, pose, ex){
   if(E.vein){ var vn=d3Group(hd, .075, .1, .07); [0,1].forEach(function(q){ var v=d3Mesh(G.box, M.mark, .03, .007, .006, vn, 0, 0, 0, true); v.rotation.z=q?.8:-.8; }); }
   if(lk.glasses){ [-1,1].forEach(function(s){ var r=d3Mesh(G.tor, M.ink, .03, .026, .03, hd, s*.045, .012, .118, true); }); d3Mesh(G.box, M.ink, .03, .005, .005, hd, 0, .016, .122, true); }
   // 머리카락
-  var hm=lk.dark?M.hairD:M.hairL, hair=lk.hair||'';
-  if(hair!=='민머리' && !lk.hood && !lk.helmet && !(HDm && HDm.vroid)){   // VRoid 머리는 자기 애니 머리카락이 있다
+  var hm=lk.dark?M.hairD:M.hairL, hair=lk.hair||'', HV=null;
+  var HA=(HDm && HDm.plain && hair!=='민머리' && !lk.hood && !lk.helmet)?d3HeadU(D3_HAIR_SET, '__hairset'):null, hap=HA&&HA.parts.filter(function(p){ return p.name==='Hair_'+(D3_HAIR_STYLE[hair]||'short'); })[0];
+  if(hap){ var hmh=new window.THREE.Mesh(hap.geo, hm); hmh.castShadow=true; hmh.add(new window.THREE.Mesh(hap.geo, d3OutlineSkin())); hd.add(hmh); HV=true; }   // 애니풍 머리카락(색은 검은 머리/밝은 머리 재질, 외곽선)
+  else if(HDm && HDm.plain && hair!=='민머리' && !lk.hood && !lk.helmet){ HV=d3HairV(/긴|단발|묶은|한쪽만/.test(hair)?'f':'m'); if(HV && HV.vroid){ var hg=d3Group(hd, 0, -.004, -.004); hg.scale.setScalar(1.04); d3HeadPutV(hg, HV, {}, lk, P, true); if(/긴|단발|묶은|한쪽만/.test(hair)){ var bk=lk.dark?'bobVd':'bobV'; if(!M[bk]) M[bk]=new window.THREE.MeshBasicMaterial({color:lk.dark?0x15121c:0x2c2538, side:window.THREE.DoubleSide}); d3Mesh(G.bobF, M[bk], .138, .15, .136, hd, 0, -.004, -.012, true); } } else HV=null; }   // VRoid 머리카락(받는 동안은 예전 덮개)
+  if(hair!=='민머리' && !lk.hood && !lk.helmet && !(HDm && HDm.vroid) && !HV){   // VRoid 머리는 자기 애니 머리카락이 있다
     if(hair==='단발' || hair==='긴' || hair==='한쪽만 긴') d3Mesh(G.bobF, hm, .126, .148, .134, hd, 0, .006, -.006, true); else d3Mesh(G.capF, hm, .124, .146, .132, hd, 0, .01, -.008, true);   // 블렌더 머리면 얼굴 앞이 트인 덮개(열린 덮개의 뒷면 외곽선이 얼굴 앞에 비치지 않게 외곽선 없이)
     if(hair!=='각진' && !FT) d3Mesh(G.sph, hm, .1, .045, .05, hd, 0, .085, .085);   // 앞머리(시트 얼굴을 씌우면 그 그림의 앞머리를 쓴다)
     if(hair==='긴') d3Mesh(G.box, hm, .25, .32, .07, hd, 0, -.14, -.075);
@@ -14789,7 +14868,13 @@ function d3FrontGeo(geo){ if(geo.__front) return geo.__front; var T=window.THREE
   var g=new T.BufferGeometry(); g.setAttribute('position', p); if(geo.attributes.normal) g.setAttribute('normal', geo.attributes.normal); if(geo.attributes.uv) g.setAttribute('uv', geo.attributes.uv); g.setIndex(keep);
   return geo.__front=g; }
 window.__d3FaceUrl=function(nm, emo){ return d3FaceUrl(nm, emo); };   // 시험용
-function d3Head(kind){ var url=D3_HEAD_URL||D3_HEADS[kind||'m']; if(!url) return null; var ck='__head_'+(D3_HEAD_URL?'one':kind), e=D3G[ck]; if(e) return e.st===2?e.v:null; e=D3G[ck]={st:1};
+function d3Head(kind){ var url=D3_HEAD_URL||D3_HEADS[kind||'m']; if(!url) return null; return d3HeadU(url, '__head_'+(D3_HEAD_URL?'one':kind)); }
+// 마네킹 머리 위 머리카락(2026-11-28, 사용자: 「3D 모델에서 머리카락 따놓은 거 아니었음?」): VRoid CC0 샘플의 머리카락만 쓴다. 긴·단발·묶은·한쪽만 긴 머리는 여자 샘플(트윈테일), 나머지는 남자 샘플
+var D3_HAIRS={f:'assets/3d/head/vroid/female.glb', m:'assets/3d/head/vroid/male.glb'};
+// 블렌더 애니풍 머리카락 6종(2026-11-28, assets/3d/head/hair/build_anime_hair.py): 인물 머리 칸 → 객체 이름. 받아지면 VRoid 머리카락보다 먼저 쓴다
+var D3_HAIR_SET='assets/3d/head/hair/anime_hair.glb', D3_HAIR_STYLE={'짧은':'short','각진':'short','삐죽':'spiky','단발':'bob','긴':'long','묶은':'pony','한쪽만 긴':'side'};
+function d3HairV(kind){ return d3HeadU(D3_HAIRS[kind||'m'], '__hair_'+(kind||'m')); }
+function d3HeadU(url, ck){ var e=D3G[ck]; if(e) return e.st===2?e.v:null; e=D3G[ck]={st:1};
   fetch(url).then(function(r){ if(!r.ok) throw 0; return r.arrayBuffer(); }).then(function(b){ var v=d3HeadParse(b); return Promise.all(v.parts.map(function(p){ return p.tex||null; })).then(function(){ return v; }); })
     .then(function(v){ e.v=v; e.st=2; SPR={}; SPR_N=0; d3RedrawAll(); try{ window.dispatchEvent(new Event('drawmode')); }catch(er){} }).catch(function(er){ e.st=-1; try{ console.warn('3D 머리 불러오기 실패', url, er); }catch(x){} });
   return null; }
@@ -14829,9 +14914,9 @@ function d3HeadPut(hd, H, ek, lk, P, FT){ var T=window.THREE, M=D3.M, anime=H.pa
     hd.add(m); }); }
 // VRoid 머리 붙이기: 그림이 이미 애니풍으로 칠해져 있어 그림 그대로(빛 계산 없이) 쓴다. 얼굴 피부·머리카락은 잘라 내기(알파), 눈·속눈썹·눈썹·입은 겹쳐 그리기.
 // 검은 머리 인물은 머리카락을 어둡게, 민머리는 머리카락을 숨긴다. 얼굴 피부에만 외곽선.
-function d3HeadPutV(hd, H, k, lk, P){ var T=window.THREE, M=D3.M;
+function d3HeadPutV(hd, H, k, lk, P, onlyHair){ var T=window.THREE, M=D3.M;
   if(lk.eyes==='감은'){ k.blink=1; } if(P.mouth){ k.a=1; }
-  H.parts.forEach(function(p){ var hairP=/HAIR/.test(p.mat), skinP=/_SKIN/.test(p.mat); if(hairP && (lk.hair==='민머리' || lk.hood || lk.helmet)) return;
+  H.parts.forEach(function(p){ var hairP=/HAIR/.test(p.mat), skinP=/_SKIN/.test(p.mat); if(hairP && (lk.hair==='민머리' || lk.hood || lk.helmet)) return; if(onlyHair && !hairP) return;
     var key=hairP?(lk.dark?'hd':'hl'):skinP?'sk':'ov'; p.mv=p.mv||{};
     if(!p.mv[key]) p.mv[key]=new T.MeshBasicMaterial({color:hairP&&lk.dark?0x4a4648:0xffffff, map:p.map||null, transparent:key==='ov', alphaTest:key==='ov'?.08:.45, depthWrite:key!=='ov', side:T.DoubleSide});
     var m=new T.Mesh(p.geo, p.mv[key]); m.renderOrder=key==='ov'?2:1;
@@ -15010,15 +15095,33 @@ function draw3d(D, kind){
   if(setK) d3Set(sc, setK, seed, wide);
   else if(!o.nolabel){ d3Floor(sc, D3.M.bg, 60, 60, 0, -10); if(wide) d3Grid(sc, 'plain', 40, 40, 1, .003, 0, -10); }   // 장소를 모르면 바닥만(그림자 받기) — 초상화(nolabel)는 빈 종이
   var figs=[], who=function(i){ return cast[i]||null; };
-  function add(i, x, z, yaw, poseDef){
-    var c=who(i), lk=Object.assign({}, (c&&c.look)||{}), pose=(c&&c.pose)||lk.pose||pz[i]||poseDef||'', fc=d3Face((c&&c.face)||lk.face);
-    var P0=POSE3[pose]; if(fc==null && P0 && P0.side && !/^(two|stand|ots|back|crowd)$/.test(k)) yaw=x>.05?-68:68;   // 움직임이 큰 자세는 옆에서 보여야 읽힌다
+  function add(i, x, z, yaw, poseDef){ return addC(who(i), i, x, z, yaw, poseDef); }
+  function addC(c, i, x, z, yaw, poseDef, staged){
+    var lk=Object.assign({}, (c&&c.look)||{}), pose=(c&&c.pose)||lk.pose3||lk.pose||pz[i]||poseDef||'', fc=d3Face((c&&c.face)||lk.face);
+    var P0=POSE3[pose]; if(staged) fc=null; else if(fc==null && P0 && P0.side && !/^(two|stand|ots|back|crowd)$/.test(k)) yaw=x>.05?-68:68;   // 움직임이 큰 자세는 옆에서 보여야 읽힌다
     var tx=d3TextFor(o, cast, i), emo=(c&&c.emo)||lk.emo||d3Find(D3_EMO_RX, tx)||(i===0 && o.shock?'shock':''), prop=(c&&c.prop)||lk.prop||d3Find(D3_PROP_RX, tx);
     if(P0 && P0.mouth && !emo) emo='shout';
-    var F=d3Fig(lk, P0?pose:'', {emo:emo, prop:prop, face:d3FaceTex(c&&c.name, emo)}); F.root.position.set(x,0,z); F.root.rotation.y=(fc!=null?fc:yaw||0)*D3_DEG; sc.add(F.root); F.c=c; F.i=i; figs.push(F); return F; }
-  var n=Math.max(1, Math.min(3, cast.length||1)), xs=o.pos?JSON.parse(o.pos):null, xf=function(i,def){ var v=xs&&xs[i]!=null?+xs[i]:def; return (v-.5)*vw*.9; };
+    var F=d3Fig(lk, P0?pose:'', {emo:emo, prop:prop, face:d3FaceTex(c&&c.name, emo), pa:c&&c.pa}); F.root.position.set(x,0,z); F.root.rotation.y=(fc!=null?fc:yaw||0)*D3_DEG; sc.add(F.root); F.c=c; F.i=i; figs.push(F); return F; }
+  var n=Math.max(1, Math.min(3, cast.length||1)), xs=(o.pos3||o.pos)?JSON.parse(o.pos3||o.pos):null, xf=function(i,def){ var v=xs&&xs[i]!=null?+xs[i]:def; return (v-.5)*vw*.9; };
   var tx=0, tz=0, camPos=null, look=null, dyS=0;
-  if(k==='two'){ add(0, xf(0,.3), 0, 55); add(1, xf(1,.7), 0, -55); }
+  var STG=null; try{ STG=o.stg?JSON.parse(o.stg):null; }catch(e){} if(STG && !(STG.all&&STG.all.length)) STG=null;
+  if(STG){   // 장면 무대: 장면 인물 모두를 자리대로 세우고, 카메라는 이 컷 인물을 잡는다
+    var byN={}; STG.all.forEach(function(e){ var ci=-1; cast.forEach(function(q,j){ if(q && q.name===e.name) ci=j; }); byN[e.name]=addC(ci>=0?cast[ci]:e, ci, +e.sx||0, +e.sz||0, +e.syaw||0, '', true); });
+    sc.updateMatrixWorld(true); var hv=new T.Vector3(), headY=function(F){ F.head.getWorldPosition(hv); return hv.y; }, pos=function(F){ return F.root.position; };
+    var FF=(STG.foc||[]).map(function(nm){ return byN[nm]; }).filter(Boolean); if(!FF.length) FF=STG.all.map(function(e){ return byN[e.name]; });
+    if(STG.ots && byN[STG.ots[0]] && byN[STG.ots[1]]){ var Fs=byN[STG.ots[0]], Fl=byN[STG.ots[1]], Sp=pos(Fs), Li=pos(Fl), ddx=Sp.x-Li.x, ddz=Sp.z-Li.z, dl=Math.hypot(ddx,ddz)||1; ddx/=dl; ddz/=dl; var qx=-ddz, qz=ddx; if(qz<0){ qx=-qx; qz=-qz; }
+      Fs.root.rotation.y=Math.atan2(-ddx,-ddz); Fl.root.rotation.y=Math.atan2(ddx,ddz); sc.updateMatrixWorld(true);   // 어깨 너머 컷: 두 사람이 서로 마주 본다
+      var hs=headY(Fs), hl=headY(Fl), back=/^(cu|bs)$/.test(k)?.75:.95; camPos=[Li.x-ddx*back+qx*.42, hl-.12+(ang==='high'?.35:ang==='low'?-.35:0), Li.z-ddz*back+qz*.42]; look=[Sp.x-qx*.08, hs-.2, Sp.z-qz*.05]; tx=Sp.x; tz=Sp.z; }
+    else { var cxs=0, czs=0, hy=0; FF.forEach(function(F){ cxs+=pos(F).x; czs+=pos(F).z; hy+=headY(F); }); cxs/=FF.length; czs/=FF.length; hy/=FF.length;
+      var bx=0, bz=1; if(FF.length===1){ var yw=FF[0].root.rotation.y; bx=Math.sin(yw); bz=Math.cos(yw)+.8; }
+      else if(FF.length===2){ var A=pos(FF[0]), Z=pos(FF[1]), lx=Z.x-A.x, lz=Z.z-A.z; bx=-lz; bz=lx; if(bz<0){ bx=-bx; bz=-bz; } if(Math.abs(bx)+Math.abs(bz)<1e-6){ bx=0; bz=1; } }
+      var bl=Math.hypot(bx,bz)||1; bx/=bl; bz/=bl; if(k==='back'){ bx=-bx; bz=-bz; }
+      var span=0; FF.forEach(function(F){ FF.forEach(function(G2){ var p=pos(F), q=pos(G2), sv=Math.abs((p.x-q.x)*bz-(p.z-q.z)*bx); if(sv>span) span=sv; }); });
+      var vh=S.vh; if(/^(els|ls|fs|ms|two|stand|crowd|high|low|frame|back)$/.test(k) && (span+.8)/aspect>vh) vh=(span+.8)/aspect;
+      var dd=vh/(2*Math.tan(fov*D3_DEG/2)), cy0=S.cy+(hy-1.69)*(/^(cu|ecu|bs|ms|two|ots)$/.test(k)?1:.5), py0=cy0, pz0=dd;
+      if(ang==='high'){ py0=cy0+dd*.62; pz0=dd*.82; } else if(ang==='low'){ py0=Math.max(.12, cy0-dd*.55); pz0=dd*.85; }
+      camPos=[cxs+bx*pz0, py0, czs+bz*pz0]; look=[cxs, cy0, czs]; tx=cxs; tz=czs; } }
+  else if(k==='two'){ add(0, xf(0,.3), 0, 55); add(1, xf(1,.7), 0, -55); }
   else if(k==='stand'){ add(0, xf(0,.22), 0, 88); add(1, xf(1,.78), 0, -88); }
   else if(k==='ots'){ add(0, .28, -.9, -14); var nf=add(1, -.42, .95, 170); camPos=[-.62, 1.56, 2.65]; look=[.22, 1.45, -.9]; }
   else if(k==='crowd'){
@@ -15422,6 +15525,7 @@ function cutData(cv,c){
     cv.dataset.bph='1';
   }
   var wl=whoOf(c); if(wl.length) cv.dataset.who=JSON.stringify(wl);
+  try{ if(c.n && B && B.cuts){ var sg=stgData(c, wl); if(sg) cv.dataset.stg=JSON.stringify(sg); } }catch(e){}   // 3D: 장면 인물 모두 세우기
   var pz=autoPoses(c, wl); if(pz.some(Boolean)) cv.dataset.pz=pz.join('|');   // 정하지 않은 사람의 자세(화면 글에서)
   if(wl.length && wl.every(function(w){ return w.x!=null; })) cv.dataset.pos=JSON.stringify(wl.map(function(w){ return w.x; }));
   return cv;
@@ -16438,6 +16542,7 @@ function camUI(ed, c, cur, setCam){
   var v=cur().cam?Object.assign({y:0,p:0,d:1}, cur().cam):{y:0,p:0,d:1}, lcv=null, rq=0;
   function paintT(){ txt.textContent=camTxt(v); }
   function draw(){ if(!lcv) return; var st=cur(), cc=Object.assign({}, c, {k:st.k,ang:st.ang,set:st.set,stage3d:st.stage3d,cam:(v.y||v.p||v.d!==1)?{y:v.y,p:v.p,d:v.d}:null, _pl:cutPlace(c)});
+    if(st.wp){ cc.wp=st.wp; cc.who=st.who; } if(st.ots3!==undefined){ if(st.ots3==null) delete cc.ots3; else cc.ots3=st.ots3; }
     if(!cc.cam) delete cc.cam; if(!cc.set) delete cc.set; cutData(lcv, cc); lcv.dataset.style='3d'; lcv.dataset.narout='1'; lcv.stageCamera=null;needRough(function(){ if(lcv.isConnected) drawCv(lcv); }); }
   function later(){ setCam((v.y||v.p||v.d!==1)?{y:v.y,p:v.p,d:v.d}:null); paintT(); if(rq) return; rq=requestAnimationFrame(function(){ rq=0; draw(); }); }
   box.__draw=draw; paintT();
@@ -16447,10 +16552,11 @@ function camUI(ed, c, cur, setCam){
       box.innerHTML='<canvas class="ct-camcv" role="img" aria-label="3D 카메라와 배치 미리보기"></canvas>'+
         '<div class="filterbar ct-campre">'+[['정면',0,0,1],['오른쪽 45°',45,0,1],['왼쪽 45°',-45,0,1],['옆',90,0,1],['뒤',180,0,1],['위에서',0,35,1],['아래에서',0,-25,1],['멀리',null,null,1.6],['가까이',null,null,.65],['처음대로',0,0,1]]
           .map(function(q){ return '<button class="chip" type="button" data-y="'+q[1]+'" data-p="'+q[2]+'" data-d="'+q[3]+'">'+q[0]+'</button>'; }).join('')+'</div>'+
-        '<fieldset class="ct-stage3d"></fieldset><label><input type="checkbox" data-stage3d-move> 미리보기를 끌어 선택한 배치 옮기기</label>'+
+        '<fieldset class="ct-stg"></fieldset><fieldset class="ct-stage3d"></fieldset><label><input type="checkbox" data-stage3d-move> 미리보기를 끌어 선택한 배치 옮기기</label>'+
         '<p class="ct-hint">미리보기를 끌어 카메라를 돌리고, 휠이나 두 손가락으로 확대합니다. 카메라와 배치를 컷에 남기려면 「저장」을 누르세요.</p>';
       lcv=box.querySelector('canvas'); lcv.style.aspectRatio=String(ar);
       var stageDrag=stage3dEditor(box.querySelector('.ct-stage3d'),lcv,cur().stage3d,later);
+      stgUI(box.querySelector('.ct-stg'), c.n, function(){ draw(); });
       var pts={}, last=null, pinch=0, placement=null;
       lcv.addEventListener('pointerdown', function(e){
         if(placement) return;
@@ -17589,6 +17695,7 @@ function openEdit(f,show3d){
     '<div class="ct-nrow"><label>나레이션 <textarea class="ct-ni" rows="1" placeholder="예: 그날 이후, 우리는 말을 하지 않았다."></textarea></label>'+
     '<label>위치 <select class="ct-np"><option value="top">위</option><option value="bottom">아래</option><option value="between">컷 사이</option></select></label></div>'+
     (enable3d?'<div class="ct-3d"><label>3D 배경 <select class="ct-set"><option value="">자동 (장소에서)</option><option value="none">없음</option>'+D3_SETS.map(function(x){ return '<option value="'+x[0]+'"'+(c.set===x[0]?' selected':'')+'>'+x[1]+'</option>'; }).join('')+'</select></label>'+
+      '<label>대화 컷 <select class="ct-ots"><option value="">자동</option><option value="1">어깨 너머로</option><option value="0">일반</option></select></label>'+
       '<button class="chip ct-camb" type="button" aria-expanded="false">🎥 3D 카메라·배치</button><span class="small ct-camt"></span></div><div class="ct-camv" hidden></div>':'')+
     '<div class="filterbar"><button class="chip ct-ok" type="button">저장</button><button class="chip ct-x" type="button">닫기</button>'+
     '<button class="chip ct-add" type="button">뒤에 컷 추가</button><button class="chip ct-del" type="button">이 컷 지우기</button></div>'+
@@ -17618,12 +17725,13 @@ function openEdit(f,show3d){
       var x=u[6]||{}; if(x.focus) ed.querySelector('.ct-f').checked=true; if(x.dyn) ed.querySelector('.ct-dyn').value=String(x.dyn); });
     fill();
   })();
-  var cam3=c.cam?Object.assign({}, c.cam):null, set3=ed.querySelector('.ct-set');
+  var cam3=c.cam?Object.assign({}, c.cam):null, set3=ed.querySelector('.ct-set'), ots3=c.ots3!=null?c.ots3:null, otsSel=ed.querySelector('.ct-ots');
+  if(otsSel){ otsSel.value=ots3==null?'':String(ots3); otsSel.addEventListener('change', function(){ ots3=otsSel.value===''?null:+otsSel.value; var lv=ed.querySelector('.ct-camv'); if(lv && !lv.hidden && lv.__draw) lv.__draw(); }); }
   var stage3d=(c.stage3d||[]).map(function(item){return Object.assign({},item);});
   if(set3){
     if(c.set==='none') set3.value='none';
     var shot3=ed.querySelector('.ct-k'), angle3=ed.querySelector('.ct-a');
-    camUI(ed,c,function(){return {k:shot3.value,ang:angle3.value,set:set3.value,cam:cam3,stage3d:stage3d};},function(v){cam3=v;});
+    camUI(ed,c,function(){ var L=typeof wpLive==='function'?wpLive():null; return {k:shot3.value,ang:angle3.value,set:set3.value,cam:cam3,stage3d:stage3d,wp:L&&L.wp,who:L&&L.who,ots3:ots3}; },function(v){cam3=v;});
     [set3,shot3,angle3].forEach(function(input){input.addEventListener('change',function(){var lv=ed.querySelector('.ct-camv');if(!lv.hidden) lv.__draw();});});
   }
   var wpBox=ed.querySelector('.ct-wp'), wpCur={};
@@ -17636,8 +17744,25 @@ function openEdit(f,show3d){
         (drawMode()==='3d'?d3PoseMcOpts(w.pose):'')+'</select>'+
         '<select class="ct-wpf" aria-label="방향">'+WP_FACE.map(function(o){ return '<option value="'+o[0]+'"'+((w.face||'')===o[0]?' selected':'')+'>'+o[1]+'</option>'; }).join('')+'</select>'+
         (drawMode()==='3d'?'<select class="ct-wpe" aria-label="표정"><option value="">표정 자동</option>'+D3_EMO_KO.slice(1).map(function(o){ return '<option value="'+o[0]+'"'+((w.emo||'')===o[0]?' selected':'')+'>'+o[1]+'</option>'; }).join('')+'</select>'+
-          '<select class="ct-wpo" aria-label="소품"><option value="">소품 자동</option>'+D3_PROP_KO.slice(1).map(function(o){ return '<option value="'+o[0]+'"'+((w.prop||'')===o[0]?' selected':'')+'>'+o[1]+'</option>'; }).join('')+'</select>':'')+'</div>'; }).join(''); }
+          '<select class="ct-wpo" aria-label="소품"><option value="">소품 자동</option>'+D3_PROP_KO.slice(1).map(function(o){ return '<option value="'+o[0]+'"'+((w.prop||'')===o[0]?' selected':'')+'>'+o[1]+'</option>'; }).join('')+'</select>'+
+          '<button class="chip ct-wpd'+(w.pa&&Object.keys(w.pa).length?' on':'')+'" type="button" aria-expanded="false">🦴 몸동작</button><div class="ct-pd" hidden></div>':'')+'</div>'; }).join(''); }
   wpRows();
+  // 몸동작 세부(2026-11-28): 부위를 고르고 슬라이더 3개. 값은 고른 자세에 더하는 각도(wp[이름].pa), 미리보기(🎥)에 바로 보인다
+  var pdPart='la';
+  function pdHTML(k){ var w=wpCur[k]||{}, pa=w.pa||{}, D=D3_PD[pdPart], cur=pa[pdPart]||[];
+    return '<div class="filterbar ct-pdp">'+D3_PD_ORDER.map(function(p){ return '<button type="button" class="chip'+(p===pdPart?' on':'')+(pa[p]?' ct-pdm':'')+'" data-pdp="'+p+'">'+D3_PD[p][0]+'</button>'; }).join('')+'</div>'+
+      D[1].map(function(q){ var v=Math.round((cur[q[1]]||0)*q[4]); return '<label class="ct-pdl" style="display:grid;grid-template-columns:minmax(7em,11em) 1fr 3em;align-items:center;gap:.4em;margin:.15em 0"><span class="small">'+q[0]+'</span><input style="width:100%;margin:0" type="range" min="'+q[2]+'" max="'+q[3]+'" step="1" value="'+v+'" data-pdj="'+q[1]+'" data-pds="'+q[4]+'"><output>'+v+'°</output></label>'; }).join('')+
+      '<div class="filterbar"><button class="chip" type="button" data-pdr="part">이 부위 처음대로</button><button class="chip" type="button" data-pdr="all">전부 처음대로</button></div>'; }
+  function pdShow(){ var lv=ed.querySelector('.ct-camv'), b=ed.querySelector('.ct-camb'); if(lv && lv.hidden && b) b.click(); else if(lv && lv.__draw) lv.__draw(); }
+  wpBox.addEventListener('click', function(e){ var r=e.target.closest('.ct-wr'); if(!r) return; var k=r.getAttribute('data-k'), pd=r.querySelector('.ct-pd'), w=wpCur[k]||(wpCur[k]={});
+    if(e.target.closest('.ct-wpd')){ var open=pd.hidden; [].slice.call(wpBox.querySelectorAll('.ct-pd')).forEach(function(x){ x.hidden=true; x.innerHTML=''; }); if(open){ pd.innerHTML=pdHTML(k); pd.hidden=false; pdShow(); } e.target.closest('.ct-wpd').setAttribute('aria-expanded', String(open)); return; }
+    var pp=e.target.closest('[data-pdp]'); if(pp){ pdPart=pp.dataset.pdp; pd.innerHTML=pdHTML(k); return; }
+    var rr=e.target.closest('[data-pdr]'); if(rr){ if(w.pa){ if(rr.dataset.pdr==='all') delete w.pa; else { delete w.pa[pdPart]; if(!Object.keys(w.pa).length) delete w.pa; } } pd.innerHTML=pdHTML(k); r.querySelector('.ct-wpd').classList.toggle('on', !!w.pa); pdShow(); } });
+  wpBox.addEventListener('input', function(e){ var t=e.target; if(t.dataset.pdj==null) return; var r=t.closest('.ct-wr'), k=r.getAttribute('data-k'), w=wpCur[k]||(wpCur[k]={}), j=+t.dataset.pdj, v=+t.value*(+t.dataset.pds);
+    w.pa=w.pa||{}; var a=(w.pa[pdPart]||[0,0,0,0]).slice(); a[j]=v; if(a.every(function(x){ return !x; })) delete w.pa[pdPart]; else w.pa[pdPart]=a; if(!Object.keys(w.pa).length) delete w.pa;
+    t.parentNode.querySelector('output').textContent=t.value+'°'; r.querySelector('.ct-wpd').classList.toggle('on', !!w.pa); var b=r.querySelector('[data-pdp="'+pdPart+'"]'); if(b) b.classList.toggle('ct-pdm', !!(w.pa&&w.pa[pdPart]));
+    var lv=ed.querySelector('.ct-camv'); if(lv && !lv.hidden && lv.__draw){ cancelAnimationFrame(lv.__pq); lv.__pq=requestAnimationFrame(lv.__draw); } });
+  function wpLive(){ if(!wpBox) return null; wpRead(); var ns=wpNames(ed.querySelector('.ct-w').value), wp={}; ns.forEach(function(nm,i){ var k=nm||('#'+i), w=wpCur[k]; if(!w) return; var o={}; ['pose','face','emo','prop','pa','x'].forEach(function(q){ if(w[q]!=null && w[q]!=='') o[q]=w[q]; }); if(Object.keys(o).length) wp[k]=o; }); return {wp:wp, who:ns}; }
   var wpT=0; ed.querySelector('.ct-w').addEventListener('input',function(){ clearTimeout(wpT); wpT=setTimeout(wpRows,250); });
   ed.addEventListener('click',function(e){ e.stopPropagation(); });
   ed.querySelector('.ct-x').addEventListener('click',function(){ ed.remove(); });
@@ -17647,7 +17772,7 @@ function openEdit(f,show3d){
     var nar=lineClean(ed.querySelector('.ct-ni').value), np=ed.querySelector('.ct-np').value;
     if(nar){ c.nar=nar; if(np==='bottom'||np==='between') c.narPos=np; else delete c.narPos; } else { delete c.nar; delete c.narPos; }
     wpRead(); c.who=wpNames(ed.querySelector('.ct-w').value);
-    var wp={}; c.who.forEach(function(nm,i){ var k=nm||('#'+i), w=wpCur[k]; if(!w) return; var o={}; if(w.pose) o.pose=w.pose; if(w.face) o.face=w.face; if(w.emo) o.emo=w.emo; if(w.prop) o.prop=w.prop; if(w.x!=null) o.x=w.x; if(Object.keys(o).length) wp[k]=o; });
+    var wp={}; c.who.forEach(function(nm,i){ var k=nm||('#'+i), w=wpCur[k]; if(!w) return; var o={}; if(w.pose) o.pose=w.pose; if(w.face) o.face=w.face; if(w.emo) o.emo=w.emo; if(w.prop) o.prop=w.prop; if(w.pa && Object.keys(w.pa).length) o.pa=w.pa; if(w.x!=null) o.x=w.x; if(Object.keys(o).length) wp[k]=o; });
     if(Object.keys(wp).length) c.wp=wp; else delete c.wp;
     var dy=+ed.querySelector('.ct-dyn').value||0; if(dy) c.dyn=dy; else delete c.dyn;
     var sz=ed.querySelector('.ct-sz').value, uu=ed.querySelector('.ct-use').value; if(sz) c.size=sz; else delete c.size;
@@ -17656,6 +17781,7 @@ function openEdit(f,show3d){
       if(set3.value) c.set=set3.value; else delete c.set;
       if(cam3 && (cam3.y||cam3.p||(cam3.d&&cam3.d!==1))) c.cam={y:Math.round(cam3.y||0),p:Math.round(cam3.p||0),d:Math.round((cam3.d||1)*100)/100}; else delete c.cam;
       if(stage3d.length){c.stage3d=stage3d;c.use3d=1;}else delete c.stage3d;
+      if(ots3==null) delete c.ots3; else c.ots3=ots3;
     }
     if((sz==='wide'||sz==='tall') && uu && useOf(uu) && useOf(uu)[1]===sz){ c.use=uu; if(useOf(uu)[6] && useOf(uu)[6].silent) c.silent=1; } else delete c.use;
   }
