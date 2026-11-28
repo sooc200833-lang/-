@@ -433,3 +433,14 @@ arcForm, deviceId, folderMemo, gdBase, gdLast, gdLinked, ideaText, mangaDataVer,
 - 그림 요청문(콘티 「GPT로 하기」·주요 컷 `ctKeyPrompt`, 전체 콘티·컷 편집기 `ctGptPrompt`, 클리셰 플레이 `cutPrompt`)에 「PERSPECTIVE & DEPTH」 블록을 넣는다: 렌즈 mm(광각 24 / 표준 35-50 / 망원 85-135), 카메라 높이·기울기와 3점 투시(앙각은 위로, 부감은 아래로 모이는 소실점), 눈높이 지평선 + 2점 투시, 더치 회전 각도, OTS 앞어깨·POV 손, 깊이 3층(앞 물체가 프레임 가장자리를 가림·중간 인물·멀어지는 배경), 움직이는 팔·주먹·발 단축법, 클로즈업도 3/4 각도 + 얕은 심도, 「무대처럼 일렬로 세우지 말 것」
 - 렌즈: 작가가 구도(🎛)를 직접 잡은 컷만 배경 확대값(bg.z)으로, 아니면 샷 종류로. 앙각·부감은 보통에서도 광각
 - 세기 localStorage `perspFx`: 0 끔 · 1 약 · 2 보통(기본) · 3 강(초광각 16-20mm 왜곡, 더치 25-30도, 앙각/부감 과장). 콘티 단계 줄 「원근·왜곡」 칩(`data-persp`)
+
+## 3D 콘티 교실 = 블렌더 GLB (2026-11-28)
+- `d3Set` 앞에 `D3_GLB`(세트 열쇠 → GLB 경로, 지금은 `class`만)·`d3Glb`·`d3GlbParse`·`d3GlbMat`·`d3GlbPut`. 처음 쓸 때 `fetch`로 받아 GLB를 직접 읽는다(GLTFLoader 안 씀, 노드 translation·scale만 적용). 받는 동안·실패면 원래 상자 세트, 받으면 `d3RedrawAll`.
+- 재질은 GLB 재질 이름(M_Floor·Wall·Trim·Wood·Dark·Glass·Paper·Chalk·Curtain·Board·Metal)으로 `D3.M` 툰 재질에 맞춘다(Board·Metal은 `D3.M.glb`에 한 번 만듦). 외곽선은 부분마다 `EdgesGeometry(30°)` 한 번. 좌우 뒤집기(mir)는 `scale.x`. GLB 바깥 바닥은 큰 `d3Floor`(y -0.012)로 잇는다.
+- 다른 세트를 블렌더로 만들면 `assets/3d/<이름>/`에 GLB를 두고 `D3_GLB`에 한 줄 더한다. 배치는 기존 상자 세트와 같은 좌표(인물 원점, 카메라 +z, 블렌더 y = three -z).
+
+## 완성 콘티 파트로 나눠 만들기 (2026-11-28) — `[[MOD:strip-parts]]` (exportStrips 자리)
+- 원인: 8단계 완성 콘티가 모든 컷을 세로 한 장(컷 100개면 7만 px)에 한꺼번에 그려 그림판 한도·메모리를 넘었다.
+- `spPlan`: 높이 `SP_MAXH`(12000px) 이하 파트로 나누고, 반을 넘겼으면 장면이 바뀌는 곳에서 끊는다. `spRender`: 컷을 하나씩 그리고 바로 비운 뒤 대사 없는 판 → 같은 판에 말풍선 → 대사 있는 판(PNG 2장).
+- `SP.cache`(이 탭에서만, 파트 열쇠 = fz + 파트 컷 JSON 해시): 멈춤(`data-spx=stop`)·실패 뒤 「이어서 만들기」는 남은 파트부터, 파트별 「다시」·「대사 있음/없음 ⬇」, 「ZIP으로 받기」(대사있음/·대사없음/ 폴더). 한 파트면 예전처럼 두 장 공유·저장, 여러 파트면 다 끝나면 ZIP. 파일 이름 `콘티-대사있음-01.png`.
+- 시험(로컬): 90컷 → 7파트, 중간 멈춤 6/7 → 이어서 7/7, ZIP 14장(23MB), 파트 800×8080 등.
