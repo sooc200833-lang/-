@@ -14600,9 +14600,33 @@ function d3Tree(par, x, z, s){ d3Cyl(par, D3.M.wood, .13*s, 1.8*s, x, .9*s, z, t
   var o=new window.THREE.Mesh(D3.G.sph, D3.M.out); o.scale.set(1.02,1.02,1.02); c.add(o); }
 function d3Lamp(par, x, z, h){ d3Cyl(par, D3.M.dark, .05, h, x, h/2, z, false, D3.G.cyl8); d3Box(par, D3.M.wall2, .5, .08, .18, x+.2, h, z); }
 function d3Chair(par, x, z, ry){ var g=d3Group(par, x, 0, z); g.rotation.y=ry||0; d3Box(g, D3.M.wood, .42, .06, .42, 0, .45, 0); d3Box(g, D3.M.wood, .42, .48, .05, 0, .7, -.19); [-1,1].forEach(function(a){ [-1,1].forEach(function(b){ d3Box(g, D3.M.dark, .04, .44, .04, a*.18, .22, b*.18, false); }); }); return g; }
+// ----- 블렌더로 만든 세트(GLB) (2026-11-28) -----
+// assets/3d/<이름>/<이름>.glb 를 처음 쓸 때 한 번 받아(외부 로더 없이 GLB를 직접 읽는다) 공유 도형으로 둔다.
+// 받는 동안·실패하면 아래 상자 세트로 그리고, 다 받으면 d3RedrawAll로 다시 그린다. 재질은 이름(M_Wall 등)으로 사전의 툰 재질에 맞추고 외곽선은 EdgesGeometry.
+var D3_GLB={'class':'assets/3d/classroom/classroom.glb'}, D3G={};
+function d3GlbParse(buf){
+  var T=window.THREE, dv=new DataView(buf), jl=dv.getUint32(12,true), js=JSON.parse(new TextDecoder().decode(new Uint8Array(buf,20,jl))), bo=20+jl+8;
+  var acc=function(i){ var a=js.accessors[i], v=js.bufferViews[a.bufferView], n={SCALAR:1,VEC2:2,VEC3:3,VEC4:4}[a.type]*a.count, off=bo+(v.byteOffset||0)+(a.byteOffset||0);
+    var A=a.componentType===5126?Float32Array:a.componentType===5125?Uint32Array:a.componentType===5123?Uint16Array:Uint8Array; return new A(buf.slice(off, off+n*A.BYTES_PER_ELEMENT)); };
+  var nd=(js.nodes||[]).filter(function(n){ return n.mesh!=null; })[0]||{mesh:0}, t=nd.translation||[0,0,0], s=nd.scale||[1,1,1], out=[];
+  js.meshes[nd.mesh].primitives.forEach(function(p){ var g=new T.BufferGeometry();
+    g.setAttribute('position', new T.BufferAttribute(acc(p.attributes.POSITION),3)); if(p.attributes.NORMAL!=null) g.setAttribute('normal', new T.BufferAttribute(acc(p.attributes.NORMAL),3)); else g.computeVertexNormals();
+    if(p.indices!=null) g.setIndex(new T.BufferAttribute(acc(p.indices),1));
+    g.scale(s[0],s[1],s[2]); g.translate(t[0],t[1],t[2]);
+    out.push({geo:g, edge:new T.EdgesGeometry(g, 30), mat:String(((js.materials||[])[p.material]||{}).name||'').replace(/^M_/,'')}); });
+  return out; }
+function d3GlbMat(nm){ var M=D3.M, T=window.THREE;
+  if(!M.glb){ var gm=M.floor.gradientMap, tn=function(c){ return new T.MeshToonMaterial({color:c, gradientMap:gm}); }; M.glb={Board:tn(0x737d76), Metal:tn(0xa3a5a1)}; }
+  return {Floor:M.floor, Wall:M.wall, Trim:M.wall2, Wood:M.wood, Dark:M.dark, Glass:M.glass, Paper:M.glass, Chalk:M.glass, Curtain:M.cloth, Board:M.glb.Board, Metal:M.glb.Metal}[nm]||M.wall2; }
+function d3Glb(key){ var u=D3_GLB[key], e=D3G[key]; if(!u) return null; if(e) return e.st===2?e.parts:null;
+  e=D3G[key]={st:1}; fetch(u).then(function(r){ if(!r.ok) throw 0; return r.arrayBuffer(); }).then(function(b){ e.parts=d3GlbParse(b); e.st=2; d3RedrawAll(); }).catch(function(){ e.st=-1; });
+  return null; }
+function d3GlbPut(g, parts, mir){ var T=window.THREE, h=d3Group(g,0,0,0); h.scale.x=mir;
+  parts.forEach(function(p){ var m=new T.Mesh(p.geo, d3GlbMat(p.mat)); m.castShadow=m.receiveShadow=true; h.add(m); h.add(new T.LineSegments(p.edge, D3.M.line)); }); return h; }
 function d3Set(sc, key, seed, wide){
-  var M=D3.M, mir=(seed%2)?-1:1, r=function(i){ return ((seed*31+i*17)%97)/97; }, g=d3Group(sc,0,0,0);
-  if(key==='room'){
+  var M=D3.M, mir=(seed%2)?-1:1, r=function(i){ return ((seed*31+i*17)%97)/97; }, g=d3Group(sc,0,0,0), gl=d3Glb(key);
+  if(gl){ d3Floor(g, M.floor, 60, 70, 0, 10).position.y=-.012; d3GlbPut(g, gl, mir); }
+  else if(key==='room'){
     d3Floor(g, M.wood, 14, 40, 0, 17); d3Lines(g, 'room-plank', function(p){ for(var z=-3;z<=30;z+=.32) p.push(-7,0,z, 7,0,z); }, M.lineL, 0, .003, 0);
     d3Box(g, M.wall, 14, 2.8, .12, 0, 1.4, -2.7); d3Box(g, M.wall, .12, 2.8, 9, mir*-3.6, 1.4, 1.6);
     d3Box(g, M.wall2, 14, .1, .03, 0, .05, -2.62, 'l');
@@ -15628,10 +15652,69 @@ function buildStrip(withText){ var W=800, cuts=B.cuts.filter(function(c){ return
     if(withText) cuts.forEach(function(c,i){ drawFx(g, c, W, hs[i], ys[i], fz); });
     return out; }); }
 function dlCanvas(cv, name){ return new Promise(function(res){ cv.toBlob(function(b){ var f=new File([b], name, {type:'image/png'}); res(f); }, 'image/png'); }); }
-function exportStrips(){ if(!B||!B.cuts||!B.cuts.length) return stat('콘티가 없다'); stat('완성 콘티를 만드는 중… (컷이 많으면 오래 걸린다)');
-  Promise.all([buildStrip(true), buildStrip(false)]).then(function(r){ return Promise.all([dlCanvas(r[0],'콘티-대사있음.png'), dlCanvas(r[1],'콘티-대사없음.png')]); }).then(function(files){
-    if(navigator.canShare && navigator.canShare({files:files})) return navigator.share({files:files, title:'완성 콘티'}).then(function(){ stat('완성 콘티 두 장을 보냈다'); }, function(){ files.forEach(dlFile); });
-    B.exported=1; save(); stepNav(); files.forEach(dlFile); stat('완성 콘티 두 장을 저장했다 — 대사 있는 판 · 대사 없는 판'); }).catch(function(e){ stat('완성 콘티를 만들지 못했다: '+(e&&e.message||'')); }); }
+// [[MOD:strip-parts]] 완성 콘티를 파트로 나눠 만들기 (2026-11-28)
+// 예전에는 모든 컷을 높이 수만 px 그림 한 장에 한꺼번에 그려서 컷이 많으면 브라우저 그림판 한도·메모리를 넘어 실패했다.
+// 이제 장면 경계를 살려 파트(높이 SP_MAXH 이하)로 나누고, 파트 안에서도 컷을 하나씩 그려 바로 비운다. 한 파트 그림판에 컷을 그린 뒤
+// 「대사 없는 판」을 먼저 PNG로 뜨고 같은 판에 말풍선을 얹어 「대사 있는 판」을 뜬다. 끝난 파트는 SP.cache(이 탭에서만)에 남아
+// 멈추거나 실패해도 「이어서 만들기」가 남은 파트부터, 「다시」는 그 파트만. 컷을 고치면 그 파트의 열쇠가 바뀌어 다시 만든다.
+var SP={run:0, stop:0, cache:{}, prog:''}, SP_MAXH=12000, SP_W=800;
+function spCuts(){ return B.cuts.filter(function(c){ return c.scr || c.art; }); }
+function spHash(s){ var h=5381; for(var i=0;i<s.length;i++) h=((h<<5)+h+s.charCodeAt(i))|0; return (h>>>0).toString(36)+s.length.toString(36); }
+function spScene(c){ try{ var x=sceneOfCut(c.n); return x?x.a:0; }catch(e){ return 0; } }
+function spPlan(){ var cuts=spCuts(), parts=[], cur=null, h=0;
+  cuts.forEach(function(c,i){ var ch=Math.round(SP_W*fxRatio(c)), gp=fxGap(c, cuts[i-1]), ns=i>0 && spScene(c)!==spScene(cuts[i-1]);
+    if(!cur || h+gp+ch+40>SP_MAXH || (ns && h>SP_MAXH*.45)){ cur={cuts:[]}; parts.push(cur); h=40; }   // 반을 넘겼으면 장면이 바뀌는 곳에서 끊는다
+    else h+=gp; cur.cuts.push(c); h+=ch; });
+  parts.forEach(function(p){ p.key=spHash(JSON.stringify([B.fz||100, p.cuts])); p.a=p.cuts[0].n; p.b=p.cuts[p.cuts.length-1].n; });
+  return parts; }
+function spBlob(cv){ return new Promise(function(res, rej){ try{ cv.toBlob(function(b){ if(b) res(b); else rej(Error('그림이 너무 크거나 메모리가 모자라다')); }, 'image/png'); }catch(e){ rej(e); } }); }
+async function spRender(p, onCut){ var W=SP_W, fz=(B.fz||100)/100, hs=p.cuts.map(function(c){ return Math.round(W*fxRatio(c)); }), gaps=p.cuts.map(function(c,j){ return j?fxGap(c, p.cuts[j-1]):40; });
+  var H=hs.reduce(function(a,h,j){ return a+h+gaps[j]; },0)+40, out=document.createElement('canvas'); out.width=W; out.height=H; var g=out.getContext('2d'); if(!g) throw Error('그림판을 만들지 못했다');
+  g.fillStyle='#fff'; g.fillRect(0,0,W,H); var y=0, ys=[];
+  for(var j=0;j<p.cuts.length;j++){ if(SP.stop) throw Error('멈춤'); y+=gaps[j]; ys.push(y); var h=hs[j], cv=await cutImg(p.cuts[j], W);
+    var k=Math.max(W/cv.width, h/cv.height), w2=cv.width*k, h2=cv.height*k; g.save(); g.beginPath(); g.rect(0,y,W,h); g.clip(); g.drawImage(cv,(W-w2)/2,y+(h-h2)/2,w2,h2); g.restore(); g.strokeStyle='#111'; g.lineWidth=3; g.strokeRect(1.5,y,W-3,h);
+    cv.width=cv.height=0; y+=h; if(onCut) onCut(); await new Promise(function(r){ setTimeout(r,0); }); }
+  var n=await spBlob(out); p.cuts.forEach(function(c,j){ drawFx(g, c, W, hs[j], ys[j], fz); }); var t=await spBlob(out); out.width=out.height=0;
+  return {t:t, n:n}; }
+function spName(i, total, withText){ return '콘티-'+(withText?'대사있음':'대사없음')+(total>1?'-'+String(i+1).padStart(2,'0'):'')+'.png'; }
+function spFiles(parts, which){ var out=[]; parts.forEach(function(p,i){ var r=SP.cache[p.key]; if(!r) return; if(which!=='n') out.push(new File([r.t], spName(i,parts.length,true), {type:'image/png'})); if(which!=='t') out.push(new File([r.n], spName(i,parts.length,false), {type:'image/png'})); }); return out; }
+async function spZip(parts){ var fs=spFiles(parts), L=[]; if(!fs.length) return stat('아직 만든 파트가 없다'); stat('ZIP으로 묶는 중…');
+  for(var i=0;i<fs.length;i++) L.push({name:(/대사있음/.test(fs[i].name)?'대사있음/':'대사없음/')+fs[i].name, data:new Uint8Array(await fs[i].arrayBuffer())});
+  dlFile(new File([zipArchive(L)], '완성콘티.zip', {type:'application/zip'})); stat('완성 콘티 '+fs.length+'장을 ZIP 하나로 저장했다'); }
+function spDeliver(parts){ var files=spFiles(parts); if(!files.length) return;
+  if(parts.length>1) return spZip(parts);
+  if(navigator.canShare && navigator.canShare({files:files})) return navigator.share({files:files, title:'완성 콘티'}).then(function(){ stat('완성 콘티 두 장을 보냈다'); }, function(){ files.forEach(dlFile); });
+  files.forEach(dlFile); stat('완성 콘티 두 장을 저장했다 — 대사 있는 판 · 대사 없는 판'); }
+async function spRun(only){ if(SP.run) return; if(!B||!B.cuts||!B.cuts.length) return stat('콘티가 없다');
+  var board=B, parts=spPlan(); if(!parts.length) return stat('그릴 컷이 없다');
+  if(only!=null && parts[only]) delete SP.cache[parts[only].key];
+  var todo=parts.filter(function(p,i){ return (only==null||i===only) && !SP.cache[p.key]; }), total=todo.reduce(function(a,p){ return a+p.cuts.length; },0), done=0, fail=0;
+  SP.run=1; SP.stop=0; SP.err={}; spPaint();
+  try{
+    for(var i=0;i<parts.length;i++){ var p=parts[i]; if(todo.indexOf(p)<0) continue; if(SP.stop||B!==board) break;
+      SP.cur=p.key; spPaint();
+      try{ SP.cache[p.key]=await spRender(p, function(){ done++; SP.prog=done+'/'+total+'컷'; stat('완성 콘티 만드는 중… '+(i+1)+'/'+parts.length+' 파트 · '+SP.prog); }); }
+      catch(e){ if(SP.stop) break; SP.err[p.key]=(e&&e.message)||'실패'; fail++; }
+      SP.cur=''; spPaint(); }
+  } finally { SP.run=0; SP.cur=''; SP.prog=''; }
+  var stopped=SP.stop; SP.stop=0; if(B!==board) return; spPaint();
+  var ok=parts.filter(function(p){ return SP.cache[p.key]; }).length;
+  if(ok===parts.length){ B.exported=1; save(); stepNav(); if(only==null) return spDeliver(parts); stat('파트 '+(only+1)+'을(를) 다시 만들었다'); return; }
+  stat((stopped?'멈췄다 — ':'')+ok+'/'+parts.length+' 파트 완료'+(fail?' · '+fail+'파트 실패':'')+' — 「이어서 만들기」를 누르면 남은 파트부터 한다'); }
+function spPaint(){ var box=document.getElementById('ct-sp'); if(!box||!B||!B.cuts) return; var parts=spPlan(), ok=parts.filter(function(p){ return SP.cache[p.key]; }).length;
+  if(parts.length<2 && !ok && !SP.run){ box.innerHTML=''; return; }
+  box.innerHTML='<p class="small">컷 '+spCuts().length+'개를 <b>'+parts.length+'파트</b>로 나눠 차례로 만든다(장면이 바뀌는 곳에서 끊고, 한 파트는 세로 '+SP_MAXH+'px 이하). 끝난 파트 '+ok+'/'+parts.length+(SP.run&&SP.prog?' · 지금 '+SP.prog:'')+'</p>'+
+    '<div class="sv-act">'+(SP.run?'<button class="chip" type="button" data-spx="stop">⏸ 멈춤</button>':(ok&&ok<parts.length?'<button class="chip ct-go" type="button" data-spx="go">▶ 이어서 만들기 ('+(parts.length-ok)+'파트 남음)</button>':''))+
+    (ok?'<button class="chip" type="button" data-spx="zip">⬇ 만든 것 ZIP으로 받기</button>':'')+'</div>'+
+    '<ol class="sp-l">'+parts.map(function(p,i){ var r=SP.cache[p.key], st=SP.cur===p.key?'⏳ 만드는 중':r?'✓':SP.err&&SP.err[p.key]?'⚠ '+cesc(SP.err[p.key]):'대기';
+      return '<li><b>파트 '+(i+1)+'</b> <span class="small">'+p.a+'~'+p.b+'번 컷 ('+p.cuts.length+'컷) · '+st+'</span> '+(r?'<button class="chip" type="button" data-spx="t" data-i="'+i+'">대사 있음 ⬇</button><button class="chip" type="button" data-spx="n" data-i="'+i+'">대사 없음 ⬇</button>':'')+(SP.run?'':'<button class="chip" type="button" data-spx="re" data-i="'+i+'">'+(r?'다시':'이 파트만 만들기')+'</button>')+'</li>'; }).join('')+'</ol>'; }
+document.addEventListener('click', function(e){ var b=e.target.closest&&e.target.closest('[data-spx]'); if(!b||!B) return; var k=b.dataset.spx, i=+b.dataset.i, parts=spPlan();
+  if(k==='stop'){ SP.stop=1; stat('지금 컷을 마치고 멈춘다…'); return; }
+  if(k==='go'){ spRun(); return; }
+  if(k==='zip'){ spZip(parts); return; }
+  if(k==='re'){ spRun(i); return; }
+  if((k==='t'||k==='n') && parts[i] && SP.cache[parts[i].key]) dlFile(new File([SP.cache[parts[i].key][k]], spName(i, parts.length, k==='t'), {type:'image/png'})); });
+function exportStrips(){ spRun(); }
 function dlFile(f){ var a=document.createElement('a'); a.download=f.name; a.href=URL.createObjectURL(f); document.body.appendChild(a); a.click(); setTimeout(function(){ URL.revokeObjectURL(a.href); a.remove(); },2000); }
 // 애니메이션: 컷 시간 짐작 → 15초 클립으로 끊기 → 점검
 function cutSec(c){ var base={els:3,ls:2.5,fs:2.2,stand:2.2,two:2.2,ms:2,ots:2,bs:1.8,cu:1.6,ecu:1.3}[c.k]||2, say=String(c.line||'').replace(/^[^:\n]{1,12}:\s*/gm,'').replace(/\s+/g,''), nar=String(c.nar||'').replace(/\s+/g,'');
@@ -15704,12 +15787,12 @@ document.addEventListener('click', function(e){ var b=e.target.closest&&e.target
   if(k==='srtja'||k==='srtko'){ var lg=k==='srtja'?'ja':'ko'; if(!subLines(lg).length) return stat(lg==='ja'?'일본어 대사가 없다 — 먼저 「일본어로 옮기기」':'대사가 없다'); dlFile(new File([subSrt(lg)], 'subtitles-'+lg+'.srt', {type:'text/plain'})); stat('자막 파일을 저장했다 (클립마다 15초씩 이어 붙인 시간)'); } });
 function renderS8(){ var box=document.getElementById('ct-s8'); if(!box) return; if(!B||!B.cuts||!B.cuts.length){ box.innerHTML='<p class="small">4단계에서 콘티를 먼저 만든다.</p>'; return; }
   var C=animClips(), tot=C.reduce(function(a,c){ return a+c.sec; },0), drawn=B.cuts.filter(function(c){ return c.art; }).length, n=B.cuts.filter(function(c){ return c.scr; }).length;
-  box.innerHTML='<div class="sv-all"><b>📜 완성 콘티</b> <span class="small">모든 컷을 일렬로 놓고 그 위에 말풍선·나레이션을 얹는다</span><p class="small">'+n+'컷 중 GPT 완성 그림 '+drawn+'컷 · 나머지는 시트 합성 → 3D·선 그림 순으로 쓴다.</p><div class="sv-act"><button class="chip" type="button" id="ct-fxopen">'+(FX.on?'최종 편집 닫기':'✏ 최종 편집 열기 (말풍선 위치·컷 크기)')+'</button><button class="chip ct-go" type="button" id="ct-strip">완성 콘티 만들기 (대사 있는 판 + 대사 없는 판)</button></div><div id="ct-fx"'+(FX.on?'':' hidden')+'></div></div>'+
+  box.innerHTML='<div class="sv-all"><b>📜 완성 콘티</b> <span class="small">모든 컷을 일렬로 놓고 그 위에 말풍선·나레이션을 얹는다</span><p class="small">'+n+'컷 중 GPT 완성 그림 '+drawn+'컷 · 나머지는 시트 합성 → 3D·선 그림 순으로 쓴다.</p><div class="sv-act"><button class="chip" type="button" id="ct-fxopen">'+(FX.on?'최종 편집 닫기':'✏ 최종 편집 열기 (말풍선 위치·컷 크기)')+'</button><button class="chip ct-go" type="button" id="ct-strip">완성 콘티 만들기 (대사 있는 판 + 대사 없는 판)</button></div><div id="ct-sp"></div><div id="ct-fx"'+(FX.on?'':' hidden')+'></div></div>'+
     '<details class="sv-all"><summary>기존 15초 클립·자막 도구</summary><div class="sv-all"><b>🎬 Grok 애니메이션 프롬프트</b> <span class="small">한 클립 = 15초 · '+C.length+'개 클립</span><p class="small">Grok은 <b>클립 하나씩</b> 만든다. 「📤 Grok으로」는 그 클립의 <b>최종 컷 그림을 컷마다 따로</b>(shot1, shot2…)와, 샷마다 <b>구도·상황·대사</b>가 담긴 요청문을 준다. 7단계에서 올린 GPT 완성 컷이 있으면 그 그림을 쓴다.</p><div class="sv-act"><button class="chip" type="button" data-an="list">📋 클립마다 나열해서 복사</button></div>'+subBox()+
     '<ol class="an-l">'+C.map(function(cl,i){ var t=0; return '<li><b>클립 '+(i+1)+'</b> <span class="small">'+cl.cuts.length+'컷 · '+cl.sec.toFixed(1)+'초'+(cl.scene?' · '+cesc(dispNm(cl.scene.name||'')):'')+(cl.cutWhy?' · 다음 클립으로 끊음: '+cl.cutWhy:'')+'</span>'+
       (cl.warn.length?'<p class="an-w">⚠ '+cl.warn.map(cesc).join(' / ')+'</p>':'')+'<div class="an-t">'+cl.cuts.map(function(o){ var a=t; t+=o.sec; return '<div class="an-r"><span class="an-tm">'+a.toFixed(1)+'–'+t.toFixed(1)+'초 · '+o.c.n+'번</span> '+cesc(shotName(o.c.k))+' · '+cesc(o.c.scr||'')+(o.c.line?'<span class="an-d">'+cesc(String(o.c.line).replace(/\n/g,' / '))+'</span>':'')+(o.c.nar?'<span class="an-d an-n">▸ '+cesc(o.c.nar)+'</span>':'')+((o.c.ja||[]).filter(Boolean).length||o.c.narJa?'<span class="ja">'+cesc((o.c.ja||[]).filter(Boolean).join(' / ')+(o.c.narJa?' ('+o.c.narJa+')':''))+'</span>':'')+'</div>'; }).join('')+'</div>'+
       '<div class="sv-act"><button class="chip ct-go" type="button" data-an="grok" data-i="'+i+'">📤 Grok으로 (컷 그림 '+cl.cuts.length+'장 + 요청문)</button><button class="chip" type="button" data-an="one" data-i="'+i+'">요청문 복사</button></div></li>'; }).join('')+'</ol>'+
-    '<p class="small">시간은 샷 크기와 대사 길이로 짐작했다(한국어 초당 6~7자). 15초가 넘거나 장면이 바뀌거나 컷 5개(그림 5장 한도)·대사 5줄을 넘으면 다음 클립으로 끊고, 모자라면 비율대로 늘려 클립마다 딱 15초로 맞춘다. 시간을 바꾸려면 6단계에서 대사를 줄이거나 컷을 나눈다.</p></div></details>';  if(FX.on) fxRender(); }
+    '<p class="small">시간은 샷 크기와 대사 길이로 짐작했다(한국어 초당 6~7자). 15초가 넘거나 장면이 바뀌거나 컷 5개(그림 5장 한도)·대사 5줄을 넘으면 다음 클립으로 끊고, 모자라면 비율대로 늘려 클립마다 딱 15초로 맞춘다. 시간을 바꾸려면 6단계에서 대사를 줄이거나 컷을 나눈다.</p></div></details>';  spPaint(); if(FX.on) fxRender(); }
 document.addEventListener('click', function(e){ var t=e.target; if(!B) return;
   if(t.id==='ct-strip'){ exportStrips(); return; }
   var a=t.closest&&t.closest('[data-an]'); if(!a) return; var C=animClips(), k=a.dataset.an;
