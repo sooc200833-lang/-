@@ -16755,11 +16755,11 @@ document.addEventListener('click', function(e){ var t=e.target; if(!t.closest ||
 });
 // ===== 단계 진행 (2026-11-21): 구체화 → 캐릭터 시트 → 대사 배정 → 콘티 → 장면·배경 → 다듬기 → 주요 컷 =====
 var STEPS=[[1,'이야기'],[2,'캐릭터'],[2.5,'연재 시트'],[3,'대사 배정'],[4,'콘티'],[5,'장면·배경'],[6,'컷 제작·다듬기'],[7,'GPT 일괄 제작'],[8,'완성 콘티'],[9,'Grok 애니메이션']];
-var CT_IMAGE_STEPS=[[1,'이미지 분석'],[2,'캐릭터 시트'],[3,'스토리 구성'],[4,'콘티 제작']].concat(STEPS.slice(5)), ctImageMode=false;
+var CT_IMAGE_STEPS=[[1,'이미지 분석'],[2,'캐릭터 시트'],[2.5,'연재 시트'],[3,'스토리 구성'],[4,'콘티 제작']].concat(STEPS.slice(5)), ctImageMode=false;
 function ctVisibleSteps(){return ctImageMode?CT_IMAGE_STEPS:STEPS;}
 var CSTEP=(function(){ try{ var v=+localStorage.getItem('ctStep')||1;return v===7.5?6:v; }catch(e){ return 1; } })();
 function stepDone(n){ var st=(document.getElementById('ct-story')||{}).value||'';
-  if(ctImageMode&&n<=4){
+  if(ctImageMode&&n<=4&&n!==2.5){   // 2.5 연재 시트(표정 시트·3D 얼굴 맞추기)는 이미지 구성기도 콘티와 같다(2026-11-28 사용자 요청)
     if(!B?.imageComposer) return false;
     if(n===1) return !!B.cuts.length;
     if(n===2) return !!B.chars.length;
@@ -16781,7 +16781,7 @@ function stepDone(n){ var st=(document.getElementById('ct-story')||{}).value||''
 function stepNav(){ var nv=document.getElementById('ct-steps'); if(!nv) return; var gm=gptMode(); setTimeout(function(){ var on=nv.querySelector('.ct-stb.on'); if(on) nv.scrollLeft=Math.max(0,on.offsetLeft-nv.clientWidth/2+on.offsetWidth/2); },0); try{ var w=document.getElementById('ct-stwarn'); if(!w){ w=document.createElement('div'); w.id='ct-stwarn'; nv.after(w); } w.innerHTML=storeWarn()+(function(){ try{ return funLine(); }catch(e){ return ''; } })(); }catch(e){}
   document.querySelectorAll('#conti .ct-gmh').forEach(function(h){ h.innerHTML='<span class="ct-gm small">시트 여러 장을 GPT에 <button type="button" class="chip'+(gm==='all'?' on':'')+'" data-gm="all">한 번에 모두</button><button type="button" class="chip'+(gm==='step'?' on':'')+'" data-gm="step">한 장씩 (「다음」)</button></span>'+(window.imgAIChips?window.imgAIChips():''); });
   nv.innerHTML=ctVisibleSteps().map(function(s){ return '<button type="button" class="ct-stb'+(s[0]===CSTEP?' on':'')+(stepDone(s[0])?' done':'')+'" data-step="'+s[0]+'"'+(s[0]===CSTEP?' aria-current="step"':'')+'><i>'+(stepDone(s[0])&&s[0]!==CSTEP?'✓':s[0])+'</i>'+s[1]+'</button>'; }).join(''); }
-function goStep(n, noScroll){ if(ctImageMode&&+n===2.5) n=3; if(+n!==CSTEP) try{ stat(''); }catch(e){} if(CSTEP===9&&+n!==9) grokClearPhotos(); CSTEP=Math.max(1,Math.min(9,+n||1)); if(B && B.projectStep!==CSTEP && !root.classList.contains('ct-choosing')){B.projectStep=CSTEP;save();} try{ localStorage.setItem('ctStep',CSTEP); }catch(e){}
+function goStep(n, noScroll){ if(+n!==CSTEP) try{ stat(''); }catch(e){} if(CSTEP===9&&+n!==9) grokClearPhotos(); CSTEP=Math.max(1,Math.min(9,+n||1)); if(B && B.projectStep!==CSTEP && !root.classList.contains('ct-choosing')){B.projectStep=CSTEP;save();} try{ localStorage.setItem('ctStep',CSTEP); }catch(e){}
   document.querySelectorAll('#conti .ct-step').forEach(function(d){ d.hidden=+d.dataset.st!==CSTEP; });
   document.querySelectorAll('#conti .ct-step').forEach(function(d){ var current=d.querySelector('.ct-nx'), mode=ctImageMode?'image':'text'; if(current?.dataset.mode===mode) return; if(current) current.remove();
     var steps=ctVisibleSteps(), k=+d.dataset.st, ix=steps.findIndex(function(q){return q[0]===k;}); if(ix<0) return;
@@ -16930,7 +16930,7 @@ document.addEventListener('click',function(e){var t=e.target;if(!t||!t.closest||
  if(t.id==='cmp75-png'){var cv=document.getElementById('cmp75-cv');if(!cv)return;var a=document.createElement('a');a.download='webtoon_cut_'+c.n+'.png';a.href=cv.toDataURL('image/png');a.click();}
 });
 
-function renderSteps(){ stepNav(); var R=ctImageMode&&CSTEP<=4?[imageComposeRender]:({2:[renderProps], 2.5:[renderSerial], 3:[renderDlg], 4:[renderS4], 5:[renderBg], 6:[renderAdd, renderShChk, renderGptQ], 7:[renderBatch,renderKey], 8:[renderS8], 9:[renderGrokClip]}[CSTEP]||[]);   // 지금 보이는 단계만 그린다
+function renderSteps(){ stepNav(); var R=ctImageMode&&CSTEP<=4&&CSTEP!==2.5?[imageComposeRender]:({2:[renderProps], 2.5:[renderSerial], 3:[renderDlg], 4:[renderS4], 5:[renderBg], 6:[renderAdd, renderShChk, renderGptQ], 7:[renderBatch,renderKey], 8:[renderS8], 9:[renderGrokClip]}[CSTEP]||[]);   // 지금 보이는 단계만 그린다
   if(CSTEP===2 && window.__ppArt) setTimeout(chAutoSlice, 600);
   R.forEach(function(f){ try{ f(); }catch(e){ try{ console.warn('renderSteps', f.name, e); }catch(er){} } }); }
 
