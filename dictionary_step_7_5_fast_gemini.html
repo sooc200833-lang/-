@@ -14483,7 +14483,8 @@ function d3Init(){
   G.egg=(function(){ var g=new T.SphereGeometry(1,40,32), p=g.attributes.position, uv=g.attributes.uv;
     for(var i=0;i<p.count;i++){ var x=p.getX(i), y=p.getY(i), z=p.getZ(i);
       if(y>=0){ if(z<0) z*=1.08; y*=.132; }
-      else { var t=-y; x*=1-.34*t*t; z*=z<0?1-.5*t*t:1-.22*t*t; z+=.2*t*t*t; y*=.138; }
+      else { var t=-y, j=t<.42?0:(t-.42)/.58;   // 턱선: 광대 아래(t .42)까지는 거의 그대로, 그 아래로 턱 끝까지 곧게 좁아진다(턱 끝은 둥근 점이 아니라 조금 넓게)
+        x*=(1-.12*t*t)*(1-.62*Math.pow(j,1.15)); z*=z<0?1-.78*Math.pow(t,1.4):1-.12*t*t; z+=.22*t*t*t; y*=.138; }
       x*=.112; z*=.12; p.setXYZ(i, x, y, z); uv.setXY(i, .5+x/.24, .5+(y-.003)/.28); }
     g.computeVertexNormals(); return g; })();
   // 관절 인형 부품(2026-11-28): 실제 크기로 한 번만 만든다. 회전체(Lathe) 윤곽 [반지름, 높이] — 팔다리는 관절 아래(-y)로 뻗고 굵기가 자연스럽게 줄어든다
@@ -14603,7 +14604,8 @@ function d3Fig(look, pose, ex){
   var hd=d3Group(sp, 0, .66, 0); d3Rot(hd, P.hd); bn.hd=hd;
   // 블렌더 만화풍 머리(assets/3d/head/head.glb, 2026-11-28)가 받아져 있으면 머리·눈·눈썹·입은 그 메시 + 표정 키, 아니면 예전 공 머리와 도형 얼굴
   var ek=ex.emo||lk.emo||'', HDm=d3Head(/긴|단발|묶은|한쪽만/.test(lk.hair||'')?'f':'m'), hr=.12;
-  if(HDm) d3HeadPut(hd, HDm, ek, lk, P); else d3Mesh(G.egg, M.skin, 1, 1, 1, hd, 0, 0, 0);   // 마네킹 계란형 머리
+  if(HDm) d3HeadPut(hd, HDm, ek, lk, P); else { d3Mesh(G.egg, M.skin, 1, 1, 1, hd, 0, 0, 0);   // 마네킹 계란형 머리
+    [-1,1].forEach(function(s){ var ea=d3Mesh(G.sph, M.skin, .012, .036, .027, hd, s*.117, -.01, -.006); ea.rotation.set(0, s*.6, s*-.1); }); }   // 귀: 눈~입 사이 높이, 살짝 앞을 보게
   // 얼굴: 눈·입(정면이 +z)
   var E=D3_EMO[ek]||D3_EMO[''], ew=(lk.eyes==='감은'||E.eye==='closed')?[.024,.004,.01]:[.016,.019,.012];
   [-1,1].forEach(function(s){ var ex0=s*.045;
