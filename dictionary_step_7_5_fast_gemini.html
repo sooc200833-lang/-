@@ -14813,6 +14813,8 @@ function d3Chair(par, x, z, ry){ var g=d3Group(par, x, 0, z); g.rotation.y=ry||0
 // assets/3d/<이름>/<이름>.glb 를 처음 쓸 때 한 번 받아(외부 로더 없이 GLB를 직접 읽는다) 공유 도형으로 둔다.
 // 받는 동안·실패하면 아래 상자 세트로 그리고, 다 받으면 d3RedrawAll로 다시 그린다. 재질은 이름(M_Wall 등)으로 사전의 툰 재질에 맞추고 외곽선은 EdgesGeometry.
 var D3_GLB={'class':'assets/3d/classroom/classroom.glb'}, D3G={};
+// Kenney CC0 키트로 만든 세트(2026-11-28, assets/3d/kenney/build_kenney_sets.py): 방·카페·공원·들판·거리·정류장. 받는 동안·실패면 예전 상자 세트
+['room','cafe','park','field','street','stop'].forEach(function(k){ D3_GLB[k]='assets/3d/kenney/sets/'+k+'.glb'; });
 // ----- 블렌더 사람 몸(스키닝, 2026-11-28) -----
 // assets/3d/human/human.glb: 머리 없는 몸(상의 Top·하의 Bottom·피부 Skin·신발 Shoes, UV 있음) + 뼈 hips sp hd sh/el/hn/hp/kn.L·R.
 // 뼈 이름이 d3Fig의 그룹과 같고 관절 자리도 같다 → 그 그룹들을 그대로 뼈로 써서 POSE3 각도가 그대로 먹는다. 블렌더 바인드 자세는 팔 22°·다리 4° 벌림(D3_BIND).
@@ -14989,7 +14991,7 @@ function d3GlbParse(buf){
   return out; }
 function d3GlbMat(nm){ var M=D3.M, T=window.THREE;
   if(!M.glb){ var gm=M.floor.gradientMap, tn=function(c){ return new T.MeshToonMaterial({color:c, gradientMap:gm}); }; M.glb={Board:tn(0x737d76), Metal:tn(0xa3a5a1)}; }
-  return {Floor:M.floor, Wall:M.wall, Trim:M.wall2, Wood:M.wood, Dark:M.dark, Glass:M.glass, Paper:M.glass, Chalk:M.glass, Curtain:M.cloth, Board:M.glb.Board, Metal:M.glb.Metal}[nm]||M.wall2; }
+  return {Floor:M.floor, Wall:M.wall, Trim:M.wall2, Wood:M.wood, Dark:M.dark, Glass:M.glass, Paper:M.glass, Chalk:M.glass, Curtain:M.cloth, Board:M.glb.Board, Metal:M.glb.Metal, Road:M.road, Grass:M.grass, Leaf:M.leaf}[nm]||M.wall2; }
 function d3Glb(key){ var u=D3_GLB[key], e=D3G[key]; if(!u) return null; if(e) return e.st===2?e.parts:null;
   e=D3G[key]={st:1}; fetch(u).then(function(r){ if(!r.ok) throw 0; return r.arrayBuffer(); }).then(function(b){ e.parts=d3GlbParse(b); e.st=2; d3RedrawAll(); }).catch(function(){ e.st=-1; });
   return null; }
