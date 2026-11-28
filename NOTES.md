@@ -555,3 +555,9 @@ arcForm, deviceId, folderMemo, gdBase, gdLast, gdLinked, ideaText, mangaDataVer,
 - 3D 얼굴 맞추기 자리: 2단계 캐릭터 카드 「🙂 3D 얼굴 맞추기」(details, `window.__faceFitUI` — 카드 클릭 처리는 다른 묶음이라 창구로 부름) + 컷 편집 창 인물 줄 「🙂 얼굴 맞추기」. 캐릭터 시트에서 딴 얼굴의 표정 이름은 시트 요청문대로(`CHSHEET_EMO_KO`: 무표정·미소·화남·슬픔·놀람·당황/겁먹음).
 - 얼굴만 그림 표시(`sprHead`, localStorage {이름:1}): 캐릭터 시트에서 딴 얼굴(`importCharSheet`·`setFaces`)은 얼굴만이라 놀이 장면 그림(`.pp-spr`, 바닥에 붙여 크게)에서는 작게·위로(cu 62%/바닥 12%, 넓은 샷 22%/42%, 그 밖 40%/34%). 🎭 표정 시트(허리 위)로 다시 저장하면 해제, 이름 바꾸면 따라감(`__ppFix.isHead`).
 - 오류 점검(올리기 전): 시트 자르기는 칸을 통째로 써서 얼굴만이어도 그대로, 컷 구성 합성은 원래 얼굴 그림(f:/h:/e:)을 얼굴 크기로 다룸, 이목구비 찾기는 얼굴이 그림 위 72% 안이면 됨. 놀이 장면만 위처럼 손봄.
+
+## 3D 배경 세트: Kenney CC0 키트 (2026-11-28)
+- 사용자 확인 후 kenney.nl에서 Furniture·Nature·City Commercial·City Suburban·City Roads·Food 키트(CC0, 약 29MB) 받음(원본 zip은 저장소 밖 스크래치). `assets/3d/kenney/build_kenney_sets.py`가 필요한 모델만 배치해 `sets/{room,cafe,park,field,street,stop}.glb`(세트마다 한 메시, 거리·정류장 약 870KB, 나머지 100~220KB). 출처 `assets/3d/kenney/CREDITS.md`.
+- 배율(측정): 가구 ×1.9(의자 0.9m), 자연 ×3(나무 약 5m), 건물·도로 ×7, 음식 ×0.7. 키트 재질 색 / colormap 그림의 면 색을 사전 팔레트 이름으로 나눔(`classify`: 초록=Leaf(땅이면 Grass), 파랑=Glass, 갈색=Wood, 빨강=Curtain, 밝기로 Dark·Metal·Trim·Floor·Wall, 도로 조각의 어두운 색=Road).
+- 사전: `D3_GLB`에 여섯 세트 추가, `d3GlbMat`에 Road·Grass·Leaf. 받는 동안·실패면 예전 상자 세트. 교실(class)은 예전 블렌더 GLB, 복도·옥상·계단·홀은 아직 상자 세트.
+- 세트 배치: 인물 자리(|x|<1.8, -1<z<1.5)는 비움. 방(침대·책상·의자·노트북·책장·TV·러그·창), 카페(카운터·커피머신·바 의자·원탁 3개·의자·컵·접시·창 벽), 공원(길·나무 12그루·덤불·꽃·벤치·가로등·바위), 들판(울타리·먼 나무·바위·풀), 거리(보도·연석·차도·상가 9채·고층 2·가로등·신호등·표지판·전봇대), 정류장(거리+지붕·뒤 유리·기둥·벤치·표지판). 카페 천장 등은 천장이 없어 뺐다.
