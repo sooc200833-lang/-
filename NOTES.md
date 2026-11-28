@@ -497,3 +497,15 @@ arcForm, deviceId, folderMemo, gdBase, gdLast, gdLinked, ideaText, mangaDataVer,
 - 재미 설계 `B.fun`={logline, goal, need, obstacle, stakes, fun:[id]}. 1단계 `#ct-fun`(칸 5개 + 재미 요소 12개 `FUN_LIST` [id, 이름, 쓰는 법] + 「✦ AI로 목표·재미 추천」 → 목표 후보 3개·재미 2~4개, JSON). `funBlock()`이 [재미 설계]로 이야기 구체화(EXSYS)·장면 배정표(reviewPrompt)·컷 쓰기(cutPrompt)에 들어간다: 목표는 앞 10% 안에 독자가 알게, 장면마다 목표에 가까워지거나 멀어지게, 재미 요소마다 쌓기·터뜨리기 자리. 단계 줄 아래 `funLine` 한 줄(고치기 → 1단계)
 - 판을 다시 까는 `fresh()`·`pull()`이 chars만 남기던 것에 `fun`도 남긴다
 - 시험(jsdom·가짜 제미나이): 보관함 저장·고르기·시트/그림 id 복원·모두 저장·색인 AI 그림·재미 추천·요청문에 [재미 설계]와 [사전 참고] 15항목 통과
+## 3D 머리: VRoid CC0 샘플 (2026-11-28)
+- 머리 파일: `assets/3d/head/vroid/female.glb`·`male.glb` (출처·라이선스 `assets/3d/head/vroid/CREDITS.md`, 만든 스크립트 `build_vroid_head.py`). VRoid 공식 샘플 중 CC0인 HairSample_Female/Male만 쓴다(AvatarSample D~G는 라이선스 "Other"라 안 씀).
+- 사전: `D3_HEAD_URL=''`이면 `D3_HEADS`(f/m)에서 인물 머리 모양으로 고른다(`긴|단발|묶은|한쪽만` → 여자 샘플, 나머지 → 남자 샘플). `d3HeadParse`가 재질 이름에 HAIR가 있으면 `vroid:true` → `d3HeadPutV`: 그림 그대로(MeshBasic), 피부·머리카락은 알파 잘라 내기, 눈·눈썹·입은 겹쳐 그리기, 피부에만 외곽선. 검은 머리(`lk.dark`)는 머리카락을 어둡게, 민머리·후드·헬멧은 머리카락 숨김. VRoid 머리가 있으면 기존 만든 머리카락은 안 그림.
+- 표정 `D3_EMO_KEYS_V`: smile=fun, laugh=joy+a, anger=angry, rage/shout=angry+a, sad=sorrow, cry=sorrow+blink 반, shock=surprised, blush=fun 반, closed=blink. 감은 눈 → blink, 입 벌림 → a.
+- 블렌더 주의: 모양 키가 있는 메시는 `mesh.transform(M, shape_keys=True)`로 옮겨야 한다(안 하면 내보낼 때 얼굴만 제자리에 남는다). VRoid를 불러오면 얼굴이 블렌더 +Y 쪽 → 180° 돌려야 three에서 앞(+Z)을 본다. 머리 불러오기 실패는 콘솔에 `3D 머리 불러오기 실패`로 남는다.
+- 쓰지 않는 시험작: `assets/3d/head/head.glb`(만화풍), `assets/3d/head/mpfb/`(MPFB 사람) — 사용자가 별로라 해서 안 씀, 저장소에 올리지 않는다.
+
+## 3D 머리: 마네킹 계란형 머리로 결정 (2026-11-28)
+- 사용자 요청: "마네킹스럽게 단순히, 계란형 얼굴에 턱이 있는 정도, 나중에 캐릭터 시트 얼굴을 넣어도 이상하지 않게". VRoid 애니 머리는 `D3_HEADS={}`로 꺼 둠(코드·파일은 남김, 파일은 저장소에 안 올림).
+- `G.egg`(d3Init): 구를 늘려 만든 실제 크기 머리(정수리~턱 .27). 위쪽은 뒤통수가 조금 나오고, 아래쪽은 양옆·뒤가 좁아지며 턱이 앞으로. 코 없음(예전 원뿔 코 삭제). uv = 정면 평면 투영(가로 .24 × 세로 .28 → 0~1) — 나중에 시트 얼굴 그림을 그대로 씌우는 용도.
+- 표정은 예전처럼 도형 눈·눈썹·입(D3_EMO). 머리카락·후드·헬멧은 얼굴 앞이 트인 `G.bobF`/`G.capF`만 쓴다(닫힌 덮개는 얼굴을 가렸다).
+- 귀·턱선 추가(사용자 요청): 턱선은 광대 아래(아래쪽 42%)부터 턱 끝까지 곧게 좁아짐, 뒤쪽 아래는 크게 들어감. 귀는 납작한 공(`G.sph` .012×.036×.027)을 머리 옆(x ±.117, y -.01)에 앞쪽으로 .6 돌려 붙임(외곽선 있음).
