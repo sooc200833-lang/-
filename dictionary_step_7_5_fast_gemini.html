@@ -14478,6 +14478,14 @@ function d3Init(){
   // 블렌더 머리용 머리카락 덮개(2026-11-28): 짧은 머리 덮개는 뒤로 젖혀 이마선을 눈썹 위로, 단발·긴 머리·후드는 얼굴 앞(+z)을 창처럼 비운다
   G.capF=G.cap.clone(); G.capF.rotateX(-.44);
   G.bobF=new T.SphereGeometry(1,22,14,Math.PI/2+.62,Math.PI*2-1.24,0,Math.PI*.78);
+  // 마네킹 머리(2026-11-28, 사용자 요청: 계란형 얼굴 + 턱 정도로 단순하게): 실제 크기. 정수리~턱 .27, 아래쪽이 좁아지며 턱이 살짝 앞으로.
+  // uv는 정면에서 비춘 평면 투영(얼굴 가로 .24 × 세로 .28 = 0~1) — 나중에 캐릭터 시트 얼굴 그림을 그대로 씌울 수 있게
+  G.egg=(function(){ var g=new T.SphereGeometry(1,40,32), p=g.attributes.position, uv=g.attributes.uv;
+    for(var i=0;i<p.count;i++){ var x=p.getX(i), y=p.getY(i), z=p.getZ(i);
+      if(y>=0){ if(z<0) z*=1.08; y*=.132; }
+      else { var t=-y; x*=1-.34*t*t; z*=z<0?1-.5*t*t:1-.22*t*t; z+=.2*t*t*t; y*=.138; }
+      x*=.112; z*=.12; p.setXYZ(i, x, y, z); uv.setXY(i, .5+x/.24, .5+(y-.003)/.28); }
+    g.computeVertexNormals(); return g; })();
   // 관절 인형 부품(2026-11-28): 실제 크기로 한 번만 만든다. 회전체(Lathe) 윤곽 [반지름, 높이] — 팔다리는 관절 아래(-y)로 뻗고 굵기가 자연스럽게 줄어든다
   var lathe=function(p, seg, k){ if(p[0][1]>p[p.length-1][1]) p=p.slice().reverse();   // 윤곽은 아래→위 순서여야 면이 바깥을 본다(거꾸로면 안팎이 뒤집혀 검게 보임)
     k=k||1; var g=new T.LatheGeometry(p.map(function(q){ return new T.Vector2(q[0]*k, q[1]); }), seg||18); g.computeVertexNormals(); return g; };
@@ -14594,8 +14602,8 @@ function d3Fig(look, pose, ex){
   if(mq) d3Mesh(Q.neck, M.skin, 1, 1.7, 1, sp, 0, .395, 0);
   var hd=d3Group(sp, 0, .66, 0); d3Rot(hd, P.hd); bn.hd=hd;
   // 블렌더 만화풍 머리(assets/3d/head/head.glb, 2026-11-28)가 받아져 있으면 머리·눈·눈썹·입은 그 메시 + 표정 키, 아니면 예전 공 머리와 도형 얼굴
-  var ek=ex.emo||lk.emo||'', HDm=d3Head(), hr=.12;
-  if(HDm) d3HeadPut(hd, HDm, ek, lk, P); else d3Mesh(G.sph, M.skin, .115, .135, .122, hd, 0, 0, 0);
+  var ek=ex.emo||lk.emo||'', HDm=d3Head(/긴|단발|묶은|한쪽만/.test(lk.hair||'')?'f':'m'), hr=.12;
+  if(HDm) d3HeadPut(hd, HDm, ek, lk, P); else d3Mesh(G.egg, M.skin, 1, 1, 1, hd, 0, 0, 0);   // 마네킹 계란형 머리
   // 얼굴: 눈·입(정면이 +z)
   var E=D3_EMO[ek]||D3_EMO[''], ew=(lk.eyes==='감은'||E.eye==='closed')?[.024,.004,.01]:[.016,.019,.012];
   [-1,1].forEach(function(s){ var ex0=s*.045;
@@ -14616,12 +14624,11 @@ function d3Fig(look, pose, ex){
   else d3Mesh(G.box, M.ink, .045, .005, .006, hd, 0, my, .118, true);
   if(E.sweat) d3Mesh(G.sph, M.tear, .014, .024, .01, hd, .118, .07, .02, true);
   if(E.vein){ var vn=d3Group(hd, .075, .1, .07); [0,1].forEach(function(q){ var v=d3Mesh(G.box, M.mark, .03, .007, .006, vn, 0, 0, 0, true); v.rotation.z=q?.8:-.8; }); }
-  if(!HDm) d3Mesh(G.cone, M.skin, .018, .04, .018, hd, 0, -.018, .125, true).rotation.x=Math.PI/2;
   if(lk.glasses){ [-1,1].forEach(function(s){ var r=d3Mesh(G.tor, M.ink, .03, .026, .03, hd, s*.045, .012, .118, true); }); d3Mesh(G.box, M.ink, .03, .005, .005, hd, 0, .016, .122, true); }
   // 머리카락
   var hm=lk.dark?M.hairD:M.hairL, hair=lk.hair||'';
-  if(hair!=='민머리' && !lk.hood && !lk.helmet){
-    if(hair==='단발' || hair==='긴' || hair==='한쪽만 긴') d3Mesh(HDm?G.bobF:G.bob, hm, .126, .148, .134, hd, 0, .006, -.006, HDm); else d3Mesh(HDm?G.capF:G.cap, hm, .124, .146, .132, hd, 0, .01, -.008, HDm);   // 블렌더 머리면 얼굴 앞이 트인 덮개(열린 덮개의 뒷면 외곽선이 얼굴 앞에 비치지 않게 외곽선 없이)
+  if(hair!=='민머리' && !lk.hood && !lk.helmet && !(HDm && HDm.vroid)){   // VRoid 머리는 자기 애니 머리카락이 있다
+    if(hair==='단발' || hair==='긴' || hair==='한쪽만 긴') d3Mesh(G.bobF, hm, .126, .148, .134, hd, 0, .006, -.006, true); else d3Mesh(G.capF, hm, .124, .146, .132, hd, 0, .01, -.008, true);   // 블렌더 머리면 얼굴 앞이 트인 덮개(열린 덮개의 뒷면 외곽선이 얼굴 앞에 비치지 않게 외곽선 없이)
     if(hair!=='각진') d3Mesh(G.sph, hm, .1, .045, .05, hd, 0, .085, .085);   // 앞머리
     if(hair==='긴') d3Mesh(G.box, hm, .25, .32, .07, hd, 0, -.14, -.075);
     if(hair==='한쪽만 긴') d3Mesh(G.box, hm, .07, .26, .08, hd, -.1, -.1, .01);
@@ -14629,9 +14636,9 @@ function d3Fig(look, pose, ex){
     if(hair==='삐죽') [[0,.15,0,0],[.07,.13,.02,-.5],[-.07,.13,.02,.5],[.03,.12,-.08,-.2],[-.04,.12,-.07,.3]].forEach(function(q){ var c=d3Mesh(G.cone, hm, .035, .09, .035, hd, q[0], q[1], q[2]); c.rotation.z=q[3]; });
     if(hair==='각진') d3Mesh(G.box, hm, .25, .09, .26, hd, 0, .1, -.01);
   }
-  if(lk.hood) d3Mesh(HDm?G.bobF:G.bob, M.cloth, .145, .165, .15, hd, 0, .01, -.02);
+  if(lk.hood) d3Mesh(G.bobF, M.cloth, .145, .165, .15, hd, 0, .01, -.02);
   if(lk.hat){ d3Mesh(G.cyl, M.cloth, .18, .018, .18, hd, 0, .1, .01); d3Mesh(G.cyl, M.cloth, .118, .1, .118, hd, 0, .16, 0); }
-  if(lk.helmet) d3Mesh(HDm?G.capF:G.cap, M.prop, .14, .16, .148, hd, 0, .012, 0);
+  if(lk.helmet) d3Mesh(G.capF, M.prop, .14, .16, .148, hd, 0, .012, 0);
   // 팔
   var hands={};
   [['la',1],['ra',-1]].forEach(function(A){ var a=P[A[0]]||POSE3[''][A[0]], s=A[1];
@@ -14740,7 +14747,12 @@ function d3BodyParse(buf){ var T=window.THREE, dv=new DataView(buf), jl=dv.getUi
 // 같은 읽기로 MPFB 사람 머리(assets/3d/head/mpfb/head.glb, Brow·Lash 그림·EyeWhite·EyeIris)도 쓸 수 있다 — D3_HEAD_URL만 바꾸면 된다.
 // 원점 = 머리 가운데(hd 그룹), 턱~정수리 .27. 표정 키(좌우 합침): eyeBlink eyeSquint eyeWide browDown browInnerUp browOuterUp mouthSmile mouthFrown jawOpen noseSneer mouthUpperUp mouthStretch
 // 사전 표정(D3_EMO 열쇠) → 키 세기 D3_EMO_KEYS (만화에서 읽히게 조금 세게)
-var D3_HEAD_URL='';   // 2026-11-28: 머리 모델은 사용자가 아직 고르는 중(만화풍·MPFB·애니 모두 보류) — 비워 두면 예전 공 머리·도형 얼굴. 정해지면 'assets/3d/head/head.glb'
+var D3_HEAD_URL='';   // 하나만 쓸 때(만화풍·MPFB 시험용). 비워 두면 아래 VRoid 머리(D3_HEADS)를 인물에 따라 고른다
+// VRoid CC0 샘플(HairSample_Female/Male, VRoid 공식 안내·파일 메타 모두 CC0)에서 떼어 낸 머리: 얼굴·애니 머리카락·표정 키(joy angry sorrow fun surprised blink a i u e o)
+// 만든 곳 assets/3d/head/vroid/build_vroid_head.py. 긴·단발·묶은 머리 인물은 여자, 나머지는 남자 모델
+var D3_HEADS={};   // VRoid 애니 머리(f:'assets/3d/head/vroid/female.glb', m:'…/male.glb')는 사용자가 마네킹 계란형 머리(G.egg)를 골라 꺼 둠(2026-11-28)
+var D3_EMO_KEYS_V={'':{}, smile:{fun:1}, laugh:{joy:1, a:.35}, anger:{angry:1}, rage:{angry:1, a:.7}, shout:{angry:.55, a:1}, sad:{sorrow:1}, cry:{sorrow:1, blink:.55},
+  shock:{surprised:1}, blush:{fun:.55}, closed:{blink:1}};
 var D3_EMO_KEYS={'':{}, smile:{mouthSmile:1.1, eyeSquint:.7}, laugh:{mouthSmile:1, jawOpen:.7, eyeSquint:1}, anger:{browDown:1.2, mouthFrown:.6, noseSneer:.5}, rage:{browDown:1.3, eyeWide:.6, jawOpen:.55, mouthUpperUp:.7, noseSneer:.7},
   shout:{jawOpen:1, browDown:.7, mouthStretch:.5, mouthUpperUp:.5}, sad:{browInnerUp:1.2, mouthFrown:1}, cry:{eyeBlink:1, browInnerUp:1.2, mouthFrown:.8, jawOpen:.35}, shock:{eyeWide:1.2, browInnerUp:.7, browOuterUp:1, jawOpen:.7},
   blush:{mouthSmile:.45, eyeSquint:.35, browInnerUp:.35}, closed:{eyeBlink:1}};
@@ -14748,9 +14760,9 @@ var D3_EMO_KEYS={'':{}, smile:{mouthSmile:1.1, eyeSquint:.7}, laugh:{mouthSmile:
 var D3_EMO_KEYS_A={'':{}, smile:{eyeSquint:1, mouthSmile:1}, laugh:{eyeSquint:1, mouthSmile:1, jawOpen:.7}, anger:{browDown:1, mouthFrown:1}, rage:{browDown:1, eyeWide:.6, jawOpen:.6, mouthStretch:.5},
   shout:{browDown:.7, jawOpen:1, mouthStretch:.6}, sad:{browInnerUp:1, mouthFrown:.8}, cry:{eyeBlink:1, browInnerUp:1, mouthFrown:.8, jawOpen:.3}, shock:{eyeWide:1, browOuterUp:1, browInnerUp:.6, jawOpen:.8},
   blush:{mouthSmile:.6, browInnerUp:.5}, closed:{eyeBlink:1}};
-function d3Head(){ if(!D3_HEAD_URL) return null; var e=D3G.__head; if(e) return e.st===2?e.v:null; e=D3G.__head={st:1};
-  fetch(D3_HEAD_URL).then(function(r){ if(!r.ok) throw 0; return r.arrayBuffer(); }).then(function(b){ var v=d3HeadParse(b); return Promise.all(v.parts.map(function(p){ return p.tex||null; })).then(function(){ return v; }); })
-    .then(function(v){ e.v=v; e.st=2; SPR={}; SPR_N=0; d3RedrawAll(); try{ window.dispatchEvent(new Event('drawmode')); }catch(er){} }).catch(function(){ e.st=-1; });
+function d3Head(kind){ var url=D3_HEAD_URL||D3_HEADS[kind||'m']; if(!url) return null; var ck='__head_'+(D3_HEAD_URL?'one':kind), e=D3G[ck]; if(e) return e.st===2?e.v:null; e=D3G[ck]={st:1};
+  fetch(url).then(function(r){ if(!r.ok) throw 0; return r.arrayBuffer(); }).then(function(b){ var v=d3HeadParse(b); return Promise.all(v.parts.map(function(p){ return p.tex||null; })).then(function(){ return v; }); })
+    .then(function(v){ e.v=v; e.st=2; SPR={}; SPR_N=0; d3RedrawAll(); try{ window.dispatchEvent(new Event('drawmode')); }catch(er){} }).catch(function(er){ e.st=-1; try{ console.warn('3D 머리 불러오기 실패', url, er); }catch(x){} });
   return null; }
 function d3HeadParse(buf){ var T=window.THREE, dv=new DataView(buf), jl=dv.getUint32(12,true), js=JSON.parse(new TextDecoder().decode(new Uint8Array(buf,20,jl))), bo=20+jl+8;
   var AR=function(ct){ return ct===5126?Float32Array:ct===5125?Uint32Array:ct===5123?Uint16Array:Uint8Array; };
@@ -14772,8 +14784,9 @@ function d3HeadParse(buf){ var T=window.THREE, dv=new DataView(buf), jl=dv.getUi
       if(im && im.bufferView!=null && window.createImageBitmap){ var bv=js.bufferViews[im.bufferView], blob=new Blob([new Uint8Array(buf, bo+(bv.byteOffset||0), bv.byteLength)], {type:im.mimeType||'image/png'});
         part.tex=createImageBitmap(blob, {imageOrientation:'flipY'}).then(function(bmp){ var t=new T.Texture(bmp); t.flipY=false; t.colorSpace=T.SRGBColorSpace; t.needsUpdate=true; part.map=t; }, function(){}); }
       parts.push(part); }); });
-  return {parts:parts}; }
-function d3HeadPut(hd, H, ek, lk, P){ var T=window.THREE, M=D3.M, anime=H.parts.some(function(p){ return p.name==='LidSmile'; }), k=Object.assign({}, (anime?D3_EMO_KEYS_A:D3_EMO_KEYS)[ek]||{});
+  return {parts:parts, vroid:parts.some(function(p){ return /HAIR/.test(p.mat); })}; }   // VRoid 머리: 머리카락이 들어 있다
+function d3HeadPut(hd, H, ek, lk, P){ var T=window.THREE, M=D3.M, anime=H.parts.some(function(p){ return p.name==='LidSmile'; }), k=Object.assign({}, (H.vroid?D3_EMO_KEYS_V:anime?D3_EMO_KEYS_A:D3_EMO_KEYS)[ek]||{});
+  if(H.vroid) return d3HeadPutV(hd, H, k, lk, P);
   if(lk.eyes==='감은'){ k.eyeBlink=1; k.eyeWide=0; k.eyeSquint=0; } if(P.mouth){ k.jawOpen=1; k.mouthStretch=.4; }
   if(!M.mouthIn){ M.mouthIn=new T.MeshBasicMaterial({color:0x2a0d10}); M.white=new T.MeshBasicMaterial({color:0xf6f4f0}); M.iris=new T.MeshBasicMaterial({color:0x1d1a18}); }
   H.parts.forEach(function(p){ var mat;
@@ -14783,6 +14796,17 @@ function d3HeadPut(hd, H, ek, lk, P){ var T=window.THREE, M=D3.M, anime=H.parts.
     var m=new T.Mesh(p.geo, mat);
     if(p.names.length){ m.morphTargetDictionary={}; m.morphTargetInfluences=p.names.map(function(n, i){ m.morphTargetDictionary[n]=i; return k[n]||0; }); }
     if(mat===M.skin){ m.castShadow=true; var o=new T.Mesh(p.geo, M.out); o.scale.setScalar(1.035); if(m.morphTargetInfluences){ o.morphTargetDictionary=m.morphTargetDictionary; o.morphTargetInfluences=m.morphTargetInfluences; } m.add(o); }
+    hd.add(m); }); }
+// VRoid 머리 붙이기: 그림이 이미 애니풍으로 칠해져 있어 그림 그대로(빛 계산 없이) 쓴다. 얼굴 피부·머리카락은 잘라 내기(알파), 눈·속눈썹·눈썹·입은 겹쳐 그리기.
+// 검은 머리 인물은 머리카락을 어둡게, 민머리는 머리카락을 숨긴다. 얼굴 피부에만 외곽선.
+function d3HeadPutV(hd, H, k, lk, P){ var T=window.THREE, M=D3.M;
+  if(lk.eyes==='감은'){ k.blink=1; } if(P.mouth){ k.a=1; }
+  H.parts.forEach(function(p){ var hairP=/HAIR/.test(p.mat), skinP=/_SKIN/.test(p.mat); if(hairP && (lk.hair==='민머리' || lk.hood || lk.helmet)) return;
+    var key=hairP?(lk.dark?'hd':'hl'):skinP?'sk':'ov'; p.mv=p.mv||{};
+    if(!p.mv[key]) p.mv[key]=new T.MeshBasicMaterial({color:hairP&&lk.dark?0x4a4648:0xffffff, map:p.map||null, transparent:key==='ov', alphaTest:key==='ov'?.08:.45, depthWrite:key!=='ov', side:T.DoubleSide});
+    var m=new T.Mesh(p.geo, p.mv[key]); m.renderOrder=key==='ov'?2:1;
+    if(p.names.length){ m.morphTargetDictionary={}; m.morphTargetInfluences=p.names.map(function(n, i){ m.morphTargetDictionary[n]=i; return k[n]||0; }); }
+    if(skinP){ m.castShadow=true; var o=new T.Mesh(p.geo, M.out); o.scale.setScalar(1.03); if(m.morphTargetInfluences){ o.morphTargetDictionary=m.morphTargetDictionary; o.morphTargetInfluences=m.morphTargetInfluences; } m.add(o); }
     hd.add(m); }); }
 // 외곽선: 스키닝된 법선 방향으로 조금 부풀린 뒷면(크기를 키우는 방식은 휘는 몸에 안 맞는다)
 function d3OutlineSkin(){ if(D3.M.outS) return D3.M.outS; var T=window.THREE, m=new T.MeshBasicMaterial({color:0x161616, side:T.BackSide});
