@@ -536,3 +536,9 @@ arcForm, deviceId, folderMemo, gdBase, gdLast, gdLinked, ideaText, mangaDataVer,
 - 사용자 요청으로 블렌더 스킬 더 설치(전역): `scenario-blender-hair`(scenario-labs, 머리카락 그루밍·카드·메시 머리), `anime-style`(arjun988, 셀 셰이딩 방향), `blender-modeling`(roble3). 기존 el4cteo blender-* 세트에 더해.
 - `assets/3d/head/hair/build_anime_hair.py` → `anime_hair.glb`(+.blend): 객체 Hair_short·spiky·bob·long·pony·side, 재질 Hair(그림 없음). 방식: 다발 경로를 데이터로 — 머리 표면(+두께 pad)을 따라 경도·위도로 흐르다 필요하면 귀 높이에서 수직으로 떨어짐(`lock`), 단면 납작한 렌즈·뿌리 넓고 끝 뾰족(`tube`), 이웃과 겹치게 폭, 밑에 두피 덮개(`cap`, 이마→관자놀이→귀 위→목덜미 가장자리가 다발 끝보다 위). 앞머리 `bangs`, 정수리 `crown`, 고리 `ring_layer`, 옆머리 `sidelocks`, 포니테일은 위·옆 다발을 뒤통수 묶은 자리로 모으고 꼬리 9가닥+머리끈. 블렌더 확인 그림: 스크래치 review_hair.py(정면·40°·옆·뒤).
 - 사전: `D3_HAIR_SET`·`D3_HAIR_STYLE`(짧은·각진→short, 삐죽→spiky, 단발→bob, 긴→long, 묶은→pony, 한쪽만 긴→side). 마네킹 머리면 그 객체를 머리 그룹에 붙이고 재질은 검은 머리 `M.hairD` / 밝은 머리 `M.hairL`(셀 셰이딩) + `d3OutlineSkin` 외곽선. 받기 전·실패면 VRoid 머리카락 → 예전 덮개 순.
+
+## 시트 표정 고르기 · 이목구비 자동 맞춤 (2026-11-28)
+- 편집 창 인물 줄 「표정」: 그 인물에게 표정 시트가 있으면 시트 요청문의 표정 그대로(`sheetEmoOpts`: 연재 표정 시트 SER_EMO 이름·순서 — 무표정·미소·화남·슬픔·놀람·당황·부끄, 🎭 표정 시트는 그 모듈 이름 EMN — 보통·미소·활짝·수줍·당황·충격·화남·슬픔·울음·비웃음·생각·위압). 값은 시트 열쇠(n·smile·grin·shy·panic·shock·angry·sad·cry·smirk·think·menace) 그대로 `wp.emo`에 저장. 3D 그린 얼굴용으로 `D3_SHEETK`가 가까운 3D 표정에 연결(D3_EMO에 별칭 추가), 얼굴 칸은 `d3FaceUrl`이 시트 열쇠로 바로 고른다(연재 시트는 `serEmoKey`로 6종에 맞춤).
+- 이목구비 자동 맞춤: 얼굴 그림이 읽힐 때 `d3FaceFeat` — 가운데 아래쪽 밝은 색 중앙값 = 피부, 피부가 아닌 덩어리 중 테두리·배경에 닿지 않는 것 = 이목구비, 높이 비슷·좌우로 떨어진 큰 한 쌍 = 눈(가늘면 눈썹으로 보고 감점), 눈 아래 가운데 = 입. `d3FaceFit`이 두 눈 간격·가운데를 3D 머리 눈 자리(x ±.045, y .012)에 맞춘 {s,x,y}(그림마다 `D3FA[url]`, 이 탭에서만). 슬라이더 값(`ser.ff`)은 그 위에 더하는 손보기(크기는 곱). 「👁 이목구비 자동 맞춤」 체크(`ser.ffoff`)·결과 한 줄(`#se-ffst`).
+- 피부색: 찾은 피부색으로 그 인물 머리(마네킹 머리 메시)를 칠한다(`t.__skin` → `M['sk'+rgb]`) — 얼굴 그림 테두리가 가면처럼 보이지 않게.
+- 시험(로컬): 가짜 5×6 표정 시트 — 「눈·입 자리를 찾아 맞췄다」, 무표정·미소·화남·놀람 정면/3/4, 편집 창 표정 칸이 시트 6종으로.
