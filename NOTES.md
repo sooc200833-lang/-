@@ -571,3 +571,5 @@ arcForm, deviceId, folderMemo, gdBase, gdLast, gdLinked, ideaText, mangaDataVer,
 - 12단계: `window.__ctFromSeq({name, story, total, chars})`(콘티 IIFE, renderProjectList 앞) — 「새로 하기」처럼 새 판(이야기 칸=대사 글+장소 목록, 캐릭터=시트·생김새·sheetArt, 컷 수=대사 줄×1.3+장면×2, 16~80)을 만들고 `stSave`로 저장소에 넣어 1단계로 연다. 화마다 `sid`를 남겨 「만든 콘티 열기」(`__ctStore.open`).
 - AI 모델은 고르지 않는다(AI 연결 페이지 선택 그대로, 요금 원칙).
 - 시험(로컬 미리보기): AI 없이 1→12 진행·콘티로 넘기기(이야기 칸·인물 2명·저장소 등록), 가짜 제미나이 응답으로 AI 단계 11종(재료 17카드·다듬기·인물 제안·질문→스토리라인·아크·조언·화 배치·줄거리·대본·장면), 휴대폰 폭 가로 넘침 없음. 실제 제미나이 호출은 사이트에서만.
+
+- (2026-11-29) 순서대로만화작업 캐릭터에 성별·나이·체격(gender·age·build) 칸 추가 — AI 제안·아이디어 인물 재료·등장인물 저장·GPT 시트·콘티 넘기기에 함께 반영(사용자 요청).
