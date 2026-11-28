@@ -1646,6 +1646,14 @@ body.dk-drag, body.dk-drag *{user-select:none!important; -webkit-user-select:non
 .fx-cut{position:relative;border:2px solid #111;background:#f4f4f4;overflow:visible}.fx-cut>img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
 .fx-num{position:absolute;left:-1.6rem;top:0;font-size:.7rem;color:var(--ink-3)}.fx-gap{position:absolute;right:0;top:-1.6rem;font-size:.7rem}.fx-gap select{font-size:.7rem}
 .fx-h{position:absolute;left:50%;bottom:-11px;transform:translateX(-50%);background:#111;color:#fff;border-radius:999px;font-size:.7rem;padding:0 .6rem;cursor:ns-resize;touch-action:none;z-index:3}
+.fx-ov{position:absolute;left:0;top:-60%;width:100%;height:220%;pointer-events:none;z-index:2}
+.fx-add{position:absolute;left:4px;bottom:-11px;z-index:3;font-size:.7rem;padding:0 .55rem;border-radius:999px;border:1px solid #111;background:#fff;color:#111;cursor:pointer}
+.fx-strip{touch-action:pan-y}
+.fx-pan{position:sticky;bottom:0;z-index:5;background:var(--paper,#fff);border-top:2px solid var(--ink,#111);padding:.5rem .6rem;margin-top:.6rem;display:grid;gap:.35rem;font-size:.8rem;max-height:40vh;overflow-y:auto;overscroll-behavior:contain}
+.fx-pan textarea{width:100%;box-sizing:border-box;font-size:.9rem}
+.fx-pr{display:flex;flex-wrap:wrap;gap:.3rem;align-items:center}.fx-pr label{display:flex;align-items:center;gap:.3rem}.fx-sp{flex:1}
+.fx-pr .chip.on{background:var(--ink,#111);color:var(--paper,#fff)}
+.fx-sw{width:22px;height:22px;border-radius:50%;border:2px solid #999;cursor:pointer;padding:0}.fx-sw.on{border-color:#2563eb;box-shadow:0 0 0 2px #2563eb}
 .fx-b{position:absolute;max-width:45%;background:#fff;border:2px solid #111;border-radius:999px;padding:.4em .8em;line-height:1.3;color:#111;font-weight:700;cursor:grab;touch-action:none;z-index:2;font-size:1em}.fx-b.th{border-style:dashed}.fx-b.fx-n{border-radius:0;background:#fffbe6;font-weight:400;max-width:70%;border-width:1px}
 .sub-box{border-top:1px dashed var(--line,#ccc);margin-top:.5rem;padding-top:.4rem}.an-t .ja{color:#6a1b9a;font-size:.72rem}
 .an-l{padding-left:0;list-style:none;display:grid;gap:.6rem}.an-l>li{min-width:0;overflow:hidden}.an-t{display:grid;gap:.25rem;margin:.35rem 0;font-size:.8rem}.an-r{border-left:2px solid var(--line,#ccc);padding:.1rem .45rem}.an-tm{font-weight:700;color:var(--ink-2,#333)}.an-d{display:block;color:#1d4e89}.an-n{color:#7a5c00;font-style:italic}.an-r .ja{display:block;color:#6a1b9a;font-size:.74rem}.an-l>li{border:1px solid var(--line,#ddd);border-radius:8px;padding:.4rem .5rem}.an-w{color:#b26a00;font-size:.8rem;margin:.2rem 0}.an-t{width:100%;border-collapse:collapse;font-size:.76rem;margin:.3rem 0}.an-t th,.an-t td{border-bottom:1px solid var(--line,#eee);padding:.15rem .25rem;text-align:left;vertical-align:top}.an-t td:first-child{white-space:nowrap}
@@ -14402,12 +14410,24 @@ function d3Init(){
     box:new T.BoxGeometry(1,1,1), cyl:new T.CylinderGeometry(1,1,1,18), cone:new T.ConeGeometry(1,1,10), tor:new T.TorusGeometry(1,.16,8,20), lim:new T.CapsuleGeometry(.5,1,6,12),
     plane:new T.PlaneGeometry(1,1), cyl8:new T.CylinderGeometry(1,1,1,10), cone4:new T.ConeGeometry(1,1,4)};
   G.arc=new T.TorusGeometry(1,.22,6,14,Math.PI);   // 반달(∩) — 웃는 눈·입
+  // 관절 인형 부품(2026-11-28): 실제 크기로 한 번만 만든다. 회전체(Lathe) 윤곽 [반지름, 높이] — 팔다리는 관절 아래(-y)로 뻗고 굵기가 자연스럽게 줄어든다
+  var lathe=function(p, seg, k){ if(p[0][1]>p[p.length-1][1]) p=p.slice().reverse();   // 윤곽은 아래→위 순서여야 면이 바깥을 본다(거꾸로면 안팎이 뒤집혀 검게 보임)
+    k=k||1; var g=new T.LatheGeometry(p.map(function(q){ return new T.Vector2(q[0]*k, q[1]); }), seg||18); g.computeVertexNormals(); return g; };
+  G.mq={uarm:lathe([[0,0],[.03,-.004],[.043,-.03],[.046,-.09],[.041,-.17],[.034,-.22],[.024,-.245],[0,-.25]], 18, 1.15),
+    farm:lathe([[0,0],[.028,-.004],[.037,-.035],[.037,-.09],[.03,-.17],[.025,-.215],[.017,-.232],[0,-.236]], 18, 1.15),
+    thigh:lathe([[0,0],[.05,-.006],[.068,-.04],[.07,-.11],[.06,-.24],[.048,-.33],[.034,-.375],[0,-.385]], 18, 1.12),
+    shin:lathe([[0,0],[.04,-.006],[.05,-.04],[.052,-.1],[.042,-.24],[.032,-.34],[.024,-.37],[0,-.378]], 18, 1.12),
+    chest:lathe([[0,0],[.09,.006],[.115,.05],[.14,.14],[.155,.24],[.15,.3],[.12,.345],[.06,.37],[0,.374]], 22),   // 허리→가슴→어깨
+    pelvis:lathe([[0,.07],[.1,.065],[.13,.03],[.14,-.02],[.12,-.07],[.08,-.1],[0,-.11]], 22),
+    neck:lathe([[0,0],[.034,0],[.038,.03],[.034,.07],[0,.075]], 14),
+    joint:new T.SphereGeometry(1,16,12), foot:lathe([[0,.06],[.03,.058],[.042,.03],[.045,-.04],[.035,-.09],[0,-.1]], 14)};
   G.boxE=new T.EdgesGeometry(G.box); G.cylE=new T.EdgesGeometry(G.cyl, 40); G.cyl8E=new T.EdgesGeometry(G.cyl8, 40); G.cone4E=new T.EdgesGeometry(G.cone4);
   var grad=new T.DataTexture(new Uint8Array([105,105,105,255, 182,182,182,255, 255,255,255,255]), 3, 1, T.RGBAFormat); grad.minFilter=grad.magFilter=T.NearestFilter; grad.needsUpdate=true;
   var toon=function(c){ return new T.MeshToonMaterial({color:c, gradientMap:grad}); };
   D3.M={body:toon(0xf6f3ec), skin:toon(0xf6f3ec), cloth:toon(0xe4e1da), hairD:toon(0x2b2a28), hairL:toon(0x8f8b83), prop:toon(0x9d9990), mark:toon(0xd14b3a),
     ink:new T.MeshBasicMaterial({color:0x161616}), out:new T.MeshBasicMaterial({color:0x161616, side:T.BackSide}), bg:toon(0xe9e6de),
     floor:toon(0xe4e1d9), wall:toon(0xeeebe4), wall2:toon(0xdcd8cf), dark:toon(0x4a4c48), road:toon(0xc9c6be), grass:toon(0xdfe0d4), leaf:toon(0xc4c7b9), glass:toon(0xf4f2ee), wood:toon(0xcfc6b6),
+    joint:toon(0xd8d1c3), jointC:toon(0xcac5bb),   // 관절 공(몸·옷보다 한 톤 어둡게 — 마디가 읽히게)
     blush:toon(0xe7aaa0), tear:toon(0xcfe0ea), line:new T.LineBasicMaterial({color:0x2a2928}), lineL:new T.LineBasicMaterial({color:0xb4b0a7}), rain:new T.LineBasicMaterial({color:0x6b6964})};
   // 빛은 하나씩만(그림자 지도도 하나) — 장면마다 다시 붙인다
   var hemi=new T.HemisphereLight(0xffffff, 0x77736b, 1.5), sun=new T.DirectionalLight(0xffffff, 2.4);
@@ -14486,12 +14506,17 @@ function d3Fig(look, pose, ex){
   root.scale.set(bs*bw, bs, bs*bw);
   var hips=d3Group(root, 0, .95+(P.dy||0), 0), rot=P.rt; if(rot) hips.rotation.set(rot[0]*D3_DEG, rot[1]*D3_DEG, rot[2]*D3_DEG);
   var cloth=(lk.outfit||lk.collar)?M.cloth:M.body;
-  d3Mesh(G.box, cloth, .3, .17, .19, hips, 0, .02, 0);
-  var sp=d3Group(hips, 0, .08, 0); d3Rot(sp, P.sp);
-  d3Mesh(G.lim, cloth, .36, .28, .21, sp, 0, .25, 0);
+  // 관절 인형 몸통(2026-11-28): 골반·허리 관절·갈비뼈 모양 가슴·목. 마디 공은 한 톤 어두운 joint 재질
+  // 블렌더 사람 몸(assets/3d/human/human.glb, 2026-11-28)이 받아져 있으면 몸통·팔다리는 그 피부(스키닝)로 — 아래 그룹들이 그대로 뼈가 된다. 아니면 관절 인형 부품
+  var BD=d3Body(), bn={hips:hips}, mq=!BD;
+  var Q=G.mq, J=cloth===M.cloth?M.jointC:M.joint, ball=function(par, r, x, y, z, sy){ return mq?d3Mesh(G.mq.joint, J, r, r*(sy||1), r, par, x, y, z):{scale:{}}; };
+  if(mq) d3Mesh(Q.pelvis, cloth, 1, 1, .72, hips, 0, 0, 0);
+  var sp=d3Group(hips, 0, .08, 0); d3Rot(sp, P.sp); bn.sp=sp;
+  ball(sp, .095, 0, .015, 0, .62).scale.z=.07;   // 허리 마디(납작한 공)
+  if(mq) d3Mesh(Q.chest, cloth, 1, 1, .66, sp, 0, .04, 0);
   if(lk.outfit==='큰 겉옷' || lk.outfit==='교복+겉옷' || lk.outfit==='긴 옷자락') d3Mesh(G.cyl, M.cloth, .2, .4, .13, sp, 0, .08, 0);
-  d3Mesh(G.cyl, M.skin, .045, .08, .045, sp, 0, .54, 0);
-  var hd=d3Group(sp, 0, .66, 0); d3Rot(hd, P.hd);
+  if(mq) d3Mesh(Q.neck, M.skin, 1, 1.7, 1, sp, 0, .395, 0);
+  var hd=d3Group(sp, 0, .66, 0); d3Rot(hd, P.hd); bn.hd=hd;
   var hr=.12; d3Mesh(G.sph, M.skin, .115, .135, .122, hd, 0, 0, 0);
   // 얼굴: 눈·입(정면이 +z)
   var E=D3_EMO[ex.emo||lk.emo||'']||D3_EMO[''], ew=(lk.eyes==='감은'||E.eye==='closed')?[.024,.004,.01]:[.016,.019,.012];
@@ -14532,17 +14557,23 @@ function d3Fig(look, pose, ex){
   [['la',1],['ra',-1]].forEach(function(A){ var a=P[A[0]]||POSE3[''][A[0]], s=A[1];
     var sh=d3Group(sp, s*.2, .45, 0); sh.rotation.set(a[0]*D3_DEG, -s*(a[3]||0)*D3_DEG, s*(a[1]||0)*D3_DEG);
     if(lk.emptysleeve && s===1){ d3Mesh(G.lim, cloth, .09, .3, .09, sh, 0, -.17, 0); return; }
-    d3Mesh(G.lim, cloth, .088, .21, .088, sh, 0, -.14, 0);
-    var el=d3Group(sh, 0, -.29, 0); el.rotation.set((a[2]||0)*D3_DEG, 0, 0);
-    d3Mesh(G.lim, M.skin, .078, .19, .078, el, 0, -.13, 0);
-    var hn=d3Group(el, 0, -.27, 0); d3Mesh(G.sph, M.skin, .05, .055, .04, hn, 0, 0, 0); hands[A[0]]=hn; });
+    var sd=s>0?'L':'R'; bn['sh.'+sd]=sh;
+    ball(sh, .052, 0, 0, 0); if(mq) d3Mesh(Q.uarm, cloth, 1, 1, 1, sh, 0, -.03, 0);   // 어깨 마디 + 위팔
+    var el=d3Group(sh, 0, -.29, 0); el.rotation.set((a[2]||0)*D3_DEG, 0, 0); bn['el.'+sd]=el;
+    ball(el, .038, 0, 0, 0); if(mq) d3Mesh(Q.farm, M.skin, 1, 1, 1, el, 0, -.026, 0);   // 팔꿈치 마디 + 아래팔
+    var hn=d3Group(el, 0, -.27, 0); ball(hn, .026, 0, 0, 0); bn['hn.'+sd]=hn;   // 손목 마디
+    if(mq){ d3Mesh(G.sph, M.skin, .036, .052, .022, hn, 0, -.052, 0);   // 손바닥(벙어리장갑 모양)
+      var th=d3Mesh(G.lim, M.skin, .02, .032, .02, hn, s*.03, -.035, .008); th.rotation.z=s*.55; }   // 엄지
+    hands[A[0]]=hn; });
   // 다리
   [['ll',1],['rl',-1]].forEach(function(A){ var a=P[A[0]]||[0,0,0], s=A[1];
     var hp=d3Group(hips, s*.09, -.03, 0); hp.rotation.set(a[0]*D3_DEG, 0, s*(a[1]||0)*D3_DEG*.5);
-    d3Mesh(G.lim, M.cloth, .13, .3, .13, hp, 0, -.21, 0);
-    var kn=d3Group(hp, 0, -.44, 0); kn.rotation.set((a[2]||0)*D3_DEG, 0, 0);
-    d3Mesh(G.lim, M.cloth, .11, .3, .11, kn, 0, -.21, 0);
-    d3Mesh(G.box, M.ink, .09, .06, lk.bigshoes?.26:.2, kn, 0, -.43, .05, true); });
+    var sd=s>0?'L':'R'; bn['hp.'+sd]=hp;
+    ball(hp, .066, 0, 0, 0); if(mq) d3Mesh(Q.thigh, M.cloth, 1, 1, 1, hp, 0, -.04, 0);   // 엉덩이 마디 + 넓적다리(바지 색)
+    var kn=d3Group(hp, 0, -.44, 0); kn.rotation.set((a[2]||0)*D3_DEG, 0, 0); bn['kn.'+sd]=kn;
+    ball(kn, .05, 0, 0, 0); if(mq) d3Mesh(Q.shin, M.cloth, 1, 1, 1, kn, 0, -.03, 0);   // 무릎 마디 + 정강이
+    ball(kn, .032, 0, -.405, 0);   // 발목 마디
+    if(mq){ var ft=d3Mesh(Q.foot, M.ink, 1, lk.bigshoes?1.3:1, 1, kn, 0, -.425, .03, true); ft.rotation.x=Math.PI/2; } });   // 발(눕힌 회전체, 발끝이 +z)
   // 소품
   var pr=P.prop;
   if(pr==='sword' || (lk.weapon && /검|칼|창/.test(lk.weapon))){ var hw=hands.la||hands.ra; if(hw){ var bl=d3Group(hw,0,0,0); d3Mesh(G.box, M.prop, .035, .9, .035, bl, 0, -.48, 0); d3Mesh(G.box, M.ink, .14, .025, .03, bl, 0, -.05, 0, true); } }
@@ -14562,6 +14593,7 @@ function d3Fig(look, pose, ex){
     else if(prop==='flower'){ d3Mesh(G.cone, M.cloth, .1, .26, .1, pg, mid.x, mid.y-.02, mid.z+.08).rotation.x=Math.PI; [[-.06,.18],[.05,.2],[0,.25],[.07,.13],[-.07,.12]].forEach(function(q){ d3Mesh(G.sph, M.mark, .045, .045, .045, pg, mid.x+q[0], mid.y+q[1], mid.z+.08); }); }
     else if(prop==='letter') d3Mesh(G.box, M.glass, .2, .13, .01, pg, mid.x, mid.y+.05, mid.z+.07);
     else if(prop==='bag') d3Mesh(G.box, M.dark, .32, .24, .1, pg, hr2.x, hr2.y-.12, hr2.z); }
+  if(BD) d3BodyBind(root, bn, BD, {Top:cloth, Bottom:M.cloth, Skin:M.skin, Shoes:M.ink});
   return {root:root, head:hd, hr:hr*bs};
 }
 // ----- 배경 세트 -----
@@ -14604,6 +14636,39 @@ function d3Chair(par, x, z, ry){ var g=d3Group(par, x, 0, z); g.rotation.y=ry||0
 // assets/3d/<이름>/<이름>.glb 를 처음 쓸 때 한 번 받아(외부 로더 없이 GLB를 직접 읽는다) 공유 도형으로 둔다.
 // 받는 동안·실패하면 아래 상자 세트로 그리고, 다 받으면 d3RedrawAll로 다시 그린다. 재질은 이름(M_Wall 등)으로 사전의 툰 재질에 맞추고 외곽선은 EdgesGeometry.
 var D3_GLB={'class':'assets/3d/classroom/classroom.glb'}, D3G={};
+// ----- 블렌더 사람 몸(스키닝, 2026-11-28) -----
+// assets/3d/human/human.glb: 머리 없는 몸(상의 Top·하의 Bottom·피부 Skin·신발 Shoes, UV 있음) + 뼈 hips sp hd sh/el/hn/hp/kn.L·R.
+// 뼈 이름이 d3Fig의 그룹과 같고 관절 자리도 같다 → 그 그룹들을 그대로 뼈로 써서 POSE3 각도가 그대로 먹는다. 블렌더 바인드 자세는 팔 22°·다리 4° 벌림(D3_BIND).
+var D3_BODY_URL='assets/3d/human/human.glb', D3_BIND={'sh.L':[0,0,22], 'sh.R':[0,0,-22], 'hp.L':[0,0,4], 'hp.R':[0,0,-4]};
+function d3Body(){ var e=D3G.__body; if(e) return e.st===2?e.v:null; e=D3G.__body={st:1};
+  fetch(D3_BODY_URL).then(function(r){ if(!r.ok) throw 0; return r.arrayBuffer(); }).then(function(b){ e.v=d3BodyParse(b); e.st=2; SPR={}; SPR_N=0; d3RedrawAll(); try{ window.dispatchEvent(new Event('drawmode')); }catch(er){} }).catch(function(){ e.st=-1; });
+  return null; }
+function d3BodyParse(buf){ var T=window.THREE, dv=new DataView(buf), jl=dv.getUint32(12,true), js=JSON.parse(new TextDecoder().decode(new Uint8Array(buf,20,jl))), bo=20+jl+8;
+  var acc=function(i, asF){ var a=js.accessors[i], v=js.bufferViews[a.bufferView], n={SCALAR:1,VEC2:2,VEC3:3,VEC4:4}[a.type]*a.count, off=bo+(v.byteOffset||0)+(a.byteOffset||0), ct=a.componentType;
+    var A=ct===5126?Float32Array:ct===5125?Uint32Array:ct===5123?Uint16Array:Uint8Array, out=new A(buf.slice(off, off+n*A.BYTES_PER_ELEMENT));
+    if(asF && ct!==5126){ var mx=ct===5121?255:65535, f=new Float32Array(n); for(var k=0;k<n;k++) f[k]=a.normalized?out[k]/mx:out[k]; return f; } return out; };
+  var nd=js.nodes.filter(function(n){ return n.mesh!=null && n.skin!=null; })[0], names=js.skins[nd.skin].joints.map(function(j){ return js.nodes[j].name; });
+  var parts=js.meshes[nd.mesh].primitives.map(function(p){ var g=new T.BufferGeometry(), A=p.attributes;
+    g.setAttribute('position', new T.BufferAttribute(acc(A.POSITION),3)); g.setAttribute('normal', new T.BufferAttribute(acc(A.NORMAL),3));
+    if(A.TEXCOORD_0!=null) g.setAttribute('uv', new T.BufferAttribute(acc(A.TEXCOORD_0),2));   // 나중에 시트 그림을 입힐 때 쓸 펼친 좌표
+    g.setAttribute('skinIndex', new T.BufferAttribute(new Uint16Array(acc(A.JOINTS_0)),4)); g.setAttribute('skinWeight', new T.BufferAttribute(acc(A.WEIGHTS_0,true),4));
+    if(p.indices!=null) g.setIndex(new T.BufferAttribute(acc(p.indices),1));
+    return {geo:g, mat:String(((js.materials||[])[p.material]||{}).name||'')}; });
+  return {parts:parts, names:names}; }
+// 외곽선: 스키닝된 법선 방향으로 조금 부풀린 뒷면(크기를 키우는 방식은 휘는 몸에 안 맞는다)
+function d3OutlineSkin(){ if(D3.M.outS) return D3.M.outS; var T=window.THREE, m=new T.MeshBasicMaterial({color:0x161616, side:T.BackSide});
+  m.onBeforeCompile=function(sh){ sh.vertexShader=sh.vertexShader.replace('#include <project_vertex>', 'transformed += normalize(objectNormal) * 0.011;\n#include <project_vertex>'); };
+  return D3.M.outS=m; }
+// 그룹을 바인드 자세(회전 0, 팔·다리만 살짝 벌림)로 돌려놓고 몸을 붙여 뼈 역행렬을 잡은 뒤 원래 자세로 되돌린다
+function d3BodyBind(root, bn, BD, mats){ var T=window.THREE, keys=Object.keys(bn), sv={}, rr=root.rotation.clone(), ms=[];
+  keys.forEach(function(k){ var o=bn[k], b=D3_BIND[k]||[0,0,0]; sv[k]={r:o.rotation.clone(), p:o.position.clone()}; o.rotation.set(b[0]*D3_DEG, b[1]*D3_DEG, b[2]*D3_DEG); });
+  bn.hips.position.set(0, .95, 0); root.rotation.set(0,0,0);
+  BD.parts.forEach(function(p){ var m=new T.SkinnedMesh(p.geo, mats[p.mat]||mats.Top); m.castShadow=true; m.frustumCulled=false; root.add(m); ms.push(m);
+    var o=new T.SkinnedMesh(p.geo, d3OutlineSkin()); o.frustumCulled=false; root.add(o); ms.push(o); });
+  root.updateMatrixWorld(true);
+  var bones=BD.names.map(function(n){ return bn[n] || bn[n.replace(/^(el|hn)\./,'sh.')] || bn.sp; }), sk=new T.Skeleton(bones);   // 빈 소매처럼 없는 뼈는 가까운 위 뼈로
+  ms.forEach(function(m){ m.bind(sk); });
+  keys.forEach(function(k){ bn[k].rotation.copy(sv[k].r); bn[k].position.copy(sv[k].p); }); root.rotation.copy(rr); root.updateMatrixWorld(true); }
 function d3GlbParse(buf){
   var T=window.THREE, dv=new DataView(buf), jl=dv.getUint32(12,true), js=JSON.parse(new TextDecoder().decode(new Uint8Array(buf,20,jl))), bo=20+jl+8;
   var acc=function(i){ var a=js.accessors[i], v=js.bufferViews[a.bufferView], n={SCALAR:1,VEC2:2,VEC3:3,VEC4:4}[a.type]*a.count, off=bo+(v.byteOffset||0)+(a.byteOffset||0);
@@ -15606,45 +15671,210 @@ function drawBubbles(g, c, W, H){ var cp=compOf(c), L=String(c.line||'').split('
 var GAPPX={0:8,1:60,2:140,3:260};
 function fxRatio(c){ return c.fr || cutRatio(c); }
 function fxGap(c, prev){ if(c.gpx!=null) return +c.gpx; if(!prev) return 40; var x=null, y=null; try{ x=sceneOfCut(c.n); y=sceneOfCut(prev.n); }catch(e){} return c.gap!=null&&c.gap!==''&&GAPPX[c.gap]!=null?GAPPX[c.gap]:((x&&y&&x.a!==y.a)?200:60); }
-function fxBubbles(c){ if(c.comicArt&&c.comicArt===c.art&&c.comicText) return []; var cp=compOf(c), L=String(c.line||'').split('\n').map(function(l){ return l.trim(); }).filter(Boolean).slice(0,4), out=[];
-  L.forEach(function(l,i){ var p=lnParse(l), ix=-1; cp.ppl.forEach(function(q,j){ if(q.nm===p.who) ix=j; }); var cx=ix>-1?cp.ppl[ix].x:[22,70,40,60][i];
-    var bp=(c.bp||[])[i]; out.push({k:'b', i:i, text:p.say.replace(/^\((.*)\)$/,'$1'), think:p.kind==='think'||/^\(/.test(p.say), x:bp?bp.x:Math.max(2,Math.min(55,cx-20)), y:bp?bp.y:4+i*16}); });
-  if(c.nar){ var np=c.np; out.push({k:'n', text:c.nar, x:np?np.x:3, y:np?np.y:(c.narPos==='top'?3:80)}); }
+// [[MOD:bubble-edit]] 최종 편집: 말풍선·나레이션·효과음 글자를 자유롭게 (2026-11-28)
+// 컷 c에 남기는 값(모두 컷 기준 %): bp[i]={x,y} 대사 풍선 자리(예전 그대로) · bs[i]={sh 모양, fs 글자 배율, w 폭(0=자동), tail 'auto'|'none'|{x,y}, b 굵게, v 세로쓰기, al 정렬 l/c/r, t 바꾼 글(줄바꿈 가능), hide}
+//   np·ns 나레이션 자리·스타일 · fxt=[{t,x,y,fs,rot,col,ol(흰 외곽선),b,v}] 효과음·자유 글자. 판 B.fz는 전체 글자 배율(예전 그대로). 스타일 보관 localStorage fxStyles(6개).
+// 그리기는 bubLayout·bubDraw 하나 — 편집 화면(컷마다 위아래로 넉넉한 덮개 캔버스, 가상 폭 800)과 완성 콘티(drawFx)가 같은 그림을 쓴다.
+function fxBubbles(c){ var out=[];
+  if(!(c.comicArt&&c.comicArt===c.art&&c.comicText)){ var cp=compOf(c), L=String(c.line||'').split('\n').map(function(l){ return l.trim(); }).filter(Boolean).slice(0,4);
+    L.forEach(function(l,i){ var p=lnParse(l), ix=-1; cp.ppl.forEach(function(q,j){ if(q.nm===p.who) ix=j; }); var cx=ix>-1?cp.ppl[ix].x:[22,70,40,60][i], bp=(c.bp||[])[i], s=(c.bs||[])[i]||{}, th=p.kind==='think'||/^\(/.test(p.say);
+      out.push({k:'b', i:i, who:p.who||'', text:s.t!=null?s.t:p.say.replace(/^\((.*)\)$/,'$1'), sh:s.sh||(th?'think':'oval'), fs:s.fs||1, w:s.w||0, tail:s.tail||'auto', b:s.b==null?1:s.b, v:!!s.v, al:s.al||'c', hide:!!s.hide, sk:s.sk, sd:!!s.sd, sx:cx,
+        x:bp?bp.x:Math.max(2,Math.min(55,cx-20)), y:bp?bp.y:4+i*16, ap:!bp, ln:s.ln}); });
+    // 이어진 풍선: 직접 정했으면(ln 0/1) 그대로, 아니면 같은 사람이 바로 앞 풍선에 이어 말할 때 자동으로 잇는다
+    out.forEach(function(b, i){ if(!i) return; var a=out[i-1], ok=a.sh!=='narr' && a.sh!=='none' && b.sh!=='narr' && b.sh!=='none'; b.lk=ok && (b.ln!=null?!!b.ln:(!!b.who && a.who===b.who)); });
+    out.forEach(function(b, i){ b.hf=!!(out[i+1] && out[i+1].lk); });   // 뒤에 이어진 풍선이 있으면 꼬리는 마지막 풍선에만
+    if(c.nar){ var np=c.np, ns=c.ns||{}; out.push({k:'n', text:ns.t!=null?ns.t:c.nar, sh:ns.sh||'narr', fs:ns.fs||1, w:ns.w||0, tail:'none', b:ns.b?1:0, v:!!ns.v, al:ns.al||'l', hide:!!ns.hide, sk:ns.sk, sd:!!ns.sd, x:np?np.x:3, y:np?np.y:(c.narPos==='top'?3:80)}); } }
+  (c.fxt||[]).forEach(function(t,j){ if(t) out.push({k:'t', j:j, text:t.t||'', sh:'none', fs:t.fs||2, rot:t.rot||0, col:t.col||'#111111', ol:t.ol==null?1:t.ol, b:t.b==null?1:t.b, v:!!t.v, sd:!!t.sd, al:'c', x:t.x==null?38:t.x, y:t.y==null?30:t.y}); });
   return out; }
-var FX={on:false};
-function fxRender(){ var box=document.getElementById('ct-fx'); if(!box||!B||!B.cuts) return; var cuts=B.cuts.filter(function(c){ return c.scr||c.art; });
-  box.innerHTML='<div class="fx-bar"><label>말풍선 크기 <input type="range" min="70" max="160" step="5" value="'+(B.fz||100)+'" data-fx="fz"></label><button class="chip" type="button" data-fx="reset">말풍선 자동 위치로</button><button class="chip" type="button" data-fx="sizereset">컷 크기 원래대로</button></div><div class="fx-strip"></div><p class="small">말풍선·나레이션은 끌어서 옮긴다(컷 밖 간격에도 놓을 수 있다). 컷 아래 손잡이를 끌면 컷 높이, 「간격」으로 다음 컷과의 거리를 바꾼다.</p>';
-  var st=box.querySelector('.fx-strip'), W=st.clientWidth||360, fz=(B.fz||100)/100;
-  st.style.setProperty('--fx-f', (W*20/800*fz)+'px');
+var BUB_SH=[['oval','타원'],['round','동그라미'],['soft','둥근 네모'],['normal','알약'],['shout','외침'],['think','생각'],['whisper','속삭임'],['tremble','떨림'],['phone','전화·기계'],['narr','나레이션 상자'],['none','글자만']];
+// 글 상자(cw×ch) 바깥으로 모양마다 얼마나 넓히나: 타원·동그라미는 글 네모를 품도록 √2배, 나머지는 글자 크기 f 배수의 여백
+var BUB_PAD={normal:[1,.55], soft:[.95,.7], whisper:[1,.55], tremble:[1.1,.65], shout:[1.45,1], think:[1.3,.85], phone:[1.05,.65], narr:[.6,.5], none:[.25,.2]};
+var BUB_SKETCH={oval:1, round:1, soft:1};   // 손그림 선이 기본인 모양(참고 그림처럼 살짝 흔들리는 선)
+// 줄바꿈: 띄어쓰기 단위로 넘기고, 한 낱말이 한 줄보다 길 때만 글자 단위로 자른다(「대/사야」처럼 낱말 가운데서 끊기지 않게)
+function bubWrap(g, text, maxW){ var out=[]; String(text).split('\n').forEach(function(par){ var line='';
+  par.split(/(\s+)/).filter(function(t){ return t!==''; }).forEach(function(tok){ var sp=/^\s+$/.test(tok), tt=line+tok;
+    if(sp){ if(line) line=tt; return; }
+    if(g.measureText(tt).width<=maxW || !line.trim()){ if(g.measureText(tt).width<=maxW){ line=tt; return; } }
+    else { out.push(line.replace(/\s+$/,'')); line=''; if(g.measureText(tok).width<=maxW){ line=tok; return; } }
+    tok.split('').forEach(function(ch){ var t2=line+ch; if(g.measureText(t2).width>maxW && line.trim()){ out.push(line); line=ch; } else line=t2; }); });
+  out.push(line.replace(/\s+$/,'')); }); return out; }
+function bubLayout(g, b, W, H, y0, fz){ var f=Math.max(8, Math.round(22*fz*(b.fs||1))), sh=b.k==='t'?'none':(b.sh||'oval'), lh=f*1.3, L, cw, ch, w, h;
+  var maxW=b.w?W*b.w/100:W*(b.k==='n'?.7:b.k==='t'?.95:.42); g.font=(b.b?'bold ':'')+f+'px sans-serif';
+  var ell=sh==='oval'||sh==='round', inner=ell?Math.max(f*2, maxW/1.42-f*.5):Math.max(f*2, maxW-2*f*((BUB_PAD[sh]||BUB_PAD.normal)[0]));
+  if(b.v){ var per=Math.max(2, Math.floor(H*.75/(f*1.08))), cols=[]; String(b.text).split('\n').forEach(function(par){ var cs=par.split(''); if(!cs.length) cols.push([]); for(var i=0;i<cs.length;i+=per) cols.push(cs.slice(i,i+per)); });
+    var mx=Math.max.apply(null, cols.map(function(q){ return q.length; }).concat([1])); cw=cols.length*f*1.25; ch=mx*f*1.08; L={cols:cols}; }
+  else { if(ell && !b.w){ var tw0=g.measureText(String(b.text).replace(/\n/g,'')).width, sq=Math.sqrt(tw0*lh)*(sh==='round'?1.5:2.1); inner=Math.min(inner, Math.max(f*3, sq)); }   // 타원·동그라미는 글을 납작하지 않게 줄바꿈
+    var lines=bubWrap(g, b.text, inner); cw=Math.max.apply(null, lines.map(function(l){ return g.measureText(l).width; }).concat([f])); ch=lines.length*lh; L={lines:lines}; }
+  if(ell){ var rx=cw/2*1.38+f*.6, ry=ch/2*1.38+f*.55; if(sh==='round'){ var r=Math.max(rx, ry); rx=r*1.04; ry=r*.96; } else ry=Math.max(ry, rx*.6); if(b.w){ rx=Math.max(rx, maxW/2); } w=rx*2; h=ry*2; }
+  else { var pd=BUB_PAD[sh]||BUB_PAD.normal; w=cw+2*f*pd[0]; h=ch+2*f*pd[1]; if(b.w) w=Math.max(w, maxW); }
+  return {f:f, sh:sh, lh:lh, L:L, cw:cw, ch:ch, x:W*b.x/100, y:y0+H*b.y/100, w:w, h:h}; }
+// 테두리 점(닫힌 다각형). 손그림이면 점마다 바깥쪽으로 살짝 흔든다 — 같은 풍선은 늘 같은 흔들림(글로 씨앗)
+function bubSeed(t){ var s=7; t=String(t||''); for(var i=0;i<t.length;i++) s=(s*31+t.charCodeAt(i))%9973; return s/9973*6.28; }
+function bubOutline(sh, x, y, w, h, f, sk, seed){ var cx=x+w/2, cy=y+h/2, p=[], i, n;
+  if(sh==='oval' || sh==='round'){ n=96; for(i=0;i<n;i++){ var a=i/n*Math.PI*2; p.push([cx+Math.cos(a)*w/2, cy+Math.sin(a)*h/2]); } }
+  else if(sh==='soft' || sh==='normal' || sh==='whisper'){ var r=sh==='soft'?Math.min(f*1.5, h/2.4, w/3):Math.min(h/2, w/2, f*1.6), bulge=sh==='soft'?f*.18:0, k;
+    var seg=function(x0,y0,x1,y1,m,nx,ny){ for(k=0;k<m;k++){ var t=k/m, bb=Math.sin(t*Math.PI)*bulge; p.push([x0+(x1-x0)*t+nx*bb, y0+(y1-y0)*t+ny*bb]); } }, arc=function(ax,ay,a0){ for(k=0;k<8;k++){ var a=a0+k/8*Math.PI/2; p.push([ax+Math.cos(a)*r, ay+Math.sin(a)*r]); } };
+    seg(x+r,y,x+w-r,y,16,0,-1); arc(x+w-r,y+r,-Math.PI/2); seg(x+w,y+r,x+w,y+h-r,10,1,0); arc(x+w-r,y+h-r,0); seg(x+w-r,y+h,x+r,y+h,16,0,1); arc(x+r,y+h-r,Math.PI/2); seg(x,y+h-r,x,y+r,10,-1,0); arc(x+r,y+r,Math.PI); }
+  else if(sh==='shout'){ n=Math.max(14, Math.round((w+h)/(f*1.1)))*2; p=bubRing(cx, cy, w/2*1.02, h/2*1.02, n, function(i){ return i%2?1:1.2; }); }
+  else if(sh==='phone'){ p=bubRing(cx, cy, w/2, h/2, 40, function(i){ return i%2?1:1.07; }); }
+  else if(sh==='tremble'){ p=bubRing(cx, cy, w/2, h/2, 72, function(i){ return 1+.035*Math.sin(i*2.1)+.02*Math.sin(i*5.3); }); }
+  if(sk && p.length){ var amp=Math.max(.8, f*.06), L2=p.length; p=p.map(function(q, j){ var dx=q[0]-cx, dy=q[1]-cy, d=Math.hypot(dx,dy)||1, o=amp*(Math.sin(j/L2*Math.PI*2*3+seed)*.6+Math.sin(j/L2*Math.PI*2*7+seed*2)*.4); return [q[0]+dx/d*o, q[1]+dy/d*o]; }); }
+  return p; }
+function bubRing(cx, cy, rx, ry, n, fk){ var p=[]; for(var i=0;i<n;i++){ var a=i/n*Math.PI*2, co=Math.cos(a), si=Math.sin(a), k=fk?fk(i):1; p.push([cx+rx*k*(co<0?-1:1)*Math.pow(Math.abs(co),.5), cy+ry*k*(si<0?-1:1)*Math.pow(Math.abs(si),.5)]); } return p; }   // 네모에 가까운 타원(글이 모서리에서 안 잘리게)
+function bubPoly(g, p){ g.moveTo(p[0][0], p[0][1]); for(var i=1;i<p.length;i++) g.lineTo(p[i][0], p[i][1]); g.closePath(); }
+// 꼬리 끝: 직접 정한 곳, 아니면 말하는 사람 쪽 아래로 짧게(참고 그림처럼 몸통 바로 밖에서 살짝 휜 꼬리)
+function bubTip(b, o, W, H, y0){ if(b.k!=='b' || b.tail==='none' || o.sh==='narr' || o.sh==='none' || (b.hf && b.tail==='auto')) return null;   // 이어진 묶음은 마지막 풍선에만 자동 꼬리(앞 풍선들은 꼬리를 직접 정했을 때만)
+  if(b.tail && typeof b.tail==='object') return [W*b.tail.x/100, y0+H*b.tail.y/100];
+  var cx=o.x+o.w/2, sx=W*(b.sx==null?50:b.sx)/100, side=sx<cx-o.w*.1?-1:1, len=o.f*1.25+Math.min(o.w, o.h)*.12;
+  return [cx+side*o.w*.3+side*len*.45, o.y+o.h*.93+len]; }
+function bubTail(g, p, cx, cy, tip, f, w){ if(!tip || !p.length) return; var dx=tip[0]-cx, dy=tip[1]-cy, best=0, bd=1e18;
+  p.forEach(function(q, i){ var v=(q[0]-tip[0])*(q[0]-tip[0])+(q[1]-tip[1])*(q[1]-tip[1]); if(v<bd){ bd=v; best=i; } });   // 꼬리 끝에서 가장 가까운 테두리 점이 꼬리 뿌리
+  var N=p.length, half=Math.max(f*.45, Math.min(f*.75, w*.09)), walk=function(dir){ var i=best, d=0; for(var s=0;s<N/4 && d<half;s++){ var j=(i+dir+N)%N; d+=Math.hypot(p[j][0]-p[i][0], p[j][1]-p[i][1]); i=j; } return p[i]; }, a=walk(-1), c=walk(1);
+  var ln=Math.hypot(dx,dy)||1, px=-dy/ln, py=dx/ln, bend=f*.35*(dx<0?-1:1), m1=[a[0]+(tip[0]-a[0])*.55+px*bend, a[1]+(tip[1]-a[1])*.55+py*bend], m2=[c[0]+(tip[0]-c[0])*.55+px*bend, c[1]+(tip[1]-c[1])*.55+py*bend];
+  g.moveTo(a[0], a[1]); g.quadraticCurveTo(m1[0], m1[1], tip[0], tip[1]); g.quadraticCurveTo(m2[0], m2[1], c[0], c[1]); g.lineTo(cx, cy); g.closePath(); }
+function bubPrep(g, b, W, H, y0, fz){ var o=bubLayout(g, b, W, H, y0, fz), sh=o.sh, sk=b.sk==null?!!BUB_SKETCH[sh]:!!b.sk;
+  return {o:o, sh:sh, x:o.x, y:o.y, w:o.w, h:o.h, cx:o.x+o.w/2, cy:o.y+o.h/2, f:o.f, lw:Math.max(1.5, 2.4*Math.min(1.6, fz*(b.fs||1))), tip:bubTip(b, o, W, H, y0), pts:(sh==='narr'||sh==='none'||sh==='think')?[]:bubOutline(sh, o.x, o.y, o.w, o.h, o.f, sk, bubSeed(b.text)+(b.i||0))}; }
+// 한 풍선 그리기. opt.ph로 단계만: 'st' 선 긋기 · 'fl' 칠하기 · 'tx' 글 · 'sel' 고른 표시(+자리 돌려줌). 없으면 전부(예전처럼 혼자).
+// 이어진 풍선은 bubDrawAll이 모두 긋고 → 목까지 칠하고 → 글을 얹어서 이음매 선이 안쪽에 남지 않는다.
+function bubDraw(g, b, W, H, y0, fz, opt){ opt=opt||{}; if(b.hide && !opt.ed) return null; var P=opt.P||bubPrep(g, b, W, H, y0, fz), ph=opt.ph, o=P.o, x=P.x, y=P.y, w=P.w, h=P.h, cx=P.cx, cy=P.cy, f=P.f, lw=P.lw, tip=P.tip, sh=P.sh, pts=P.pts;
+  var doSt=!ph||ph==='st', doFl=!ph||ph==='fl', doTx=!ph||ph==='tx', doSel=(!ph||ph==='sel') && opt.sel;
+  g.save(); if(b.hide) g.globalAlpha=.3; g.lineJoin='round'; g.lineCap='round'; g.strokeStyle='#111'; g.fillStyle='#fff';
+  if(b.k==='t' && b.rot){ g.translate(cx, cy); g.rotate(b.rot*Math.PI/180); g.translate(-cx, -cy); }
+  var shadow=function(on){ if(on && b.sd){ g.shadowColor='rgba(0,0,0,.35)'; g.shadowBlur=f*.7; g.shadowOffsetX=f*.1; g.shadowOffsetY=f*.25; } else { g.shadowColor='transparent'; g.shadowBlur=0; g.shadowOffsetX=0; g.shadowOffsetY=0; } };
+  if(sh==='narr'){ if(doFl){ g.fillStyle='#fffbe6'; g.lineWidth=1.5; shadow(1); g.fillRect(x, y, w, h); shadow(0); g.strokeRect(x, y, w, h); } }
+  else if(sh!=='none'){
+    var body=function(){ if(sh==='think'){ var tp=bubRing(cx, cy, w/2*.94, h/2*.94, Math.max(10, Math.round((w+h)/(f*1.2)))), r0=f*.8; tp.forEach(function(q){ g.moveTo(q[0]+r0, q[1]); g.arc(q[0], q[1], r0, 0, Math.PI*2); }); g.moveTo(x+f*.6, y+f*.6); g.rect(x+f*.6, y+f*.6, w-f*1.2, h-f*1.2); } else bubPoly(g, pts); },
+      tail=function(){ if(sh!=='think') bubTail(g, pts, cx, cy, tip, f, w); };
+    if(doSt){ g.beginPath(); body(); tail(); if(sh==='whisper') g.setLineDash([f*.35, f*.25]); g.lineWidth=lw*2; shadow(1); g.stroke(); shadow(0); g.setLineDash([]); }
+    if(doFl){ g.beginPath(); body(); g.fill(); g.beginPath(); tail(); g.fill();   // 두 배 굵게 긋고 몸통·꼬리를 따로 칠하면 안쪽 이음선은 가려지고 바깥 선만 남는다
+      if(sh==='think' && tip){ g.lineWidth=lw; [[.55,.36],[.75,.26],[.92,.17]].forEach(function(q){ var px2=cx+(tip[0]-cx)*q[0], py2=cy+(tip[1]-cy)*q[0]; if(Math.abs(px2-cx)<w/2 && Math.abs(py2-cy)<h/2) return; g.beginPath(); g.arc(px2, py2, f*q[1], 0, Math.PI*2); g.fill(); g.stroke(); }); } } }
+  if(doTx){   // 글 — 글 상자를 모양 가운데에
+    var ink=b.k==='t'?(b.col||'#111111'):'#111', outl=sh==='none' && (b.k!=='t' || b.ol), tx0=cx-o.cw/2, ty0=cy-o.ch/2; g.fillStyle=ink; g.font=(b.b?'bold ':'')+f+'px sans-serif'; g.textBaseline='alphabetic';
+    if(outl){ g.lineWidth=Math.max(3, f*.22); g.strokeStyle=(b.k==='t' && /^#f{3,6}$/i.test(ink))?'#111':'#fff'; }
+    if(b.k==='t' && b.sd) shadow(1);
+    var put=function(t, tx, ty){ if(outl) g.strokeText(t, tx, ty); g.fillText(t, tx, ty); };
+    if(o.L.cols){ g.textAlign='center'; o.L.cols.forEach(function(col, k){ var ccx=tx0+o.cw-(k+.5)*f*1.25; col.forEach(function(chr, j){ put(chr, ccx, ty0+(j+1)*f*1.08-f*.12); }); }); }
+    else { var al=b.al||'c'; g.textAlign=al==='l'?'left':al==='r'?'right':'center'; var tx=al==='l'?tx0:al==='r'?tx0+o.cw:cx; o.L.lines.forEach(function(l, i){ put(l, tx, ty0+i*o.lh+f*1.02); }); } }
+  g.restore();
+  if(doSel){ g.save(); g.strokeStyle='#2563eb'; g.lineWidth=2; g.setLineDash([6,4]); g.strokeRect(x-6, y-6, w+12, h+12); g.setLineDash([]); g.fillStyle='#2563eb';
+    g.fillRect(x+w-2, y+h-2, 14, 14); if(tip){ g.beginPath(); g.arc(tip[0], tip[1], 9, 0, Math.PI*2); g.fill(); } g.restore(); }
+  return {x:x, y:y, w:w, h:h, tip:tip}; }
+// 이어진 풍선의 목: 두 몸통에서 서로 가장 가까운 테두리 점을 잇는 가운데가 잘록한 띠. 양 끝은 몸통 안쪽으로 조금 밀어 넣어 칠할 때 이음매가 덮이게
+function bubNeck(g, A, Bq, mode){ var near=function(P, tx, ty){ var bi=0, bd=1e18; P.pts.forEach(function(q, i){ var d=(q[0]-tx)*(q[0]-tx)+(q[1]-ty)*(q[1]-ty); if(d<bd){ bd=d; bi=i; } }); return P.pts[bi]; };
+  if(!A.pts.length || !Bq.pts.length) return; var pa=near(A, Bq.cx, Bq.cy), pb=near(Bq, A.cx, A.cy), dx=pb[0]-pa[0], dy=pb[1]-pa[1], ln=Math.hypot(dx, dy); if(ln<Math.min(A.f, Bq.f)) return;   // 한 글자 크기보다 가까우면(겹친 것 포함) 목 없이 둔다
+  var ux=dx/ln, uy=dy/ln, f=Math.min(A.f, Bq.f), hw=f*.5, nx=-uy*hw, ny=ux*hw, a=[pa[0]-ux*f*.9, pa[1]-uy*f*.9], c=[pb[0]+ux*f*.9, pb[1]+uy*f*.9], m=[(pa[0]+pb[0])/2, (pa[1]+pb[1])/2], k=.72;   // 조금 굵고 덜 잘록한 목(가늘고 길면 어색해 보인다)
+  g.beginPath(); g.moveTo(a[0]+nx, a[1]+ny); g.quadraticCurveTo(m[0]+nx*k, m[1]+ny*k, c[0]+nx, c[1]+ny); g.lineTo(c[0]-nx, c[1]-ny); g.quadraticCurveTo(m[0]-nx*k, m[1]-ny*k, a[0]-nx, a[1]-ny); g.closePath();
+  if(mode==='st'){ g.lineWidth=Math.max(A.lw, Bq.lw)*2; g.strokeStyle='#111'; g.lineJoin='round'; g.stroke(); } else { g.fillStyle='#fff'; g.fill(); } }
+// 한 컷의 풍선을 모두 그린다(편집 화면·완성 콘티 공용). opt.ed 편집 화면, opt.isSel(b) 고른 것. 돌려줌: [{b, box, sel}]
+function bubDrawAll(g, items, W, H, y0, fz, opt){ opt=opt||{}; var ed=!!opt.ed, P=[], necks=[];
+  items.forEach(function(b, q){ if(b.hide && !ed){ P.push(null); return; }
+    var Pb=bubPrep(g, b, W, H, y0, fz);
+    if(b.k==='b' && b.lk && b.ap && q>0 && P[q-1] && items[q-1].k==='b'){   // 자리를 안 옮긴 이어진 풍선: 앞 풍선에서 비스듬히 아래로 간격을 두고 놓아 목으로 잇는다(겹치지 않게)
+      // 실제 테두리끼리 가장 가까운 거리가 글자 크기의 1.6배가 될 때까지 비스듬히(오른쪽 아래, 자리가 없으면 왼쪽 아래) 밀어낸다
+      var A=P[q-1], want=Math.max(A.f, Pb.f)*1.6, edge=function(P2){ return P2.pts.length?P2.pts:[[P2.x,P2.y],[P2.x+P2.w,P2.y],[P2.x+P2.w,P2.y+P2.h],[P2.x,P2.y+P2.h]]; },
+        dist=function(P1, P2){ var a=edge(P1), c2=edge(P2), m=1e18; for(var i=0;i<a.length;i+=3) for(var j=0;j<c2.length;j+=3){ var dx=a[i][0]-c2[j][0], dy=a[i][1]-c2[j][1], d=dx*dx+dy*dy; if(d<m) m=d; } return Math.sqrt(m); },
+        put=function(sx, D){ b.x=Math.round((A.cx+Math.cos(.6)*sx*D-Pb.w/2)/W*1000)/10; b.y=Math.round((A.cy+Math.sin(.6)*D-Pb.h/2-y0)/H*1000)/10; Pb=bubPrep(g, b, W, H, y0, fz); },
+        go=function(sx){ var D=(A.w+Pb.w)/4; for(var it=0;it<24;it++){ put(sx, D); var dd=dist(A, Pb), inside=Math.abs(Pb.cx-A.cx)<A.w/2 && Math.abs(Pb.cy-A.cy)<A.h/2; if(!inside && dd>=want) break; D+=Math.max(4, want-(inside?0:dd)); } };
+      go(1); if(Pb.x+Pb.w>W*.98) go(-1); }
+    P.push(Pb); });
+  items.forEach(function(b, q){ if(b.k!=='b' || !b.lk || !P[q]) return; for(var r=q-1;r>=0;r--){ if(items[r].k!=='b') continue; if(P[r] && items[r].i===b.i-1) necks.push([P[r], P[q], b.hide||items[r].hide]); break; } });
+  var run=function(ph){ items.forEach(function(b, q){ if(P[q]) bubDraw(g, b, W, H, y0, fz, {ph:ph, P:P[q], ed:ed}); }); }, nk=function(md){ necks.forEach(function(n){ g.save(); if(n[2]) g.globalAlpha=.3; bubNeck(g, n[0], n[1], md); g.restore(); }); };
+  run('st'); nk('st'); run('fl'); nk('fl'); run('tx');
+  var out=[]; items.forEach(function(b, q){ if(!P[q]) return; var s=!!(opt.isSel && opt.isSel(b)); out.push({b:b, box:bubDraw(g, b, W, H, y0, fz, {ph:'sel', P:P[q], ed:ed, sel:s}), sel:s}); }); return out; }
+var FX={on:false}, FXS=null, FXB={}, FXU=[], fxInp=0, fxSv=0;
+function fxSt(c, b){ if(b.k==='b'){ c.bs=c.bs||[]; return c.bs[b.i]=c.bs[b.i]||{}; } if(b.k==='n') return c.ns=c.ns||{}; return c.fxt[b.j]; }
+function fxPush(cs){ FXU.push(cs.map(function(c){ return {n:c.n, s:JSON.stringify({bp:c.bp, bs:c.bs, np:c.np, ns:c.ns, fxt:c.fxt})}; })); if(FXU.length>60) FXU.shift(); }
+function fxUndo(){ var u=FXU.pop(); if(!u) return stat('되돌릴 것이 없다'); u.forEach(function(e){ var c=B.cuts[e.n-1], o=JSON.parse(e.s); if(!c) return; ['bp','bs','np','ns','fxt'].forEach(function(k){ if(o[k]==null) delete c[k]; else c[k]=o[k]; }); fxPaint(e.n); }); save(); if(FXS && !fxSelItem()) FXS=null; fxPanel(); stat('되돌렸다'); }
+function fxStyles(){ try{ return JSON.parse(localStorage.getItem('fxStyles')||'[]')||[]; }catch(e){ return []; } }
+function fxPaint(n){ var d=document.querySelector('#ct-fx .fx-cut[data-n="'+n+'"]'), c=B&&B.cuts[n-1]; if(!d||!c) return; var cv=d.querySelector('canvas.fx-ov'); if(!cv) return;
+  var Hc=Math.round(800*fxRatio(c)), y0=Math.round(Hc*.6), TH=Math.round(Hc*2.2); if(cv.width!==800 || cv.height!==TH){ cv.width=800; cv.height=TH; } var g=cv.getContext('2d'); g.clearRect(0, 0, 800, TH);
+  var fz=(B.fz||100)/100, L=bubDrawAll(g, fxBubbles(c), 800, Hc, y0, fz, {ed:1, isSel:function(b){ return !!(FXS && FXS.n===n && FXS.k===b.k && (b.k==='n' || (b.k==='b'?FXS.i===b.i:FXS.j===b.j))); }});
+  FXB[n]={L:L, y0:y0, Hc:Hc, TH:TH}; }
+function fxPaintAll(){ document.querySelectorAll('#ct-fx .fx-cut').forEach(function(d){ fxPaint(+d.dataset.n); }); }
+function fxPt(n, e){ var d=document.querySelector('#ct-fx .fx-cut[data-n="'+n+'"]'), cv=d&&d.querySelector('canvas.fx-ov'), I=FXB[n]; if(!cv||!I) return null; var r=cv.getBoundingClientRect(); return {x:(e.clientX-r.left)/r.width*800, y:(e.clientY-r.top)/r.height*I.TH, out:e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom}; }
+function fxSelItem(){ if(!FXS) return null; var I=FXB[FXS.n]; return I?(I.L.filter(function(it){ return it.sel; })[0]||null):null; }
+function fxHit(e){ var ds=[].slice.call(document.querySelectorAll('#ct-fx .fx-cut'));
+  if(FXS){ var it=fxSelItem(), p0=it&&fxPt(FXS.n, e); if(it && p0 && !p0.out){ var bx=it.box; if(bx.tip && Math.hypot(p0.x-bx.tip[0], p0.y-bx.tip[1])<26) return {n:FXS.n, it:it, mode:'tail', p:p0}; if(Math.abs(p0.x-(bx.x+bx.w+5))<22 && Math.abs(p0.y-(bx.y+bx.h+5))<22) return {n:FXS.n, it:it, mode:'size', p:p0}; } }
+  for(var q=ds.length-1;q>=0;q--){ var n=+ds[q].dataset.n, I=FXB[n], p=I&&fxPt(n, e); if(!p||p.out) continue;
+    for(var m=I.L.length-1;m>=0;m--){ var b=I.L[m].box; if(p.x>=b.x-8 && p.x<=b.x+b.w+8 && p.y>=b.y-8 && p.y<=b.y+b.h+8) return {n:n, it:I.L[m], mode:'move', p:p}; } }
+  return null; }
+function fxRender(){ var box=document.getElementById('ct-fx'); if(!box||!B||!B.cuts) return; var cuts=B.cuts.filter(function(c){ return c.scr||c.art; }); FXS=null;
+  box.innerHTML='<div class="fx-bar"><label>글자 크기(전체) <input type="range" min="70" max="160" step="5" value="'+(B.fz||100)+'" data-fx="fz"></label><button class="chip" type="button" data-fx="undo">↶ 되돌리기</button><button class="chip" type="button" data-fx="reset">말풍선 자동 위치로</button><button class="chip" type="button" data-fx="stylereset">모양·글자 원래대로</button><button class="chip" type="button" data-fx="sizereset">컷 크기 원래대로</button></div><div class="fx-strip"></div>'+
+    '<p class="small">말풍선·나레이션·글자를 누르면 아래에 편집 상자가 열린다. 끌어서 옮기고(컷 밖 간격에도 놓인다), 고른 풍선의 ● 꼬리 끝과 ■ 모서리를 끌어 꼬리 방향·폭을 바꾼다. 컷의 「＋글자」로 효과음을 넣는다. 컷 아래 ⇕로 컷 높이, 「간격」으로 다음 컷과의 거리.</p><div class="fx-pan" id="fx-pan"></div>';
+  var st=box.querySelector('.fx-strip'), W=st.clientWidth||360;
   cuts.forEach(function(c,i){ var gap=fxGap(c, cuts[i-1]), d=document.createElement('div'); d.className='fx-cut'; d.dataset.n=c.n; d.style.marginTop=(gap*W/800)+'px'; d.style.aspectRatio=String(1/fxRatio(c));
-    d.innerHTML='<span class="fx-num">'+c.n+'</span><span class="fx-gap"><select data-fxg="'+c.n+'" aria-label="'+c.n+'번 컷 앞 간격">'+[['','간격 자동'],['8','붙임'],['60','보통'],['140','여백'],['260','긴 여백']].map(function(o){ return '<option value="'+o[0]+'"'+(String(c.gpx==null?'':c.gpx)===o[0]?' selected':'')+'>'+o[1]+'</option>'; }).join('')+'</select></span><span class="fx-h" data-fxh="'+c.n+'" title="끌어서 컷 높이">⇕</span>';
-    fxBubbles(c).forEach(function(b){ var e=document.createElement('span'); e.className='fx-b'+(b.k==='n'?' fx-n':'')+(b.think?' th':''); e.textContent=b.text; e.style.left=b.x+'%'; e.style.top=b.y+'%'; e.dataset.k=b.k; if(b.i!=null) e.dataset.i=b.i; d.appendChild(e); });
-    st.appendChild(d);
+    d.innerHTML='<span class="fx-num">'+c.n+'</span><span class="fx-gap"><select data-fxg="'+c.n+'" aria-label="'+c.n+'번 컷 앞 간격">'+[['','간격 자동'],['8','붙임'],['60','보통'],['140','여백'],['260','긴 여백']].map(function(o){ return '<option value="'+o[0]+'"'+(String(c.gpx==null?'':c.gpx)===o[0]?' selected':'')+'>'+o[1]+'</option>'; }).join('')+'</select></span><span class="fx-h" data-fxh="'+c.n+'" title="끌어서 컷 높이">⇕</span><button type="button" class="fx-add" data-fxadd="'+c.n+'">＋글자</button><canvas class="fx-ov" aria-hidden="true"></canvas>';
+    st.appendChild(d); fxPaint(c.n);
     cutImg(c, 800).then(function(cv){ var im=document.createElement('img'); im.alt=c.n+'번 컷'; im.src=cv.toDataURL('image/jpeg',.82); d.insertBefore(im, d.firstChild); }); });
-  fxWire(st); }
+  fxWire(st); fxPanel(); }
 function fxWire(st){ var drag=null;
-  st.addEventListener('pointerdown', function(e){ var b=e.target.closest('.fx-b'), h=e.target.closest('.fx-h'); if(!b&&!h) return; e.preventDefault(); var cut=e.target.closest('.fx-cut'), r=cut.getBoundingClientRect();
-    drag={b:b, h:h, cut:cut, r:r, sx:e.clientX, sy:e.clientY, x0:b?parseFloat(b.style.left):0, y0:b?parseFloat(b.style.top):0, h0:r.height}; try{ st.setPointerCapture(e.pointerId); }catch(er){} });
-  st.addEventListener('pointermove', function(e){ if(!drag) return; var dx=e.clientX-drag.sx, dy=e.clientY-drag.sy;
-    if(drag.b){ drag.b.style.left=Math.max(-10,Math.min(95,drag.x0+dx/drag.r.width*100))+'%'; drag.b.style.top=Math.max(-60,Math.min(150,drag.y0+dy/drag.r.height*100))+'%'; }
-    if(drag.h){ var nh=Math.max(drag.r.width*.25, Math.min(drag.r.width*2.2, drag.h0+dy)); drag.cut.style.aspectRatio=String(drag.r.width/nh); } });
-  var up=function(){ if(!drag) return; var c=B.cuts[+drag.cut.dataset.n-1];
-    if(drag.b){ var x=parseFloat(drag.b.style.left), y=parseFloat(drag.b.style.top); if(drag.b.dataset.k==='n') c.np={x:x,y:y}; else { c.bp=c.bp||[]; c.bp[+drag.b.dataset.i]={x:x,y:y}; } }
-    if(drag.h){ var rr=drag.cut.getBoundingClientRect(); c.fr=Math.round(rr.height/rr.width*100)/100; }
-    drag=null; save(); };
+  st.addEventListener('touchstart', function(e){ var t=e.touches&&e.touches[0]; if(!t || e.target.closest('select,button')) return; if(e.target.closest('.fx-h') || fxHit(t)) e.preventDefault(); }, {passive:false});   // 풍선을 끌 때 화면이 같이 밀리지 않게
+  st.addEventListener('pointerdown', function(e){ if(e.target.closest('select,button,.fx-gap')) return; var hh=e.target.closest('.fx-h');
+    if(hh){ e.preventDefault(); var cut=hh.closest('.fx-cut'), r=cut.getBoundingClientRect(); drag={h:1, cut:cut, r:r, sy:e.clientY, h0:r.height}; try{ st.setPointerCapture(e.pointerId); }catch(er){} return; }
+    var hit=fxHit(e), prev=FXS&&FXS.n; if(!hit){ if(FXS){ FXS=null; fxPaint(prev); fxPanel(); } return; }
+    e.preventDefault(); var c=B.cuts[hit.n-1], b=hit.it.b; FXS={n:hit.n, k:b.k, i:b.i, j:b.j}; if(prev && prev!==hit.n) fxPaint(prev);
+    var fol=[]; if(b.k==='b' && hit.mode==='move'){ var LL=FXB[hit.n].L.map(function(q){ return q.b; }).filter(function(q){ return q.k==='b'; }); for(var fi=b.i+1;fi<LL.length && LL[fi] && LL[fi].lk;fi++) fol.push({i:LL[fi].i, x0:LL[fi].x, y0:LL[fi].y}); }   // 이어진 뒤 풍선은 같이 옮긴다
+    fxPush([c]); fxInp=0; drag={hit:hit, c:c, sx:hit.p.x, sy:hit.p.y, x0:b.x, y0:b.y, box:hit.it.box, fs0:b.fs||1, moved:0, fol:fol}; fxPaint(hit.n); fxPanel(); try{ st.setPointerCapture(e.pointerId); }catch(er){} });
+  st.addEventListener('pointermove', function(e){ if(!drag) return;
+    if(drag.h){ var nh=Math.max(drag.r.width*.25, Math.min(drag.r.width*2.2, drag.h0+e.clientY-drag.sy)); drag.cut.style.aspectRatio=String(drag.r.width/nh); return; }
+    var n=drag.hit.n, I=FXB[n], p=fxPt(n, e), c=drag.c, b=drag.hit.it.b; if(!p) return; var dx=p.x-drag.sx, dy=p.y-drag.sy; if(Math.abs(dx)+Math.abs(dy)>3) drag.moved=1; if(!drag.moved) return;
+    var md=drag.hit.mode, r1=function(v){ return Math.round(v*10)/10; };
+    if(md==='move'){ var nx=r1(Math.max(-10, Math.min(95, drag.x0+dx/8))), ny=r1(Math.max(-60, Math.min(150, drag.y0+dy/I.Hc*100)));
+      if(b.k==='b'){ c.bp=c.bp||[]; c.bp[b.i]={x:nx, y:ny}; (drag.fol||[]).forEach(function(q){ c.bp[q.i]={x:r1(Math.max(-10, Math.min(95, q.x0+(nx-drag.x0)))), y:r1(Math.max(-60, Math.min(150, q.y0+(ny-drag.y0))))}; }); } else if(b.k==='n') c.np={x:nx, y:ny}; else { c.fxt[b.j].x=nx; c.fxt[b.j].y=ny; } }
+    else if(md==='tail') fxSt(c, b).tail={x:r1(p.x/8), y:r1((p.y-I.y0)/I.Hc*100)};
+    else if(md==='size'){ if(b.k==='t') c.fxt[b.j].fs=r1(Math.max(.6, Math.min(6, drag.fs0*(1+dx/Math.max(40, drag.box.w))))); else fxSt(c, b).w=Math.max(8, Math.min(98, Math.round((p.x-drag.box.x)/8))); }
+    fxPaint(n); });
+  var up=function(){ if(!drag) return; var d=drag; drag=null;
+    if(d.h){ var c=B.cuts[+d.cut.dataset.n-1], rr=d.cut.getBoundingClientRect(); c.fr=Math.round(rr.height/rr.width*100)/100; save(); fxPaint(c.n); return; }
+    if(!d.moved) FXU.pop(); else { save(); fxPanel(); } };   // 누르기만 했으면 되돌리기 칸을 남기지 않는다
   st.addEventListener('pointerup', up); st.addEventListener('pointercancel', up); }
+function fxPanel(){ var P=document.getElementById('fx-pan'); if(!P) return; var it=fxSelItem();
+  if(!it){ P.classList.remove('on'); P.innerHTML='<p class="small">말풍선·나레이션·글자를 누르면 여기에서 모양·글자·꼬리를 바꾼다.</p>'; return; }
+  var b=it.b, c=B.cuts[FXS.n-1], T=b.k==='t', ch=function(k, v, lab, on){ return '<button type="button" class="chip'+(on?' on':'')+'" data-fp="'+k+'" data-v="'+v+'" aria-pressed="'+!!on+'">'+lab+'</button>'; },
+    rg=function(k, lab, mn, mx, stp, val){ return '<label>'+lab+' <input type="range" data-fp="'+k+'" min="'+mn+'" max="'+mx+'" step="'+stp+'" value="'+val+'"></label>'; };
+  var h='<div class="fx-pr"><b>'+c.n+'번 컷 · '+(b.k==='b'?'대사 '+(b.i+1)+(b.who?' ('+cesc(b.who)+')':''):b.k==='n'?'나레이션':'글자·효과음')+'</b><span class="fx-sp"></span>'+ch('undo',1,'↶',0)+ch('close',1,'닫기',0)+'</div>'+
+    '<textarea data-fp="t" rows="2" aria-label="글 (줄바꿈 가능)">'+cesc(b.text)+'</textarea>';
+  if(!T) h+='<div class="fx-pr">'+BUB_SH.map(function(s){ return ch('sh', s[0], s[1], b.sh===s[0]); }).join('')+'</div>';
+  h+='<div class="fx-pr">'+rg('fs','글자 크기',.6,T?6:2.4,.1,b.fs||1)+(T?rg('rot','회전',-45,45,1,b.rot||0):rg('w','폭 (0=자동)',0,98,1,b.w||0))+'</div>';
+  var skOn=b.sk==null?!!BUB_SKETCH[b.sh]:!!b.sk;
+  h+='<div class="fx-pr">'+ch('b', b.b?0:1, '굵게', b.b)+ch('v', b.v?0:1, '세로쓰기', b.v)+(T?'':ch('al','l','왼쪽',b.al==='l')+ch('al','c','가운데',b.al==='c')+ch('al','r','오른쪽',b.al==='r'))+'</div>';
+  h+='<div class="fx-pr">'+(T?'':ch('sk', skOn?0:1, '손그림 선', skOn))+ch('sd', b.sd?0:1, '그림자', b.sd)+'</div>';
+  if(b.k==='b' && b.i>0) h+='<div class="fx-pr">'+ch('ln', b.lk?0:1, '🔗 앞 풍선과 잇기', b.lk)+'<span class="small">'+(b.ln==null?'자동(같은 사람이 이어 말하면 잇는다)':'직접 정함')+'</span></div>';
+  if(b.k==='b') h+='<div class="fx-pr"><span class="small">꼬리</span>'+ch('tail','auto','자동',b.tail==='auto')+ch('tail','none','없음',b.tail==='none')+'<span class="small">'+(typeof b.tail==='object'?'직접 정함 · ':'')+'● 끝을 끌어 방향을 바꾼다</span></div>';
+  if(T) h+='<div class="fx-pr"><span class="small">색</span>'+['#111111','#ffffff','#d62828','#1d4ed8','#f59e0b'].map(function(cl){ return '<button type="button" class="fx-sw'+(b.col===cl?' on':'')+'" data-fp="col" data-v="'+cl+'" style="background:'+cl+'" aria-label="색 '+cl+'"></button>'; }).join('')+'<input type="color" data-fp="colx" value="'+cesc(b.col)+'" aria-label="다른 색">'+ch('ol', b.ol?0:1, '외곽선', b.ol)+'</div>';
+  h+='<div class="fx-pr">'+(T?ch('dup',1,'복제',0)+ch('del',1,'지우기',0):ch('hide', b.hide?0:1, '숨기기', b.hide)+(b.k==='b'?ch('scene',1,'이 모양을 장면 전체에',0):'')+ch('reset',1,'원래대로',0))+ch('ssave',1,'스타일 저장',0)+fxStyles().map(function(s, q){ return ch('sload', q, '스타일 '+(q+1), 0); }).join('')+'</div>';
+  P.innerHTML=h; P.classList.add('on'); }
+document.addEventListener('input', function(e){ var t=e.target, k=t.dataset&&t.dataset.fp; if(!k || !FXS || !B) return; var c=B.cuts[FXS.n-1], it=fxSelItem(); if(!c||!it) return; var s=fxSt(c, it.b);
+  if(!fxInp){ fxPush([c]); fxInp=1; }   // 한 번 고치는 동안은 되돌리기 한 칸
+  if(k==='t') s.t=t.value; else if(k==='fs') s.fs=+t.value; else if(k==='w'){ if(+t.value) s.w=+t.value; else delete s.w; } else if(k==='rot') s.rot=+t.value; else if(k==='colx') s.col=t.value; else return;
+  fxPaint(FXS.n); clearTimeout(fxSv); fxSv=setTimeout(save, 400); });
+document.addEventListener('change', function(e){ if(e.target.dataset && e.target.dataset.fp) fxInp=0; });
+document.addEventListener('click', function(e){ var t=e.target.closest&&e.target.closest('[data-fp],[data-fxadd]'); if(!t || !B) return; fxInp=0;
+  if(t.dataset.fxadd){ var c0=B.cuts[+t.dataset.fxadd-1], p0=FXS&&FXS.n; if(!c0) return; fxPush([c0]); c0.fxt=(c0.fxt||[]).concat([{t:'쾅!', x:38, y:30, fs:2.4, rot:-8, col:'#111111', ol:1}]); FXS={n:c0.n, k:'t', j:c0.fxt.length-1}; save(); if(p0 && p0!==c0.n) fxPaint(p0); fxPaint(c0.n); fxPanel(); return; }
+  var k=t.dataset.fp, v=t.dataset.v; if(k==='undo'){ fxUndo(); return; } if(!FXS) return; if(k==='close'){ var n0=FXS.n; FXS=null; fxPaint(n0); fxPanel(); return; }
+  var c=B.cuts[FXS.n-1], it=fxSelItem(); if(!c||!it) return; var b=it.b, s;
+  if(k==='ssave'){ var SL=fxStyles(); SL.unshift(b.k==='t'?{fs:b.fs, b:b.b, v:b.v, col:b.col, ol:b.ol, rot:b.rot, sd:b.sd?1:0}:{sh:b.sh, fs:b.fs, b:b.b, v:b.v, al:b.al, sk:b.sk, sd:b.sd?1:0}); try{ localStorage.setItem('fxStyles', JSON.stringify(SL.slice(0,6))); }catch(er){} fxPanel(); stat('스타일을 저장했다 — 다른 풍선을 고르고 「스타일 n」을 누르면 같은 모양이 된다'); return; }
+  if(k==='scene'){ var sc=null; try{ sc=sceneOfCut(c.n); }catch(er){} var cs=B.cuts.slice((sc?sc.a:c.n)-1, sc?sc.b:c.n), pk={sh:b.sh, fs:b.fs, b:b.b, v:b.v, al:b.al, sk:b.sk, sd:b.sd?1:0}, cnt=0; fxPush(cs);
+    cs.forEach(function(c2){ fxBubbles(c2).forEach(function(b2){ if(b2.k!=='b') return; Object.assign(fxSt(c2, b2), pk); cnt++; }); fxPaint(c2.n); }); save(); stat('이 장면 풍선 '+cnt+'개를 같은 모양으로 맞췄다'); return; }
+  fxPush([c]);
+  if(k==='del'){ c.fxt.splice(b.j, 1); if(!c.fxt.length) delete c.fxt; FXS=null; }
+  else if(k==='dup'){ var o=Object.assign({}, c.fxt[b.j]); o.x=Math.min(90, (o.x||38)+4); o.y=(o.y||30)+6; c.fxt.push(o); FXS.j=c.fxt.length-1; }
+  else if(k==='reset'){ if(b.k==='b'){ if(c.bs) c.bs[b.i]=null; if(c.bp) c.bp[b.i]=null; } else { delete c.ns; delete c.np; } }
+  else { s=fxSt(c, b);
+    if(k==='sload'){ var sv=fxStyles()[+v]; if(sv) Object.keys(sv).forEach(function(q){ if(sv[q]==null) return; if(b.k==='t' && /^(sh|al)$/.test(q)) return; if(b.k!=='t' && /^(col|ol|rot)$/.test(q)) return; s[q]=sv[q]; }); }
+    else if(k==='sh') s.sh=v; else if(k==='al') s.al=v; else if(k==='tail') s.tail=v; else if(k==='col') s.col=v;
+    else if(k==='b' || k==='v' || k==='hide' || k==='ol' || k==='sk' || k==='sd' || k==='ln') s[k]=+v; }
+  save(); fxPaint(c.n); fxPanel(); });
 document.addEventListener('change', function(e){ var t=e.target; if(t.dataset && t.dataset.fxg && B){ var c=B.cuts[+t.dataset.fxg-1]; if(t.value==='') delete c.gpx; else c.gpx=+t.value; save(); fxRender(); } });
-document.addEventListener('input', function(e){ var t=e.target; if(t.dataset && t.dataset.fx==='fz' && B){ B.fz=+t.value; save(); var st=document.querySelector('#ct-fx .fx-strip'); if(st) st.style.setProperty('--fx-f', ((st.clientWidth||360)*20/800*B.fz/100)+'px'); } });
+document.addEventListener('input', function(e){ var t=e.target; if(t.dataset && t.dataset.fx==='fz' && B){ B.fz=+t.value; save(); fxPaintAll(); } });
 document.addEventListener('click', function(e){ var t=e.target; if(!t.dataset||!B) return;
-  if(t.dataset.fx==='reset'){ B.cuts.forEach(function(c){ delete c.bp; delete c.np; }); save(); fxRender(); }
+  if(t.dataset.fx==='undo'){ fxUndo(); return; }
+  if(t.dataset.fx==='reset'){ fxPush(B.cuts); B.cuts.forEach(function(c){ delete c.bp; delete c.np; }); save(); fxRender(); }
+  if(t.dataset.fx==='stylereset'){ fxPush(B.cuts); B.cuts.forEach(function(c){ delete c.bs; delete c.ns; }); save(); fxRender(); }
   if(t.dataset.fx==='sizereset'){ B.cuts.forEach(function(c){ delete c.fr; delete c.gpx; }); save(); fxRender(); }
   if(t.id==='ct-fxopen'){ FX.on=!FX.on; var box=document.getElementById('ct-fx'); box.hidden=!FX.on; t.textContent=FX.on?'최종 편집 닫기':'✏ 최종 편집 열기 (말풍선 위치·컷 크기)'; if(FX.on) fxRender(); } });
-// 최종 편집 기준으로 완성 콘티 그리기
-function drawFx(g, c, W, H, y0, fz){ fxBubbles(c).forEach(function(b){ var f=Math.round(22*fz), x=W*b.x/100, y=y0+H*b.y/100, mw=W*(b.k==='n'?.7:.45);
-  g.font=(b.k==='n'?'':'bold ')+f+'px sans-serif'; var tw=g.measureText(b.text).width+f*1.6, bw=Math.min(mw, tw), lines=1, tmp=document.createElement('canvas').getContext('2d'); tmp.font=g.font; (function(){ var line='', n=1; String(b.text).split('').forEach(function(ch){ var tt=line+ch; if(tmp.measureText(tt).width>bw-f*1.6+6 && line){ n++; line=ch; } else line=tt; }); lines=n; })(); var bh=lines*f*1.3+f*.8;
-  g.save(); if(b.k==='n'){ g.fillStyle='#fffbe6'; g.fillRect(x,y,bw,bh); g.strokeStyle='#111'; g.lineWidth=1.5; g.strokeRect(x,y,bw,bh); }
-  else { g.fillStyle='#fff'; g.strokeStyle='#111'; g.lineWidth=2.5; if(b.think) g.setLineDash([6,5]); g.beginPath(); if(g.roundRect) g.roundRect(x,y,bw,bh,bh/2); else g.rect(x,y,bw,bh); g.fill(); g.stroke(); }
-  g.restore(); g.fillStyle='#111'; wrapText(g, b.text, x+f*.8, y+f*1.25, bw-f*1.6+6, f*1.3); }); }
+// 최종 편집 기준으로 완성 콘티 그리기 — 편집 화면과 같은 bubDraw
+function drawFx(g, c, W, H, y0, fz){ bubDrawAll(g, fxBubbles(c), W, H, y0, fz); }
 function buildStrip(withText){ var W=800, cuts=B.cuts.filter(function(c){ return c.scr || c.art; }), fz=(B.fz||100)/100;
   return Promise.all(cuts.map(function(c){ return cutImg(c, W); })).then(function(cs){ var hs=cuts.map(function(c){ return Math.round(W*fxRatio(c)); }), gaps=cuts.map(function(c,i){ return fxGap(c, cuts[i-1]); });
     var H=hs.reduce(function(a,h,i){ return a+h+gaps[i]; },0)+80, out=document.createElement('canvas'); out.width=W; out.height=H; var g=out.getContext('2d'); g.fillStyle='#fff'; g.fillRect(0,0,W,H); var y=0, ys=[];
