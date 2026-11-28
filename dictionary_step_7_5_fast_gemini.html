@@ -25607,7 +25607,7 @@ var GROUPS=['기획','이야기','화 작업','그리기'], ROLES=['주인공','
 var KEY='seqWork', LKEY='seqWorks', BUSY='';
 function E(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 function rid(){ return 'sq'+Date.now().toString(36)+Math.random().toString(36).slice(2,5); }
-function blank(){ return {id:rid(), name:'새 만화', step:0, genre:'', idea:'', homage:'', found:null, picks:[], rough:'', cast:['주인공','히로인','조연','악역'].map(function(r){ return {role:r, name:'', lack:'', pers:'', look:'', goal:'', rel:''}; }),
+function blank(){ return {id:rid(), name:'새 만화', step:0, genre:'', idea:'', homage:'', found:null, picks:[], rough:'', cast:['주인공','히로인','조연','악역'].map(function(r){ return {role:r, name:'', age:'', build:'', gender:'', lack:'', pers:'', look:'', goal:'', rel:''}; }),
   line:{qs:[], ans:[], logline:'', start:'', turn:'', crisis:'', climax:'', end:''}, serial:{n:20, arcs:[]}, adv:null, eps:[], cur:0, at:Date.now()}; }
 function J(s, d){ try{ var v=JSON.parse(s); return v==null?d:v; }catch(e){ return d; } }
 function list(){ var L=J(localStorage.getItem(LKEY)||'{}', {}); return (L&&typeof L==='object')?L:{}; }
@@ -25637,7 +25637,7 @@ var SYS='너는 한국 웹툰·만화 작가를 돕는 기획 편집자다. 작�
 function ctx(upto){ var o=[]; if(P.genre) o.push('장르: '+P.genre); if(P.idea) o.push('아이디어: '+P.idea); if(P.homage) o.push('오마주할 작품: '+P.homage);
   if(P.picks.length) o.push('고른 재료: '+P.picks.map(function(p){ return p.t+' 「'+p.n+'」'; }).join(', '));
   if(P.rough) o.push('대략 아이디어: '+P.rough);
-  var cs=P.cast.filter(function(c){ return c.name||c.lack||c.pers; }); if(cs.length && upto>3) o.push('캐릭터:\n'+cs.map(function(c){ return '- '+c.role+' '+(c.name||'(이름 미정)')+': 결핍 '+(c.lack||'-')+' / 성격 '+(c.pers||'-')+' / 외모 '+(c.look||'-')+' / 목표 '+(c.goal||'-')+(c.rel?' / 관계 '+c.rel:''); }).join('\n'));
+  var cs=P.cast.filter(function(c){ return c.name||c.lack||c.pers; }); if(cs.length && upto>3) o.push('캐릭터:\n'+cs.map(function(c){ return '- '+c.role+' '+(c.name||'(이름 미정)')+' / 성별 '+(c.gender||'-')+' / 나이 '+(c.age||'-')+' / 체격 '+(c.build||'-')+': 결핍 '+(c.lack||'-')+' / 성격 '+(c.pers||'-')+' / 외모 '+(c.look||'-')+' / 목표 '+(c.goal||'-')+(c.rel?' / 관계 '+c.rel:''); }).join('\n'));
   var L=P.line; if(upto>4 && (L.logline||L.start)) o.push('스토리라인: '+[L.logline, '시작 '+L.start, '전환 '+L.turn, '위기 '+L.crisis, '절정 '+L.climax, '결말 '+L.end].join(' / '));
   if(upto>5 && P.serial.arcs.length) o.push('연재 '+P.serial.n+'화, 아크: '+P.serial.arcs.map(function(a){ return a.name+'('+a.from+'~'+a.to+'화): '+a.goal; }).join(' / '));
   if(upto>6 && P.adv && P.adv.use) o.push('쓰기로 한 클리셰·연출: '+P.adv.use.filter(function(u){ return u.on!==false; }).map(function(u){ return u.n+'('+u.arc+')'; }).join(', '));
@@ -25676,7 +25676,7 @@ idea:function(){ var F=P.found;
     (F?'<p class="small">'+E(F.note||'')+'</p><div class="sq-cards">'+F.items.map(function(x,i){ var on=P.picks.some(function(p){ return p.n===x.n&&p.t===x.t; });
       return '<div class="sq-card'+(on?' on':'')+'"><label><input type="checkbox" data-pick="'+i+'"'+(on?' checked':'')+'> <span class="small">'+E(x.t)+'</span> <b>'+E(x.n)+'</b></label><p class="small">'+E(x.why||x.d||'')+'</p>'+
         (favKey(x.t,x.n)!==x.n?'<button type="button" class="chip sq-star" data-star="'+i+'">'+((typeof FAV!=='undefined'&&FAV[favKey(x.t,x.n)])?'★':'☆')+' 즐겨찾기</button>':'')+'</div>'; }).join('')+'</div>'+
-      (F.chars&&F.chars.length?'<h4>인물 재료</h4><div class="sq-cards">'+F.chars.map(function(c,i){ return '<div class="sq-card"><b>'+E(c.role)+'</b><p class="small">결핍 '+E(c.lack)+' · 성격 '+E(c.pers)+' · 외모 '+E(c.look)+' · 목표 '+E(c.goal)+'</p><button type="button" class="chip" data-chuse="'+i+'">캐릭터에 넣기</button></div>'; }).join('')+'</div>':'')+
+      (F.chars&&F.chars.length?'<h4>인물 재료</h4><div class="sq-cards">'+F.chars.map(function(c,i){ return '<div class="sq-card"><b>'+E(c.role)+'</b><p class="small">'+[c.gender&&('성별 '+E(c.gender)), c.age&&('나이 '+E(c.age)), c.build&&('체격 '+E(c.build))].filter(Boolean).join(' · ')+([c.gender,c.age,c.build].some(Boolean)?' · ':'')+'결핍 '+E(c.lack)+' · 성격 '+E(c.pers)+' · 외모 '+E(c.look)+' · 목표 '+E(c.goal)+'</p><button type="button" class="chip" data-chuse="'+i+'">캐릭터에 넣기</button></div>'; }).join('')+'</div>':'')+
       (F.tech&&F.tech.length?'<h4>연출 기법</h4><ul class="small">'+F.tech.map(function(t){ return '<li>'+E(t)+'</li>'; }).join('')+'</ul>':''):''); },
 rough:function(){ var R=P.rnd;
   return ta('rough', P.rough, 6, '예) 기억을 팔아 돈을 버는 소년이, 판 기억 속에 자신이 잊은 첫사랑이 있었다는 걸 알게 된다…')+
@@ -25690,7 +25690,7 @@ cast:function(){
       aiBtn('ch'+i,'AI 제안')+'<button type="button" class="chip" data-a="sheet'+i+'">🖌 GPT 시트</button><label class="chip sv-up">'+(art?'시트 바꾸기':'📥 시트 넣기')+'<input type="file" accept="image/*" hidden data-art="'+i+'"></label>'+
       '<button type="button" class="chip" data-a="tocast'+i+'">등장인물에 저장</button><button type="button" class="chip" data-a="rm'+i+'">빼기</button></div>'+
       (art?'<img class="sq-art" alt="'+E(c.name)+' 시트" src="'+art+'">':'')+
-      F('name','이름')+F('lack','결핍','무엇이 비어 있나')+F('pers','성격')+F('look','외모')+F('goal','목표')+F('rel','관계','다른 인물과')+'</div>'; }).join('')+'</div>'+
+      F('name','이름')+F('gender','성별','예) 여')+F('age','나이','예) 17')+F('build','체격','예) 마른 편, 165cm')+F('lack','결핍','무엇이 비어 있나')+F('pers','성격')+F('look','외모')+F('goal','목표')+F('rel','관계','다른 인물과')+'</div>'; }).join('')+'</div>'+
     '<div class="filterbar"><button type="button" class="chip" data-a="addch">＋ 인물 추가</button></div>'; },
 line:function(){ var L=P.line;
   return '<p class="small">AI가 이야기의 갈림길을 질문으로 묻는다. 답을 적어야 스토리라인을 만든다 — 결정은 작가가.</p><div class="filterbar">'+aiBtn('qs','질문 받기')+'</div>'+
@@ -25751,7 +25751,7 @@ root.addEventListener('click', function(e){ var b=e.target.closest('button'); if
   if(d.genre){ P.genre=d.genre; save(); render(); return; }
   if(d.star!=null && typeof favToggle==='function'){ var x=P.found.items[+d.star]; favToggle(favKey(x.t,x.n), '순서대로만화작업'); render(); return; }
   if(d.chuse!=null){ var c=P.found.chars[+d.chuse], slot=P.cast.filter(function(q){ return q.role===c.role && !q.lack && !q.pers; })[0];
-    if(!slot){ slot={role:c.role||'조연', name:'', lack:'', pers:'', look:'', goal:'', rel:''}; P.cast.push(slot); } ['lack','pers','look','goal'].forEach(function(k){ if(!slot[k]) slot[k]=c[k]||''; }); save(); msg('「'+slot.role+'」 칸에 넣었어요.'); return; }
+    if(!slot){ slot={role:c.role||'조연', name:'', age:'', build:'', gender:'', lack:'', pers:'', look:'', goal:'', rel:''}; P.cast.push(slot); } ['gender','age','build','lack','pers','look','goal'].forEach(function(k){ if(!slot[k]) slot[k]=c[k]||''; }); save(); msg('「'+slot.role+'」 칸에 넣었어요.'); return; }
   if(d.mv!=null){ var i=+d.mv, j=i+(+d.d); if(j<0||j>=P.eps.length) return; var tmp=P.eps[i]; P.eps[i]=P.eps[j]; P.eps[j]=tmp; save(); render(); return; }
   if(d.rmep!=null){ P.eps.splice(+d.rmep,1); P.cur=Math.min(P.cur, Math.max(0,P.eps.length-1)); save(); render(); return; }
   if(d.bg!=null){ var e4=ep(), s=e4.scenes[+d.bg]; copyOpen('Draw ONE background image for a Korean webtoon panel. Place: '+(s.place||'')+(s.time?', time: '+s.time:'')+'. Genre: '+(P.genre||'')+'. No people, no text, no speech bubbles. Clean line art, flat colors, wide shot, eye level. Keep it usable as the same location in many panels.', '배경'); return; }
@@ -25763,23 +25763,23 @@ root.addEventListener('click', function(e){ var b=e.target.closest('button'); if
   if(a==='rnd'){ var g=P.genre, rows=ROWS.filter(function(r){ return !g || String(r[1]).indexOf(g)>-1; }); if(!rows.length) rows=ROWS;
     P.rnd={m:rnd(MOTIFDATA)[0], c:rnd(rows)[0], e:rnd(ENDINGS)[1]}; save(); render(); return; }
   if(a==='rndin'){ var R=P.rnd; P.rough=(P.rough?P.rough+'\n':'')+'소재 「'+R.m+'」에 클리셰 「'+R.c+'」, 끝은 「'+R.e+'」.'; save(); render(); return; }
-  if(a==='addch'){ P.cast.push({role:'조연', name:'', lack:'', pers:'', look:'', goal:'', rel:''}); save(); render(); return; }
+  if(a==='addch'){ P.cast.push({role:'조연', name:'', age:'', build:'', gender:'', lack:'', pers:'', look:'', goal:'', rel:''}); save(); render(); return; }
   if(a==='addep'){ P.eps.push({title:'', sum:'', arc:''}); save(); render(); return; }
   var m;
   if((m=a.match(/^rm(\d+)$/))){ P.cast.splice(+m[1],1); save(); render(); return; }
-  if((m=a.match(/^tocast(\d+)$/))){ var c2=P.cast[+m[1]]; if(!c2.name){ msg('이름을 먼저 적어 주세요.'); return; } var r=window.__castUpsert?window.__castUpsert({name:c2.name, role:c2.role, desc:['결핍 '+c2.lack,'성격 '+c2.pers,'외모 '+c2.look,'목표 '+c2.goal].filter(function(x){ return !/ $/.test(x); }).join(' / ')}):''; msg(r==='new'?'등장인물에 새로 넣었어요.':r==='upd'?'등장인물에 이미 있어 빈 칸만 채웠어요.':'등장인물 페이지를 쓸 수 없어요.'); return; }
-  if((m=a.match(/^sheet(\d+)$/))){ var c3=P.cast[+m[1]]; var q=window.__ctSheetPrompt?window.__ctSheetPrompt({name:c3.name||c3.role, role:c3.role, note:c3.look, sheet:{pers:c3.pers, look:c3.look, fear:'', want:c3.goal}}):'';
-    if(!q) q='Draw ONE image: a character reference sheet for '+(c3.name||c3.role)+'. Appearance: '+c3.look+'. Personality: '+c3.pers+'. TOP ROW: 4 full-body views (front, 3/4, side, back). BOTTOM ROW: 6 face close-ups (neutral, smile, angry, sad, surprised, embarrassed). Korean webtoon style, flat colors, plain white background, no text.';
+  if((m=a.match(/^tocast(\d+)$/))){ var c2=P.cast[+m[1]]; if(!c2.name){ msg('이름을 먼저 적어 주세요.'); return; } var r=window.__castUpsert?window.__castUpsert({name:c2.name, role:c2.role, desc:[c2.gender&&('성별 '+c2.gender),c2.age&&('나이 '+c2.age),c2.build&&('체격 '+c2.build),'결핍 '+c2.lack,'성격 '+c2.pers,'외모 '+c2.look,'목표 '+c2.goal].filter(function(x){ return x && !/ $/.test(x); }).join(' / ')}):''; msg(r==='new'?'등장인물에 새로 넣었어요.':r==='upd'?'등장인물에 이미 있어 빈 칸만 채웠어요.':'등장인물 페이지를 쓸 수 없어요.'); return; }
+  if((m=a.match(/^sheet(\d+)$/))){ var c3=P.cast[+m[1]]; var q=window.__ctSheetPrompt?window.__ctSheetPrompt({name:c3.name||c3.role, role:c3.role, note:[c3.gender, c3.age&&(c3.age+'살'), c3.build, c3.look].filter(Boolean).join(', '), sheet:{pers:c3.pers, look:[c3.gender, c3.age&&(c3.age+'살'), c3.build, c3.look].filter(Boolean).join(', '), fear:'', want:c3.goal}}):'';
+    if(!q) q='Draw ONE image: a character reference sheet for '+(c3.name||c3.role)+'. Appearance: '+[c3.gender, c3.age&&(c3.age+'살'), c3.build, c3.look].filter(Boolean).join(', ')+'. Personality: '+c3.pers+'. TOP ROW: 4 full-body views (front, 3/4, side, back). BOTTOM ROW: 6 face close-ups (neutral, smile, angry, sad, surprised, embarrassed). Korean webtoon style, flat colors, plain white background, no text.';
     copyOpen(q, '캐릭터 시트'); return; }
   if((m=a.match(/^ch(\d+)$/))){ var ci=+m[1], cc=P.cast[ci]; run(a, function(){ var cand=sqFind([cc.role, cc.lack, cc.pers, P.rough, P.idea].join(' ')).filter(function(x){ return x.t==='캐릭터 모티브'; }).slice(0,12);
     return ask(SYS, ctx(3)+'\n\n['+cc.role+'] 칸을 채운다. 이미 적힌 값은 살린다: '+JSON.stringify(cc)+'\n참고할 캐릭터 모티브(사전):\n'+cand.map(function(x){ return '- '+x.n+': '+x.d+' ('+x.m+')'; }).join('\n')+
-      '\n\nJSON만: {"name":"이름","lack":"결핍","pers":"성격","look":"외모(그림으로 그릴 수 있게)","goal":"목표","rel":"다른 인물과 관계"}', 900).then(function(o){ ['name','lack','pers','look','goal','rel'].forEach(function(k){ if(!cc[k] && o[k]) cc[k]=String(o[k]); }); }); }); return; }
+      '\n\nJSON만: {"name":"이름","gender":"성별","age":"나이(숫자나 연령대)","build":"체격(키·몸집)","lack":"결핍","pers":"성격","look":"외모(그림으로 그릴 수 있게)","goal":"목표","rel":"다른 인물과 관계"}', 900).then(function(o){ ['name','gender','age','build','lack','pers','look','goal','rel'].forEach(function(k){ if(!cc[k] && o[k]) cc[k]=String(o[k]); }); }); }); return; }
   if(a==='find') return run(a, function(){
     var pre=(P.homage && typeof webOn==='function' && webOn() && typeof webPlot==='function')?webPlot(P.homage,'작품',P.idea).then(function(t){ return aiIsErr(t)||/찾지 못함/.test(t)?'':t; }):Promise.resolve('');
     return pre.then(function(plot){ var text=[P.genre, P.idea, P.homage, plot].join(' '), cand=sqFind(text);
       if(!cand.length){ P.found={note:'사전에서 가까운 항목을 못 찾았어요. 아이디어를 조금 더 구체적으로 적어 주세요.', items:[], chars:[], tech:[]}; return; }
       return ask(SYS, ctx(1)+(plot?'\n오마주 작품 줄거리(웹): '+plot.slice(0,1200):'')+'\n\n사전 후보(번호. [종류] 이름: 뜻):\n'+cand.map(function(x,i){ return (i+1)+'. ['+x.t+'] '+x.n+': '+String(x.d).slice(0,80); }).join('\n')+
-        '\n\n이 만화에 쓸 만한 후보를 8~12개 고르고 이 이야기에서 어떻게 쓰는지 한 줄씩. 오마주 작품이 있으면 그 작품의 무엇을 빌리고 무엇을 바꿀지 반영. 주요 인물 재료 2~4명(역할·결핍·성격·외모·목표), 연출 기법 2~4개.\nJSON만: {"note":"한두 문장 총평","picks":[{"i":번호,"why":"쓰는 법"}],"chars":[{"role":"주인공","lack":"","pers":"","look":"","goal":""}],"tech":["연출 기법"]}', 2600)
+        '\n\n이 만화에 쓸 만한 후보를 8~12개 고르고 이 이야기에서 어떻게 쓰는지 한 줄씩. 오마주 작품이 있으면 그 작품의 무엇을 빌리고 무엇을 바꿀지 반영. 주요 인물 재료 2~4명(역할·결핍·성격·외모·목표), 연출 기법 2~4개.\nJSON만: {"note":"한두 문장 총평","picks":[{"i":번호,"why":"쓰는 법"}],"chars":[{"role":"주인공","gender":"","age":"","build":"","lack":"","pers":"","look":"","goal":""}],"tech":["연출 기법"]}', 2600)
         .then(function(o){ var items=(o.picks||[]).map(function(p){ var x=cand[(+p.i||0)-1]; return x?{t:x.t, n:x.n, d:x.d, why:p.why}:null; }).filter(Boolean);
           cand.forEach(function(x){ if(!items.some(function(y){ return y.n===x.n&&y.t===x.t; }) && items.length<16) items.push({t:x.t, n:x.n, d:x.d}); });
           P.found={note:o.note||'', items:items, chars:o.chars||[], tech:o.tech||[]}; }); }); });
@@ -25803,12 +25803,12 @@ root.addEventListener('click', function(e){ var b=e.target.closest('button'); if
   if(a==='scenes'){ var e8=ep(); if(!e8.script){ msg('먼저 「대사 글」을 써 주세요.'); return; }
     return run(a, function(){ return ask(SYS, '아래 만화 대본을 장면별로 나눈다. 장면마다 장소·때·나오는 인물 이름·대사 줄(「이름: 대사」 그대로)·화면 요약.\n등장인물: '+P.cast.map(function(c){ return c.name; }).filter(Boolean).join(', ')+'\n\n'+e8.script+'\n\nJSON만: {"scenes":[{"place":"장소","time":"때","who":["이름"],"lines":["이름: 대사"],"what":"화면 요약"}]}', 3600).then(function(o){ e8.scenes=(o.scenes||[]).map(function(s){ var old=(e8.scenes||[]).filter(function(x){ return x.place===s.place && x.art; })[0]; return {place:s.place||'', time:s.time||'', who:s.who||[], lines:s.lines||[], what:s.what||'', art:old?old.art:''}; }); }); }); }
   if(a==='toconti'){ var e9=ep(); if(!e9.script){ msg('먼저 「대사 글」을 써 주세요.'); return; }
-    var names=(e9.scenes||[]).reduce(function(s,x){ return s.concat(x.who||[]); }, []), chars=P.cast.filter(function(c){ return c.name && (!names.length || names.indexOf(c.name)>-1); });
+    var ap=function(c){ return [c.gender, c.age&&(c.age+'살'), c.build, c.look].filter(Boolean).join(', '); }; var names=(e9.scenes||[]).reduce(function(s,x){ return s.concat(x.who||[]); }, []), chars=P.cast.filter(function(c){ return c.name && (!names.length || names.indexOf(c.name)>-1); });
     var lines=e9.script.split('\n').filter(function(l){ return /^[^\[\s][^:：]{0,12}[:：]/.test(l); }).length, total=Math.max(16, Math.min(80, Math.round(lines*1.3)+(e9.scenes||[]).length*2));
     var story=e9.script+((e9.scenes||[]).length?'\n\n[장소]\n'+e9.scenes.map(function(s,i){ return (i+1)+'. '+s.place+(s.time?' · '+s.time:'')+(s.what?' — '+s.what:''); }).join('\n'):'');
     location.hash='#conti';
     setTimeout(function(){ if(!window.__ctFromSeq){ msg('콘티 구성기를 열지 못했어요.'); return; }
-      var id=window.__ctFromSeq({name:(P.name||'만화')+' '+(P.cur+1)+'화', story:story, total:total, chars:chars.map(function(c){ return {name:c.name, role:c.role, note:c.look, sheet:{pers:c.pers, want:c.goal, fear:c.lack, look:c.look, rel:c.rel}, sheetArt:c.art||''}; })});
+      var id=window.__ctFromSeq({name:(P.name||'만화')+' '+(P.cur+1)+'화', story:story, total:total, chars:chars.map(function(c){ return {name:c.name, role:c.role, note:ap(c), sheet:{gender:c.gender, age:c.age, build:c.build, pers:c.pers, want:c.goal, fear:c.lack, look:ap(c), rel:c.rel}, sheetArt:c.art||''}; })});
       if(id && !/^error|^busy/.test(id)){ e9.sid=id; save(true); } else msg(String(id||'콘티로 넘기지 못했어요.').replace(/^error:|^busy:/,'')); }, 600); return; }
   if(a==='openconti'){ var e10=ep(); location.hash='#conti'; setTimeout(function(){ if(window.__ctStore && e10.sid) window.__ctStore.open(e10.sid); }, 600); return; }
 });
