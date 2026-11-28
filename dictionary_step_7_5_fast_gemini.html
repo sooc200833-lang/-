@@ -14487,7 +14487,7 @@ function d3Sprite(sp, hpx){
   hpx=clamp(Math.round(hpx||100),24,440); var key=JSON.stringify(sp||{})+'|'+hpx; if(SPR[key]) return SPR[key];
   var T=window.THREE, R=D3.R, sc=new T.Scene(), L=D3.L; L.hemi.intensity=1.5; L.sun.intensity=2.4; sc.add(L.hemi); sc.add(L.sun); sc.add(L.sun.target);
   L.sun.position.set(-2,5,4); L.sun.target.position.set(0,0,0);
-  var F=d3Fig((sp&&sp.look)||{}, POSE3[sp&&sp.pose]?sp.pose:'', {emo:sp&&sp.emo, prop:sp&&sp.prop, face:sp&&sp.faceUrl?d3FaceTexU(sp.faceUrl, sp.faceFit):null}); F.root.rotation.y=((sp&&sp.yaw)||0)*D3_DEG; sc.add(F.root);
+  var F=d3Fig((sp&&sp.look)||{}, POSE3[sp&&sp.pose]?sp.pose:'', {emo:sp&&sp.emo, prop:sp&&sp.prop, face:sp&&sp.faceUrl?d3FaceTexU(sp.faceUrl, sp.faceFit, sp.faceNoAuto):null}); F.root.rotation.y=((sp&&sp.yaw)||0)*D3_DEG; sc.add(F.root);
   var W, cam;
   if(sp && sp.head){ W=hpx; cam=new T.OrthographicCamera(-.3, .3, .3, -.3, .1, 40); cam.position.set(0, 1.69, 12); cam.lookAt(0, 1.69, 0); }   // 머리 가운데(1.69)에서 ±0.3
   else { W=Math.round(hpx*SPR_W/SPR_H); cam=new T.OrthographicCamera(-SPR_W/2, SPR_W/2, SPR_H-.55, -.55, .1, 40); cam.position.set(0, .55, 12); cam.lookAt(0, .55, 0); }
@@ -14627,6 +14627,9 @@ var D3_EMO={'':{eye:'dot',brow:0,mouth:'line'}, smile:{eye:'arc',brow:-.12,by:.0
   anger:{eye:'dot',brow:.45,mouth:'frown'}, rage:{eye:'wide',brow:.55,mouth:'big',vein:1}, shout:{eye:'dot',brow:.35,mouth:'big'},
   sad:{eye:'dot',brow:-.42,mouth:'frown'}, cry:{eye:'closed',brow:-.48,mouth:'open',tear:1}, shock:{eye:'wide',brow:-.06,by:.016,mouth:'open',sweat:1},
   blush:{eye:'dot',brow:-.18,mouth:'line',blush:1}, closed:{eye:'closed',brow:0,mouth:'line'}};
+// 표정 시트 열쇠(연재 시트 SER_EMO · 🎭 표정 시트 LAY)를 그대로 3D 표정 값으로 쓸 수 있게(2026-11-28): 그린 얼굴은 가까운 3D 표정으로
+var D3_SHEETK={n:'',smile:'smile',grin:'laugh',shy:'blush',panic:'shock',shock:'shock',angry:'anger',sad:'sad',cry:'cry',smirk:'smile',think:'',menace:'anger'};
+Object.keys(D3_SHEETK).forEach(function(k){ if(!D3_EMO[k]) D3_EMO[k]=D3_EMO[D3_SHEETK[k]]||D3_EMO['']; });
 var D3_EMO_KO=[['','무표정'],['smile','미소'],['laugh','크게 웃음'],['shock','놀람'],['anger','화남'],['rage','격분'],['shout','외침'],['sad','슬픔'],['cry','울음'],['blush','부끄러움'],['closed','눈 감음']];
 var D3_EMO_RX=[['cry',/울음|운다|울며|울고|울먹|눈물|흐느|오열|훌쩍|ㅠㅠ|흑흑/],['shock',/놀라|놀란|놀래|충격|경악|얼어붙|굳어|소스라|헉|뭐\?!|!\?|\?!|설마/],['rage',/격분|폭발한|이성을 잃|분노가 터/],
   ['anger',/화가|화난|화를|노려|이를 악|버럭|짜증|씩씩|째려|분해|분노/],['shout',/외친|외치|소리친|고함|절규|소리 지른|부르짖/],['laugh',/웃음을 터|폭소|깔깔|하하|ㅋㅋ|껄껄|빵 터/],
@@ -14849,18 +14852,42 @@ var D3_EMO_KEYS_A={'':{}, smile:{eyeSquint:1, mouthSmile:1}, laugh:{eyeSquint:1,
 // 캐릭터 시트 얼굴을 마네킹 머리 앞면에 씌운다(2026-11-28): 인물 이름으로 연재 표정 시트(ch.serial.emo 정면 열 2) → 없으면 「🎭 표정 시트」(faceUrl) 칸을 고른다.
 // 3D 머리가 스스로 돌기 때문에 늘 정면 칸을 쓴다. 머리 uv(정면 투영 .24×.28)에 그림 비율을 지켜 가운데 맞춤, 바깥은 투명. 앞을 보는 면에만 붙인다(뒤통수에 비치지 않게).
 var D3_FACE_EMO={smile:'smile', laugh:'smile', anger:'angry', rage:'angry', shout:'angry', sad:'sad', cry:'sad', shock:'shock', blush:'shy', panic:'shy'}, D3FT={};
-function d3FaceUrl(nm, emo){ if(!nm) return ''; var k=D3_FACE_EMO[emo]||'n', S=null, u=''; try{ S=serOf(nm); }catch(e){} if(S) u=serEmoOk(S, k+'.2')||serEmoOk(S, 'n.2')||'';
+function d3FaceUrl(nm, emo){ if(!nm) return ''; var k=(emo in D3_SHEETK)?emo:(D3_FACE_EMO[emo]||'n'), S=null, u=''; try{ S=serOf(nm); }catch(e){} if(S) u=serEmoOk(S, serEmoKey(k)+'.2')||serEmoOk(S, 'n.2')||'';
   if(!u){ try{ u=faceUrl(nm, k); }catch(e){} } return u||''; }
-function d3FaceTex(nm, emo){ var S=null; try{ S=serOf(nm); }catch(e){} return d3FaceTexU(d3FaceUrl(nm, emo), S&&S.ff); }
+function d3FaceTex(nm, emo){ var S=null; try{ S=serOf(nm); }catch(e){} return d3FaceTexU(d3FaceUrl(nm, emo), S&&S.ff, S&&S.ffoff); }
 // ff = 맞추기 {s 크기%, x 좌우%, y 위아래%(+ 위), r 기울기°} — 시트의 「3D 얼굴 맞추기」에서 인물마다 직접 조절(ch.serial.ff)
-var D3FI={}, D3FT_N=0;
-function d3FaceTexU(u, ff){ if(!u || !window.THREE) return null; var I=D3FI[u];
-  if(!I){ I=D3FI[u]={st:1}; var im=new Image(); im.onload=function(){ I.im=im; I.st=2; SPR={}; SPR_N=0; d3RedrawAll(); }; im.onerror=function(){ I.st=-1; }; im.src=u; return null; }
-  if(I.st!==2) return null; ff=ff||{}; var fs=+(ff.s||100), fx=+(ff.x||0), fy=+(ff.y||0), fr=+(ff.r||0), key=u+'|'+[fs,fx,fy,fr].join(','); if(D3FT[key]) return D3FT[key];
+var D3FI={}, D3FT_N=0, D3FA={};   // D3FA[그림] = 이목구비로 구한 맞춤값 {s,x,y,ok,eyes,mouth} (이 탭에서만, 그림이 읽힐 때 한 번)
+// 이목구비 찾기(2026-11-28, 사용자: 「시트 이목구비 판단해서 딱 맞춰줄 순 없엉?」): 가운데 아래쪽 밝은 색 = 피부, 피부가 아닌 덩어리 중 테두리·배경에 닿지 않는 것 = 눈·눈썹·입.
+// 높이가 비슷하고 좌우로 떨어진 큰 한 쌍 = 눈(가늘고 위에 있으면 눈썹으로 보고 덜 고름), 눈 아래 가운데 = 입. 두 눈 가운데·간격을 3D 머리 눈 자리(x ±.045, y .012)에 맞춘다
+function d3FaceFeat(im){ var W0=im.naturalWidth, H0=im.naturalHeight; if(!W0||!H0) return null; var sc=Math.min(1, 220/Math.max(W0,H0)), W=Math.max(8,Math.round(W0*sc)), H=Math.max(8,Math.round(H0*sc));
+  var cv=document.createElement('canvas'); cv.width=W; cv.height=H; var g=cv.getContext('2d'); g.drawImage(im,0,0,W,H); var d; try{ d=g.getImageData(0,0,W,H).data; }catch(e){ return null; }
+  var n=W*H, A=new Uint8Array(n), Lm=new Float32Array(n), anyT=false, i, x, y; for(i=0;i<n;i++){ Lm[i]=.299*d[i*4]+.587*d[i*4+1]+.114*d[i*4+2]; A[i]=d[i*4+3]>128?1:0; if(!A[i]) anyT=true; }
+  if(!anyT) for(i=0;i<n;i++) if(Lm[i]>246) A[i]=0;   // 배경을 안 지운 그림: 거의 흰색은 배경
+  var R=[],G2=[],B2=[]; for(y=Math.round(H*.42);y<H*.78;y++) for(x=Math.round(W*.28);x<W*.72;x++){ i=y*W+x; if(A[i]&&Lm[i]>105){ R.push(d[i*4]); G2.push(d[i*4+1]); B2.push(d[i*4+2]); } }
+  if(R.length<25) return null; var med=function(a){ a.sort(function(p,q){ return p-q; }); return a[a.length>>1]; }, sr=med(R), sg=med(G2), sb=med(B2);
+  var S=new Uint8Array(n), fx0=W, fx1=0, fy0=H, fy1=0; for(i=0;i<n;i++) if(A[i]){ var dr=d[i*4]-sr, dg=d[i*4+1]-sg, db=d[i*4+2]-sb; if(dr*dr+dg*dg+db*db<3600){ S[i]=1; x=i%W; y=(i-x)/W; if(x<fx0)fx0=x; if(x>fx1)fx1=x; if(y<fy0)fy0=y; if(y>fy1)fy1=y; } }
+  var fw=fx1-fx0+1, fh=fy1-fy0+1; if(fw<W*.2||fh<H*.2) return null;
+  var lab=new Int32Array(n).fill(-1), C=[], st=[]; for(i=0;i<n;i++){ if(!A[i]||S[i]||lab[i]>=0) continue; var c={n:0,sx:0,sy:0,x0:W,x1:0,y0:H,y1:0,out:false}, id=C.length; C.push(c); st.push(i); lab[i]=id;
+    while(st.length){ var p=st.pop(), px=p%W, py=(p-px)/W; c.n++; c.sx+=px; c.sy+=py; if(px<c.x0)c.x0=px; if(px>c.x1)c.x1=px; if(py<c.y0)c.y0=py; if(py>c.y1)c.y1=py;
+      for(var k=0;k<4;k++){ var qx=px+(k===0?1:k===1?-1:0), qy=py+(k===2?1:k===3?-1:0); if(qx<0||qy<0||qx>=W||qy>=H){ c.out=true; continue; } var q=qy*W+qx; if(!A[q]){ c.out=true; continue; } if(S[q]||lab[q]>=0) continue; lab[q]=id; st.push(q); } } }
+  var In=C.filter(function(c){ return !c.out && c.n>=n*.0005; }).map(function(c){ return {n:c.n, cx:c.sx/c.n, cy:c.sy/c.n, w:c.x1-c.x0+1, h:c.y1-c.y0+1}; });
+  var best=null, bs=0, fcx=(fx0+fx1)/2; for(var a=0;a<In.length;a++) for(var b=a+1;b<In.length;b++){ var P=In[a], Q=In[b], dy=Math.abs(P.cy-Q.cy), dx=Math.abs(P.cx-Q.cx);
+    if(dy>fh*.09 || dx<fw*.16 || dx>fw*.75 || Math.max(P.n,Q.n)/Math.min(P.n,Q.n)>3.2) continue; var mid=(P.cx+Q.cx)/2; if(Math.abs(mid-fcx)>fw*.18) continue; var yy=((P.cy+Q.cy)/2-fy0)/fh; if(yy<.2||yy>.75) continue;
+    var thin=(P.h/P.w<.32?.45:1)*(Q.h/Q.w<.32?.45:1), sco=(P.n+Q.n)*thin*(1-dy/(fh*.09)*.5)*(.6+yy); if(sco>bs){ bs=sco; best=P.cx<Q.cx?[P,Q]:[Q,P]; } }
+  var skin=[sr,sg,sb]; if(!best) return {eyes:null, skin:skin}; var ey=(best[0].cy+best[1].cy)/2, mo=null, mn=0; In.forEach(function(c){ if(c===best[0]||c===best[1]) return; if(c.cy>ey+fh*.1 && Math.abs(c.cx-(best[0].cx+best[1].cx)/2)<fw*.2 && c.n>mn){ mn=c.n; mo=c; } });
+  return {eyes:[[best[0].cx/W, best[0].cy/H],[best[1].cx/W, best[1].cy/H]], mouth:mo?[mo.cx/W, mo.cy/H]:null, skin:skin}; }
+function d3FaceFit(im, F){ if(!F || !F.eyes) return null; var a=im.naturalWidth/Math.max(1,im.naturalHeight), ha=.24/.28, su=1, sv=1; if(a>ha) sv=ha/a; else su=a/ha;
+  var de=F.eyes[1][0]-F.eyes[0][0]; if(de<.08) return null; var k=(2*.045/.24)/(de*su), SU=su*k, SV=sv*k, emu=(F.eyes[0][0]+F.eyes[1][0])/2, emv=(F.eyes[0][1]+F.eyes[1][1])/2;
+  var cx=.5-(emu-.5)*SU, cy=(.5-(.012-.003)/.28)-(emv-.5)*SV; return {s:clamp(Math.round(k*100),30,320), x:Math.round((cx-.5)*1000)/10, y:Math.round((.5-cy)*1000)/10, ok:1, mouth:!!F.mouth}; }
+function d3FaceTexU(u, ff, noAuto){ if(!u || !window.THREE) return null; var I=D3FI[u];
+  if(!I){ I=D3FI[u]={st:1}; var im=new Image(); im.onload=function(){ I.im=im; I.st=2; try{ var FF=d3FaceFeat(im); D3FA[u]=Object.assign(d3FaceFit(im, FF)||{ok:0}, {skin:FF&&FF.skin}); }catch(e){ D3FA[u]={ok:0}; } SPR={}; SPR_N=0; d3RedrawAll(); }; im.onerror=function(){ I.st=-1; }; im.src=u; return null; }
+  if(I.st!==2) return null; ff=ff||{}; var AF=(!noAuto && D3FA[u] && D3FA[u].ok)?D3FA[u]:null;   // 자동 맞춤 + 손으로 고친 값(크기는 곱, 자리·기울기는 더함)
+  var fs=+(ff.s||100)*(AF?AF.s/100:1), fx=+(ff.x||0)+(AF?AF.x:0), fy=+(ff.y||0)+(AF?AF.y:0), fr=+(ff.r||0), key=u+'|'+[fs,fx,fy,fr].join(','); if(D3FT[key]) return D3FT[key];
   if(++D3FT_N>80){ D3FT={}; D3FT_N=1; }
   var T=window.THREE, im2=I.im, t=new T.Texture(im2), a=im2.naturalWidth/Math.max(1,im2.naturalHeight), ha=.24/.28, su=1, sv=1; if(a>ha) sv=ha/a; else su=a/ha;
   su*=fs/100; sv*=fs/100; var Sx=1/su, Sy=1/sv, rot=fr*Math.PI/180, c=Math.cos(rot), sn=Math.sin(rot), dx=fx/100, dy=-fy/100;   // uv는 위가 0이라 위로 올리면 -
   t.colorSpace=T.SRGBColorSpace; t.flipY=false; t.wrapS=t.wrapT=T.ClampToEdgeWrapping; t.center.set(.5,.5); t.rotation=rot; t.repeat.set(Sx, Sy); t.offset.set(-Sx*(c*dx+sn*dy), -Sy*(-sn*dx+c*dy)); t.needsUpdate=true;
+  if(D3FA[u] && D3FA[u].skin) t.__skin=D3FA[u].skin;   // 시트 얼굴 피부색(머리를 그 색으로)
   return D3FT[key]=t; }
 function d3FrontGeo(geo){ if(geo.__front) return geo.__front; var T=window.THREE, p=geo.attributes.position, ix=geo.index, n=ix?ix.count:p.count, keep=[], A=new T.Vector3(), Bv=new T.Vector3(), C=new T.Vector3();
   for(var i=0;i<n;i+=3){ var a=ix?ix.getX(i):i, b=ix?ix.getX(i+1):i+1, c=ix?ix.getX(i+2):i+2; A.fromBufferAttribute(p,a); Bv.fromBufferAttribute(p,b); C.fromBufferAttribute(p,c);
@@ -14901,7 +14928,8 @@ function d3HeadParse(buf){ var T=window.THREE, dv=new DataView(buf), jl=dv.getUi
   return {parts:parts, vroid:parts.some(function(p){ return /HAIR/.test(p.mat); }), plain:!parts.some(function(p){ return p.names.length || p.tex; })}; }   // plain: 표정 키·그림 없는 마네킹 머리   // VRoid 머리: 머리카락이 들어 있다
 function d3HeadPut(hd, H, ek, lk, P, FT){ var T=window.THREE, M=D3.M, anime=H.parts.some(function(p){ return p.name==='LidSmile'; }), k=Object.assign({}, (H.vroid?D3_EMO_KEYS_V:anime?D3_EMO_KEYS_A:D3_EMO_KEYS)[ek]||{});
   if(H.vroid) return d3HeadPutV(hd, H, k, lk, P);
-  if(H.plain){ H.parts.forEach(function(p){ var m=new T.Mesh(p.geo, M.skin), o=new T.Mesh(p.geo, M.out); o.scale.setScalar(1.035); m.add(o); hd.add(m); if(FT){ if(!FT.__m) FT.__m=new T.MeshBasicMaterial({map:FT, transparent:true, alphaTest:.12, depthWrite:false, polygonOffset:true, polygonOffsetFactor:-2, polygonOffsetUnits:-2}); var fm=new T.Mesh(d3FrontGeo(p.geo), FT.__m); fm.renderOrder=2; hd.add(fm); } }); return; }   // 마네킹 머리: 피부 + 법선으로 부풀린 외곽선
+  if(H.plain){ var skm=M.skin; if(FT && FT.__skin){ var sk=FT.__skin, shk='sk'+sk.join('_'); if(!M[shk]){ M[shk]=M.skin.clone(); M[shk].color=new T.Color('rgb('+sk.join(',')+')'); } skm=M[shk]; }   // 시트 얼굴이 있으면 머리를 그 피부색으로(얼굴 그림 테두리가 가면처럼 보이지 않게)
+  H.parts.forEach(function(p){ var m=new T.Mesh(p.geo, skm), o=new T.Mesh(p.geo, M.out); o.scale.setScalar(1.035); m.add(o); hd.add(m); if(FT){ if(!FT.__m) FT.__m=new T.MeshBasicMaterial({map:FT, transparent:true, alphaTest:.12, depthWrite:false, polygonOffset:true, polygonOffsetFactor:-2, polygonOffsetUnits:-2}); var fm=new T.Mesh(d3FrontGeo(p.geo), FT.__m); fm.renderOrder=2; hd.add(fm); } }); return; }   // 마네킹 머리: 피부 + 법선으로 부풀린 외곽선
   if(lk.eyes==='감은'){ k.eyeBlink=1; k.eyeWide=0; k.eyeSquint=0; } if(P.mouth){ k.jawOpen=1; k.mouthStretch=.4; }
   if(!M.mouthIn){ M.mouthIn=new T.MeshBasicMaterial({color:0x2a0d10}); M.white=new T.MeshBasicMaterial({color:0xf6f4f0}); M.iris=new T.MeshBasicMaterial({color:0x1d1a18}); }
   H.parts.forEach(function(p){ var mat;
@@ -17618,6 +17646,13 @@ function renderSerial(){
     '<div class="se-st"><b>4. 콘티에서 실시간 자동 조합</b><p class="small">머리·몸통 원본 시트를 등록하면 컷의 카메라·인물 방향에 맞춰 자동으로 조합합니다. 맞지 않는 방향은 제외하며 전신 시트 저장은 필요 없습니다.</p></div>';
   if(S.emo) serFitPreview(ch);
 }
+// 표정 시트가 있는 인물의 표정 칸 = 시트 요청문의 표정 그대로(2026-11-28): 연재 표정 시트(SER_EMO 이름) + 🎭 표정 시트(그 모듈 이름)
+var SHEET_EMO_KO={n:'보통',smile:'미소',grin:'활짝',shy:'수줍',panic:'당황',shock:'충격',angry:'화남',sad:'슬픔',cry:'울음',smirk:'비웃음',think:'생각',menace:'위압'}, SHEET_EMO_ORD=['n','smile','grin','shy','panic','shock','angry','sad','cry','smirk','think','menace'];
+function sheetEmoOpts(nm){ var o={}, S=null; try{ S=serOf(nm); }catch(e){} var F=window.__ppFix, m=F&&F.spr&&F.spr[nm];
+  if(m) Object.keys(m).forEach(function(k){ if(SHEET_EMO_KO[k]) o[k]=SHEET_EMO_KO[k]; });
+  if(S&&S.emo) SER_EMO.forEach(function(q){ if(S.emo[q[0]+'.2']) o[q[0]]=q[1]; });
+  var ord=(S&&S.emo)?SER_EMO.map(function(q){ return q[0]; }).concat(SHEET_EMO_ORD):SHEET_EMO_ORD, seen={};   // 연재 시트가 있으면 그 요청문 순서
+  return ord.filter(function(k){ if(!o[k]||seen[k]) return false; seen[k]=1; return true; }).map(function(k){ return [k, o[k]]; }); }
 // 3D 얼굴 맞추기(2026-11-28): 마네킹 머리 앞면에 씌우는 정면 표정 칸의 크기·자리·기울기를 인물마다 직접 조절(ch.serial.ff). 미리보기 정면·3/4·옆
 var SER_FFE='n', SER_FFT=0, SER_FFQ=0;
 function serFitHTML(S){ var ff=S.ff||{}, R=function(l,k,mn,mx,def){ var v=ff[k]!=null?ff[k]:def; return '<label class="small">'+l+' <input type="range" data-ff="'+k+'" min="'+mn+'" max="'+mx+'" value="'+v+'"> <output>'+v+'</output></label>'; };
@@ -17625,15 +17660,18 @@ function serFitHTML(S){ var ff=S.ff||{}, R=function(l,k,mn,mx,def){ var v=ff[k]!
     '<div id="se-fitv" style="display:flex;gap:.4em;flex-wrap:wrap;margin:.4em 0;min-height:60px"><span class="small">3D 미리보기 준비 중…</span></div>'+
     '<div style="display:flex;flex-wrap:wrap;gap:.3em 1em">'+R('크기 %','s',40,250,100)+R('좌우','x',-40,40,0)+R('위아래','y',-40,40,0)+R('기울기°','r',-30,30,0)+
     '<label class="small">미리보기 표정 <select data-ffe="1">'+SER_EMO.map(function(q){ return '<option value="'+q[0]+'"'+(q[0]===SER_FFE?' selected':'')+'>'+q[1]+'</option>'; }).join('')+'</select></label></div>'+
-    '<div class="filterbar"><button class="chip" type="button" data-ser="ffreset">원래대로</button></div></div>'; }
+    '<div class="filterbar"><label class="small" style="display:inline-flex;align-items:center;gap:.35em"><input style="width:auto;margin:0" type="checkbox" data-ffauto="1"'+(S.ffoff?'':' checked')+'> 👁 이목구비 자동 맞춤</label><span class="small" id="se-ffst"></span><button class="chip" type="button" data-ser="ffreset">원래대로</button></div>'+
+    '<p class="small">자동 맞춤이 켜져 있으면 표정 칸마다 눈·입 자리를 찾아 3D 머리의 눈·입에 맞추고, 슬라이더는 그 위에 더하는 손보기다.</p></div>'; }
 function serFitPreview(ch, tries){ var box=document.getElementById('se-fitv'); if(!box) return; var S=ch.serial||{}, u=serEmoOk(S, SER_FFE+'.2')||serEmoOk(S, 'n.2'); if(!u){ box.innerHTML='<span class="small">정면(가운데 열) 표정 칸이 없다</span>'; return; }
-  if(!D3.st) d3Load(); var ready=d3Ready() && !!d3Head('m') && !!d3FaceTexU(u, S.ff||{});   // 얼굴 그림이 다 읽히기 전에 그리면 그린 눈·입으로 굳는다
-  var ims=!ready?[null]:[0,35,90].map(function(y){ return d3Sprite({head:1, force:1, faceUrl:u, faceFit:S.ff||{}, yaw:y, emo:'', look:{hair:'민머리'}}, 150); });
+  if(!D3.st) d3Load(); var ready=d3Ready() && !!d3Head('m') && !!d3FaceTexU(u, S.ff||{}, !!S.ffoff);   // 얼굴 그림이 다 읽히기 전에 그리면 그린 눈·입으로 굳는다
+  var ims=!ready?[null]:[0,35,90].map(function(y){ return d3Sprite({head:1, force:1, faceUrl:u, faceFit:S.ff||{}, faceNoAuto:!!S.ffoff, yaw:y, emo:'', look:{hair:'민머리'}}, 150); });
+  var st=document.getElementById('se-ffst'), fa=D3FA[u]; if(st) st.textContent=S.ffoff?'(자동 맞춤 끔)':!fa?'':fa.ok?'— 눈'+(fa.mouth?'·입':'')+' 자리를 찾아 맞췄다':'— 눈을 못 찾아 가운데 맞춤(슬라이더로 맞춘다)';
   if(ims.some(function(x){ return !x; })){ tries=(tries||0)+1; if(tries<25) { clearTimeout(SER_FFT); SER_FFT=setTimeout(function(){ serFitPreview(ch, tries); }, 400); } return; }
   box.innerHTML=''; ims.forEach(function(x, i){ x.style.cssText='width:120px;height:120px;background:#eee;border-radius:6px'; x.title=['정면','3/4','옆'][i]; box.appendChild(x); }); }
 document.addEventListener('input', function(e){ var t=e.target; if(!t.dataset || t.dataset.ff==null || !t.closest('#ct-serialbox')) return; var ch=chars()[SER_OPEN_I]; if(!ch||!ch.serial) return;
   var k=t.dataset.ff, v=+t.value, def=k==='s'?100:0, ff=ch.serial.ff=ch.serial.ff||{}; if(v===def) delete ff[k]; else ff[k]=v; var o=t.parentNode.querySelector('output'); if(o) o.textContent=v;
   cancelAnimationFrame(SER_FFQ); SER_FFQ=requestAnimationFrame(function(){ serFitPreview(ch); }); clearTimeout(t.__sv); t.__sv=setTimeout(function(){ save(); SPR={}; SPR_N=0; d3RedrawAll(); }, 500); });
+document.addEventListener('change', function(e){ var t=e.target; if(!t.dataset || !t.dataset.ffauto || !t.closest('#ct-serialbox')) return; var ch=chars()[SER_OPEN_I]; if(!ch||!ch.serial) return; if(t.checked) delete ch.serial.ffoff; else ch.serial.ffoff=1; save(); SPR={}; SPR_N=0; d3RedrawAll(); serFitPreview(ch); });
 document.addEventListener('change', function(e){ var t=e.target; if(!t.dataset || !t.dataset.ffe || !t.closest('#ct-serialbox')) return; SER_FFE=t.value; var ch=chars()[SER_OPEN_I]; if(ch) serFitPreview(ch); });
 document.addEventListener('change', function(e){ var t=e.target; if(!t.closest || !t.closest('#ct-serialbox')) return;
   if(t.id==='se-who'){ SER_OPEN_I=+t.value; SER_SHOW=''; renderSerial(); return; }
@@ -17743,7 +17781,7 @@ function openEdit(f,show3d){
       return '<div class="ct-wr" data-k="'+cesc(k)+'"><b>'+cesc(nm||'(이름 없음)')+'</b><select class="ct-wpp" aria-label="자세"><option value="">자세 그대로</option>'+P.map(function(p){ return '<option'+(w.pose===p?' selected':'')+'>'+p+'</option>'; }).join('')+
         (drawMode()==='3d'?d3PoseMcOpts(w.pose):'')+'</select>'+
         '<select class="ct-wpf" aria-label="방향">'+WP_FACE.map(function(o){ return '<option value="'+o[0]+'"'+((w.face||'')===o[0]?' selected':'')+'>'+o[1]+'</option>'; }).join('')+'</select>'+
-        (drawMode()==='3d'?'<select class="ct-wpe" aria-label="표정"><option value="">표정 자동</option>'+D3_EMO_KO.slice(1).map(function(o){ return '<option value="'+o[0]+'"'+((w.emo||'')===o[0]?' selected':'')+'>'+o[1]+'</option>'; }).join('')+'</select>'+
+        (drawMode()==='3d'?'<select class="ct-wpe" aria-label="표정"><option value="">표정 자동</option>'+(sheetEmoOpts(nm).length?sheetEmoOpts(nm):D3_EMO_KO.slice(1)).map(function(o){ return '<option value="'+o[0]+'"'+((w.emo||'')===o[0]?' selected':'')+'>'+o[1]+'</option>'; }).join('')+'</select>'+
           '<select class="ct-wpo" aria-label="소품"><option value="">소품 자동</option>'+D3_PROP_KO.slice(1).map(function(o){ return '<option value="'+o[0]+'"'+((w.prop||'')===o[0]?' selected':'')+'>'+o[1]+'</option>'; }).join('')+'</select>'+
           '<button class="chip ct-wpd'+(w.pa&&Object.keys(w.pa).length?' on':'')+'" type="button" aria-expanded="false">🦴 몸동작</button><div class="ct-pd" hidden></div>':'')+'</div>'; }).join(''); }
   wpRows();
