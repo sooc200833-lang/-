@@ -1739,6 +1739,32 @@ button.pl-card[disabled]{cursor:default}
 .pl-end .filterbar{justify-content:center}
 .pl-best{margin:.2rem 0; padding-left:1.1rem; font-size:.88rem}
 .pl-sys{margin-top:.8rem}
+/* [[CSS:seqwork]] 순서대로만화작업 */
+.sq-proj .sq-name{flex:1 1 10rem; min-width:0; font:inherit; font-weight:700; padding:.3rem .5rem}
+.sq-bar{display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:.4rem; margin:.6rem 0}
+.sq-grp{border:1px solid var(--line,#ccc); border-radius:8px; padding:.35rem .4rem; opacity:.7}
+.sq-grp.on{opacity:1; border-color:var(--ink,#222)}
+.sq-grp b{display:block; font-size:.82rem; margin-bottom:.2rem}
+.sq-grp span{display:flex; flex-wrap:wrap; gap:.2rem}
+.sq-dot{min-width:1.9rem; height:1.9rem; border-radius:50%; border:1px solid var(--line,#bbb); background:var(--paper,#fff); font:inherit; font-size:.8rem; cursor:pointer; padding:0}
+.sq-dot.ok{background:var(--paper-2,#eee)}
+.sq-dot.cur{background:var(--ink,#222); color:var(--paper,#fff); border-color:var(--ink,#222)}
+.sq-step{border:1px solid var(--line,#ccc); border-radius:10px; padding:.7rem .8rem; margin:.4rem 0}
+.sq-step h3{margin:.1rem 0 .2rem}
+.sq-ta{width:100%; box-sizing:border-box; font:inherit; padding:.4rem .5rem; margin:.2rem 0}
+.sq-in{font:inherit; padding:.25rem .45rem; min-width:0; max-width:100%}
+label.small .sq-in{width:100%; box-sizing:border-box; display:block}
+.sq-cards{display:grid; grid-template-columns:repeat(auto-fill,minmax(15rem,1fr)); gap:.5rem; margin:.4rem 0}
+.sq-card{border:1px solid var(--line,#ccc); border-radius:8px; padding:.5rem .6rem}
+.sq-card.on{border-color:var(--ink,#222); background:var(--paper-2,#f4f2ee)}
+.sq-card p{margin:.25rem 0}
+.sq-cast{display:grid; grid-template-columns:repeat(auto-fill,minmax(17rem,1fr)); gap:.5rem}
+.sq-art{max-width:100%; max-height:12rem; display:block; margin:.3rem 0; border-radius:6px}
+.sq-qs li{margin:.4rem 0}
+.sq-eps li{margin:.35rem 0}
+.sq-chips{max-height:9rem; overflow:auto}
+.sq-msg{min-height:1.2em}
+@media (max-width:560px){ .sq-bar{grid-template-columns:repeat(2,minmax(0,1fr))} }
 /* [[CSS:cutdict]] */
 .cd-bar .cd-q{flex:1 1 14rem; min-width:0; font:inherit; font-size:.88rem; padding:.3rem .5rem; background:var(--paper); color:var(--ink); border:1px solid var(--rule-hard)}
 .cd-grp{margin:1.6rem 0 0}
@@ -2884,6 +2910,13 @@ button.pl-card[disabled]{cursor:default}
 <section class="blk" id="texts">
   <h2 class="big">글 보관함</h2>
   <div id="texts-root"></div>
+</section>
+
+<!-- [[MOD:seqwork]] 순서대로만화작업 (2026-11-29): 장르 → 아이디어 → 캐릭터 → 이야기 → 연재 → 화 작업 → 콘티로 넘겨 그리기. 그림은 아래 스크립트 seqwork 모듈이 sq-root에 그린다 -->
+<section class="blk" id="seqwork">
+  <h2 class="big">순서대로만화작업</h2>
+  <p class="lede">만화를 그리는 순서대로 한 단계씩. 작가가 적고, AI가 사전을 참고해 제안하고, 작가가 고른다. 그리기 단계는 콘티 구성기로 넘겨서 한다.</p>
+  <div id="sq-root"></div>
 </section>
 
 <section class="blk" id="conti">
@@ -5692,6 +5725,7 @@ function hsUse(h, F){
 
 window.PAGE_ON=window.PAGE_ON||{};   // 페이지를 열 때 부를 함수 (id → fn)
 var PAGES=[
+ {g:'생성기·구성기',id:'seqwork',t:'순서대로만화작업',d:'장르 → 아이디어 → 캐릭터 → 스토리 → 연재 기획 → 화별 줄거리·대사 → 콘티·그림·말풍선까지 한 단계씩. AI가 사전을 참고해 돕는다.'},
  {g:'생성기·구성기',id:'charsheet',t:'캐릭터 시트 생성기',d:'인물 하나의 턴어라운드·표정·얼굴 각도·의상·포즈·컬러 시트를 GPT로. 생김새는 AI가 짜 주고, 받은 그림은 인물별로 모은다.'},
  {g:'생성기·구성기',id:'shuffle',t:'랜덤 구성기',d:'소재·클리셰·엔딩을 한 번에. 연재 모드와 고정 지원.'},
  {g:'생성기·구성기',id:'ideacomp',t:'아이디어 구성기',d:'적어 둔 아이디어로 소재·클리셰·엔딩·주인공을 골라 구성안을 만든다.'},
@@ -6910,7 +6944,7 @@ function saveFile(name, text, type){
   }catch(e){ return false; }
 }
 function stampName(){ var d=new Date(); return d.getFullYear()+('0'+(d.getMonth()+1)).slice(-2)+('0'+d.getDate()).slice(-2); }
-var BK_KEYS=['mangaFav','mangaFolders','folderMemo','pinoMemo','pinoTodo','arcForm','ideaText','userAdds','mangaCast','mangaTexts','deskLayout','favPick','mangaCuts','contiBoard','contiSaved','gmModel','mangaDataVer'];
+var BK_KEYS=['mangaFav','mangaFolders','folderMemo','pinoMemo','pinoTodo','arcForm','ideaText','userAdds','mangaCast','mangaTexts','deskLayout','favPick','mangaCuts','contiBoard','contiSaved','gmModel','mangaDataVer','seqWork','seqWorks'];
 function bkDump(){
   var o={app:'manga-cliche-dictionary', v:1, dataVer:DATA_VER, at:new Date().toISOString(), data:{}};
   BK_KEYS.forEach(function(k){ try{ var v=localStorage.getItem(k); if(v!==null) o.data[k]=v; }catch(e){} });
@@ -6959,7 +6993,7 @@ function bkRestore(text){
 // ----- 구글 드라이브 동기화 -----
 var GD={cid:'349312731183-t2bc2v3cbr90jci7aa4f8gumre6fdcd2.apps.googleusercontent.com', scope:'https://www.googleapis.com/auth/drive.appdata', file:'manga-sync.json',
   token:null, exp:0, client:null, fileId:null, busy:false, timer:null, applying:false, pending:false};
-var GD_KEYS=['mangaFav','mangaFolders','folderMemo','pinoMemo','pinoTodo','arcForm','ideaText','userAdds','mangaCast','mangaTexts','deskLayout','favPick','mangaCuts','contiBoard','contiSaved'];
+var GD_KEYS=['mangaFav','mangaFolders','folderMemo','pinoMemo','pinoTodo','arcForm','ideaText','userAdds','mangaCast','mangaTexts','deskLayout','favPick','mangaCuts','contiBoard','contiSaved','seqWork','seqWorks'];
 // 기록 묶음 형식 {items:{id:{…, at:ms}}, gone:{id:ms}} — 등장인물(mangaCast)·글 보관함(mangaTexts)
 var REC_KEYS=['mangaCast','mangaTexts','mangaCuts','contiSaved'];
 function recLoad(key){ var o=null; try{ o=JSON.parse(localStorage.getItem(key)||'null'); }catch(e){}
@@ -7071,6 +7105,9 @@ function gdMerge(L,R,B){
   // 콘티 판: 하나뿐이라 나중에 고친 쪽(at)을 쓴다
   if(L.contiBoard!==undefined || R.contiBoard!==undefined){ var lc=J(L.contiBoard,null), rc=J(R.contiBoard,null);
     out.contiBoard=(!rc || (lc && (lc.at||0)>=(rc.at||0))) ? L.contiBoard : R.contiBoard; if(out.contiBoard==null) delete out.contiBoard; }
+  // 순서대로만화작업(2026-11-29): 지금 작품은 나중에 고친 쪽, 목록은 작품마다 나중에 고친 쪽(지운 작품은 gone 표시로 남겨 되살아나지 않게)
+  if(L.seqWork!==undefined || R.seqWork!==undefined){ var lsq=J(L.seqWork,null), rsq=J(R.seqWork,null); out.seqWork=(!rsq || (lsq && (lsq.at||0)>=(rsq.at||0))) ? L.seqWork : R.seqWork; if(out.seqWork==null) delete out.seqWork; }
+  if(L.seqWorks!==undefined || R.seqWorks!==undefined){ var lw=J(L.seqWorks,{})||{}, rw=J(R.seqWorks,{})||{}, mw={}; Object.keys(lw).concat(Object.keys(rw)).forEach(function(k){ var x=lw[k], y=rw[k]; mw[k]=(!y || (x && (x.at||0)>=(y.at||0))) ? x : y; }); out.seqWorks=JSON.stringify(mw); }
   ['pinoTodo','arcForm','deskLayout','favPick'].forEach(function(k){ var l=L[k], r=R[k], b=B[k];
     var v=(l===r)?l:(l===b?r:l); if(v!==undefined && v!==null) out[k]=v; });
   if(gdKeysOn()) GD_AIKEYS.forEach(function(k){ var l=L[k]||'', r=R[k]||'', b=B[k]||'';
@@ -17413,6 +17450,7 @@ function chGptOne(x, k, n){
     'LAYOUT (exactly 2 rows): TOP ROW = 4 full-body figures (front, 3/4, side, back), same height. BOTTOM ROW = 6 FACE CLOSE-UPS (head only: from the top of the hair down to the chin — NO neck, NO shoulders, NO body), facing the viewer, the face filling each cell, all heads the same size and level — in this order: neutral, smile, angry, sad, surprised, '+(h.fear?'scared':'embarrassed')+'. Every figure and head is separated by wide clear empty gaps — nothing touches or overlaps, no ground shadows.\n'+
     'Korean webtoon style, clean line art, flat colors, TRANSPARENT background (PNG with alpha channel; if transparency is impossible, use flat pure white #FFFFFF with no texture, no shadow, no gradient), NO text, NO names, NO labels. Keep outfit and colors identical in every view.';
 }
+window.__ctSheetPrompt=function(x){ try{ return chGptOne(x, 1, 1); }catch(e){ return ''; } };   // 순서대로만화작업이 같은 시트 요청문을 쓴다
 function chGptAll(list){
   var cs=(list||chars()).filter(function(x){ return x && x.name; }).sort(function(a,b){ return ((a.sheet&&a.sheet.kind)==='조연')-((b.sheet&&b.sheet.kind)==='조연'); }); if(!cs.length) return '';
   var n=cs.length;
@@ -19795,6 +19833,20 @@ function enterProject(step){
   renderRefs();
   goStep(step===7.5?6:step,true);
 }
+ // 순서대로만화작업에서 한 화를 넘겨받아 새 콘티로 연다(2026-11-29): 대사 글을 이야기 칸에, 인물(시트·생김새)을 캐릭터에 넣고 콘티 저장소에 저장. 돌려주는 값 = 저장소 id
+ window.__ctFromSeq=function(o){ try{
+   if((typeof running!=='undefined'&&running)||(typeof batchBusy!=='undefined'&&batchBusy)||(typeof comicBusy!=='undefined'&&comicBusy)||window.__stale) return 'busy:콘티 구성기가 다른 작업 중이에요. 끝난 뒤 다시 눌러 주세요.';
+   if(ctImageMode && window.__contiShow) window.__contiShow(false,false);
+   archiveProject();
+   var chars=(o.chars||[]).map(function(c){ return {name:String(c.name||''), role:c.role||'', look:{}, note:c.note||'', sheet:Object.assign({kind:c.role==='주인공'?'주연':'조연'}, c.sheet||{}), sheetArt:c.sheetArt||''}; }).filter(function(c){ return c.name; });
+   var n=Math.max(8, Math.min(150, +o.total||40)), next={v:2,total:n,target:n,band:[],cl:[],drawn:'',story:String(o.story||''),cuts:[],chars:chars,projectRefs:{},projectStep:1,imageComposer:false,seq:1,at:Date.now()};
+   localStorage.setItem('contiBoard',JSON.stringify(next)); B=next;
+   var st=document.getElementById('ct-story'); if(st) st.value=next.story;
+   totalSet(n); if(window.__ctModeSync) window.__ctModeSync(); renderAll();
+   var id=stSave(o.name||'순서대로만화작업', true, true); enterProject(1); save();
+   stat('「'+(o.name||'')+'」 대사 글과 인물을 넣었어요. 1단계부터 확인하고 「다음 단계」로 진행하세요.');
+   return id||'';
+ }catch(e){ return 'error:'+e.message; } };
 function renderProjectList(focusId){
   var items=recList('contiSaved').filter(function(it){return typeof it.board==='string'&&!!it.imageComposer===ctImageMode;});
   projectList.replaceChildren();
@@ -25534,6 +25586,237 @@ window.__cutDict={list:CUT_DICT, layouts:CUT_LAYOUT, groups:CD_GROUPS, layoutGro
 
 aiBar(); favAiBar(); aiSlots(); if(typeof ideaWriteBar==='function') ideaWriteBar();
 if(window.__reSlots) window.__reSlots(); if(typeof renderFavs==='function') renderFavs();
+// [[MOD:seqwork]] 순서대로만화작업 (2026-11-29) — 장르 → 아이디어·오마주 → 대략 아이디어 → 캐릭터 → 스토리라인 → 연재 분량 → 클리셰 조언 → 화 배치 → 화별 줄거리 → 대사 글 → 장소·인물·대사 → 콘티로 넘겨 그리기
+// 저장: localStorage seqWork(지금 프로젝트) · seqWorks({id: 프로젝트}). 드라이브 동기화(GD_KEYS·gdMerge)에 들어 있다. AI는 aiAsk(모델은 AI 연결 페이지에서 고른 것 그대로)
+(function(){
+var root=document.getElementById('sq-root'); if(!root) return;
+var SQ=[
+  ['genre',0,'장르','그리려는 만화 장르를 고른다.'],
+  ['idea',0,'아이디어·오마주','아이디어나 오마주할 작품을 적으면 사전에서 소재·클리셰·연출·인물 재료를 찾아 준다.'],
+  ['rough',0,'대략 아이디어','한 단락으로 정리한다. 막히면 랜덤 추천이나 AI 다듬기.'],
+  ['cast',0,'캐릭터','역할마다 이름·결핍·성격·외모·목표. 시트 그림은 GPT로 그려 넣는다.'],
+  ['line',1,'스토리라인','AI가 먼저 묻고, 작가가 답한 내용으로 이야기 뼈대를 만든다.'],
+  ['serial',1,'연재 분량','몇 화로 할지 정하면 아크(구간)마다 흐름을 추천한다.'],
+  ['cliche',1,'클리셰 조언','지금까지 정한 설정으로 사전을 참고해 어디에 무엇을 쓸지 조언한다.'],
+  ['eps',1,'화 배치','화마다 담을 내용을 한 줄씩.'],
+  ['syn',2,'화별 줄거리','화를 골라 줄거리를 쓴다.'],
+  ['script',2,'대사 글','줄거리로 장면·행동·대사·나레이션 글을 쓴다.'],
+  ['scene',2,'장소·인물·대사','장면마다 장소와 나오는 인물, 대사를 정리하고 배경 그림을 만든다.'],
+  ['draw',3,'콘티·그림·말풍선','이 화를 콘티 구성기로 넘겨 컷·3D·그림·말풍선을 만든다.']];
+var GROUPS=['기획','이야기','화 작업','그리기'], ROLES=['주인공','히로인','조연','악역','반동인물','스승','라이벌','친구'];
+var KEY='seqWork', LKEY='seqWorks', BUSY='';
+function E(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function rid(){ return 'sq'+Date.now().toString(36)+Math.random().toString(36).slice(2,5); }
+function blank(){ return {id:rid(), name:'새 만화', step:0, genre:'', idea:'', homage:'', found:null, picks:[], rough:'', cast:['주인공','히로인','조연','악역'].map(function(r){ return {role:r, name:'', lack:'', pers:'', look:'', goal:'', rel:''}; }),
+  line:{qs:[], ans:[], logline:'', start:'', turn:'', crisis:'', climax:'', end:''}, serial:{n:20, arcs:[]}, adv:null, eps:[], cur:0, at:Date.now()}; }
+function J(s, d){ try{ var v=JSON.parse(s); return v==null?d:v; }catch(e){ return d; } }
+function list(){ var L=J(localStorage.getItem(LKEY)||'{}', {}); return (L&&typeof L==='object')?L:{}; }
+var P=(function(){ var p=J(localStorage.getItem(KEY)||'null', null); return (p&&p.id)?Object.assign(blank(), p):blank(); })();
+var saveT=0;
+function save(now){ P.at=Date.now(); clearTimeout(saveT); var go=function(){ try{ localStorage.setItem(KEY, JSON.stringify(P)); var L=list(); L[P.id]=P; localStorage.setItem(LKEY, JSON.stringify(L)); }catch(e){ msg('저장 공간이 모자라 저장하지 못했어요.'); } }; if(now) go(); else saveT=setTimeout(go, 400); }
+function msg(t){ var m=root.querySelector('.sq-msg'); if(m) m.textContent=t||''; }
+
+// ---------- 사전 찾기: 아이디어 단계용(종류마다 더 많이) ----------
+var SQ_QUOTA={'클리셰':12,'소재':6,'캐릭터 모티브':8,'엔딩':4,'한 칸 연출':4,'컷 배치 연출':4};
+function sqFind(text){ var X=drIndex(), q=String(text||'').slice(0,12000), res=[]; if(q.replace(/\s/g,'').length<2) return [];
+  var idf=function(b){ return Math.log(1+X.N/(X.df[b]||1)); };
+  X.E.forEach(function(e){ var ns=0, nh=0, ds=0; e.ns.forEach(function(b){ if(q.indexOf(b)>-1){ nh++; ns+=idf(b); } }); e.ds.forEach(function(b){ if(q.indexOf(b)>-1) ds+=idf(b); });
+    var cov=e.ns.length?nh/e.ns.length:0, s=3*ns*Math.sqrt(cov)*(nh>=2?1.5:1)+0.7*ds/Math.sqrt(1+e.ds.length); if(s>0) res.push({e:e, s:s}); });
+  res.sort(function(a,b){ return b.s-a.s; }); var cnt={}, out=[];
+  res.forEach(function(r){ var t=r.e.t; if((cnt[t]||0)>=(SQ_QUOTA[t]||3)) return; cnt[t]=(cnt[t]||0)+1; out.push(r.e); }); return out; }
+function favKey(t, n){ return ({'클리셰':'c|','소재':'m|','캐릭터 모티브':'ch|','엔딩':'e|'}[t]||'')+n; }
+function genreList(){ var g=[]; ROWS.forEach(function(r){ var x=String(r[1]||''); if(x && !/공통/.test(x) && g.indexOf(x)<0) g.push(x); }); return g; }
+function rnd(a){ return a[Math.floor(Math.random()*a.length)]; }
+
+// ---------- AI ----------
+function ask(sys, user, max, raw){
+  if(!(typeof aiReady==='function' && aiReady())){ msg('AI 연결 페이지에서 제미나이 키를 먼저 넣어 주세요.'); return Promise.reject(new Error('nokey')); }
+  return aiAsk(sys, user, max||2400, raw?{}:{json:true}).then(function(t){ if(aiIsErr(t)) throw new Error(t); if(raw) return String(t||'').trim();
+    var s=String(t||''), a=s.indexOf('{'), b=s.lastIndexOf('}'); if(a<0||b<a) throw new Error('AI 답을 읽지 못했어요. 다시 눌러 주세요.'); return JSON.parse(s.slice(a,b+1)); }); }
+var SYS='너는 한국 웹툰·만화 작가를 돕는 기획 편집자다. 작가의 생각을 존중하고, 결정은 작가가 하도록 선택지를 준다. 한국어로 짧고 구체적으로 쓴다. 기존 작품을 베끼지 않는다.';
+function ctx(upto){ var o=[]; if(P.genre) o.push('장르: '+P.genre); if(P.idea) o.push('아이디어: '+P.idea); if(P.homage) o.push('오마주할 작품: '+P.homage);
+  if(P.picks.length) o.push('고른 재료: '+P.picks.map(function(p){ return p.t+' 「'+p.n+'」'; }).join(', '));
+  if(P.rough) o.push('대략 아이디어: '+P.rough);
+  var cs=P.cast.filter(function(c){ return c.name||c.lack||c.pers; }); if(cs.length && upto>3) o.push('캐릭터:\n'+cs.map(function(c){ return '- '+c.role+' '+(c.name||'(이름 미정)')+': 결핍 '+(c.lack||'-')+' / 성격 '+(c.pers||'-')+' / 외모 '+(c.look||'-')+' / 목표 '+(c.goal||'-')+(c.rel?' / 관계 '+c.rel:''); }).join('\n'));
+  var L=P.line; if(upto>4 && (L.logline||L.start)) o.push('스토리라인: '+[L.logline, '시작 '+L.start, '전환 '+L.turn, '위기 '+L.crisis, '절정 '+L.climax, '결말 '+L.end].join(' / '));
+  if(upto>5 && P.serial.arcs.length) o.push('연재 '+P.serial.n+'화, 아크: '+P.serial.arcs.map(function(a){ return a.name+'('+a.from+'~'+a.to+'화): '+a.goal; }).join(' / '));
+  if(upto>6 && P.adv && P.adv.use) o.push('쓰기로 한 클리셰·연출: '+P.adv.use.filter(function(u){ return u.on!==false; }).map(function(u){ return u.n+'('+u.arc+')'; }).join(', '));
+  return o.join('\n'); }
+function run(tag, fn){ if(BUSY) return; BUSY=tag; msg('AI가 생각하는 중…'); render(); fn().then(function(){ BUSY=''; msg(''); save(); render(); }, function(e){ BUSY=''; if(e && e.message!=='nokey') msg(String(e.message||e).slice(0,160)); render(); }); }
+
+// ---------- 그리기 ----------
+function stepIdx(){ return Math.max(0, Math.min(SQ.length-1, P.step|0)); }
+function done(i){ var k=SQ[i][0];
+  return k==='genre'?!!P.genre : k==='idea'?!!(P.idea||P.homage) : k==='rough'?!!P.rough : k==='cast'?P.cast.some(function(c){ return c.name; }) : k==='line'?!!(P.line.logline||P.line.start) :
+    k==='serial'?P.serial.arcs.length>0 : k==='cliche'?!!P.adv : k==='eps'?P.eps.length>0 : k==='syn'?P.eps.some(function(e){ return e.syn; }) : k==='script'?P.eps.some(function(e){ return e.script; }) :
+    k==='scene'?P.eps.some(function(e){ return e.scenes&&e.scenes.length; }) : k==='draw'?P.eps.some(function(e){ return e.sid; }) : false; }
+function bar(){ var i=stepIdx(), g=SQ[i][1];
+  return '<div class="sq-bar">'+GROUPS.map(function(n,gi){ var steps=SQ.map(function(s,j){ return [s,j]; }).filter(function(x){ return x[0][1]===gi; });
+    return '<div class="sq-grp'+(gi===g?' on':'')+'"><b>'+(gi+1)+'. '+n+'</b><span>'+steps.map(function(x){ var j=x[1];
+      return '<button type="button" class="sq-dot'+(j===i?' cur':'')+(done(j)?' ok':'')+'" data-go="'+j+'" title="'+E(x[0][2])+'" aria-label="'+(j+1)+'단계 '+E(x[0][2])+'">'+(done(j)&&j!==i?'✓':(j+1))+'</button>'; }).join('')+'</span></div>'; }).join('')+'</div>'; }
+function head(){ var L=list(), ids=Object.keys(L).filter(function(k){ return L[k]&&!L[k].gone; }).sort(function(a,b){ return (L[b].at||0)-(L[a].at||0); });
+  return '<div class="filterbar sq-proj"><input class="sq-name" value="'+E(P.name)+'" aria-label="작품 이름" maxlength="40"><select class="sq-open" aria-label="다른 작품 열기"><option value="">작품 '+ids.length+'개</option>'+ids.map(function(k){ return '<option value="'+E(k)+'"'+(k===P.id?' selected':'')+'>'+E(L[k].name||'이름 없음')+'</option>'; }).join('')+'</select>'+
+    '<button type="button" class="chip" data-a="new">＋ 새 작품</button><button type="button" class="chip" data-a="del">이 작품 지우기</button></div>'; }
+function nav(){ var i=stepIdx();
+  return '<div class="filterbar sq-nav">'+(i>0?'<button type="button" class="chip" data-go="'+(i-1)+'">← '+E(SQ[i-1][2])+'</button>':'')+(i<SQ.length-1?'<button type="button" class="chip ct-go" data-go="'+(i+1)+'">다음: '+E(SQ[i+1][2])+' →</button>':'')+'</div>'; }
+function aiBtn(a, label){ return '<button type="button" class="chip ct-go" data-a="'+a+'"'+(BUSY?' disabled':'')+'>'+(BUSY===a?'⏳ 생각하는 중…':'✨ '+label)+'</button>'; }
+function ta(f, val, rows, ph){ return '<textarea class="sq-ta" data-f="'+f+'" rows="'+(rows||4)+'" placeholder="'+E(ph||'')+'">'+E(val||'')+'</textarea>'; }
+function epSel(){ if(!P.eps.length) return '<p class="small">먼저 「화 배치」에서 화를 만들어 주세요.</p>';
+  return '<label class="small">화 <select data-a="cur">'+P.eps.map(function(e,i){ return '<option value="'+i+'"'+(i===P.cur?' selected':'')+'>'+(i+1)+'화 '+E(e.title||'')+'</option>'; }).join('')+'</select></label>'; }
+function ep(){ return P.eps[Math.min(P.cur, P.eps.length-1)]||null; }
+
+var VIEW={
+genre:function(){ var G=genreList();
+  return '<div class="filterbar sq-chips">'+G.map(function(g){ return '<button type="button" class="chip'+(P.genre===g?' on':'')+'" data-genre="'+E(g)+'">'+E(g)+'</button>'; }).join('')+'</div>'+
+    '<label class="small">직접 적기 <input class="sq-in" data-f="genre" value="'+E(P.genre)+'" placeholder="예) 학원 로맨스 판타지"></label>'; },
+idea:function(){ var F=P.found;
+  return '<label class="small">아이디어</label>'+ta('idea', P.idea, 4, '예) 기억을 파는 가게. 주인공은 동생 병원비 때문에 자기 기억을 판다')+
+    '<label class="small">오마주할 작품(선택) <input class="sq-in" data-f="homage" value="'+E(P.homage)+'" placeholder="예) 장송의 프리렌"></label>'+
+    '<div class="filterbar">'+aiBtn('find','사전에서 재료 찾기')+'<button type="button" class="chip" data-a="img">🖼 그림으로 컷 연출 읽기</button></div>'+
+    (F?'<p class="small">'+E(F.note||'')+'</p><div class="sq-cards">'+F.items.map(function(x,i){ var on=P.picks.some(function(p){ return p.n===x.n&&p.t===x.t; });
+      return '<div class="sq-card'+(on?' on':'')+'"><label><input type="checkbox" data-pick="'+i+'"'+(on?' checked':'')+'> <span class="small">'+E(x.t)+'</span> <b>'+E(x.n)+'</b></label><p class="small">'+E(x.why||x.d||'')+'</p>'+
+        (favKey(x.t,x.n)!==x.n?'<button type="button" class="chip sq-star" data-star="'+i+'">'+((typeof FAV!=='undefined'&&FAV[favKey(x.t,x.n)])?'★':'☆')+' 즐겨찾기</button>':'')+'</div>'; }).join('')+'</div>'+
+      (F.chars&&F.chars.length?'<h4>인물 재료</h4><div class="sq-cards">'+F.chars.map(function(c,i){ return '<div class="sq-card"><b>'+E(c.role)+'</b><p class="small">결핍 '+E(c.lack)+' · 성격 '+E(c.pers)+' · 외모 '+E(c.look)+' · 목표 '+E(c.goal)+'</p><button type="button" class="chip" data-chuse="'+i+'">캐릭터에 넣기</button></div>'; }).join('')+'</div>':'')+
+      (F.tech&&F.tech.length?'<h4>연출 기법</h4><ul class="small">'+F.tech.map(function(t){ return '<li>'+E(t)+'</li>'; }).join('')+'</ul>':''):''); },
+rough:function(){ var R=P.rnd;
+  return ta('rough', P.rough, 6, '예) 기억을 팔아 돈을 버는 소년이, 판 기억 속에 자신이 잊은 첫사랑이 있었다는 걸 알게 된다…')+
+    '<div class="filterbar"><button type="button" class="chip" data-a="rnd">🎲 랜덤 추천</button>'+aiBtn('polish','AI로 다듬기')+'</div>'+
+    (R?'<div class="sq-card"><p class="small">소재 「'+E(R.m)+'」 · 클리셰 「'+E(R.c)+'」 · 엔딩 「'+E(R.e)+'」</p><button type="button" class="chip" data-a="rndin">아이디어에 덧붙이기</button></div>':'')+
+    (P.hook?'<p class="small">한 줄 훅: <b>'+E(P.hook)+'</b></p>':'')+(P.roughAsk?'<p class="small">생각해 볼 것: '+E(P.roughAsk)+'</p>':''); },
+cast:function(){
+  return '<div class="sq-cast">'+P.cast.map(function(c,i){ var F=function(k,l,ph){ return '<label class="small">'+l+' <input class="sq-in" data-c="'+i+'" data-k="'+k+'" value="'+E(c[k])+'" placeholder="'+E(ph||'')+'"></label>'; };
+    var art=c.art&&window.__ppArt?window.__ppArt.get(c.art):'';
+    return '<div class="sq-card sq-ch"><div class="filterbar"><select data-c="'+i+'" data-k="role">'+ROLES.concat(ROLES.indexOf(c.role)<0?[c.role]:[]).map(function(r){ return '<option'+(r===c.role?' selected':'')+'>'+E(r)+'</option>'; }).join('')+'</select>'+
+      aiBtn('ch'+i,'AI 제안')+'<button type="button" class="chip" data-a="sheet'+i+'">🖌 GPT 시트</button><label class="chip sv-up">'+(art?'시트 바꾸기':'📥 시트 넣기')+'<input type="file" accept="image/*" hidden data-art="'+i+'"></label>'+
+      '<button type="button" class="chip" data-a="tocast'+i+'">등장인물에 저장</button><button type="button" class="chip" data-a="rm'+i+'">빼기</button></div>'+
+      (art?'<img class="sq-art" alt="'+E(c.name)+' 시트" src="'+art+'">':'')+
+      F('name','이름')+F('lack','결핍','무엇이 비어 있나')+F('pers','성격')+F('look','외모')+F('goal','목표')+F('rel','관계','다른 인물과')+'</div>'; }).join('')+'</div>'+
+    '<div class="filterbar"><button type="button" class="chip" data-a="addch">＋ 인물 추가</button></div>'; },
+line:function(){ var L=P.line;
+  return '<p class="small">AI가 이야기의 갈림길을 질문으로 묻는다. 답을 적어야 스토리라인을 만든다 — 결정은 작가가.</p><div class="filterbar">'+aiBtn('qs','질문 받기')+'</div>'+
+    (L.qs.length?'<ol class="sq-qs">'+L.qs.map(function(q,i){ return '<li><b class="small">'+E(q)+'</b><textarea class="sq-ta" data-ans="'+i+'" rows="2">'+E(L.ans[i]||'')+'</textarea></li>'; }).join('')+'</ol><div class="filterbar">'+aiBtn('line','답으로 스토리라인 만들기')+'</div>':'')+
+    (L.logline||L.start?['logline:한 줄','start:시작','turn:전환','crisis:위기','climax:절정','end:결말'].map(function(x){ var p=x.split(':'); return '<label class="small">'+p[1]+'</label>'+ta('line.'+p[0], L[p[0]], p[0]==='logline'?2:3); }).join(''):''); },
+serial:function(){ var S=P.serial;
+  return '<label class="small">몇 화로 할까 <input class="sq-in" type="number" min="1" max="300" data-f="serial.n" value="'+E(S.n)+'" style="width:6em"></label> '+aiBtn('arcs','흐름 추천')+
+    (S.arcs.length?'<div class="sq-cards">'+S.arcs.map(function(a,i){ return '<div class="sq-card"><div class="filterbar"><input class="sq-in" data-arc="'+i+'" data-k="name" value="'+E(a.name)+'"> <input class="sq-in" type="number" data-arc="'+i+'" data-k="from" value="'+E(a.from)+'" style="width:4em">~<input class="sq-in" type="number" data-arc="'+i+'" data-k="to" value="'+E(a.to)+'" style="width:4em">화</div>'+
+      '<label class="small">흐름</label><textarea class="sq-ta" data-arc="'+i+'" data-k="goal" rows="2">'+E(a.goal)+'</textarea><p class="small">인물 비중: '+E(a.cast||'')+(a.turn?' · 끝의 전환: '+E(a.turn):'')+'</p></div>'; }).join('')+'</div>':''); },
+cliche:function(){ var A=P.adv;
+  return '<p class="small">지금까지 정한 장르·아이디어·인물·스토리·연재 흐름으로 사전을 찾아, 아크마다 쓸 클리셰·연출과 피할 조합을 조언한다. 체크한 것만 화 배치에 쓴다.</p>'+aiBtn('adv','조언 받기')+
+    (A?'<p>'+E(A.note||'')+'</p><h4>써 볼 것</h4><div class="sq-cards">'+(A.use||[]).map(function(u,i){ return '<div class="sq-card'+(u.on!==false?' on':'')+'"><label><input type="checkbox" data-use="'+i+'"'+(u.on!==false?' checked':'')+'> <span class="small">'+E(u.arc||'')+'</span> <b>'+E(u.n)+'</b></label><p class="small">'+E(u.how||'')+(u.why?' — '+E(u.why):'')+'</p></div>'; }).join('')+'</div>'+
+      ((A.avoid||[]).length?'<h4>피할 것</h4><ul class="small">'+A.avoid.map(function(v){ return '<li><b>'+E(v.n)+'</b> — '+E(v.why||'')+'</li>'; }).join('')+'</ul>':''):''); },
+eps:function(){
+  return '<div class="filterbar">'+aiBtn('eps','화 배치 채우기')+'<button type="button" class="chip" data-a="addep">＋ 화 추가</button></div>'+
+    (P.eps.length?'<ol class="sq-eps">'+P.eps.map(function(e,i){ return '<li><div class="filterbar"><input class="sq-in" data-ep="'+i+'" data-k="title" value="'+E(e.title)+'" placeholder="제목"><span class="small">'+E(e.arc||'')+'</span>'+
+      '<button type="button" class="chip" data-mv="'+i+'" data-d="-1" aria-label="위로">↑</button><button type="button" class="chip" data-mv="'+i+'" data-d="1" aria-label="아래로">↓</button><button type="button" class="chip" data-rmep="'+i+'">빼기</button></div>'+
+      '<textarea class="sq-ta" data-ep="'+i+'" data-k="sum" rows="2" placeholder="이 화에 담을 내용">'+E(e.sum)+'</textarea></li>'; }).join('')+'</ol>':'<p class="small">아직 화가 없어요.</p>'); },
+syn:function(){ var e=ep();
+  return epSel()+(e?'<p class="small">이 화 내용: '+E(e.sum||'-')+'</p><div class="filterbar">'+aiBtn('syn','줄거리 쓰기')+'</div><textarea class="sq-ta" data-ep="'+P.cur+'" data-k="syn" rows="10" placeholder="줄거리">'+E(e.syn||'')+'</textarea>':''); },
+script:function(){ var e=ep();
+  return epSel()+(e?'<div class="filterbar">'+aiBtn('script','대사 글 쓰기')+'</div><p class="small">형식: [장면] 장소 · 때 / 행동 줄 / 이름: 대사 / (속마음) / 나레이션: …</p><textarea class="sq-ta" data-ep="'+P.cur+'" data-k="script" rows="16">'+E(e.script||'')+'</textarea>'+
+    '<div class="filterbar"><input class="sq-in" data-f="fix" value="'+E(P.fix||'')+'" placeholder="AI에게 고쳐 달라고 할 것 (예: 2장면 대사를 더 짧게)">'+aiBtn('fix','고쳐 쓰기')+'</div>':''); },
+scene:function(){ var e=ep();
+  return epSel()+(e?'<div class="filterbar">'+aiBtn('scenes','장면 나누기')+'</div>'+((e.scenes||[]).length?'<div class="sq-cards">'+e.scenes.map(function(s,i){ var art=s.art&&window.__ppArt?window.__ppArt.get(s.art):'';
+    return '<div class="sq-card"><div class="filterbar"><b>'+(i+1)+'.</b><input class="sq-in" data-sc="'+i+'" data-k="place" value="'+E(s.place)+'" placeholder="장소"> <input class="sq-in" data-sc="'+i+'" data-k="time" value="'+E(s.time||'')+'" placeholder="때" style="width:6em"></div>'+
+      '<p class="small">나오는 인물: '+E((s.who||[]).join(', '))+'</p><textarea class="sq-ta" data-sc="'+i+'" data-k="lines" rows="3">'+E((s.lines||[]).join('\n'))+'</textarea>'+
+      (art?'<img class="sq-art" alt="'+E(s.place)+' 배경" src="'+art+'">':'')+'<div class="filterbar"><button type="button" class="chip" data-bg="'+i+'">🖌 배경 그림 요청</button><label class="chip sv-up">'+(art?'배경 바꾸기':'📥 배경 넣기')+'<input type="file" accept="image/*" hidden data-bgart="'+i+'"></label></div></div>'; }).join('')+'</div>':''):''); },
+draw:function(){ var e=ep();
+  return epSel()+(e?'<ol class="small sq-todo"><li>「🎬 이 화를 콘티로」를 누르면 이 화의 대사 글·인물(시트)·장소가 담긴 새 콘티가 콘티 구성기에 열린다.</li><li>콘티 구성기 <b>4단계 콘티</b>에서 컷을 만들고, 컷마다 ✎·🎥로 고치거나 다시 쓴다.</li><li><b>7단계 GPT 일괄 제작</b>에서 3D 콘티·시트·배경으로 그림을 그린다.</li><li><b>8단계 완성 콘티</b>에서 말풍선을 넣는다.</li></ol>'+
+    '<div class="filterbar"><button type="button" class="chip ct-go" data-a="toconti">🎬 이 화를 콘티로</button>'+(e.sid?'<button type="button" class="chip" data-a="openconti">만든 콘티 열기</button>':'')+'</div>'+(e.sid?'<p class="small">이 화 콘티가 콘티 저장소에 있어요.</p>':''):''); }
+};
+
+function render(){ var i=stepIdx(), s=SQ[i];
+  root.innerHTML=head()+bar()+'<div class="sq-step"><h3>'+(i+1)+'. '+E(s[2])+'</h3><p class="small">'+E(s[3])+'</p>'+VIEW[s[0]]()+'</div><p class="small sq-msg" aria-live="polite"></p>'+nav(); }
+
+// ---------- 값 고치기 ----------
+function setPath(path, v){ var p=path.split('.'), o=P; for(var i=0;i<p.length-1;i++) o=o[p[i]]; o[p[p.length-1]]=(p[p.length-1]==='n')?Math.max(1,+v||1):v; }
+root.addEventListener('input', function(e){ var t=e.target, d=t.dataset;
+  if(t.classList.contains('sq-name')){ P.name=t.value; save(); return; }
+  if(d.f){ if(d.f==='genre'){ P.genre=t.value; } else if(d.f==='fix'){ P.fix=t.value; } else setPath(d.f, t.value); save(); return; }
+  if(d.ans!=null){ P.line.ans[+d.ans]=t.value; save(); return; }
+  if(d.c!=null && d.k){ P.cast[+d.c][d.k]=t.value; save(); return; }
+  if(d.arc!=null){ P.serial.arcs[+d.arc][d.k]=(d.k==='from'||d.k==='to')?+t.value:t.value; save(); return; }
+  if(d.ep!=null){ P.eps[+d.ep][d.k]=t.value; save(); return; }
+  if(d.sc!=null){ var e2=ep(); if(!e2) return; var sc=e2.scenes[+d.sc]; if(d.k==='lines') sc.lines=t.value.split('\n').filter(Boolean); else sc[d.k]=t.value; save(); } });
+root.addEventListener('change', function(e){ var t=e.target, d=t.dataset;
+  if(t.classList.contains('sq-open')){ var L=list(); if(t.value && L[t.value]){ save(true); P=Object.assign(blank(), L[t.value]); save(true); render(); } return; }
+  if(d.a==='cur'){ P.cur=+t.value; save(); render(); return; }
+  if(d.c!=null && d.k==='role'){ P.cast[+d.c].role=t.value; save(); return; }
+  if(d.pick!=null){ var x=P.found.items[+d.pick]; P.picks=P.picks.filter(function(p){ return !(p.n===x.n&&p.t===x.t); }); if(t.checked) P.picks.push({t:x.t, n:x.n, d:x.d, why:x.why}); save(); render(); return; }
+  if(d.use!=null){ P.adv.use[+d.use].on=t.checked; save(); render(); return; }
+  if(d.art!=null || d.bgart!=null){ var f=t.files&&t.files[0]; if(!f||!window.__ppArt) return; var r=new FileReader(); r.onload=function(){ var id='sq'+Date.now().toString(36);
+    window.__ppArt.put(id, r.result).then(function(){ if(d.art!=null) P.cast[+d.art].art=id; else { var e3=ep(); if(e3) e3.scenes[+d.bgart].art=id; } save(); render(); }); }; r.readAsDataURL(f); } });
+function copyOpen(q, what){ try{ navigator.clipboard.writeText(q); }catch(e){} if(window.imgAIOpen) window.imgAIOpen(q.slice(0,6000)); msg(what+' 요청문을 복사했어요. 열린 그림 AI 창에 붙여 넣어 주세요.'); }
+root.addEventListener('click', function(e){ var b=e.target.closest('button'); if(!b||!root.contains(b)) return; var d=b.dataset;
+  if(d.go!=null){ save(); P.step=+d.go; save(); render(); root.scrollIntoView({block:'start'}); return; }
+  if(d.genre){ P.genre=d.genre; save(); render(); return; }
+  if(d.star!=null && typeof favToggle==='function'){ var x=P.found.items[+d.star]; favToggle(favKey(x.t,x.n), '순서대로만화작업'); render(); return; }
+  if(d.chuse!=null){ var c=P.found.chars[+d.chuse], slot=P.cast.filter(function(q){ return q.role===c.role && !q.lack && !q.pers; })[0];
+    if(!slot){ slot={role:c.role||'조연', name:'', lack:'', pers:'', look:'', goal:'', rel:''}; P.cast.push(slot); } ['lack','pers','look','goal'].forEach(function(k){ if(!slot[k]) slot[k]=c[k]||''; }); save(); msg('「'+slot.role+'」 칸에 넣었어요.'); return; }
+  if(d.mv!=null){ var i=+d.mv, j=i+(+d.d); if(j<0||j>=P.eps.length) return; var tmp=P.eps[i]; P.eps[i]=P.eps[j]; P.eps[j]=tmp; save(); render(); return; }
+  if(d.rmep!=null){ P.eps.splice(+d.rmep,1); P.cur=Math.min(P.cur, Math.max(0,P.eps.length-1)); save(); render(); return; }
+  if(d.bg!=null){ var e4=ep(), s=e4.scenes[+d.bg]; copyOpen('Draw ONE background image for a Korean webtoon panel. Place: '+(s.place||'')+(s.time?', time: '+s.time:'')+'. Genre: '+(P.genre||'')+'. No people, no text, no speech bubbles. Clean line art, flat colors, wide shot, eye level. Keep it usable as the same location in many panels.', '배경'); return; }
+  var a=d.a; if(!a) return;
+  if(a==='new'){ save(true); P=blank(); save(true); render(); return; }
+  if(a==='del'){ if(b.dataset.arm!=='1'){ b.dataset.arm='1'; b.textContent='정말 지우기 — 한 번 더'; return; } var L=list(); L[P.id]={id:P.id, gone:1, at:Date.now()}; try{ localStorage.setItem(LKEY, JSON.stringify(L)); }catch(er){}
+    var rest=Object.keys(L).filter(function(k){ return L[k]&&!L[k].gone; }).sort(function(p,q){ return (L[q].at||0)-(L[p].at||0); }); P=rest.length?Object.assign(blank(), L[rest[0]]):blank(); save(true); render(); return; }
+  if(a==='img'){ location.hash='#probe'; setTimeout(function(){ var t=document.querySelector('#probe [data-pbt]:not([data-pbt="s"])'); if(t) t.click(); }, 300); return; }
+  if(a==='rnd'){ var g=P.genre, rows=ROWS.filter(function(r){ return !g || String(r[1]).indexOf(g)>-1; }); if(!rows.length) rows=ROWS;
+    P.rnd={m:rnd(MOTIFDATA)[0], c:rnd(rows)[0], e:rnd(ENDINGS)[1]}; save(); render(); return; }
+  if(a==='rndin'){ var R=P.rnd; P.rough=(P.rough?P.rough+'\n':'')+'소재 「'+R.m+'」에 클리셰 「'+R.c+'」, 끝은 「'+R.e+'」.'; save(); render(); return; }
+  if(a==='addch'){ P.cast.push({role:'조연', name:'', lack:'', pers:'', look:'', goal:'', rel:''}); save(); render(); return; }
+  if(a==='addep'){ P.eps.push({title:'', sum:'', arc:''}); save(); render(); return; }
+  var m;
+  if((m=a.match(/^rm(\d+)$/))){ P.cast.splice(+m[1],1); save(); render(); return; }
+  if((m=a.match(/^tocast(\d+)$/))){ var c2=P.cast[+m[1]]; if(!c2.name){ msg('이름을 먼저 적어 주세요.'); return; } var r=window.__castUpsert?window.__castUpsert({name:c2.name, role:c2.role, desc:['결핍 '+c2.lack,'성격 '+c2.pers,'외모 '+c2.look,'목표 '+c2.goal].filter(function(x){ return !/ $/.test(x); }).join(' / ')}):''; msg(r==='new'?'등장인물에 새로 넣었어요.':r==='upd'?'등장인물에 이미 있어 빈 칸만 채웠어요.':'등장인물 페이지를 쓸 수 없어요.'); return; }
+  if((m=a.match(/^sheet(\d+)$/))){ var c3=P.cast[+m[1]]; var q=window.__ctSheetPrompt?window.__ctSheetPrompt({name:c3.name||c3.role, role:c3.role, note:c3.look, sheet:{pers:c3.pers, look:c3.look, fear:'', want:c3.goal}}):'';
+    if(!q) q='Draw ONE image: a character reference sheet for '+(c3.name||c3.role)+'. Appearance: '+c3.look+'. Personality: '+c3.pers+'. TOP ROW: 4 full-body views (front, 3/4, side, back). BOTTOM ROW: 6 face close-ups (neutral, smile, angry, sad, surprised, embarrassed). Korean webtoon style, flat colors, plain white background, no text.';
+    copyOpen(q, '캐릭터 시트'); return; }
+  if((m=a.match(/^ch(\d+)$/))){ var ci=+m[1], cc=P.cast[ci]; run(a, function(){ var cand=sqFind([cc.role, cc.lack, cc.pers, P.rough, P.idea].join(' ')).filter(function(x){ return x.t==='캐릭터 모티브'; }).slice(0,12);
+    return ask(SYS, ctx(3)+'\n\n['+cc.role+'] 칸을 채운다. 이미 적힌 값은 살린다: '+JSON.stringify(cc)+'\n참고할 캐릭터 모티브(사전):\n'+cand.map(function(x){ return '- '+x.n+': '+x.d+' ('+x.m+')'; }).join('\n')+
+      '\n\nJSON만: {"name":"이름","lack":"결핍","pers":"성격","look":"외모(그림으로 그릴 수 있게)","goal":"목표","rel":"다른 인물과 관계"}', 900).then(function(o){ ['name','lack','pers','look','goal','rel'].forEach(function(k){ if(!cc[k] && o[k]) cc[k]=String(o[k]); }); }); }); return; }
+  if(a==='find') return run(a, function(){
+    var pre=(P.homage && typeof webOn==='function' && webOn() && typeof webPlot==='function')?webPlot(P.homage,'작품',P.idea).then(function(t){ return aiIsErr(t)||/찾지 못함/.test(t)?'':t; }):Promise.resolve('');
+    return pre.then(function(plot){ var text=[P.genre, P.idea, P.homage, plot].join(' '), cand=sqFind(text);
+      if(!cand.length){ P.found={note:'사전에서 가까운 항목을 못 찾았어요. 아이디어를 조금 더 구체적으로 적어 주세요.', items:[], chars:[], tech:[]}; return; }
+      return ask(SYS, ctx(1)+(plot?'\n오마주 작품 줄거리(웹): '+plot.slice(0,1200):'')+'\n\n사전 후보(번호. [종류] 이름: 뜻):\n'+cand.map(function(x,i){ return (i+1)+'. ['+x.t+'] '+x.n+': '+String(x.d).slice(0,80); }).join('\n')+
+        '\n\n이 만화에 쓸 만한 후보를 8~12개 고르고 이 이야기에서 어떻게 쓰는지 한 줄씩. 오마주 작품이 있으면 그 작품의 무엇을 빌리고 무엇을 바꿀지 반영. 주요 인물 재료 2~4명(역할·결핍·성격·외모·목표), 연출 기법 2~4개.\nJSON만: {"note":"한두 문장 총평","picks":[{"i":번호,"why":"쓰는 법"}],"chars":[{"role":"주인공","lack":"","pers":"","look":"","goal":""}],"tech":["연출 기법"]}', 2600)
+        .then(function(o){ var items=(o.picks||[]).map(function(p){ var x=cand[(+p.i||0)-1]; return x?{t:x.t, n:x.n, d:x.d, why:p.why}:null; }).filter(Boolean);
+          cand.forEach(function(x){ if(!items.some(function(y){ return y.n===x.n&&y.t===x.t; }) && items.length<16) items.push({t:x.t, n:x.n, d:x.d}); });
+          P.found={note:o.note||'', items:items, chars:o.chars||[], tech:o.tech||[]}; }); }); });
+  if(a==='polish') return run(a, function(){ return ask(SYS, ctx(2)+'\n\n위 재료로 이 만화의 대략 아이디어를 한 단락(5~7문장)으로 정리한다. 작가가 적은 내용을 우선한다.\nJSON만: {"rough":"한 단락","hook":"한 줄 훅","ask":"작가가 정해야 할 것 한 가지"}', 1400).then(function(o){ if(o.rough) P.rough=o.rough; P.hook=o.hook||''; P.roughAsk=o.ask||''; }); });
+  if(a==='qs') return run(a, function(){ return ask(SYS, ctx(4)+'\n\n이야기 뼈대를 만들기 전에 작가가 직접 정해야 하는 갈림길을 질문 4개로 묻는다(주인공이 무엇을 포기하나, 대가, 관계의 끝, 결말의 감정 같은 것). 답을 유도하지 말고 선택지를 짧게 예로 든다.\nJSON만: {"qs":["질문"]}', 900).then(function(o){ P.line.qs=(o.qs||[]).slice(0,5); P.line.ans=[]; }); });
+  if(a==='line'){ var ans=P.line.ans.filter(function(x){ return x&&x.trim(); }); if(ans.length<2){ msg('질문에 두 개 이상 답해 주세요. 작가의 결정이 이야기의 중심이에요.'); return; }
+    return run(a, function(){ return ask(SYS, ctx(4)+'\n\n작가의 답:\n'+P.line.qs.map(function(q,i){ return '- '+q+' → '+(P.line.ans[i]||'(답 없음)'); }).join('\n')+'\n\n작가의 답을 반드시 따라 스토리라인을 만든다.\nJSON만: {"logline":"한 줄","start":"시작","turn":"전환","crisis":"위기","climax":"절정","end":"결말"}', 1600).then(function(o){ ['logline','start','turn','crisis','climax','end'].forEach(function(k){ if(o[k]) P.line[k]=String(o[k]); }); }); }); }
+  if(a==='arcs') return run(a, function(){ return ask(SYS, ctx(5)+'\n\n이 이야기를 '+P.serial.n+'화 연재로 나눈다. 아크(구간) 3~7개, 화 범위가 1~'+P.serial.n+'을 빈틈없이 덮게. 아크마다 흐름·인물 비중·끝의 전환. 초반 3화 안에 주인공의 결핍과 훅이 보이게.\nJSON만: {"arcs":[{"name":"아크 이름","from":1,"to":5,"goal":"이 구간에서 일어나는 일","cast":"인물 비중","turn":"끝의 전환"}]}', 2200).then(function(o){ P.serial.arcs=(o.arcs||[]).map(function(x){ return {name:x.name||'', from:+x.from||1, to:+x.to||1, goal:x.goal||'', cast:x.cast||'', turn:x.turn||''}; }); }); });
+  if(a==='adv') return run(a, function(){ var full=ctx(6), dc=(typeof dictCtx==='function'?dictCtx(full, 14):''), combo=(typeof CHAR_COMBO!=='undefined'?CHAR_COMBO.slice(0,20).map(function(c){ return (c.names||[]).join('+')+': '+(c.note||''); }).join('\n'):'');
+    return ask(SYS, full+'\n\n'+dc+'\n\n[흔해서 피하는 인물 조합(사전)]\n'+combo+'\n\n아크마다 쓸 클리셰·연출 1~3개(사전 항목 이름을 쓰고, 이 이야기에서 어떻게 비틀어 쓰는지), 피할 조합·클리셰, 전체 조언.\nJSON만: {"note":"전체 조언 2~3문장","use":[{"arc":"아크 이름","n":"클리셰·연출 이름","how":"어떻게","why":"왜"}],"avoid":[{"n":"이름","why":"이유"}]}', 2600).then(function(o){ P.adv={note:o.note||'', use:(o.use||[]).map(function(u){ u.on=true; return u; }), avoid:o.avoid||[]}; }); });
+  if(a==='eps') return run(a, function(){ var N=Math.min(+P.serial.n||10, 120), out=[];
+    var chunk=function(from){ if(from>N) return Promise.resolve(); var to=Math.min(N, from+19);
+      return ask(SYS, ctx(7)+'\n\n'+(out.length?'앞 화 요약: '+out.slice(-3).map(function(e,i){ return e.title+' — '+e.sum; }).join(' / ')+'\n':'')+from+'화부터 '+to+'화까지 화마다 제목과 담을 내용 한 줄. 아크 범위를 지키고, 고른 클리셰·연출을 알맞은 화에 배치.\nJSON만: {"eps":[{"no":'+from+',"title":"제목","sum":"담을 내용 한 줄","arc":"아크 이름"}]}', 3000)
+        .then(function(o){ (o.eps||[]).forEach(function(e){ out.push({title:e.title||'', sum:e.sum||'', arc:e.arc||''}); }); return chunk(to+1); }); };
+    return chunk(1).then(function(){ var old=P.eps; P.eps=out.map(function(e,i){ var o=old[i]||{}; return Object.assign({}, o, e); }); P.cur=0; }); });
+  if(a==='syn'){ var e5=ep(), k5=P.cur; return run(a, function(){ return ask(SYS, ctx(8)+'\n\n'+(P.eps[k5-1]?'앞 화: '+P.eps[k5-1].title+' — '+(P.eps[k5-1].syn||P.eps[k5-1].sum)+'\n':'')+(k5+1)+'화 「'+e5.title+'」: '+e5.sum+(P.eps[k5+1]?'\n다음 화: '+P.eps[k5+1].sum:'')+'\n\n이 화의 줄거리를 장면 순서대로 8~14문장. 마지막은 다음 화로 넘기는 훅.\nJSON만: {"syn":"줄거리"}', 2200).then(function(o){ if(o.syn) e5.syn=String(o.syn); }); }); }
+  if(a==='script'){ var e6=ep(); if(!e6.syn){ msg('먼저 「화별 줄거리」를 써 주세요.'); return; }
+    return run(a, function(){ return ask(SYS, ctx(8)+'\n\n'+(P.cur+1)+'화 줄거리:\n'+e6.syn+'\n\n이 화를 만화 대본으로 쓴다. 형식(지켜서):\n[장면] 장소 · 때\n행동이나 화면 묘사 한 줄\n이름: 대사\n이름: (속마음)\n나레이션: …\n장면 4~8개, 대사는 짧게(말풍선 하나에 20자 안팎). 마크다운 기호 없이 본문만.', 4000, true).then(function(t){ e6.script=t; }); }); }
+  if(a==='fix'){ var e7=ep(); if(!e7.script||!P.fix){ msg('고칠 글과 요청을 적어 주세요.'); return; }
+    return run(a, function(){ return ask(SYS, '아래 만화 대본을 요청대로 고친다. 요청에 없는 부분은 그대로 둔다. 형식 유지, 본문만.\n요청: '+P.fix+'\n\n'+e7.script, 4000, true).then(function(t){ e7.script=t; P.fix=''; }); }); }
+  if(a==='scenes'){ var e8=ep(); if(!e8.script){ msg('먼저 「대사 글」을 써 주세요.'); return; }
+    return run(a, function(){ return ask(SYS, '아래 만화 대본을 장면별로 나눈다. 장면마다 장소·때·나오는 인물 이름·대사 줄(「이름: 대사」 그대로)·화면 요약.\n등장인물: '+P.cast.map(function(c){ return c.name; }).filter(Boolean).join(', ')+'\n\n'+e8.script+'\n\nJSON만: {"scenes":[{"place":"장소","time":"때","who":["이름"],"lines":["이름: 대사"],"what":"화면 요약"}]}', 3600).then(function(o){ e8.scenes=(o.scenes||[]).map(function(s){ var old=(e8.scenes||[]).filter(function(x){ return x.place===s.place && x.art; })[0]; return {place:s.place||'', time:s.time||'', who:s.who||[], lines:s.lines||[], what:s.what||'', art:old?old.art:''}; }); }); }); }
+  if(a==='toconti'){ var e9=ep(); if(!e9.script){ msg('먼저 「대사 글」을 써 주세요.'); return; }
+    var names=(e9.scenes||[]).reduce(function(s,x){ return s.concat(x.who||[]); }, []), chars=P.cast.filter(function(c){ return c.name && (!names.length || names.indexOf(c.name)>-1); });
+    var lines=e9.script.split('\n').filter(function(l){ return /^[^\[\s][^:：]{0,12}[:：]/.test(l); }).length, total=Math.max(16, Math.min(80, Math.round(lines*1.3)+(e9.scenes||[]).length*2));
+    var story=e9.script+((e9.scenes||[]).length?'\n\n[장소]\n'+e9.scenes.map(function(s,i){ return (i+1)+'. '+s.place+(s.time?' · '+s.time:'')+(s.what?' — '+s.what:''); }).join('\n'):'');
+    location.hash='#conti';
+    setTimeout(function(){ if(!window.__ctFromSeq){ msg('콘티 구성기를 열지 못했어요.'); return; }
+      var id=window.__ctFromSeq({name:(P.name||'만화')+' '+(P.cur+1)+'화', story:story, total:total, chars:chars.map(function(c){ return {name:c.name, role:c.role, note:c.look, sheet:{pers:c.pers, want:c.goal, fear:c.lack, look:c.look, rel:c.rel}, sheetArt:c.art||''}; })});
+      if(id && !/^error|^busy/.test(id)){ e9.sid=id; save(true); } else msg(String(id||'콘티로 넘기지 못했어요.').replace(/^error:|^busy:/,'')); }, 600); return; }
+  if(a==='openconti'){ var e10=ep(); location.hash='#conti'; setTimeout(function(){ if(window.__ctStore && e10.sid) window.__ctStore.open(e10.sid); }, 600); return; }
+});
+window.PAGE_ON=window.PAGE_ON||{}; var pon=PAGE_ON.seqwork; PAGE_ON.seqwork=function(){ if(pon) try{ pon(); }catch(e){} var L=J(localStorage.getItem(KEY)||'null', null); if(L&&L.id&&L.at>(P.at||0)) P=Object.assign(blank(), L); render(); };
+render();
+})();
+// [[/MOD:seqwork]]
+
 dataMigrate();
 hsLoad();
 if(typeof mineCount==='function') mineCount();
