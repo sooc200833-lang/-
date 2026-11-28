@@ -466,3 +466,9 @@ arcForm, deviceId, folderMemo, gdBase, gdLast, gdLinked, ideaText, mangaDataVer,
 - 사전: 처음 쓸 때 GLB를 직접 읽어(JOINTS_0 ubyte·WEIGHTS_0 float, UV 보관) 캐시, 받기 전·실패면 관절 인형(`G.mq`) 그대로. 받으면 `SPR` 비우고 `d3RedrawAll`+`drawmode`. `d3Fig`는 그룹(hips…kn)을 `bn`에 모으고 몸이 있으면 관절 인형 부품을 만들지 않는다(`mq`). `d3BodyBind`가 그룹을 바인드 자세로 돌려놓고 SkinnedMesh(재질 Top=옷/몸, Bottom=M.cloth, Skin, Shoes=ink)+외곽선(스키닝된 법선으로 0.011 부풀린 뒷면, onBeforeCompile)을 붙여 Skeleton을 잡은 뒤 원래 자세로 되돌린다. 빈 소매 등 없는 뼈는 가까운 위 뼈로.
 - 시트 그림 입히기(다음): UV가 있으니 Top/Bottom 재질에 시트에서 잘라 낸 그림을 텍스처로 넣으면 된다(아직 안 함).
 - 시험(로컬): `__d3Sprite`로 12자세, 크게 4자세(기본·달리기·주먹 지르기·앉기).
+
+## 모션 캡처 자세 129개 (2026-11-28) — `[[MOD:mocap-poses]]` `POSE_MC` (`var D3_DEG` 바로 앞, POSE3에 합침)
+- 출처: CMU Graphics Lab Motion Capture Database(공식 FAQ 「허락 없이 복사·수정·재배포 가능」), BVH는 깃허브 미러 una-dinosauria/cmu-mocap에서 33개만. 출처·동작 목록 `assets/3d/mocap/CREDITS.md`.
+- 변환기 `assets/3d/mocap/mocap_convert.js`(node): BVH 파싱·FK → 매 프레임 엉덩이 방향으로 정면(+z) 돌리기 → 골반·가슴·머리 틀로 rt·sp·hd 오일러(XYZ) → 팔(la/ra [x, 옆, 팔꿈치≤0, 비틀기])·다리(ll/rl [x, 옆, 무릎≥0])는 우리 인형 회전식으로 위팔·아래팔 방향을 맞추는 수치 풀이 → 0.1초마다, 맞춤 오차 큰 프레임 버림 → 기본 자세에서 먼 순간부터 서로 다른 것 최대 4개. dy는 다리 뼈 길이 비율(넓적다리+정강이 .87)로. 앉는 동작에서 허벅지가 앞·몸이 섰으면 prop seat.
+- 이름 「모캡·<동작> n」. 3D 그림 전용: 선 그림(POSE_J)·FIG_SEL·POSE_INFO(AI에 보내는 자세 목록)에는 안 넣는다(요금·목록 길이). 고르는 곳: 편집 창 인물 줄 자세 칸(3D일 때 optgroup 「모션 캡처 · 동작」, `d3PoseMcOpts`), 연출 문법 「직접 돌려 보기」 자세 칸(`window.__d3PoseMcOpts`, PV.pose → who[0].pose·look.pose).
+- 시험(로컬): 24자세 그림, 「직접 돌려 보기」 복싱 1.
